@@ -1,0 +1,5 @@
+# Automatically normalize line endings.
+* text=auto
+
+# Behaviors
+*.webp  binary
