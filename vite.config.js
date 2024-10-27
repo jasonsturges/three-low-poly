@@ -1,14 +1,14 @@
-import dts from "vite-plugin-dts";
 import path from "path";
-import { defineConfig, UserConfig } from "vite";
+import { defineConfig } from "vite";
 
 export default defineConfig({
   base: "./",
-  plugins: [dts({ rollupTypes: true })],
+  plugins: [],
   build: {
+    minimal: false,
     sourcemap: true,
     lib: {
-      entry: path.resolve(__dirname, "src/index.ts"),
+      entry: path.resolve(__dirname, "src/index.js"),
       name: "ThreeLowPoly",
       formats: ["es", "cjs", "umd", "iife"],
       fileName: (format) => `index.${format}.js`,
@@ -22,4 +22,4 @@ export default defineConfig({
       },
     },
   },
-} satisfies UserConfig);
+});
