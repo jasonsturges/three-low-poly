@@ -14,10 +14,12 @@ export default defineConfig({
       fileName: (format) => `index.${format}.js`,
     },
     rollupOptions: {
-      external: ["three"],
+      // Exclude any import that begins with "three"
+      external: [/^three(\/.+)?$/],
       output: {
         globals: {
           three: "THREE",
+          "three/addons/utils/BufferGeometryUtils.js": "BufferGeometryUtils",
         },
       },
     },
