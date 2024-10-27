@@ -17,9 +17,19 @@
     "assets",
     "3d"
   ],
+  "type": "module",
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
-  "type": "module",
+  "browser": "dist/index.iife.js",
+  "umd": "dist/index.umd.js",
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs.js",
+      "import": "./dist/index.es.js",
+      "browser": "./dist/index.iife.js",
+      "umd": "./dist/index.umd.js"
+    }
+  },
   "files": [
     "dist"
   ],
