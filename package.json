@@ -1,16 +1,16 @@
 {
-  "name": "vite-typescript-npm-package",
-  "version": "1.0.0",
-  "description": "Vite TypeScript library npm package template",
+  "name": "three-low-poly",
+  "version": "0.9.0",
+  "description": "Low poly assets for Three.js",
   "author": "Jason Sturges <jason@jsonsturges.com> (https://jasonsturges.com)",
-  "homepage": "https://github.com/jasonsturges/vite-typescript-npm-package",
-  "repository": "github:jasonsturges/vite-typescript-npm-package",
+  "homepage": "https://github.com/jasonsturges/three-low-poly",
+  "repository": "github:jasonsturges/three-low-poly",
   "license": "ISC",
   "keywords": [
-    "vite",
-    "typescript",
-    "npm",
-    "package"
+    "three",
+    "low-poly",
+    "assets",
+    "3d"
   ],
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
