@@ -23,11 +23,7 @@
     "dev": "tsc && vite build --watch",
     "start": "vite --host --open",
     "build": "tsc && vite build",
-    "build:types": "dts-bundle-generator --config ./dts-bundle-generator.config.ts",
-    "lint:scripts": "eslint ./src --ext .ts",
-    "lint:styles": "stylelint ./**/*.{css,scss}",
-    "format:scripts": "prettier ./src --write",
-    "format:styles": "stylelint ./**/*.{css,scss} --fix"
+    "build:types": "dts-bundle-generator --config ./dts-bundle-generator.config.ts"
   },
   "devDependencies": {
     "@types/node": "^22.8.1",
