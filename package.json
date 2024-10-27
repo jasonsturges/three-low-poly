@@ -6,6 +6,11 @@
   "homepage": "https://github.com/jasonsturges/three-low-poly",
   "repository": "github:jasonsturges/three-low-poly",
   "license": "ISC",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/",
+    "scope": "jasonsturges"
+  },
   "keywords": [
     "three",
     "low-poly",
