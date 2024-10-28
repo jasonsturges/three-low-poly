@@ -33,5 +33,5 @@ export { Candle } from "./group/lighting/Candle";
 export { Lantern } from "./group/lighting/Lantern";
 
 // Rocks
-export { Stones } from "./group/rocks/Stones";
+export { MossyRocks } from "./group/rocks/MossyRocks";
 export { Rocks } from "./group/rocks/Rocks.js";
