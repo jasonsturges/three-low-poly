@@ -1,6 +1,6 @@
 import { DodecahedronGeometry, Group, Mesh, MeshStandardMaterial } from "three";
 
-class Stones extends Group {
+class Rocks extends Group {
   constructor() {
     super();
 
@@ -19,4 +19,4 @@ class Stones extends Group {
   }
 }
 
-export { Stones };
+export { Rocks };

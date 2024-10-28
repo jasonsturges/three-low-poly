@@ -34,3 +34,4 @@ export { Lantern } from "./group/lighting/Lantern";
 
 // Rocks
 export { Stones } from "./group/rocks/Stones";
+export { Rocks } from "./group/rocks/Rocks.js";
