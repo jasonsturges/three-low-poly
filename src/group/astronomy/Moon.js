@@ -50,8 +50,7 @@ class Moon extends Group {
           color *= 0.8 + 0.2 * n; // Modulate color by noise
           gl_FragColor = vec4(color, 1.0);
         }
-      `,
-      flatShading: true,
+      `
     });
 
     // Create the moon mesh and add it to the scene
