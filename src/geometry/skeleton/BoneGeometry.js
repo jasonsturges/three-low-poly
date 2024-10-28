@@ -7,7 +7,7 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
  *
  * @example
  * // Create a bone
- * const boneGeometry = new Bone();
+ * const boneGeometry = new BoneGeometry();
  * const boneMaterial = new MeshStandardMaterial({ color: 0xffffff });
  * const bone = new Mesh(boneGeometry, boneMaterial);
  * scene.add(bone);
