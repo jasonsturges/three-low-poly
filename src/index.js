@@ -28,6 +28,9 @@ export { Moon } from "./group/astronomy/Moon";
 // Cemetery
 export { Mausoleum } from "./group/cemetery/Mausoleum";
 
+// Furniture
+export { Desk } from "./group/furniture/Desk";
+
 // Lighting
 export { Candle } from "./group/lighting/Candle";
 export { Lantern } from "./group/lighting/Lantern";
@@ -35,3 +38,8 @@ export { Lantern } from "./group/lighting/Lantern";
 // Rocks
 export { MossyRocks } from "./group/rocks/MossyRocks";
 export { Rocks } from "./group/rocks/Rocks.js";
+
+// Science
+export { Beaker } from "./group/science/Beaker";
+export { Book } from "./group/science/Book";
+export { TestTube } from "./group/science/testTube";
