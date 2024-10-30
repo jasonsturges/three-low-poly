@@ -35,8 +35,9 @@
   ],
   "scripts": {
     "dev": "vite build --watch",
-    "start": "vite --host --open",
-    "build": "vite build"
+    "build": "vite build",
+    "start:examples": "vite --host --open --config vite-examples.config.js",
+    "build:examples": "vite build --config vite-examples.config.js"
   },
   "dependencies": {
     "three": "^0.169.0"
