@@ -18,6 +18,9 @@ export { SimpleLeafGeometry } from "./geometry/leafs/SimpleLeafGeometry";
 // Skeleton
 export { BoneGeometry } from "./geometry/skeleton/BoneGeometry";
 
+// Science
+export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
+
 //------------------------------
 //  Groups
 //------------------------------
