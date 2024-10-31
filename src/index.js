@@ -1,4 +1,10 @@
 //------------------------------
+//  Effects
+//------------------------------
+
+export { Bubbling } from "./effects/Bubbling.js";
+
+//------------------------------
 //  Geometries
 //------------------------------
 
@@ -19,6 +25,8 @@ export { SimpleLeafGeometry } from "./geometry/leafs/SimpleLeafGeometry";
 export { BoneGeometry } from "./geometry/skeleton/BoneGeometry";
 
 // Science
+export { BeakerGeometry } from "./geometry/science/BeakerGeometry";
+export { MortarGeometry } from "./geometry/science/MortarGeometry";
 export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
 
 //------------------------------
@@ -40,9 +48,20 @@ export { Lantern } from "./group/lighting/Lantern";
 
 // Rocks
 export { MossyRocks } from "./group/rocks/MossyRocks";
-export { Rocks } from "./group/rocks/Rocks.js";
+export { Rocks } from "./group/rocks/Rocks";
 
 // Science
 export { Beaker } from "./group/science/Beaker";
 export { Book } from "./group/science/Book";
-export { TestTube } from "./group/science/testTube";
+export { Bottle } from "./group/science/Bottle";
+export { BunsenBurner } from "./group/science/BunsenBurner";
+export { ElectricPanel } from "./group/science/ElectricPanel";
+export { Flask } from "./group/science/Flask";
+export { LeverPanel } from "./group/science/LeverPanel";
+export { Microscope } from "./group/science/Microscope";
+export { MortarAndPestle } from "./group/science/MortarAndPestle";
+export { SpiralTube } from "./group/science/SpiralTube";
+export { Stand } from "./group/science/Stand";
+export { TeslaCoil } from "./group/science/TeslaCoil";
+export { TestTube } from "./group/science/TestTube";
+export { TestTubeRack } from "./group/science/TestTubeRack";
