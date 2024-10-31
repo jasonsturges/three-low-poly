@@ -40,6 +40,7 @@
     "build:examples": "vite build --config vite-examples.config.js"
   },
   "dependencies": {
+    "dat.gui": "^0.7.9",
     "three": "^0.169.0"
   },
   "devDependencies": {
