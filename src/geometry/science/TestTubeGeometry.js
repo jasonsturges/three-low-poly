@@ -6,10 +6,10 @@ class TestTubeGeometry extends BufferGeometry {
     super();
 
     // Create the cylindrical body
-    const tubeGeometry = new CylinderGeometry(radiusTop, radiusBottom, height, segments, 1, true); // Radius top, radius bottom, height
+    const tubeGeometry = new CylinderGeometry(radiusTop, radiusBottom, height, segments, 1, true);
 
-    // Create the rounded bottom using a sphere
-    const bottomGeometry = new SphereGeometry(radiusBottom, segments, segments / 2, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2); // Half sphere
+    // Create the rounded bottom using a half sphere
+    const bottomGeometry = new SphereGeometry(radiusBottom, segments, segments / 2, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
     bottomGeometry.translate(0, -(height / 2), 0); // Position it at the bottom of the cylinder
 
     // Merge parts
