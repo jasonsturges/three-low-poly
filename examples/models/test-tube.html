@@ -17,7 +17,8 @@
     <script type="module">
       import * as THREE from "three";
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-      import {Beaker, TestTube} from "../../src/index.js";
+      import { TestTube } from "../../src/index.js";
+      import { GUI } from "dat.gui";
 
       const scene = new THREE.Scene();
 
@@ -30,7 +31,7 @@
       renderer.shadowMap.enabled = true;
       document.body.appendChild(renderer.domElement);
 
-      const testTube = new TestTube();
+      let testTube = new TestTube();
       scene.add(testTube);
 
       const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
@@ -52,6 +53,32 @@
         renderer.render(scene, camera);
         controls.update();
       });
+
+      const gui = new GUI();
+      const geometryFolder = gui.addFolder("Geometry");
+      const parameters = {
+        radiusTop: 0.2,
+        radiusBottom: 0.2,
+        height: 3,
+        segments: 32,
+      };
+
+      geometryFolder.add(parameters, "radiusTop", 0.05, 0.5).onChange(updateGeometry);
+      geometryFolder.add(parameters, "radiusBottom", 0.05, 0.5).onChange(updateGeometry);
+      geometryFolder.add(parameters, "height", 0.2, 3.0).onChange(updateGeometry);
+      geometryFolder.add(parameters, "segments", 3, 32).step(1).onChange(updateGeometry);
+      geometryFolder.open();
+
+      function updateGeometry() {
+        scene.remove(testTube);
+        testTube = new TestTube(
+          parameters.radiusTop,
+          parameters.radiusBottom,
+          parameters.height,
+          parameters.segments
+        );
+        scene.add(testTube);
+      }
     </script>
   </body>
 </html>
