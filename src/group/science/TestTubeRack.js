@@ -2,7 +2,7 @@ import { BoxGeometry, DoubleSide, Group, Mesh, MeshStandardMaterial } from "thre
 import { TestTubeGeometry } from "../../geometry/science/TestTubeGeometry.js";
 
 class TestTubeRack extends Group {
-  constructor() {
+  constructor(count = 3, colors = [0x00ffaa, 0xff00aa, 0xaa00ff]) {
     super();
 
     // Rack geometry
@@ -26,21 +26,23 @@ class TestTubeRack extends Group {
       side: DoubleSide,
     });
 
-    // Liquid geometry and material
-    const liquidGeometry = new TestTubeGeometry(0.099, 0.099, 0.5, 16, false);
-    const liquidMaterial = new MeshStandardMaterial({
-      color: 0x00ffaa, // Vibrant color for glowing effect
-      emissive: 0x00ffaa,
-      emissiveIntensity: 0.5,
-      transparent: true,
-      opacity: 0.6,
-    });
-
-    // Create multiple test tubes with liquid
-    for (let i = -1; i <= 1; i++) {
+    // Create multiple test tubes with specified liquid colors
+    for (let i = 0; i < count; i++) {
       // Test tube
       const testTube = new Mesh(testTubeGeometry, glassMaterial);
-      testTube.position.set(i * 0.8, 1, 0);
+      const xPosition = (i - (count - 1) / 2) * 0.8;
+      testTube.position.set(xPosition, 1, 0);
+
+      // Liquid geometry and material with unique color
+      const liquidGeometry = new TestTubeGeometry(0.099, 0.099, 0.5, 16, false);
+      const liquidColor = colors[i % colors.length]; // Cycle through colors if fewer than tubes
+      const liquidMaterial = new MeshStandardMaterial({
+        color: liquidColor,
+        emissive: liquidColor,
+        emissiveIntensity: 0.5,
+        transparent: true,
+        opacity: 0.6,
+      });
 
       // Liquid inside test tube
       const liquid = new Mesh(liquidGeometry, liquidMaterial);
