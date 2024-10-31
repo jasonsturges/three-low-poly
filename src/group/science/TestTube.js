@@ -2,11 +2,11 @@ import { DoubleSide, Group, Mesh, MeshPhysicalMaterial } from "three";
 import { TestTubeGeometry } from "../../geometry/science/TestTubeGeometry.js";
 
 class TestTube extends Group {
-  constructor() {
+  constructor(radiusTop = 0.2, radiusBottom = 0.2, height = 3, segments = 32) {
     super();
 
     // Test Tube Geometry
-    const tubeGeometry = new TestTubeGeometry();
+    const tubeGeometry = new TestTubeGeometry(radiusTop, radiusBottom, height, segments);
 
     const tubeMaterial = new MeshPhysicalMaterial({
       color: 0x88ccff,
