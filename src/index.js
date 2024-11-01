@@ -28,6 +28,7 @@ export { BoneGeometry } from "./geometry/skeleton/BoneGeometry";
 export { BeakerGeometry } from "./geometry/science/BeakerGeometry";
 export { MortarGeometry } from "./geometry/science/MortarGeometry";
 export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
+export { WineBottleGeometry } from "./geometry/science/WineBottleGeometry";
 
 //------------------------------
 //  Groups
@@ -65,3 +66,4 @@ export { Stand } from "./group/science/Stand";
 export { TeslaCoil } from "./group/science/TeslaCoil";
 export { TestTube } from "./group/science/TestTube";
 export { TestTubeRack } from "./group/science/TestTubeRack";
+export { WineBottle } from "./group/science/WineBottle.js";
