@@ -20,7 +20,7 @@ export const checkerboardTexture = (size) => {
     data[stride + 3] = 255;    // alpha
   }
 
-  const texture = new THREE.DataTexture(data, size, size, RGBAFormat, UnsignedByteType);
+  const texture = new DataTexture(data, size, size, RGBAFormat, UnsignedByteType);
   texture.wrapS = RepeatWrapping;
   texture.wrapT = RepeatWrapping;
   texture.minFilter = NearestFilter;
