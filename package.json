@@ -3,7 +3,7 @@
   "version": "0.9.2",
   "description": "Low poly assets for Three.js",
   "author": "Jason Sturges <jason@jsonsturges.com> (https://jasonsturges.com)",
-  "homepage": "https://github.com/jasonsturges/three-low-poly",
+  "homepage": "https://jasonsturges.com/three-low-poly/",
   "repository": "github:jasonsturges/three-low-poly",
   "license": "ISC",
   "publishConfig": {
