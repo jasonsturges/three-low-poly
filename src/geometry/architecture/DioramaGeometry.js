@@ -1,6 +1,6 @@
 import { BufferGeometry, Float32BufferAttribute } from "three";
 
-class Diorama extends BufferGeometry {
+class DioramaGeometry extends BufferGeometry {
   constructor(width = 5, height = 3, depth = 5, wallThickness = 0.2) {
     super();
 
@@ -47,4 +47,4 @@ class Diorama extends BufferGeometry {
   }
 }
 
-export { Diorama }
+export { DioramaGeometry }

@@ -17,7 +17,7 @@
     <script type="module">
       import * as THREE from "three";
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-      import { Diorama } from "../../src/index.js";
+      import { DioramaGeometry } from "../../src/index.js";
 
       const scene = new THREE.Scene();
 
@@ -31,9 +31,9 @@
       renderer.shadowMap.enabled = true;
       document.body.appendChild(renderer.domElement);
 
-      const customRoomGeometry = new Diorama(5, 3, 5, 0.2);
+      const dioramaGeometry = new DioramaGeometry(5, 3, 5, 0.2);
       const material = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, side: THREE.DoubleSide });
-      const customRoomMesh = new THREE.Mesh(customRoomGeometry, material);
+      const customRoomMesh = new THREE.Mesh(dioramaGeometry, material);
       scene.add(customRoomMesh);
 
       const ambientLight = new THREE.AmbientLight(0x404040, 0.5);

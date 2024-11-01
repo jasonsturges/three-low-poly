@@ -10,7 +10,7 @@ export { Bubbling } from "./effects/Bubbling";
 
 // Architecture
 export { BifurcatedStaircaseGeometry } from "./geometry/architecture/BifurcatedStaircaseGeometry.js";
-export { Diorama } from "./geometry/architecture/Diorama";
+export { DioramaGeometry } from "./geometry/architecture/DioramaGeometry.js";
 export { LShapedStaircaseGeometry } from "./geometry/architecture/LShapedStaircaseGeometry.js";
 export { SpiralStaircaseGeometry } from "./geometry/architecture/SpiralStaircaseGeometry.js";
 export { StaircaseGeometry } from "./geometry/architecture/StaircaseGeometry.js";
