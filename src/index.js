@@ -74,3 +74,15 @@ export { TeslaCoil } from "./group/science/TeslaCoil";
 export { TestTube } from "./group/science/TestTube";
 export { TestTubeRack } from "./group/science/TestTubeRack";
 export { WineBottle } from "./group/science/WineBottle.js";
+
+//------------------------------
+//  Shaders
+//------------------------------
+
+export { fadeShader } from "./shaders/fadeShader.js";
+
+//------------------------------
+//  Textures
+//------------------------------
+
+export { checkerboardTexture } from "./textures/checkerboard.js";
