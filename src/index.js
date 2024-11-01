@@ -8,6 +8,13 @@ export { Bubbling } from "./effects/Bubbling";
 //  Geometries
 //------------------------------
 
+// Architecture
+export { BifurcatedStaircaseGeometry } from "./geometry/architecture/BifurcatedStaircaseGeometry.js";
+export { Diorama } from "./geometry/architecture/Diorama";
+export { LShapedStaircaseGeometry } from "./geometry/architecture/LShapedStaircaseGeometry.js";
+export { SpiralStaircaseGeometry } from "./geometry/architecture/SpiralStaircaseGeometry.js";
+export { StaircaseGeometry } from "./geometry/architecture/StaircaseGeometry.js";
+
 // Cemetery
 export { CrossHeadstoneGeometry } from "./geometry/cemetery/CrossHeadstoneGeometry";
 export { ObeliskHeadstoneGeometry } from "./geometry/cemetery/ObeliskHeadstoneGeometry";
