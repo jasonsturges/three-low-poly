@@ -2,7 +2,7 @@
 //  Effects
 //------------------------------
 
-export { Bubbling } from "./effects/Bubbling.js";
+export { Bubbling } from "./effects/Bubbling";
 
 //------------------------------
 //  Geometries
