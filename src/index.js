@@ -78,6 +78,7 @@ export { WineBottle } from "./models/science/WineBottle";
 // Shapes
 export { Burst } from "./models/shapes/Burst";
 export { Gear } from "./models/shapes/Gear";
+export { Heart } from "./models/shapes/Heart";
 export { Star } from "./models/shapes/Star";
 
 //------------------------------
@@ -92,6 +93,7 @@ export { fadeShader } from "./shaders/fadeShader";
 
 export { BurstShape } from "./shapes/BurstShape";
 export { GearShape } from "./shapes/GearShape";
+export { HeartShape } from "./shapes/HeartShape";
 export { StarShape } from "./shapes/StarShape";
 
 //------------------------------
