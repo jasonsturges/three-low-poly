@@ -13,7 +13,7 @@ class TestTubeGeometry extends BufferGeometry {
     bottomGeometry.translate(0, -(height / 2), 0); // Position it at the bottom of the cylinder
 
     // Merge parts
-    this.copy(mergeGeometries([tubeGeometry, bottomGeometry], true));
+    this.copy(mergeGeometries([tubeGeometry, bottomGeometry], false));
   }
 }
 

@@ -18,7 +18,7 @@ class RoundedHeadstoneGeometry extends BufferGeometry {
     topGeometry.translate(0, baseHeight + topHeight / 2 - depth / 2 - 0.05, 0);
 
     // Merge base and top into a single geometry
-    this.copy(mergeGeometries([baseGeometry, topGeometry], true));
+    this.copy(mergeGeometries([baseGeometry, topGeometry], false));
   }
 }
 

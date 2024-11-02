@@ -20,7 +20,7 @@ class WineBottleGeometry extends BufferGeometry {
     neckGeometry.translate(0, bodyHeight + shoulderHeight + neckHeight / 2, 0);
 
     // Merge geometries
-    this.copy(mergeGeometries([bodyGeometry, shoulderGeometry, neckGeometry], true));
+    this.copy(mergeGeometries([bodyGeometry, shoulderGeometry, neckGeometry], false));
   }
 }
 

@@ -28,7 +28,7 @@ class FenceColumn extends BufferGeometry {
     const capGeometry = new BoxGeometry(1.4, 0.3, 1.4);
     capGeometry.translate(0, 0.5 + height + 0.15, 0);
 
-    this.copy(mergeGeometries([baseGeometry, columnGeometry, capGeometry], true));
+    this.copy(mergeGeometries([baseGeometry, columnGeometry, capGeometry], false));
   }
 }
 

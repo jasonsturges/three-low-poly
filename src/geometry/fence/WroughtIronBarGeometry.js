@@ -25,7 +25,7 @@ class WroughtIronBarGeometry extends BufferGeometry {
     spikeGeometry.translate(0, barHeight + spikeHeight / 2, 0); // Place on top of the bar
 
     // Merge bar and spike into one geometry
-    this.copy(mergeGeometries([barGeometry, spikeGeometry], true));
+    this.copy(mergeGeometries([barGeometry, spikeGeometry], false));
   }
 }
 

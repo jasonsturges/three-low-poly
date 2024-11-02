@@ -13,7 +13,7 @@ class BeakerGeometry extends BufferGeometry {
     tubeGeometry.translate(0, 1.5, 0);
     tubeGeometry.rotateX(Math.PI / 2);
 
-    this.copy(mergeGeometries([sphereGeometry, tubeGeometry], true));
+    this.copy(mergeGeometries([sphereGeometry, tubeGeometry], false));
   }
 }
 

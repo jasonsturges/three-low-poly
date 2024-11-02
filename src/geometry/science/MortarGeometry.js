@@ -20,7 +20,7 @@ class MortarGeometry extends BufferGeometry {
     baseDisk.rotateX(-Math.PI / 2); // Rotate to align with the bottom
     baseDisk.translate(0, 0, 0); // Position at the base of the mortar
 
-    this.copy(mergeGeometries([mortarGeometry, baseDisk], true));
+    this.copy(mergeGeometries([mortarGeometry, baseDisk], false));
   }
 }
 
