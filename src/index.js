@@ -100,7 +100,7 @@ export { StarShape } from "./shapes/StarShape";
 //  Skybox
 //------------------------------
 
-export { SunSkybox } from "./skybox/SunSkybox";
+export { TwilightSkybox } from "./skybox/TwilightSkybox.js";
 
 //------------------------------
 //  Textures

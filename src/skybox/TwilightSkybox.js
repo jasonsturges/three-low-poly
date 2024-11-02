@@ -1,7 +1,7 @@
 import { Mesh, Vector3 } from "three";
 import { Sky } from "three/addons/objects/Sky.js";
 
-class SunSkybox extends Mesh {
+class TwilightSkybox extends Mesh {
   constructor(
     theta = Math.PI * 0.49, // Elevation angle (0 to PI)
     phi = 2 * Math.PI * 0.25, // Azimuth angle (0 to 2*PI)
@@ -36,4 +36,4 @@ class SunSkybox extends Mesh {
   }
 }
 
-export { SunSkybox };
+export { TwilightSkybox };

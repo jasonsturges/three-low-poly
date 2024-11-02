@@ -18,7 +18,7 @@
       import * as THREE from "three";
       import GUI from "lil-gui";
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-      import { SunSkybox } from "../../src/index.js";
+      import { TwilightSkybox } from "../../src/index.js";
 
       const scene = new THREE.Scene();
 
@@ -31,8 +31,8 @@
       renderer.shadowMap.enabled = true;
       document.body.appendChild(renderer.domElement);
 
-      let sunSkybox = new SunSkybox();
-      scene.add(sunSkybox);
+      let twilightSkybox = new TwilightSkybox();
+      scene.add(twilightSkybox);
 
       // Create GUI
       const gui = new GUI();
@@ -55,11 +55,11 @@
 
       // Update sun position function
       function update() {
-        sunSkybox.skyUniforms.turbidity.value = parameters.turbidity;
-        sunSkybox.skyUniforms.rayleigh.value = parameters.rayleigh;
-        sunSkybox.skyUniforms.mieCoefficient.value = parameters.mieCoefficient;
-        sunSkybox.skyUniforms.mieDirectionalG.value = parameters.mieDirectionalG;
-        sunSkybox.sunPosition(parameters.theta, parameters.phi);
+        twilightSkybox.skyUniforms.turbidity.value = parameters.turbidity;
+        twilightSkybox.skyUniforms.rayleigh.value = parameters.rayleigh;
+        twilightSkybox.skyUniforms.mieCoefficient.value = parameters.mieCoefficient;
+        twilightSkybox.skyUniforms.mieDirectionalG.value = parameters.mieDirectionalG;
+        twilightSkybox.sunPosition(parameters.theta, parameters.phi);
       }
 
       const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
