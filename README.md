@@ -1,6 +1,6 @@
 # Three.js Low Poly
 
-Collection of procedurally generated low poly assets for Three.js.
+Procedurally generated low poly modeling for Three.js.
 
 Example Graveyard Scene:
 
