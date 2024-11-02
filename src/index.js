@@ -9,11 +9,11 @@ export { Bubbling } from "./effects/Bubbling";
 //------------------------------
 
 // Architecture
-export { BifurcatedStaircaseGeometry } from "./geometry/architecture/BifurcatedStaircaseGeometry.js";
-export { DioramaGeometry } from "./geometry/architecture/DioramaGeometry.js";
-export { LShapedStaircaseGeometry } from "./geometry/architecture/LShapedStaircaseGeometry.js";
-export { SpiralStaircaseGeometry } from "./geometry/architecture/SpiralStaircaseGeometry.js";
-export { StaircaseGeometry } from "./geometry/architecture/StaircaseGeometry.js";
+export { BifurcatedStaircaseGeometry } from "./geometry/architecture/BifurcatedStaircaseGeometry";
+export { DioramaGeometry } from "./geometry/architecture/DioramaGeometry";
+export { LShapedStaircaseGeometry } from "./geometry/architecture/LShapedStaircaseGeometry";
+export { SpiralStaircaseGeometry } from "./geometry/architecture/SpiralStaircaseGeometry";
+export { StaircaseGeometry } from "./geometry/architecture/StaircaseGeometry";
 
 // Cemetery
 export { CrossHeadstoneGeometry } from "./geometry/cemetery/CrossHeadstoneGeometry";
@@ -73,16 +73,22 @@ export { Stand } from "./group/science/Stand";
 export { TeslaCoil } from "./group/science/TeslaCoil";
 export { TestTube } from "./group/science/TestTube";
 export { TestTubeRack } from "./group/science/TestTubeRack";
-export { WineBottle } from "./group/science/WineBottle.js";
+export { WineBottle } from "./group/science/WineBottle";
 
 //------------------------------
 //  Shaders
 //------------------------------
 
-export { fadeShader } from "./shaders/fadeShader.js";
+export { fadeShader } from "./shaders/fadeShader";
+
+//------------------------------
+//  Shapes
+//------------------------------
+
+export { StarShape } from "./shapes/StarShape";
 
 //------------------------------
 //  Textures
 //------------------------------
 
-export { checkerboardTexture } from "./textures/checkerboard.js";
+export { checkerboardTexture } from "./textures/checkerboard";
