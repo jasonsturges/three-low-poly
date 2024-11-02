@@ -54,17 +54,6 @@
         controls.update();
       });
 
-      /** @type {ExtrudeSettings} */
-      const extrudeSettings = {
-        steps: 0,
-        depth: 0.25,
-        bevelEnabled: true,
-        bevelThickness: 0,
-        bevelSize: 0,
-        bevelOffset: 0,
-        bevelSegments: 1,
-      };
-
       // Initial values for constructor parameters
       const params = {
         sides: 5,
@@ -72,8 +61,8 @@
         outerRadius: 1.0,
         holeSides: 2,
         holeRadius: 0.25,
+        depth: 0.25,
         wireframe: false,
-        ...extrudeSettings,
       };
 
       // Creating the dat.GUI instance
@@ -85,36 +74,16 @@
       gui.add(params, "outerRadius", 0.1, 5.0).name("Outer Radius").step(0.1).onChange(() => updateShape());
       gui.add(params, "holeSides", 2, 32).name("Hole Sides").step(1).onChange(() => updateShape());
       gui.add(params, "holeRadius", 0.1, 5.0).name("Hole Radius").step(0.1).onChange(() => updateShape());
+      gui.add(params, "depth", 0, 5.0).name("Depth").step(0.1).onChange(() => updateShape());
 
-      // Add controls for the ExtrudeSettings options
-      gui.add(params, "bevelEnabled").name("Bevel Enabled").onChange(() => updateShape());
-      gui.add(params, "steps", 0, 10).name("Steps").step(1).onChange(() => updateShape());
-      gui.add(params, "depth", 0, 10).name("Depth").step(0.25).onChange(() => updateShape());
-      gui.add(params, "bevelThickness", 0, 5.0).name("Bevel Thickness").step(0.1).onChange(() => updateShape());
-      gui.add(params, "bevelSize", 0, 5.0).name("Bevel Size").step(0.1).onChange(() => updateShape());
-      gui.add(params, "bevelOffset", -1, 1).name("Bevel Offset").step(0.1).onChange(() => updateShape());
-      gui.add(params, "bevelSegments", 1, 10).name("Bevel Segments").step(1).onChange(() => updateShape());
-      gui.add(params, "wireframe").name("Wireframe").onChange(() => updateShape());
-
-      // Function to update your shape based on GUI controls
       function updateShape() {
-        const options = {
-          steps: params.steps,
-          depth: params.depth,
-          bevelEnabled: params.bevelEnabled,
-          bevelThickness: params.bevelThickness,
-          bevelSize: params.bevelSize,
-          bevelOffset: params.bevelOffset,
-          bevelSegments: params.bevelSegments,
-        };
-
         scene.remove(gear);
-        gear = new Gear(params.sides, params.innerRadius, params.outerRadius, params.holeSides, params.holeRadius, options);
+        gear = new Gear(params.sides, params.innerRadius, params.outerRadius, params.holeSides, params.holeRadius, params.depth);
         gear.material.wireframe = params.wireframe;
         scene.add(gear);
       }
 
-      // updateShape();
+      updateShape();
     </script>
   </body>
 </html>

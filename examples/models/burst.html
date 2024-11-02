@@ -72,7 +72,6 @@
       gui.add(params, "outerRadius", 0.1, 5.0).name("Outer Radius").step(0.1).onChange(() => updateShape());
       gui.add(params, "depth", 0, 5.0).name("Depth").step(0.1).onChange(() => updateShape());
 
-      // Function to update your shape based on GUI controls
       function updateShape() {
         scene.remove(burst);
         burst = new Burst(params.steps, params.innerRadius, params.outerRadius, params.depth);
@@ -80,7 +79,7 @@
         scene.add(burst);
       }
 
-      // updateShape();
+      updateShape();
     </script>
   </body>
 </html>
