@@ -97,6 +97,12 @@ export { HeartShape } from "./shapes/HeartShape";
 export { StarShape } from "./shapes/StarShape";
 
 //------------------------------
+//  Skybox
+//------------------------------
+
+export { SunSkybox } from "./skybox/SunSkybox";
+
+//------------------------------
 //  Textures
 //------------------------------
 
