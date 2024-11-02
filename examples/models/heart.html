@@ -18,7 +18,7 @@
       import * as THREE from "three";
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
       import {Heart, Star} from "../../src/index.js";
-      import { GUI } from "dat.gui";
+      import { GUI } from "lil-gui";
 
       const scene = new THREE.Scene();
 
@@ -64,7 +64,7 @@
         wireframe: false,
       };
 
-      // Creating the dat.GUI instance
+      // Creating the lil-gui instance
       const gui = new GUI();
 
       // Add controls for the constructor parameters
