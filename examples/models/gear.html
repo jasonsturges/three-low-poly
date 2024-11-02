@@ -59,7 +59,7 @@
         sides: 5,
         innerRadius: 0.5,
         outerRadius: 1.0,
-        holeSides: 2,
+        holeSides: 5,
         holeRadius: 0.25,
         depth: 0.25,
         wireframe: false,
@@ -72,7 +72,7 @@
       gui.add(params, "sides", 2, 32).name("Sides").step(1).onChange(() => updateShape());
       gui.add(params, "innerRadius", 0.1, 5.0).name("Inner Radius").step(0.1).onChange(() => updateShape());
       gui.add(params, "outerRadius", 0.1, 5.0).name("Outer Radius").step(0.1).onChange(() => updateShape());
-      gui.add(params, "holeSides", 2, 32).name("Hole Sides").step(1).onChange(() => updateShape());
+      gui.add(params, "holeSides", 3, 32).name("Hole Sides").step(1).onChange(() => updateShape());
       gui.add(params, "holeRadius", 0.1, 5.0).name("Hole Radius").step(0.1).onChange(() => updateShape());
       gui.add(params, "depth", 0, 5.0).name("Depth").step(0.1).onChange(() => updateShape());
 
