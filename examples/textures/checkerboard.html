@@ -17,7 +17,7 @@
     <script type="module">
       import * as THREE from "three";
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-      import { GUI } from "dat.gui";
+      import { GUI } from "lil-gui";
       import { checkerboardTexture } from "../../src/index.js";
 
       const scene = new THREE.Scene();
@@ -67,7 +67,7 @@
         controls.update();
       });
 
-      // Create dat.GUI and add size slider
+      // Create lil-gui and add size slider
       const gui = new GUI();
       gui
         .add({ size: 8 }, "size", 2, 32, 1)
