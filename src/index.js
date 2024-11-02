@@ -87,6 +87,7 @@ export { TestTubeRack } from "./group/science/TestTubeRack";
 export { WineBottle } from "./group/science/WineBottle";
 
 // Shapes
+export { Gear } from "./group/shapes/Gear";
 export { Star } from "./group/shapes/Star";
 
 //------------------------------
@@ -99,6 +100,7 @@ export { fadeShader } from "./shaders/fadeShader";
 //  Shapes
 //------------------------------
 
+export { GearShape } from "./shapes/GearShape";
 export { StarShape } from "./shapes/StarShape";
 
 //------------------------------
