@@ -42,43 +42,43 @@ export { WineBottleGeometry } from "./geometry/science/WineBottleGeometry";
 //------------------------------
 
 // Astronomy
-export { Moon } from "./group/astronomy/Moon";
+export { Moon } from "./models/astronomy/Moon";
 
 // Cemetery
-export { Mausoleum } from "./group/cemetery/Mausoleum";
+export { Mausoleum } from "./models/cemetery/Mausoleum";
 
 // Furniture
-export { Desk } from "./group/furniture/Desk";
+export { Desk } from "./models/furniture/Desk";
 
 // Lighting
-export { Candle } from "./group/lighting/Candle";
-export { Lantern } from "./group/lighting/Lantern";
+export { Candle } from "./models/lighting/Candle";
+export { Lantern } from "./models/lighting/Lantern";
 
 // Rocks
-export { MossyRocks } from "./group/rocks/MossyRocks";
-export { Rocks } from "./group/rocks/Rocks";
+export { MossyRocks } from "./models/rocks/MossyRocks";
+export { Rocks } from "./models/rocks/Rocks";
 
 // Science
-export { Beaker } from "./group/science/Beaker";
-export { Book } from "./group/science/Book";
-export { Bottle } from "./group/science/Bottle";
-export { BunsenBurner } from "./group/science/BunsenBurner";
-export { ElectricPanel } from "./group/science/ElectricPanel";
-export { Flask } from "./group/science/Flask";
-export { LeverPanel } from "./group/science/LeverPanel";
-export { Microscope } from "./group/science/Microscope";
-export { MortarAndPestle } from "./group/science/MortarAndPestle";
-export { SpiralTube } from "./group/science/SpiralTube";
-export { Stand } from "./group/science/Stand";
-export { TeslaCoil } from "./group/science/TeslaCoil";
-export { TestTube } from "./group/science/TestTube";
-export { TestTubeRack } from "./group/science/TestTubeRack";
-export { WineBottle } from "./group/science/WineBottle";
+export { Beaker } from "./models/science/Beaker";
+export { Book } from "./models/science/Book";
+export { Bottle } from "./models/science/Bottle";
+export { BunsenBurner } from "./models/science/BunsenBurner";
+export { ElectricPanel } from "./models/science/ElectricPanel";
+export { Flask } from "./models/science/Flask";
+export { LeverPanel } from "./models/science/LeverPanel";
+export { Microscope } from "./models/science/Microscope";
+export { MortarAndPestle } from "./models/science/MortarAndPestle";
+export { SpiralTube } from "./models/science/SpiralTube";
+export { Stand } from "./models/science/Stand";
+export { TeslaCoil } from "./models/science/TeslaCoil";
+export { TestTube } from "./models/science/TestTube";
+export { TestTubeRack } from "./models/science/TestTubeRack";
+export { WineBottle } from "./models/science/WineBottle";
 
 // Shapes
-export { Burst } from "./group/shapes/Burst";
-export { Gear } from "./group/shapes/Gear";
-export { Star } from "./group/shapes/Star";
+export { Burst } from "./models/shapes/Burst";
+export { Gear } from "./models/shapes/Gear";
+export { Star } from "./models/shapes/Star";
 
 //------------------------------
 //  Shaders
