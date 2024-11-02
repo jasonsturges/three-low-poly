@@ -12,7 +12,12 @@ class Gear extends Mesh {
       bevelThickness: 0,
       bevelSize: 0,
     });
-    const material = new MeshStandardMaterial({ color: 0x2194ce });
+    const material = new MeshStandardMaterial({
+      color: 0xaaaaaa,
+      metalness: 0.8,
+      roughness: 0.2,
+      reflectivity: 0.5,
+    });
 
     geometry.center();
     this.geometry = geometry;
