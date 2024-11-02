@@ -85,6 +85,7 @@ export { Star } from "./models/shapes/Star";
 //  Shaders
 //------------------------------
 
+export { daySkyShader } from "./shaders/daySkyShader";
 export { fadeShader } from "./shaders/fadeShader";
 
 //------------------------------
@@ -100,6 +101,7 @@ export { StarShape } from "./shapes/StarShape";
 //  Skybox
 //------------------------------
 
+export { DaySkybox } from "./skybox/DaySkybox";
 export { TwilightSkybox } from "./skybox/TwilightSkybox.js";
 
 //------------------------------
