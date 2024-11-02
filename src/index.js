@@ -1,3 +1,14 @@
+/**
+ * @typedef {Object} ExtrudeSettings
+ * @property {number} steps - Number of points used to calculate the shape between the start and end.
+ * @property {number} depth - Depth to extrude the shape.
+ * @property {boolean} bevelEnabled - Whether or not to apply bevel to the shape.
+ * @property {number} bevelThickness - Thickness of the bevel.
+ * @property {number} bevelSize - Distance from the shape outline to the bevel.
+ * @property {number} bevelOffset - Offset of the bevel.
+ * @property {number} bevelSegments - Number of bevel segments for the bevel curve.
+ */
+
 //------------------------------
 //  Effects
 //------------------------------
@@ -74,6 +85,9 @@ export { TeslaCoil } from "./group/science/TeslaCoil";
 export { TestTube } from "./group/science/TestTube";
 export { TestTubeRack } from "./group/science/TestTubeRack";
 export { WineBottle } from "./group/science/WineBottle";
+
+// Shapes
+export { Star } from "./group/shapes/Star";
 
 //------------------------------
 //  Shaders
