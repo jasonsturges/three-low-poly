@@ -1,7 +1,7 @@
 import { Shape } from "three";
 
 class StarShape extends Shape {
-  constructor(points, innerRadius, outerRadius) {
+  constructor(points = 5, innerRadius = 0.5, outerRadius = 1.0) {
     super();
 
     const step = (Math.PI * 2) / points;
