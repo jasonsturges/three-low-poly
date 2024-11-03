@@ -3,7 +3,7 @@ import { TreeGeometry } from "../../geometry/trees/TreeGeometry.js";
 
 /**
  * @example
- * const treeGeometry = new TreeGeometry({
+ * const tree = new Tree({
  *   trunkRadiusTop: 0.25,
  *   trunkRadiusBottom: 0.4,
  *   trunkHeight: 2.5,
