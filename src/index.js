@@ -37,8 +37,11 @@ export { MortarGeometry } from "./geometry/science/MortarGeometry";
 export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
 export { WineBottleGeometry } from "./geometry/science/WineBottleGeometry";
 
+// Trees
+export { TreeGeometry } from "./geometry/trees/TreeGeometry";
+
 //------------------------------
-//  Groups
+//  Models
 //------------------------------
 
 // Astronomy
@@ -80,6 +83,9 @@ export { Burst } from "./models/shapes/Burst";
 export { Gear } from "./models/shapes/Gear";
 export { Heart } from "./models/shapes/Heart";
 export { Star } from "./models/shapes/Star";
+
+// Trees
+export { Tree } from "./models/trees/Tree";
 
 //------------------------------
 //  Shaders
