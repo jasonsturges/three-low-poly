@@ -47,6 +47,9 @@ export { WroughtIronBarGeometry } from "./geometry/fence/WroughtIronBarGeometry"
 // Leafs
 export { SimpleLeafGeometry } from "./geometry/leafs/SimpleLeafGeometry";
 
+// Rocks
+export { RockGeometry } from "./geometry/rocks/RockGeometry";
+
 // Skeleton
 export { BoneGeometry } from "./geometry/skeleton/BoneGeometry";
 
@@ -78,6 +81,7 @@ export { Lantern } from "./models/lighting/Lantern";
 
 // Rocks
 export { MossyRocks } from "./models/rocks/MossyRocks";
+export { Rock } from "./models/rocks/Rock";
 export { Rocks } from "./models/rocks/Rocks";
 
 // Science
