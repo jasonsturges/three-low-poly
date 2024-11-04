@@ -1,4 +1,23 @@
 //------------------------------
+//  Constants
+//------------------------------
+
+export { displacementBrush } from "./brushes/DisplacementBrush";
+export { flattenBrush } from "./brushes/FlattenBrush";
+export { noiseBrush } from "./brushes/NoiseBrush";
+export { smoothBrush } from "./brushes/SmoothBrush";
+export { spikeBrush } from "./brushes/SpikeBrush";
+export { twistBrush } from "./brushes/TwistBrush";
+
+//------------------------------
+//  Constants
+//------------------------------
+
+export { Direction } from "./constants/Direction";
+export { Easing } from "./constants/Easing";
+export { Falloff } from "./constants/Falloff";
+
+//------------------------------
 //  Effects
 //------------------------------
 
@@ -117,3 +136,9 @@ export { TwilightSkybox } from "./skybox/TwilightSkybox";
 //------------------------------
 
 export { checkerboardTexture } from "./textures/checkerboard";
+
+//------------------------------
+//  Utils
+//------------------------------
+
+export { SceneUtils } from "./utils/SceneUtils";
