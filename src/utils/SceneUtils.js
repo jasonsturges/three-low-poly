@@ -1,11 +1,10 @@
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
-import { fadeShader } from "../shader/fadeShader.js";
+import { fadeShader } from "../shaders/fadeShader.js";
 
 class SceneUtils {
   static dispose(scene) {
-    // Clean up all resources
     scene?.traverse((object) => {
       if (object.geometry) object.geometry.dispose();
       if (object.material) {
