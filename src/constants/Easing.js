@@ -1,0 +1,16 @@
+export const Easing = {
+  LINEAR: (t) => t,
+  QUADRATIC_EASE_IN: (t) => t * t,
+  QUADRATIC_EASE_OUT: (t) => 1 - Math.pow(1 - t, 2),
+  SQUARE_ROOT_EASING: (t) => Math.sqrt(t),
+  LOGARITHMIC_EASING: (t) => Math.log(1 + t) / Math.log(2),
+  SINE_EASE_IN: (t) => 1 - Math.cos((t * Math.PI) / 2),
+  SINE_EASE_OUT: (t) => Math.sin((t * Math.PI) / 2),
+  EXPONENTIAL_EASE_IN: (t) => Math.pow(2, 10 * (t - 1)),
+  EXPONENTIAL_EASE_OUT: (t) => 1 - Math.pow(2, -10 * t),
+  CUBIC_EASE_IN: (t) => t * t * t,
+  CUBIC_EASE_OUT: (t) => 1 - Math.pow(1 - t, 3),
+  GAUSSIAN_EASING: (t) => Math.exp(-Math.pow(t - 0.5, 2) / (2 * 0.1)),
+  INVERSE_EASING: (t) => 1 / (1 + t),
+  SMOOTHSTEP_EASING: (t) => t * t * (3 - 2 * t),
+};
