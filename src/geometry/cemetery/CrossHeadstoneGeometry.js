@@ -17,6 +17,7 @@ class CrossHeadstoneGeometry extends BufferGeometry {
 
     // Merge both parts into a cross
     this.copy(mergeGeometries([verticalGeometry, horizontalGeometry], false));
+    this.computeVertexNormals();
   }
 }
 
