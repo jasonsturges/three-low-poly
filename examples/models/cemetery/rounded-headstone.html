@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import GUI from "lil-gui";
+      import { RoundedHeadstone } from "../../../src/index.js";
+      import { createOrbitScene } from "../../utils/orbitScene.js";
+
+      const { scene, camera } = createOrbitScene();
+
+      let roundedHeadstone = new RoundedHeadstone();
+      scene.add(roundedHeadstone);
+
+      const gui = new GUI();
+      const params = {
+        width: 0.6,
+        radius: 0.6,
+        height: 1.0,
+        depth: 0.2,
+      };
+
+      gui.add(params, "width", 0.1, 2).onChange(updateGeometry);
+      gui.add(params, "radius", 0.1, 2).onChange(updateGeometry);
+      gui.add(params, "height", 0.1, 2).onChange(updateGeometry);
+      gui.add(params, "depth", 0.1, 2).onChange(updateGeometry);
+
+      function updateGeometry() {
+        scene.remove(roundedHeadstone);
+        roundedHeadstone = new RoundedHeadstone(params.width, params.height, params.depth, params.radius);
+        scene.add(roundedHeadstone);
+      }
+    </script>
+  </body>
+</html>
