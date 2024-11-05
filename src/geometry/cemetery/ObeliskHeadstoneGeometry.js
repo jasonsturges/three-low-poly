@@ -37,9 +37,8 @@ class ObeliskHeadstoneGeometry extends BufferGeometry {
     const pyramidGeometry = new ConeGeometry((baseWidth * 0.4) / Math.sqrt(2), 0.1, 4, 1, false, Math.PI / 4);
     pyramidGeometry.translate(0, currentHeight + 0.1 / 2, 0);
 
-    this.copy(
-      mergeGeometries([baseGeometry, lowerSegmentGeometry, middleSegmentGeometry, topSegmentGeometry, pyramidGeometry], false),
-    );
+    this.copy(mergeGeometries([baseGeometry, lowerSegmentGeometry, middleSegmentGeometry, topSegmentGeometry, pyramidGeometry], false));
+    this.computeVertexNormals();
   }
 }
 
