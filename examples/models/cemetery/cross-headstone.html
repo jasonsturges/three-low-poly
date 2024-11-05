@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import GUI from "lil-gui";
+      import { CrossHeadstone } from "../../../src/index.js";
+      import { createOrbitScene } from "../../utils/orbitScene.js";
+
+      const { scene, camera } = createOrbitScene();
+
+      let crossHeadstone = new CrossHeadstone();
+      scene.add(crossHeadstone);
+
+      const gui = new GUI();
+      const params = {
+        width: 0.4,
+        height: 1.2,
+        depth: 0.2
+      };
+
+      gui.add(params, 'width', 0.1, 2).onChange(updateGeometry);
+      gui.add(params, 'height', 0.1, 2).onChange(updateGeometry);
+      gui.add(params, 'depth', 0.1, 2).onChange(updateGeometry);
+
+      function updateGeometry() {
+        scene.remove(crossHeadstone);
+        crossHeadstone = new CrossHeadstone(params.width, params.height, params.depth);
+        scene.add(crossHeadstone);
+      }
+    </script>
+  </body>
+</html>
