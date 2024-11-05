@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import GUI from "lil-gui";
+      import { ObeliskHeadstone } from "../../../src/index.js";
+      import { createOrbitScene } from "../../utils/orbitScene.js";
+
+      const { scene, camera } = createOrbitScene();
+
+      let crossHeadstone = new ObeliskHeadstone();
+      scene.add(crossHeadstone);
+
+      const gui = new GUI();
+      const params = {
+        totalHeight: 1.75,
+        baseWidth: 0.75,
+      };
+
+      gui.add(params, "totalHeight", 0.1, 4).onChange(updateGeometry);
+      gui.add(params, "baseWidth", 0.1, 2).onChange(updateGeometry);
+
+      function updateGeometry() {
+        scene.remove(crossHeadstone);
+        crossHeadstone = new ObeliskHeadstone(params.totalHeight, params.baseWidth);
+        scene.add(crossHeadstone);
+      }
+    </script>
+  </body>
+</html>
