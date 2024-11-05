@@ -2,11 +2,11 @@ import { Direction } from "../constants/Direction.js";
 
 /**
  * Utility function to add noise-based vertex displacement to an existing Three.js material.
- * @param {THREE.Material} material - The material to mutate, e.g., MeshStandardMaterial.
+ * @param {Material} material - The material to mutate, e.g., MeshStandardMaterial.
  * @param {Object} options - Options for noise modification.
  * @param {number} [options.time=0.0] - The time value for the noise function.
  * @param {number} [options.intensity=1.0] - The intensity of the displacement.
- * @param {THREE.Vector3} [options.direction=new Vector3(1, 1, 1)] - The direction of displacement.
+ * @param {Vector3} [options.direction=new Vector3(1, 1, 1)] - The direction of displacement.
  * @param {number} [options.scale=10.0] - The scale of the noise effect.
  */
 export function addNoiseDisplacement(material, { time = 0.0, intensity = 1.0, direction = Direction.XYZ, scale = 10.0 } = {}) {
@@ -69,10 +69,10 @@ export function addNoiseDisplacement(material, { time = 0.0, intensity = 1.0, di
 
 /**
  * Updates the time uniform of the material's shader to animate the noise effect.
- * @param {THREE.Material} material - The material to update.
+ * @param {Material} material - The material to update.
  * @param {number} deltaTime - The time increment to add.
  */
-export function updateMaterialTime(material, deltaTime) {
+export function updateNoiseDisplacementTime(material, deltaTime) {
   if (material.userData.shader) {
     material.userData.shader.uniforms.time.value += deltaTime;
   }

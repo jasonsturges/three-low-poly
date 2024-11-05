@@ -119,10 +119,10 @@ export { Tree } from "./models/trees/Tree";
 //------------------------------
 
 export { addWaterDisplacement, updateWaterDisplacementTime } from "./shaders/addWaterDisplacement";
+export { addNoiseDisplacement, updateNoiseDisplacementTime } from "./shaders/addNoiseDisplacement";
 export { daySkyShader } from "./shaders/daySkyShader";
 export { fadeShader } from "./shaders/fadeShader";
 export { nightSkyShader } from "./shaders/nightSkyShader";
-export * from "./shaders/noiseDisplacement";
 
 //------------------------------
 //  Shapes
