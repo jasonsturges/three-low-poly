@@ -70,6 +70,7 @@ export { TreeGeometry } from "./geometry/trees/TreeGeometry";
 export { Moon } from "./models/astronomy/Moon";
 
 // Cemetery
+export { CrossHeadstone } from "./models/cemetery/CrossHeadstone";
 export { Mausoleum } from "./models/cemetery/Mausoleum";
 
 // Furniture
