@@ -30,8 +30,8 @@
         baseWidth: 0.75,
       };
 
-      gui.add(params, "totalHeight", 0.1, 4).onChange(updateGeometry);
-      gui.add(params, "baseWidth", 0.1, 2).onChange(updateGeometry);
+      gui.add(params, "totalHeight", 0.1, 4).name("Total Height").step(0.1).onChange(updateGeometry);
+      gui.add(params, "baseWidth", 0.1, 2).name("Base Width").step(0.1).onChange(updateGeometry);
 
       function updateGeometry() {
         scene.remove(crossHeadstone);

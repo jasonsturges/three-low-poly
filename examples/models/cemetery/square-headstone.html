@@ -31,9 +31,9 @@
         depth: 0.15,
       };
 
-      gui.add(params, "width", 0.1, 2).onChange(updateGeometry);
-      gui.add(params, "height", 0.1, 2).onChange(updateGeometry);
-      gui.add(params, "depth", 0.1, 2).onChange(updateGeometry);
+      gui.add(params, "width", 0.1, 2).name("Width").step(0.1).onChange(updateGeometry);
+      gui.add(params, "height", 0.1, 2).name("Height").step(0.1).onChange(updateGeometry);
+      gui.add(params, "depth", 0.1, 2).name("Depth").step(0.1).onChange(updateGeometry);
 
       function updateGeometry() {
         scene.remove(squareHeadstone);
