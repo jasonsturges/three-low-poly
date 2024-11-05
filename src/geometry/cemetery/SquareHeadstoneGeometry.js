@@ -6,7 +6,7 @@ class SquareHeadstoneGeometry extends BufferGeometry {
 
     // Create a rectangular slab
     const slabGeometry = new BoxGeometry(width, height, depth);
-    slabGeometry.translate(0, height / 2, 0); // Shift up to stand on the ground
+    slabGeometry.translate(0, height / 2, 0);
 
     this.copy(slabGeometry);
   }
