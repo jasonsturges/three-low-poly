@@ -6,7 +6,7 @@ class RoundedHeadstoneGeometry extends BufferGeometry {
     super();
 
     // Create the base of the headstone (a box)
-    const baseHeight = height * 0.7;
+    const baseHeight = height - width / 2;
     const baseGeometry = new BoxGeometry(width, baseHeight, depth);
     baseGeometry.translate(0, baseHeight / 2, 0);
 
@@ -15,7 +15,7 @@ class RoundedHeadstoneGeometry extends BufferGeometry {
     const topGeometry = new CylinderGeometry(width / 2, width / 2, depth, 16, 1, false, 0, Math.PI);
     topGeometry.rotateY(Math.PI / 2);
     topGeometry.rotateX(Math.PI / 2);
-    topGeometry.translate(0, baseHeight + topHeight / 2 - depth / 2 - 0.05, 0);
+    topGeometry.translate(0, baseHeight, 0);
 
     // Merge base and top into a single geometry
     this.copy(mergeGeometries([baseGeometry, topGeometry], false));
