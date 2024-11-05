@@ -73,6 +73,7 @@ export { Moon } from "./models/astronomy/Moon";
 export { CrossHeadstone } from "./models/cemetery/CrossHeadstone";
 export { Mausoleum } from "./models/cemetery/Mausoleum";
 export { ObeliskHeadstone } from "./models/cemetery/ObeliskHeadstone";
+export { RoundedHeadstone } from "./models/cemetery/RoundedHeadstone";
 
 // Furniture
 export { Desk } from "./models/furniture/Desk";
