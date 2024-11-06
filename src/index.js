@@ -34,6 +34,9 @@ export { LShapedStaircaseGeometry } from "./geometry/architecture/LShapedStairca
 export { SpiralStaircaseGeometry } from "./geometry/architecture/SpiralStaircaseGeometry";
 export { StaircaseGeometry } from "./geometry/architecture/StaircaseGeometry";
 
+// Books
+export { BookGeometry } from "./geometry/books/BookGeometry";
+
 // Cemetery
 export { CrossHeadstoneGeometry } from "./geometry/cemetery/CrossHeadstoneGeometry";
 export { ObeliskHeadstoneGeometry } from "./geometry/cemetery/ObeliskHeadstoneGeometry";
@@ -69,6 +72,9 @@ export { TreeGeometry } from "./geometry/trees/TreeGeometry";
 // Astronomy
 export { Moon } from "./models/astronomy/Moon";
 
+// Books
+export { Book } from "./models/books/Book";
+
 // Cemetery
 export { CrossHeadstone } from "./models/cemetery/CrossHeadstone";
 export { Mausoleum } from "./models/cemetery/Mausoleum";
@@ -90,7 +96,6 @@ export { Rocks } from "./models/rocks/Rocks";
 
 // Science
 export { Beaker } from "./models/science/Beaker";
-export { Book } from "./models/science/Book";
 export { Bottle } from "./models/science/Bottle";
 export { BunsenBurner } from "./models/science/BunsenBurner";
 export { ElectricPanel } from "./models/science/ElectricPanel";
