@@ -1,14 +1,15 @@
-import {BufferAttribute, BufferGeometry} from "three";
+import { BoxGeometry, BufferAttribute, BufferGeometry } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 export class BookGeometry extends BufferGeometry {
-  constructor(width = 1, height = 1.5, depth = 0.5, coverThickness = 0.05) {
+  constructor(width = 1, height = 1.5, depth = 0.5, coverThickness = 0.05, pageIndent = 0.05) {
     super();
 
     const w = width;
     const h = height;
     const d = depth;
     const t = coverThickness;
+    const i = pageIndent;
 
     const vertices = [
       // Front cover
@@ -157,9 +158,14 @@ export class BookGeometry extends BufferGeometry {
     const uvArray = new Float32Array(uvs);
     const indexArray = new Uint16Array(indices);
 
-    this.setAttribute('position', new BufferAttribute(positions, 3));
-    this.setAttribute('normal', new BufferAttribute(normalArray, 3));
-    this.setAttribute('uv', new BufferAttribute(uvArray, 2));
-    this.setIndex(new BufferAttribute(indexArray, 1));
+    const coverGeometry = new BufferGeometry();
+    coverGeometry.setAttribute('position', new BufferAttribute(positions, 3));
+    coverGeometry.setAttribute('normal', new BufferAttribute(normalArray, 3));
+    coverGeometry.setAttribute('uv', new BufferAttribute(uvArray, 2));
+    coverGeometry.setIndex(new BufferAttribute(indexArray, 1));
+
+    const pagesGeometry = new BoxGeometry(width - t - i, h - i * 2, d - t * 2);
+    pagesGeometry.translate((width - t - i) / 2 + t, h / 2, -d / 2 );
+    this.copy(mergeGeometries([coverGeometry, pagesGeometry], true));
   }
 }
