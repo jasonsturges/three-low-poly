@@ -19,6 +19,10 @@ export default defineConfig({
       output: {
         globals: {
           three: "THREE",
+          "three/addons/objects/Sky.js": "Sky",
+          "three/addons/postprocessing/EffectComposer.js": "EffectComposer",
+          "three/addons/postprocessing/RenderPass.js": "RenderPass",
+          "three/addons/postprocessing/ShaderPass.js": "ShaderPass",
           "three/addons/utils/BufferGeometryUtils.js": "BufferGeometryUtils",
         },
       },
