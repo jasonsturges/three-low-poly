@@ -63,6 +63,7 @@ export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
 export { WineBottleGeometry } from "./geometry/science/WineBottleGeometry";
 
 // Terrain
+export { HillGeometry } from "./geometry/terrain/HillGeometry";
 export { MoundGeometry } from "./geometry/terrain/MoundGeometry";
 
 // Trees
@@ -123,6 +124,7 @@ export { Star } from "./models/shapes/Star";
 export { Tree } from "./models/trees/Tree";
 
 // Terrain
+export { Hill } from "./models/terrain/Hill";
 export { Mound } from "./models/terrain/Mound";
 
 //------------------------------
