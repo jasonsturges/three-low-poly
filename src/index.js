@@ -86,6 +86,9 @@ export { ObeliskHeadstone } from "./models/cemetery/ObeliskHeadstone";
 export { RoundedHeadstone } from "./models/cemetery/RoundedHeadstone";
 export { SquareHeadstone } from "./models/cemetery/SquareHeadstone";
 
+// Fence
+export { WroughtIronBar } from "./models/fence/WroughtIronBar";
+
 // Furniture
 export { Desk } from "./models/furniture/Desk";
 
