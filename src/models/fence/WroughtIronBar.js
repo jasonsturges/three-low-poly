@@ -6,7 +6,8 @@ export class WroughtIronBar extends Mesh {
     barHeight = 2.0, //
     barRadius = 0.05,
     spikeHeight = 0.3,
-    spikeRadius = 0.075, // barRadius * 1.5,
+    spikeRadius = 0.075,
+    spikeScaleZ = 1.0,
     radialSegments = 8,
   } = {}) {
     super();
@@ -16,6 +17,7 @@ export class WroughtIronBar extends Mesh {
       barRadius,
       spikeHeight,
       spikeRadius,
+      spikeScaleZ,
       radialSegments,
     });
     this.material = new MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.4 });
