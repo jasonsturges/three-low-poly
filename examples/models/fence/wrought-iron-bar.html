@@ -42,7 +42,7 @@
 
       gui.add(params, "barHeight", 0.1, 5).name("Bar Height").step(0.1).onChange(update);
       gui.add(params, "barRadius", 0.01, 0.3).name("Bar Radius").step(0.005).onChange(update);
-      gui.add(params, "spikeHeight", 1, 5).name("Spike Height").step(0.1).onChange(update);
+      gui.add(params, "spikeHeight", 0.01, 0.5).name("Spike Height").step(0.005).onChange(update);
       gui.add(params, "spikeRadius", 0.01, 0.3).name("Spike Radius").step(0.005).onChange(update);
       gui.add(params, "spikeScaleZ", 0.1, 1).name("Spike Scale Z").step(0.01).onChange(update);
       gui.add(params, "radialSegments", 8, 64, 1).name("Radial Segments").step(1).onChange(update);
