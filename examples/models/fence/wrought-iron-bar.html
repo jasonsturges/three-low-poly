@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+        color: #dfd9bc;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { centerMesh, Mound } from "../../../src/index.js";
+      import { createOrbitScene } from "../../utils/orbitScene.js";
+      import { WroughtIronBar } from "../../../src/models/fence/WroughtIronBar.js";
+
+      const { scene } = createOrbitScene();
+      scene.background = new THREE.Color(0xe64d4d);
+
+      // Default parameters
+      const params = {
+        barHeight: 2.0,
+        barRadius: 0.05,
+        spikeHeight: 0.3,
+        spikeRadius: 0.075,
+        radialSegments: 8,
+      };
+
+      let wroughtIronBar = new WroughtIronBar(params);
+      scene.add(wroughtIronBar);
+      centerMesh(wroughtIronBar);
+
+      const gui = new GUI();
+
+      gui.add(params, "barHeight", 0.1, 5).name("Bar Height").step(0.1).onChange(update);
+      gui.add(params, "barRadius", 0.01, 0.3).name("Bar Radius").step(0.05).onChange(update);
+      gui.add(params, "spikeHeight", 1, 5).name("Spike Height").step(0.1).onChange(update);
+      gui.add(params, "spikeRadius", 0.01, 0.3).name("Spike Radius").step(0.005).onChange(update);
+      gui.add(params, "radialSegments", 8, 64, 1).name("Radial Segments").step(1).onChange(update);
+
+      function update() {
+        scene.remove(wroughtIronBar);
+        wroughtIronBar = new WroughtIronBar(params);
+        scene.add(wroughtIronBar);
+        centerMesh(wroughtIronBar);
+      }
+    </script>
+  </body>
+</html>
