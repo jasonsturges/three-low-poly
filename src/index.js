@@ -126,6 +126,9 @@ export { Gear } from "./models/shapes/Gear";
 export { Heart } from "./models/shapes/Heart";
 export { Star } from "./models/shapes/Star";
 
+// Skeleton
+export { Bone } from "./models/skeleton/Bone";
+
 // Trees
 export { Tree } from "./models/trees/Tree";
 
