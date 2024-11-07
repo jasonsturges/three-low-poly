@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+        color: #dfd9bc;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import GUI from "lil-gui";
+      import { Hill } from "../../../src/index.js";
+      import { createOrbitScene } from "../../utils/orbitScene.js";
+
+      const { scene } = createOrbitScene();
+
+      // Default parameters
+      const params = {
+        radius: 3,
+        height: 0.6,
+        widthSegments: 64,
+        heightSegments: 16,
+        phiStart: 0,
+        phiLength: Math.PI * 2,
+      };
+
+      let hill = new Hill(params);
+      scene.add(hill);
+
+      // Create lil-gui instance
+      const gui = new GUI();
+
+      gui.add(params, "radius", 1, 10).name("Radius").step(0.1).onChange(update);
+      gui.add(params, "height", 1, 10).name("Height").step(0.1).onChange(update);
+      gui.add(params, "widthSegments", 8, 128, 1).name("Width Segments").step(1).onChange(update);
+      gui.add(params, "heightSegments", 8, 64, 1).name("Height Segments").step(1).onChange(update);
+      gui.add(params, "phiStart", 0, Math.PI * 2).name("Phi Start").step(0.01).onChange(update);
+      gui.add(params, "phiLength", 0, Math.PI * 2).name("Phi Length").step(0.01).onChange(update);
+
+      function update() {
+        scene.remove(hill);
+        hill = new Hill(params);
+        scene.add(hill);
+      }
+    </script>
+  </body>
+</html>
