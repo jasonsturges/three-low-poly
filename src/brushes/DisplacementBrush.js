@@ -5,7 +5,7 @@ import { Falloff } from "../constants/Falloff.js";
 /**
  * Moves vertices within a specified radius around a target position along a given direction
  */
-export const displacementBrush = (geometry, position, radius, strength, axis = Direction.UP, falloffFn = Falloff.LINEAR) => {
+export const displacementBrush = (geometry, position, radius, strength, direction = Direction.UP, falloffFn = Falloff.LINEAR) => {
   const positions = geometry.attributes.position;
   for (let i = 0; i < positions.count; i++) {
     const vertex = new Vector3();
@@ -19,7 +19,7 @@ export const displacementBrush = (geometry, position, radius, strength, axis = D
       const influence = falloff * strength;
 
       // Apply the effect (e.g., pulling the vertex upwards)
-      vertex.add(axis.clone().multiplyScalar(influence));
+      vertex.add(direction.clone().multiplyScalar(influence));
 
       // Update the vertex position
       positions.setXYZ(i, vertex.x, vertex.y, vertex.z);

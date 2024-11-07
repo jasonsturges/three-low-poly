@@ -5,7 +5,7 @@ import {Falloff} from "../constants/Falloff.js";
 /**
  * Flattens vertices to a given plane defined by a target height or normal direction.
  */
-export const flattenBrush = (geometry, position, radius, targetHeight, strength, axis = Direction.UP, falloffFn = Falloff.LINEAR) => {
+export const flattenBrush = (geometry, position, radius, targetHeight, strength, direction = Direction.UP, falloffFn = Falloff.LINEAR) => {
   const positions = geometry.attributes.position;
   for (let i = 0; i < positions.count; i++) {
     const vertex = new Vector3();
@@ -17,10 +17,10 @@ export const flattenBrush = (geometry, position, radius, targetHeight, strength,
       const influence = falloff * strength;
 
       // Project vertex onto flatten plane
-      const projectedHeight = vertex.dot(axis.normalize());
+      const projectedHeight = vertex.dot(direction.normalize());
       const delta = targetHeight - projectedHeight;
 
-      vertex.add(axis.clone().multiplyScalar(delta * influence));
+      vertex.add(direction.clone().multiplyScalar(delta * influence));
       positions.setXYZ(i, vertex.x, vertex.y, vertex.z);
     }
   }

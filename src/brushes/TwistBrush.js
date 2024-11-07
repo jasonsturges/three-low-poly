@@ -3,9 +3,9 @@ import { Direction } from "../constants/Direction.js";
 import { Falloff } from "../constants/Falloff.js";
 
 /**
- * Applies a twisting force to the vertices, rotating them around the axis defined by the target position.
+ * Applies a twisting force to the vertices, rotating them around the direction defined by the target position.
  */
-export const twistBrush = (geometry, position, radius, strength, axis = Direction.UP, falloffFn = Falloff.LINEAR) => {
+export const twistBrush = (geometry, position, radius, strength, direction = Direction.UP, falloffFn = Falloff.LINEAR) => {
   const positions = geometry.attributes.position;
   const quaternion = new Quaternion();
 
@@ -20,7 +20,7 @@ export const twistBrush = (geometry, position, radius, strength, axis = Directio
       const angle = falloff * strength;
 
       // Create quaternion for rotation around the axis
-      quaternion.setFromAxisAngle(axis, angle);
+      quaternion.setFromAxisAngle(direction, angle);
 
       // Apply twist rotation
       vertex.sub(position).applyQuaternion(quaternion).add(position);
