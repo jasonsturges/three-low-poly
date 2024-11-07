@@ -16,17 +16,11 @@ export const noiseBrush = (geometry, position, radius, strength, direction = Dir
       const falloff = falloffFn(distance, radius);
       const noiseStrength = strength * falloff;
 
-      // Generate random noise, but only in the direction specified
+      // Generate random noise in the direction specified
       const noise = direction.clone().normalize();
-      if (noise.x !== 0) {
-        vertex.x += MathUtils.randFloatSpread(noiseStrength) * noise.x;
-      }
-      if (noise.y !== 0) {
-        vertex.y += MathUtils.randFloatSpread(noiseStrength) * noise.y;
-      }
-      if (noise.z !== 0) {
-        vertex.z += MathUtils.randFloatSpread(noiseStrength) * noise.z;
-      }
+      vertex.x += MathUtils.randFloatSpread(noiseStrength) * noise.x;
+      vertex.y += MathUtils.randFloatSpread(noiseStrength) * noise.y;
+      vertex.z += MathUtils.randFloatSpread(noiseStrength) * noise.z;
 
       positions.setXYZ(i, vertex.x, vertex.y, vertex.z);
     }
