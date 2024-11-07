@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+      import {
+        Bone,
+        Candle,
+        CrossHeadstone,
+        FenceColumn,
+        Lantern,
+        Mausoleum,
+        Moon,
+        ObeliskHeadstone,
+        Rocks,
+        RoundedHeadstone,
+        SquareHeadstone,
+        WroughtIronFence,
+      } from "../../src/index.js";
+
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.Fog(0x010101, 5, 35);
+
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 7, 13);
+
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setClearColor(0x000000);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      document.body.appendChild(renderer.domElement);
+
+      // Terrain
+      const terrainGeometry = new THREE.PlaneGeometry(32, 32, 256, 256);
+      const terrainMaterial = new THREE.MeshStandardMaterial({ color: 0x228b22, flatShading: true });
+      const terrainMesh = new THREE.Mesh(terrainGeometry, terrainMaterial);
+      terrainMesh.rotateX(-Math.PI / 2);
+      terrainMesh.receiveShadow = true;
+      scene.add(terrainMesh);
+
+      // Mausoleum
+      const mausoleum = new Mausoleum();
+      mausoleum.position.set(0, 0, -5);
+      scene.add(mausoleum);
+
+      // Add a lantern to the scene
+      const lantern = new Lantern(1.3, 0.5);
+      lantern.scale.set(0.5, 0.5, 0.5);
+      lantern.position.set(-1.25, 1, -2.8);
+      scene.add(lantern);
+
+      // Headstones
+      function createTombstoneRow(numTombstones = 5) {
+        const tombstoneGroup = new THREE.Group();
+        for (let i = 0; i < numTombstones; i++) {
+          const tombstoneTypes = [RoundedHeadstone, CrossHeadstone, SquareHeadstone, ObeliskHeadstone];
+          const randomIndex = Math.floor(Math.random() * tombstoneTypes.length);
+          const tombstone = new tombstoneTypes[randomIndex]();
+
+          tombstone.position.set(i, 0, (Math.random() - 0.5) * 0.1);
+          tombstone.rotation.y = (Math.random() - 0.5) * 0.5;
+          tombstone.rotation.z = (Math.random() - 0.5) * 0.25;
+          tombstone.castShadow = true;
+          tombstoneGroup.add(tombstone);
+        }
+        return tombstoneGroup;
+      }
+
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 2; j++) {
+          const tombstones = createTombstoneRow(7);
+          tombstones.position.set(j === 0 ? -7.5 : 1.5, 0, (i + 1) * 2);
+          scene.add(tombstones);
+        }
+      }
+
+      // Fence
+      const stoneColumn = new FenceColumn();
+      const wroughtIronFence = new WroughtIronFence({ count: 15 });
+      const enclosedFenceGroup = new THREE.Group();
+      const sideLength = 4;
+      const columnSpacing = 6;
+
+      for (let side = 0; side < sideLength; side++) {
+        for (let i = 0; i < sideLength; i++) {
+          const columnMesh = stoneColumn.clone();
+          const x = side === 1 || side === 3 ? i * columnSpacing : side === 0 ? 0 : (sideLength - 1) * columnSpacing;
+          const z = side === 0 || side === 2 ? i * columnSpacing : side === 1 ? (sideLength - 1) * columnSpacing : 0;
+          columnMesh.position.set(x, 0, z);
+          enclosedFenceGroup.add(columnMesh);
+
+          if (i < sideLength - 1) {
+            const fenceMesh = wroughtIronFence.clone();
+            fenceMesh.position.set(x, 0, z);
+            if (side === 0 || side === 2) fenceMesh.rotation.y = -Math.PI / 2;
+            if (!(side === 1 && i === 1)) enclosedFenceGroup.add(fenceMesh);
+          }
+        }
+      }
+
+      enclosedFenceGroup.position.set(-9, 0, -9);
+      scene.add(enclosedFenceGroup);
+
+      // Rocks
+      for (let i = 0; i < 10; i++) {
+        const rock = new Rocks();
+        rock.scale.set(0.5, 0.5, 0.5);
+
+        const angle = Math.random() * 2 * Math.PI;
+        const distance = 6 + Math.random() * 12;
+        const x = Math.cos(angle) * distance;
+        const z = Math.sin(angle) * distance;
+        rock.position.set(x, -0.1, z);
+        scene.add(rock);
+      }
+
+      // Bones
+      for (let i = 0; i < 25; i++) {
+        const radius = Math.random() * 0.07 + 0.03;
+        const bone = new Bone(radius, radius, radius * 4, 8);
+        bone.position.set(Math.random() * 24 - 12, 0, Math.random() * 24 - 12);
+        bone.rotation.x = -Math.PI / 2;
+        bone.rotation.z = Math.random() * Math.PI;
+        bone.rotation.x += Math.random() * 0.1 - 0.05;
+        bone.rotation.y += Math.random() * 0.1 - 0.05;
+        bone.rotation.z += Math.random() * 0.1 - 0.05;
+        scene.add(bone);
+      }
+
+      // Candles
+      const candle = new Candle(0.2, 0.05);
+      candle.position.set(4.0, 0, 9.7);
+      scene.add(candle);
+      
+      for (let i = 0; i < 5; i++) {
+        const candle = new Candle(Math.random(), Math.random() * 0.1);
+        candle.position.set(Math.random() * 24 - 12, 0, Math.random() * 24 - 12);
+        scene.add(candle);
+      }
+
+      // Moon
+      const moon = new Moon();
+      moon.position.set(9, 15, -45); // Adjust position as desired
+      scene.add(moon);
+
+      // Lighting
+      const spotlight = new THREE.SpotLight(0x23adf5, 100, 10, Math.PI / 8);
+      spotlight.position.set(0, 9, -15);
+      spotlight.target = mausoleum; // Aim at the rounded tombstone
+      spotlight.distance = 15;
+      spotlight.angle = Math.PI / 6;
+      spotlight.penumbra = 0.5;
+      spotlight.castShadow = true;
+      scene.add(spotlight);
+
+      const pointLight = new THREE.PointLight(0xffffff, 1.2, 32);
+      pointLight.position.set(4.4, 2, 1.7);
+      pointLight.decay = 2;
+      pointLight.castShadow = true;
+      scene.add(pointLight);
+
+      const pointLight2 = new THREE.PointLight(0xffffff, 1.2, 32);
+      pointLight2.position.set(-4.4, 2, 1.7);
+      pointLight2.decay = 2;
+      pointLight2.castShadow = true;
+      scene.add(pointLight2);
+
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.15);
+      scene.add(ambientLight);
+
+      const hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, 0.2);
+      hemisphereLight.position.set(0, 10, 0);
+      scene.add(hemisphereLight);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.target.set(0, 3, 0);
+      controls.update();
+
+      renderer.setAnimationLoop(() => {
+        renderer.render(scene, camera);
+        controls.update();
+      });
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+</html>
