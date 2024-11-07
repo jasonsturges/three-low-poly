@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+        color: #dfd9bc;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import GUI from "lil-gui";
+      import { centerMesh, FenceColumn } from "../../../src/index.js";
+      import { createOrbitScene } from "../../utils/orbitScene.js";
+
+      const { scene } = createOrbitScene();
+
+      // Default parameters
+      const params = {
+        height: 2.25,
+      };
+
+      let fenceColumn = new FenceColumn(params);
+      scene.add(fenceColumn);
+      centerMesh(fenceColumn);
+
+      const gui = new GUI();
+
+      gui.add(params, "height", 0.1, 5).name("Height").step(0.1).onChange(update);
+
+      function update() {
+        scene.remove(fenceColumn);
+        fenceColumn = new FenceColumn(params);
+        scene.add(fenceColumn);
+        centerMesh(fenceColumn);
+      }
+    </script>
+  </body>
+</html>
