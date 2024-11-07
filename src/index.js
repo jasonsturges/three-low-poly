@@ -62,6 +62,9 @@ export { MortarGeometry } from "./geometry/science/MortarGeometry";
 export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
 export { WineBottleGeometry } from "./geometry/science/WineBottleGeometry";
 
+// Terrain
+export { MoundGeometry } from "./geometry/terrain/MoundGeometry";
+
 // Trees
 export { TreeGeometry } from "./geometry/trees/TreeGeometry";
 
@@ -118,6 +121,9 @@ export { Star } from "./models/shapes/Star";
 
 // Trees
 export { Tree } from "./models/trees/Tree";
+
+// Terrain
+export { Mound } from "./models/terrain/Mound";
 
 //------------------------------
 //  Shaders
