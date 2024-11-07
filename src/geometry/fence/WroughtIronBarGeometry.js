@@ -9,7 +9,8 @@ export class WroughtIronBarGeometry extends BufferGeometry {
     barHeight = 2.0, //
     barRadius = 0.05,
     spikeHeight = 0.3,
-    spikeRadius = 0.075, // barRadius * 1.5,
+    spikeRadius = 0.075,
+    spikeScaleZ = 1.0,
     radialSegments = 8,
   } = {}) {
     super();
@@ -21,6 +22,7 @@ export class WroughtIronBarGeometry extends BufferGeometry {
     // Create a cone for the spike on top
     const spikeGeometry = new ConeGeometry(spikeRadius, spikeHeight, radialSegments);
     spikeGeometry.translate(0, barHeight + spikeHeight / 2, 0);
+    spikeGeometry.scale(1, 1, spikeScaleZ);
 
     // Merge bar and spike into one geometry
     this.copy(mergeGeometries([barGeometry, spikeGeometry], false));
