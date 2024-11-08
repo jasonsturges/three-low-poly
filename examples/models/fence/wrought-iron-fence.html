@@ -36,6 +36,7 @@
         railHeight: 0.1,
         railDepth: 0.05,
         railOffset: 0.0,
+        radialSegments: 8,
       };
 
       let wroughtIronFence = new WroughtIronFence(params);
@@ -44,7 +45,7 @@
 
       const gui = new GUI();
 
-      gui.add(params, "count", 1, 20).name("Count").step(1).onChange(update);
+      gui.add(params, "count", 1, 24).name("Count").step(1).onChange(update);
       gui.add(params, "spacing", 0.1, 1).name("Spacing").step(0.01).onChange(update);
       gui.add(params, "barHeight", 0.1, 3).name("Bar Height").step(0.01).onChange(update);
       gui.add(params, "barRadius", 0.01, 0.3).name("Bar Radius").step(0.005).onChange(update);
@@ -54,6 +55,7 @@
       gui.add(params, "railHeight", 0.01, 0.5).name("Rail Height").step(0.01).onChange(update);
       gui.add(params, "railDepth", 0.01, 0.5).name("Rail Depth").step(0.01).onChange(update);
       gui.add(params, "railOffset", 0.0, 0.5).name("Rail Offset").step(0.01).onChange(update);
+      gui.add(params, "radialSegments", 3, 64, 1).name("Radial Segments").step(1).onChange(update);
 
       function update() {
         scene.remove(wroughtIronFence);
