@@ -13,6 +13,7 @@ export class WroughtIronFence extends Mesh {
     railHeight = 0.1,
     railDepth = 0.05,
     railOffset = 0.0,
+    radialSegments = 8,
   } = {}) {
     super();
 
@@ -27,6 +28,7 @@ export class WroughtIronFence extends Mesh {
       railHeight,
       railDepth,
       railOffset,
+      radialSegments,
     });
     this.material = new MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.4 });
   }
