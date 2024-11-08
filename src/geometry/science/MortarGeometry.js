@@ -5,7 +5,6 @@ class MortarGeometry extends BufferGeometry {
   constructor() {
     super();
 
-    // Mortar geometry
     const mortarPoints = [
       new Vector2(1, 0), // Bottom of the bowl
       new Vector2(1.2, 0.5), // Slight flare at the base
