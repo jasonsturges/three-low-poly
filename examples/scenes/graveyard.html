@@ -55,6 +55,7 @@
       // Mausoleum
       const mausoleum = new Mausoleum();
       mausoleum.position.set(0, 0, -5);
+      mausoleum.castShadow = true;
       scene.add(mausoleum);
 
       // Add a lantern to the scene
@@ -97,17 +98,19 @@
 
       for (let side = 0; side < sideLength; side++) {
         for (let i = 0; i < sideLength; i++) {
-          const columnMesh = stoneColumn.clone();
+          const column = stoneColumn.clone();
           const x = side === 1 || side === 3 ? i * columnSpacing : side === 0 ? 0 : (sideLength - 1) * columnSpacing;
           const z = side === 0 || side === 2 ? i * columnSpacing : side === 1 ? (sideLength - 1) * columnSpacing : 0;
-          columnMesh.position.set(x, 0, z);
-          enclosedFenceGroup.add(columnMesh);
+          column.position.set(x, 0, z);
+          column.castShadow = true;
+          enclosedFenceGroup.add(column);
 
           if (i < sideLength - 1) {
-            const fenceMesh = wroughtIronFence.clone();
-            fenceMesh.position.set(x, 0, z);
-            if (side === 0 || side === 2) fenceMesh.rotation.y = -Math.PI / 2;
-            if (!(side === 1 && i === 1)) enclosedFenceGroup.add(fenceMesh);
+            const fence = wroughtIronFence.clone();
+            fence.position.set(x, 0, z);
+            fence.castShadow = true;
+            if (side === 0 || side === 2) fence.rotation.y = -Math.PI / 2;
+            if (!(side === 1 && i === 1)) enclosedFenceGroup.add(fence);
           }
         }
       }
@@ -119,6 +122,7 @@
       for (let i = 0; i < 10; i++) {
         const rock = new Rocks();
         rock.scale.set(0.5, 0.5, 0.5);
+        rock.castShadow = true;
 
         const angle = Math.random() * 2 * Math.PI;
         const distance = 6 + Math.random() * 12;
@@ -138,6 +142,7 @@
         bone.rotation.x += Math.random() * 0.1 - 0.05;
         bone.rotation.y += Math.random() * 0.1 - 0.05;
         bone.rotation.z += Math.random() * 0.1 - 0.05;
+        bone.castShadow = true;
         scene.add(bone);
       }
 
@@ -145,7 +150,7 @@
       const candle = new Candle(0.2, 0.05);
       candle.position.set(4.0, 0, 9.7);
       scene.add(candle);
-      
+
       for (let i = 0; i < 5; i++) {
         const candle = new Candle(Math.random(), Math.random() * 0.1);
         candle.position.set(Math.random() * 24 - 12, 0, Math.random() * 24 - 12);
