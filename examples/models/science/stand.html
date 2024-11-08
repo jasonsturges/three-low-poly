@@ -15,13 +15,38 @@
   </head>
   <body>
     <script type="module">
-      import { Stand } from "../../../src/index.js";
+      import GUI from "lil-gui";
+      import { centerMesh, Stand } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
 
-      const stand = new Stand();
+      const params = {
+        radius: 0.3,
+        height: 0.4,
+        count: 3,
+        thickness: 0.03,
+        radialSegments: 16,
+      };
+
+      let stand = new Stand(params);
       scene.add(stand);
+      centerMesh(stand);
+
+      const gui = new GUI();
+      gui.title("Stand");
+      gui.add(params, "radius", 0.1, 1).name("Radius").step(0.01).onChange(update);
+      gui.add(params, "height", 0.1, 1).name("Height").step(0.01).onChange(update);
+      gui.add(params, "count", 1, 8).name("Leg Count").step(1).onChange(update);
+      gui.add(params, "thickness", 0.01, 0.1).name("Thickness").step(0.005).onChange(update);
+      gui.add(params, "radialSegments", 3, 64).name("Radial Segments").step(1).onChange(update);
+
+      function update() {
+        scene.remove(stand);
+        stand = new Stand(params);
+        scene.add(stand);
+        centerMesh(stand);
+      }
     </script>
   </body>
 </html>
