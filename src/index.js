@@ -60,6 +60,7 @@ export { BoneGeometry } from "./geometry/skeleton/BoneGeometry";
 // Science
 export { BeakerGeometry } from "./geometry/science/BeakerGeometry";
 export { MortarGeometry } from "./geometry/science/MortarGeometry";
+export { StandGeometry } from "./geometry/science/StandGeometry";
 export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
 export { WineBottleGeometry } from "./geometry/science/WineBottleGeometry";
 
