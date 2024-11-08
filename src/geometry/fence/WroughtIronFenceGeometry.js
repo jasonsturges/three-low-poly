@@ -14,11 +14,12 @@ export class WroughtIronFenceGeometry extends BufferGeometry {
     railHeight = 0.1,
     railDepth = 0.05,
     railOffset = 0.0,
+    radialSegments = 8,
   } = {}) {
     super();
 
     const geometries = [];
-    const bar = new WroughtIronBarGeometry({ barHeight, barRadius, spikeHeight, spikeRadius, spikeScaleZ });
+    const bar = new WroughtIronBarGeometry({ barHeight, barRadius, spikeHeight, spikeRadius, spikeScaleZ, radialSegments });
     const rail = new BoxGeometry(count * spacing, railHeight, railDepth);
 
     for (let i = 0; i < count; i++) {
