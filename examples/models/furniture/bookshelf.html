@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import GUI from "lil-gui";
+      import { Bookshelf, centerMesh } from "../../../src/index.js";
+      import { createOrbitScene } from "../../utils/orbitScene.js";
+
+      const { scene, camera } = createOrbitScene();
+      camera.position.set(0, 0, 10);
+
+      // Default parameters
+      const params = {
+        width: 5,
+        height: 8,
+        depth: 1,
+        shelves: 4,
+        frameThickness: 0.1,
+      };
+
+      let bookshelf = new Bookshelf(params);
+      scene.add(bookshelf);
+      centerMesh(bookshelf);
+
+      const gui = new GUI();
+
+      gui.add(params, "width", 0.5, 10).name("Width").step(0.1).onChange(update);
+      gui.add(params, "height", 0.5, 10).name("Height").step(0.1).onChange(update);
+      gui.add(params, "depth", 0.5, 4).name("Depth").step(0.1).onChange(update);
+      gui.add(params, "shelves", 0, 10).name("Shelves").step(1).onChange(update);
+      gui.add(params, "frameThickness", 0.1, 1).name("Shelves").step(0.01).onChange(update);
+
+      function update() {
+        scene.remove(bookshelf);
+        bookshelf = new Bookshelf(params);
+        scene.add(bookshelf);
+        centerMesh(bookshelf);
+      }
+    </script>
+  </body>
+</html>
