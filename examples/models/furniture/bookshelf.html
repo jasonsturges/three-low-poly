@@ -41,7 +41,7 @@
       gui.add(params, "height", 0.5, 10).name("Height").step(0.1).onChange(update);
       gui.add(params, "depth", 0.5, 4).name("Depth").step(0.1).onChange(update);
       gui.add(params, "shelves", 0, 10).name("Shelves").step(1).onChange(update);
-      gui.add(params, "frameThickness", 0.1, 1).name("Shelves").step(0.01).onChange(update);
+      gui.add(params, "frameThickness", 0.1, 1).name("Frame Thickness").step(0.01).onChange(update);
 
       function update() {
         scene.remove(bookshelf);
