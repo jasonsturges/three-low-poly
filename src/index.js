@@ -48,6 +48,9 @@ export { FenceColumnGeometry } from "./geometry/fence/FenceColumnGeometry";
 export { WroughtIronBarGeometry } from "./geometry/fence/WroughtIronBarGeometry";
 export { WroughtIronFenceGeometry } from "./geometry/fence/WroughtIronFenceGeometry";
 
+// Furniture
+export { BookshelfGeometry } from "./geometry/furniture/BookshelfGeometry";
+
 // Leafs
 export { SimpleLeafGeometry } from "./geometry/leafs/SimpleLeafGeometry";
 
@@ -95,6 +98,7 @@ export { WroughtIronBar } from "./models/fence/WroughtIronBar";
 export { WroughtIronFence } from "./models/fence/WroughtIronFence";
 
 // Furniture
+export { Bookshelf } from "./models/furniture/Bookshelf";
 export { Desk } from "./models/furniture/Desk";
 
 // Lighting
