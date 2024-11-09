@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import { VertexNormalsHelper } from "three/addons/helpers/VertexNormalsHelper.js";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+      import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+
+      const { scene } = createOrbitScene();
+
+      const textureLoader = new THREE.TextureLoader();
+      const texture = textureLoader.load("https://threejs.org/examples/textures/uv_grid_opengl.jpg");
+      const material = new THREE.MeshStandardMaterial({
+        map: texture,
+        side: THREE.FrontSide,
+      });
+
+      export class ModelingGeometry extends THREE.BufferGeometry {
+        constructor() {
+          super();
+
+          const vertices = [
+            0, 0, 0,
+            1, 0, 0,
+            1, 1, 0,
+            0, 1, 0,
+          ];
+
+          const normals = [
+            0, 0, 1,   0, 0, 1,   0, 0, 1,   0, 0, 1,
+          ];
+
+          const uvs = [
+            0, 0,   1, 0,   1, 1,   0, 1,
+          ];
+
+          const indices = [
+            0,  1,  2,   0,  2,  3,
+          ];
+
+          const positions = new Float32Array(vertices);
+          const normalArray = new Float32Array(normals);
+          const uvArray = new Float32Array(uvs);
+          const indexArray = new Uint16Array(indices);
+
+          const geometry = new THREE.BufferGeometry();
+          geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+          geometry.setAttribute('normal', new THREE.BufferAttribute(normalArray, 3));
+          geometry.setAttribute('uv', new THREE.BufferAttribute(uvArray, 2));
+          geometry.setIndex(new THREE.BufferAttribute(indexArray, 1));
+
+          this.copy(mergeGeometries([geometry], false));
+        }
+      }
+
+      const geometry = new ModelingGeometry();
+      const mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+
+      const helper = new VertexNormalsHelper(mesh, 1, 0xff0000);
+      scene.add(helper);
+    </script>
+  </body>
+</html>
