@@ -59,6 +59,7 @@ export { BoneGeometry } from "./geometry/skeleton/BoneGeometry";
 
 // Science
 export { BeakerGeometry } from "./geometry/science/BeakerGeometry";
+export { ErlenmeyerFlaskGeometry } from "./geometry/science/ErlenmeyerFlaskGeometry";
 export { MortarGeometry } from "./geometry/science/MortarGeometry";
 export { StandGeometry } from "./geometry/science/StandGeometry";
 export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
@@ -110,6 +111,7 @@ export { Beaker } from "./models/science/Beaker";
 export { Bottle } from "./models/science/Bottle";
 export { BunsenBurner } from "./models/science/BunsenBurner";
 export { ElectricPanel } from "./models/science/ElectricPanel";
+export { ErlenmeyerFlask } from "./models/science/ErlenmeyerFlask";
 export { Flask } from "./models/science/Flask";
 export { LeverPanel } from "./models/science/LeverPanel";
 export { Microscope } from "./models/science/Microscope";
