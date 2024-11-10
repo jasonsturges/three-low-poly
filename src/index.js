@@ -180,7 +180,7 @@ export { checkerboardTexture } from "./textures/checkerboard";
 //  Utils
 //------------------------------
 
-export * from "./utils/MathUtils"
 export * from "./utils/MeshUtils";
 export { SceneUtils } from "./utils/SceneUtils";
+export * from "./utils/SphericalGeometryUtils";
 export * from "./utils/VertexUtils";

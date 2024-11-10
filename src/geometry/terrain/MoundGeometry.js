@@ -1,5 +1,5 @@
 import { BufferGeometry, SphereGeometry } from "three";
-import { calculateSphereCapHeight, radiusForSphereCapWidth } from "../../utils/MathUtils.js";
+import {capHeightFromRadius, radiusFromCapWidth} from "../../utils/SphericalGeometryUtils.js";
 
 /**
  * Mound-like geometry with a flat top.
@@ -7,20 +7,20 @@ import { calculateSphereCapHeight, radiusForSphereCapWidth } from "../../utils/M
  * To create a radius based on a desired width:
  * ```
  * const moundGeometry = new MoundGeometry({
- *   radius: radiusForSphereCapWidth(5, Math.PI / 10),
+ *   radius: radiusFromCapWidth(5, Math.PI / 10),
  * }
  * ```
  *
  * To create a radius based on a desired height:
  * ```
  * const moundGeometry = new MoundGeometry({
- *  radius: radiusForSphereCapHeight(5, Math.PI / 10),
+ *  radius: radiusFromCapHeight(5, Math.PI / 10),
  * }
  * ```
  */
 export class MoundGeometry extends BufferGeometry {
   constructor({
-    radius = radiusForSphereCapWidth(5, Math.PI / 10), //
+    radius = radiusFromCapWidth(5, Math.PI / 10), //
     widthSegments = 64,
     heightSegments = 32,
     phiStart = 0,
@@ -32,7 +32,7 @@ export class MoundGeometry extends BufferGeometry {
     this.copy(new SphereGeometry(radius, widthSegments, heightSegments, phiStart, phiLength, 0, thetaLength));
 
     // Translate the geometry so the base is at the origin
-    const height = calculateSphereCapHeight(radius, thetaLength);
+    const height = capHeightFromRadius(radius, thetaLength);
     this.translate(0, -radius + height, 0);
   }
 }
