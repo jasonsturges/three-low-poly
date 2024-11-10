@@ -8,6 +8,7 @@ export class BookshelfGeometry extends BufferGeometry {
     depth = 1,
     shelves = 4,
     frameThickness = 0.1,
+    open = false,
   } = {}) {
     super();
 
@@ -44,6 +45,13 @@ export class BookshelfGeometry extends BufferGeometry {
       shelfPanels.push(shelfPanel);
     }
 
-    this.copy(mergeGeometries([leftPanel, rightPanel, topPanel, bottomPanel, backPanel, ...shelfPanels], false));
+    this.copy(mergeGeometries([
+      leftPanel, //
+      rightPanel,
+      topPanel,
+      bottomPanel,
+      ...(open ? [] : [backPanel]),
+      ...shelfPanels
+    ], false));
   }
 }
