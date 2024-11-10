@@ -29,6 +29,7 @@
         depth: 1,
         shelves: 4,
         frameThickness: 0.1,
+        open: false,
       };
 
       let bookshelf = new Bookshelf(params);
@@ -42,6 +43,7 @@
       gui.add(params, "depth", 0.5, 4).name("Depth").step(0.1).onChange(update);
       gui.add(params, "shelves", 0, 10).name("Shelves").step(1).onChange(update);
       gui.add(params, "frameThickness", 0.1, 1).name("Frame Thickness").step(0.01).onChange(update);
+      gui.add(params, "open").name("Open").onChange(update);
 
       function update() {
         scene.remove(bookshelf);
