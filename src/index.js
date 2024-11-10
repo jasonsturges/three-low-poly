@@ -24,6 +24,12 @@ export { Falloff } from "./constants/Falloff";
 export { Bubbling } from "./effects/Bubbling";
 
 //------------------------------
+//  Factory
+//------------------------------
+
+export * from "./factory/BookFactory";
+
+//------------------------------
 //  Geometries
 //------------------------------
 
