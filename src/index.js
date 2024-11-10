@@ -182,6 +182,7 @@ export { checkerboardTexture } from "./textures/checkerboard";
 
 export * from "./utils/InstancedMeshUtils";
 export * from "./utils/MeshUtils";
+export * from "./utils/RandomNumberUtils";
 export { SceneUtils } from "./utils/SceneUtils";
 export * from "./utils/SphericalGeometryUtils";
 export * from "./utils/VertexUtils";
