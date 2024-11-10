@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+        color: #dfd9bc;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { centerInstancedMesh, rowOfBooksByCount } from "../../src/index.js";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+
+      const { scene, camera } = createOrbitScene();
+      camera.position.set(0, 3, 5);
+
+      // Book materials
+      const coverMaterial = new THREE.MeshStandardMaterial({
+        color: 0x8b0000,
+        metalness: 0.1,
+        roughness: 0.7,
+        flatShading: true,
+      });
+      const pagesMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, flatShading: true });
+
+      // Create the lil-gui panel
+      const gui = new GUI();
+      const params = {
+        count: 24,
+        scaleXMin: 0.4,
+        scaleXMax: 0.7,
+        scaleYMin: 0.3,
+        scaleYMax: 0.95,
+        scaleZMin: 0.1,
+        scaleZMax: 0.5,
+      };
+
+      let mesh;
+      updateGeometry();
+
+      // Add controls for each parameter and listen for changes
+      gui.add(params, "count", 1, 250).step(1).name("Count").onChange(updateGeometry);
+      gui.add(params, "scaleYMin", 0.01, 1).step(0.01).name("Scale Y Min").onChange(updateGeometry);
+      gui.add(params, "scaleYMax", 0.01, 1).step(0.01).name("Scale Y Max").onChange(updateGeometry);
+      gui.add(params, "scaleXMin", 0.01, 1).step(0.01).name("Scale X Min").onChange(updateGeometry);
+      gui.add(params, "scaleXMax", 0.01, 1).step(0.01).name("Scale X Max").onChange(updateGeometry);
+      gui.add(params, "scaleZMin", 0.01, 1).step(0.01).name("Scale Z Min").onChange(updateGeometry);
+      gui.add(params, "scaleZMax", 0.01, 1).step(0.01).name("Scale Z Max").onChange(updateGeometry);
+
+      function updateGeometry() {
+        scene.remove(mesh);
+        mesh = rowOfBooksByCount({
+          coverMaterial: coverMaterial,
+          pagesMaterial: pagesMaterial,
+          ...params,
+        });
+        mesh.rotation.y = Math.PI / 2;
+        centerInstancedMesh(mesh);
+        scene.add(mesh);
+      }
+    </script>
+  </body>
+</html>
