@@ -8,10 +8,11 @@ export class Bookshelf extends Mesh {
     depth = 1,
     shelves = 4,
     frameThickness = 0.1,
+    open = false,
   } = {}) {
     super();
 
-    this.geometry = new BookshelfGeometry({ width, height, depth, shelves, frameThickness });
+    this.geometry = new BookshelfGeometry({ width, height, depth, shelves, frameThickness, open });
     this.material = new MeshStandardMaterial({ color: 0x8b4513 });
   }
 }
