@@ -27,6 +27,6 @@ See the [examples](https://jasonsturges.com/three-low-poly/) for more informatio
 
 ## Usage
 
-Assets are procedurally generated and customized via parameters, generally featuring a base geometry that implements a mesh with material.
+Assets are procedurally generated and customizable through parameters, typically based on a core geometry that combines a mesh with a material.
 
-In addition to geometries are prefabricated models, either mesh or group that may be directly added to the scene featuring default materials.
+Alongside these geometries, there are prefabricated models that can be added directly to the scene, as well as factory methods for bulk creation.
