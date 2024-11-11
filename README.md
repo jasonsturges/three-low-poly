@@ -2,9 +2,8 @@
 
 Procedurally generated low poly modeling for Three.js.
 
-Example Graveyard Scene:
-
-![screen-capture](https://github.com/user-attachments/assets/d97345cc-bdaa-46d5-a267-531559919ee5)
+![screen-capture](https://github.com/user-attachments/assets/3285ed9a-da3c-4287-ad2f-0c7e82cd70fd)
+_Example Library scene_
 
 ## Getting Started
 
@@ -24,6 +23,9 @@ scene.add(rocks);
 ```
 
 See the [examples](https://jasonsturges.com/three-low-poly/) for more information.
+
+![screen-capture](https://github.com/user-attachments/assets/d97345cc-bdaa-46d5-a267-531559919ee5)
+_Example Graveyard scene_
 
 ## Usage
 
