@@ -16,13 +16,14 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { ObeliskHeadstone } from "../../../src/index.js";
+      import { ObeliskHeadstone, ObeliskHeadstoneGeometry, centerMesh } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene, camera } = createOrbitScene();
 
       let crossHeadstone = new ObeliskHeadstone();
       scene.add(crossHeadstone);
+      centerMesh(crossHeadstone);
 
       const gui = new GUI();
       const params = {
@@ -34,9 +35,8 @@
       gui.add(params, "baseWidth", 0.1, 2).name("Base Width").step(0.1).onChange(updateGeometry);
 
       function updateGeometry() {
-        scene.remove(crossHeadstone);
-        crossHeadstone = new ObeliskHeadstone(params.totalHeight, params.baseWidth);
-        scene.add(crossHeadstone);
+        crossHeadstone.geometry.dispose();
+        crossHeadstone.geometry = new ObeliskHeadstoneGeometry(params.totalHeight, params.baseWidth);
       }
     </script>
   </body>
