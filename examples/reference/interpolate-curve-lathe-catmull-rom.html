@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from 'lil-gui';
+      import { createOrbitScene } from "../utils/orbitScene.js";
+      import { Easing, centerMesh, interpolateCurve } from "../../src/index.js";
+
+      const { scene } = createOrbitScene();
+
+      // GUI parameters
+      const params = {
+        startRadius: 0.5,
+        endRadius: 0.2,
+        startHeight: 1,
+        endHeight: 3,
+        segments: 20,
+        easingFunction: 'SINE_EASE_IN_OUT',
+      };
+
+      // Function to update lathe geometry
+      function updateLatheGeometry() {
+        const lathePoints = [
+          new THREE.Vector2(0.5, 0),   // Bottom point
+          new THREE.Vector2(0.5, params.startHeight),   // Straight section up to startHeight
+          ...interpolateCurve(Easing[params.easingFunction], params.startRadius, params.endRadius, params.startHeight, params.endHeight, params.segments)
+        ];
+
+        // Create Catmull-Rom curve
+        const catmullRomCurve = new THREE.CatmullRomCurve3(lathePoints.map(p => new THREE.Vector3(p.x, p.y, 0)));
+        const smoothLathePoints = catmullRomCurve.getPoints(params.segments);
+
+        const newLatheGeometry = new THREE.LatheGeometry(smoothLathePoints.map(p => new THREE.Vector2(p.x, p.y)), 32);
+        latheMesh.geometry.dispose();
+        latheMesh.geometry = newLatheGeometry;
+      }
+
+      // Create the lathe geometry
+      const lathePoints = [
+        new THREE.Vector2(0.5, 0),   // Bottom point
+        new THREE.Vector2(0.5, params.startHeight),   // Straight section up to height 1
+        ...interpolateCurve(Easing[params.easingFunction], 0.5, 0.2, 1, 3, 20)
+      ];
+
+      // Create Catmull-Rom curve
+      const catmullRomCurve = new THREE.CatmullRomCurve3(lathePoints.map(p => new THREE.Vector3(p.x, p.y, 0)));
+      const smoothLathePoints = catmullRomCurve.getPoints(params.segments);
+
+      const latheGeometry = new THREE.LatheGeometry(smoothLathePoints.map(p => new THREE.Vector2(p.x, p.y)), 32);
+      const material = new THREE.MeshStandardMaterial({ color: 0x0077ff, metalness: 0.3, roughness: 0.7, side: THREE.DoubleSide });
+      const latheMesh = new THREE.Mesh(latheGeometry, material);
+      scene.add(latheMesh);
+      centerMesh(latheMesh);
+
+      // Create GUI
+      const gui = new GUI();
+      gui.add(params, 'easingFunction', Object.keys(Easing)).onChange(updateLatheGeometry);
+      gui.add(params, 'startRadius', 0.1, 2).onChange(updateLatheGeometry);
+      gui.add(params, 'endRadius', 0.1, 2).onChange(updateLatheGeometry);
+      gui.add(params, 'startHeight', 0.1, 5).onChange(updateLatheGeometry);
+      gui.add(params, 'endHeight', 0.1, 5).onChange(updateLatheGeometry);
+      gui.add(params, 'segments', 5, 50, 1).onChange(updateLatheGeometry);
+
+    </script>
+  </body>
+</html>
