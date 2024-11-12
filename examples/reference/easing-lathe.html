@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+      import { Easing } from "../../src/index.js";
+
+      const { scene, camera, controls } = createOrbitScene();
+      camera.position.set(0, -36, 70);
+      controls.target.set(0, -36, 0);
+
+      // Create a grid of easing function lathe geometries
+      const easingFunctions = Object.entries(Easing);
+      const gridCols = 5;
+      const gridSpacing = 15;
+
+      for (let i = 0; i < easingFunctions.length; i++) {
+        const [name, easingFunction] = easingFunctions[i];
+
+        // Create points for the lathe geometry representing the easing function
+        const points = [];
+        const segments = 100;
+        for (let j = 0; j <= segments; j++) {
+          const t = j / segments;
+          const x = easingFunction(t) * 5; // Scale x for better visibility
+          const y = t * 10; // Height along y-axis
+          points.push(new THREE.Vector2(x, y));
+        }
+
+        const latheGeometry = new THREE.LatheGeometry(points, 32);
+        const latheMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000, metalness: 0.5, roughness: 0.5, side: THREE.DoubleSide });
+        const latheMesh = new THREE.Mesh(latheGeometry, latheMaterial);
+
+        // Position the lathe in the grid
+        const col = i % gridCols;
+        const row = Math.floor(i / gridCols);
+        latheMesh.position.x = col * gridSpacing - (gridCols - 1) * gridSpacing * 0.5;
+        latheMesh.position.y = -row * gridSpacing - gridSpacing * 0.5;
+
+        scene.add(latheMesh);
+
+        // Create a label for each easing function using simple canvas text
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        context.font = '24px Arial';
+        context.fillStyle = 'white';
+        context.fillText(name, 0, 24);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const textMaterial = new THREE.SpriteMaterial({ map: texture });
+        const textSprite = new THREE.Sprite(textMaterial);
+        textSprite.scale.set(5, 2.5, 1); // Adjust size as needed
+        textSprite.position.set(latheMesh.position.x - 5, latheMesh.position.y - 0, 0);
+        scene.add(textSprite);
+      }
+    </script>
+  </body>
+</html>
