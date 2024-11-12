@@ -16,13 +16,14 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { SquareHeadstone } from "../../../src/index.js";
+      import { SquareHeadstone, SquareHeadstoneGeometry, centerMesh } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene, camera } = createOrbitScene();
 
       let squareHeadstone = new SquareHeadstone();
       scene.add(squareHeadstone);
+      centerMesh(squareHeadstone);
 
       const gui = new GUI();
       const params = {
@@ -36,9 +37,8 @@
       gui.add(params, "depth", 0.1, 2).name("Depth").step(0.1).onChange(updateGeometry);
 
       function updateGeometry() {
-        scene.remove(squareHeadstone);
-        squareHeadstone = new SquareHeadstone(params.width, params.height, params.depth);
-        scene.add(squareHeadstone);
+        squareHeadstone.geometry.dispose();
+        squareHeadstone.geometry = new SquareHeadstoneGeometry(params.width, params.height, params.depth);
       }
     </script>
   </body>
