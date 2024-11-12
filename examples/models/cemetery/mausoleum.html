@@ -15,15 +15,15 @@
   </head>
   <body>
     <script type="module">
-      import { Mausoleum } from "../../../src/index.js";
+      import { Mausoleum, centerMesh } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene, camera } = createOrbitScene();
       camera.position.set(0, 0, 10);
 
       const mausoleum = new Mausoleum();
-      mausoleum.position.y = -2;
       scene.add(mausoleum);
+      centerMesh(mausoleum);
     </script>
   </body>
 </html>
