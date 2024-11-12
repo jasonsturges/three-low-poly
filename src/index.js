@@ -188,6 +188,7 @@ export { checkerboardTexture } from "./textures/checkerboard";
 
 export * from "./utils/GroupUtils";
 export * from "./utils/InstancedMeshUtils";
+export * from "./utils/Interpolation"
 export * from "./utils/MeshUtils";
 export * from "./utils/RandomNumberUtils";
 export { SceneUtils } from "./utils/SceneUtils";
