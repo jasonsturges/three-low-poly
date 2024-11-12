@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+      import { Easing } from "../../src/index.js";
+
+      const { scene, camera, controls } = createOrbitScene();
+      camera.position.set(0, -10, 24);
+      controls.target.set(0, -10, 0);
+
+      // Create a grid of easing function lines
+      const easingFunctions = Object.entries(Easing);
+      const gridCols = 5;
+      const gridSpacing = 5;
+
+      for (let i = 0; i < easingFunctions.length; i++) {
+        const [name, easingFunction] = easingFunctions[i];
+
+        // Create geometry for the line representing the easing function
+        const points = [];
+        const segments = 100;
+        for (let j = 0; j <= segments; j++) {
+          const t = j / segments;
+          const x = t * 2 - 1; // Range from -1 to 1 for better visibility
+          const y = easingFunction(t) * 2 - 1; // Scale y similarly
+          points.push(new THREE.Vector3(x, y, 0));
+        }
+
+        const curveGeometry = new THREE.BufferGeometry().setFromPoints(points);
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 }); // Red color for visibility
+        const line = new THREE.Line(curveGeometry, lineMaterial);
+
+        // Position the line in the grid
+        const col = i % gridCols;
+        const row = Math.floor(i / gridCols);
+        line.position.x = col * gridSpacing - (gridCols - 1) * gridSpacing * 0.5;
+        line.position.y = -row * gridSpacing + gridSpacing * 0.5;
+
+        scene.add(line);
+
+        // Create a label for each easing function using simple canvas text
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        context.font = "24px Arial";
+        context.fillStyle = "white";
+        context.fillText(name, 0, 24);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const textMaterial = new THREE.SpriteMaterial({ map: texture });
+        const textSprite = new THREE.Sprite(textMaterial);
+        textSprite.scale.set(3, 1.5, 1); // Adjust size as needed
+        textSprite.position.set(line.position.x - 1, line.position.y - 2, 0);
+        scene.add(textSprite);
+      }
+    </script>
+  </body>
+</html>
