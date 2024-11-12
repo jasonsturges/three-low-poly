@@ -16,13 +16,14 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { RoundedHeadstone } from "../../../src/index.js";
+      import { RoundedHeadstone, RoundedHeadstoneGeometry, centerMesh } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene, camera } = createOrbitScene();
 
       let roundedHeadstone = new RoundedHeadstone();
       scene.add(roundedHeadstone);
+      centerMesh(roundedHeadstone);
 
       const gui = new GUI();
       const params = {
@@ -38,9 +39,8 @@
       gui.add(params, "depth", 0.1, 2).name("Depth").step(0.1).onChange(updateGeometry);
 
       function updateGeometry() {
-        scene.remove(roundedHeadstone);
-        roundedHeadstone = new RoundedHeadstone(params.width, params.height, params.depth, params.radius);
-        scene.add(roundedHeadstone);
+        roundedHeadstone.geometry.dispose();
+        roundedHeadstone.geometry = new RoundedHeadstoneGeometry(params.width, params.height, params.depth, params.radius);
       }
     </script>
   </body>
