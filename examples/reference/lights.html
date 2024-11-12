@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+      const scene = new THREE.Scene();
+
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 5, 10);
+
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setClearColor(0x000000);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 2.3;
+      renderer.shadowMap.enabled = true;
+      document.body.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+
+      const handlers = [];
+
+      renderer.setAnimationLoop(() => {
+        handlers.forEach((handler) => handler());
+        renderer.render(scene, camera);
+        controls.update();
+      });
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // Create a plane to visualize light patterns and shadows
+      const planeGeometry = new THREE.PlaneGeometry(20, 20);
+      const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x808080, side: THREE.DoubleSide });
+      const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+      plane.rotation.x = -Math.PI / 2;
+      plane.receiveShadow = true;
+      scene.add(plane);
+
+      // Create a sphere to see reflections and light effects
+      const sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
+      const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+      const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      sphere.position.set(0, 1, 0);
+      sphere.castShadow = true;
+      scene.add(sphere);
+
+      // Ambient Light (soft global light)
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+      scene.add(ambientLight);
+
+      // Directional Light (like sunlight)
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      directionalLight.position.set(-5, 10, 5);
+      directionalLight.castShadow = true;
+      scene.add(directionalLight);
+
+      // Point Light (light that spreads in all directions from a point)
+      const pointLight = new THREE.PointLight(0xffffff, 1, 50);
+      pointLight.position.set(5, 10, 5);
+      pointLight.castShadow = true;
+      scene.add(pointLight);
+
+      // Spot Light (focused light, like a flashlight)
+      const spotLight = new THREE.SpotLight(0xffffff, 1);
+      spotLight.position.set(0, 10, 0);
+      spotLight.angle = Math.PI / 6;
+      spotLight.castShadow = true;
+      scene.add(spotLight);
+
+      // Hemisphere Light (simulates sky and ground lighting)
+      const hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, 0.5);
+      hemisphereLight.position.set(0, 10, 0);
+      scene.add(hemisphereLight);
+
+      // Set up lil-gui
+      const gui = new GUI();
+      const lightOptions = {
+        lightType: "All",
+      };
+
+      // Add light selection dropdown
+      const lightFolder = gui.addFolder("Light Controls");
+      let controllers = []; // Array to keep track of controllers added
+
+      lightFolder
+        .add(lightOptions, "lightType", ["All", "Ambient", "Directional", "Point", "Spot", "Hemisphere"])
+        .name("Select Light")
+        .onChange((value) => {
+          // Set all lights to invisible initially
+          ambientLight.visible = false;
+          directionalLight.visible = false;
+          pointLight.visible = false;
+          spotLight.visible = false;
+          hemisphereLight.visible = false;
+
+          // Remove any previous light controls
+          controllers.forEach((controller) => controller.destroy());
+          controllers = []; // Clear the array of controllers
+
+          // Show the selected light and add relevant controls
+          switch (value) {
+            case "All":
+              ambientLight.visible = true;
+              directionalLight.visible = true;
+              pointLight.visible = true;
+              spotLight.visible = true;
+              hemisphereLight.visible = true;
+              break;
+            case "Ambient":
+              ambientLight.visible = true;
+              controllers.push(lightFolder.add(ambientLight, "intensity", 0, 2).name("Intensity"));
+              break;
+            case "Directional":
+              directionalLight.visible = true;
+              controllers.push(lightFolder.add(directionalLight, "intensity", 0, 2).name("Intensity"));
+              controllers.push(lightFolder.add(directionalLight.position, "x", -20, 20).name("Position X"));
+              controllers.push(lightFolder.add(directionalLight.position, "y", -20, 20).name("Position Y"));
+              controllers.push(lightFolder.add(directionalLight.position, "z", -20, 20).name("Position Z"));
+              break;
+            case "Point":
+              pointLight.visible = true;
+              controllers.push(lightFolder.add(pointLight, "intensity", 0, 2).name("Intensity"));
+              controllers.push(lightFolder.add(pointLight.position, "x", -20, 20).name("Position X"));
+              controllers.push(lightFolder.add(pointLight.position, "y", -20, 20).name("Position Y"));
+              controllers.push(lightFolder.add(pointLight.position, "z", -20, 20).name("Position Z"));
+              controllers.push(lightFolder.add(pointLight, "distance", 0, 100).name("Distance"));
+              controllers.push(lightFolder.add(pointLight, "decay", 0, 10).name("Decay"));
+              break;
+            case "Spot":
+              spotLight.visible = true;
+              controllers.push(lightFolder.add(spotLight, "intensity", 0, 2).name("Intensity"));
+              controllers.push(lightFolder.add(spotLight.position, "x", -20, 20).name("Position X"));
+              controllers.push(lightFolder.add(spotLight.position, "y", -20, 20).name("Position Y"));
+              controllers.push(lightFolder.add(spotLight.position, "z", -20, 20).name("Position Z"));
+              controllers.push(lightFolder.add(spotLight, "angle", 0, Math.PI / 2).name("Angle"));
+              controllers.push(lightFolder.add(spotLight, "penumbra", 0, 1).name("Penumbra"));
+              controllers.push(lightFolder.add(spotLight, "distance", 0, 100).name("Distance"));
+              controllers.push(lightFolder.add(spotLight, "decay", 0, 10).name("Decay"));
+              break;
+            case "Hemisphere":
+              hemisphereLight.visible = true;
+              controllers.push(lightFolder.add(hemisphereLight, "intensity", 0, 2).name("Intensity"));
+              controllers.push(
+                lightFolder.addColor({ color: "#ffffff" }, "color").onChange((value) => {
+                  hemisphereLight.color.set(value);
+                }),
+              );
+              controllers.push(
+                lightFolder.addColor({ groundColor: "#ffffff" }, "groundColor").onChange((value) => {
+                  hemisphereLight.groundColor.set(value);
+                }),
+              );
+              break;
+          }
+        });
+
+      lightFolder.open();
+    </script>
+  </body>
+</html>
