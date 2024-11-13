@@ -10,7 +10,7 @@ _Example Library scene_
 To install, execute:
 
 ```shell
-npm i lunarphase-js
+npm i three-low-poly
 ```
 
 Then, import into a project and use as:
