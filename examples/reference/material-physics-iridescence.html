@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+      import { createTextSprite } from "../utils/TextFactory";
+
+      const { scene, camera, controls } = createOrbitScene();
+      camera.position.set(0, 24, 0);
+      camera.lookAt(0, 0, 0);
+
+      // Grid of spheres parameters
+      const rows = 10; // Number of rows (varying roughness)
+      const cols = 10; // Number of columns (varying metalness)
+      const spacing = 2.5;
+
+      // Sphere geometry
+      const sphereGeometry = new THREE.SphereGeometry(1, 24, 32);
+
+      // Create grid of spheres
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const iridescenceIOR = row / (rows - 1); // Varies from 0 to 1 along the y-axis
+          const iridescence = col / (cols - 1); // Varies from 0 to 1 along the x-axis
+
+          const material = new THREE.MeshPhysicalMaterial({
+            color: 0x0077ff,
+            iridescence: iridescence,
+            iridescenceIOR: iridescenceIOR,
+          });
+
+          const sphere = new THREE.Mesh(sphereGeometry, material);
+          sphere.position.set(col * spacing - (cols * spacing) / 2 + spacing / 2, 0, row * spacing - (rows * spacing) / 2 + spacing / 2);
+
+          scene.add(createTextSprite(`${iridescenceIOR.toFixed(1)}, ${iridescence.toFixed(1)}`, { size: 24, x:col * spacing - (cols * spacing) / 2 + spacing / 2, y: 0.5, z: row * spacing - (rows * spacing) / 2 + spacing / 2 +1.75  }));
+          scene.add(sphere);
+        }
+      }
+
+      scene.add(createTextSprite("IRIDESCENCE", { x: (cols * spacing) / 2 + 3, y: 0, z: -(rows * spacing) / 2 - 1 }));
+      scene.add(createTextSprite("IRIDESCENCE IOR", { x: -(cols * spacing) / 2 - 3, y: 0, z: (rows * spacing) / 2 + 2 }));
+      scene.add(createTextSprite("0,0", { x: -(cols * spacing) / 2 - 3, y: 0, z: -(rows * spacing) / 2 - 1 }));
+      scene.add(createTextSprite("1,1", { x: (cols * spacing) / 2 + 3, y: 0, z: (rows * spacing) / 2 + 2 }));
+    </script>
+  </body>
+</html>
