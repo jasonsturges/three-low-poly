@@ -16,8 +16,9 @@
   <body>
     <script type="module">
       import * as THREE from "three";
-      import { createOrbitScene } from "../utils/orbitScene.js";
       import { Easing } from "../../src/index.js";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+      import { createTextSprite } from "../utils/TextFactory";
 
       const { scene, camera, controls } = createOrbitScene();
       camera.position.set(0, -10, 24);
@@ -52,20 +53,7 @@
         line.position.y = -row * gridSpacing + gridSpacing * 0.5;
 
         scene.add(line);
-
-        // Create a label for each easing function using simple canvas text
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-        context.font = "24px Arial";
-        context.fillStyle = "white";
-        context.fillText(name, 0, 24);
-
-        const texture = new THREE.CanvasTexture(canvas);
-        const textMaterial = new THREE.SpriteMaterial({ map: texture });
-        const textSprite = new THREE.Sprite(textMaterial);
-        textSprite.scale.set(3, 1.5, 1); // Adjust size as needed
-        textSprite.position.set(line.position.x - 1, line.position.y - 2, 0);
-        scene.add(textSprite);
+        scene.add(createTextSprite(name, { size: 24, x: line.position.x , y: line.position.y - 2, z: 0 }));
       }
     </script>
   </body>
