@@ -191,6 +191,7 @@ export * from "./utils/GroupUtils";
 export * from "./utils/InstancedMeshUtils";
 export * from "./utils/InterpolateCurve"
 export * from "./utils/MeshUtils";
+export * from "./utils/ParametricCurveUtils"
 export * from "./utils/RandomNumberUtils";
 export { SceneUtils } from "./utils/SceneUtils";
 export * from "./utils/SphericalGeometryUtils";
