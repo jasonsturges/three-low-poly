@@ -16,8 +16,9 @@
   <body>
     <script type="module">
       import * as THREE from "three";
-      import { createOrbitScene } from "../utils/orbitScene.js";
       import { Easing } from "../../src/index.js";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+      import { createTextSprite } from "../utils/TextFactory";
 
       const { scene, camera, controls } = createOrbitScene();
       camera.position.set(0, -36, 70);
@@ -42,7 +43,7 @@
         }
 
         const latheGeometry = new THREE.LatheGeometry(points, 32);
-        const latheMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000, metalness: 0.5, roughness: 0.5, side: THREE.DoubleSide });
+        const latheMaterial = new THREE.MeshStandardMaterial({ color: 0xc2452d, emissive: 0xc2452d, emissiveIntensity: 0.05, metalness: 0.5, roughness: 0.5, side: THREE.DoubleSide });
         const latheMesh = new THREE.Mesh(latheGeometry, latheMaterial);
 
         // Position the lathe in the grid
@@ -52,20 +53,7 @@
         latheMesh.position.y = -row * gridSpacing - gridSpacing * 0.5;
 
         scene.add(latheMesh);
-
-        // Create a label for each easing function using simple canvas text
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        context.font = '24px Arial';
-        context.fillStyle = 'white';
-        context.fillText(name, 0, 24);
-
-        const texture = new THREE.CanvasTexture(canvas);
-        const textMaterial = new THREE.SpriteMaterial({ map: texture });
-        const textSprite = new THREE.Sprite(textMaterial);
-        textSprite.scale.set(5, 2.5, 1); // Adjust size as needed
-        textSprite.position.set(latheMesh.position.x - 5, latheMesh.position.y - 0, 0);
-        scene.add(textSprite);
+        scene.add(createTextSprite(name, { size: 80, x: latheMesh.position.x , y: latheMesh.position.y - 1, z: 0 }));
       }
     </script>
   </body>
