@@ -69,10 +69,10 @@
       // Create GUI
       const gui = new GUI();
       gui.add(params, 'easingFunction', Object.keys(Easing)).onChange(updateLatheGeometry);
-      gui.add(params, 'startRadius', 0.1, 2).onChange(updateLatheGeometry);
-      gui.add(params, 'endRadius', 0.1, 2).onChange(updateLatheGeometry);
-      gui.add(params, 'startHeight', 0.1, 5).onChange(updateLatheGeometry);
-      gui.add(params, 'endHeight', 0.1, 5).onChange(updateLatheGeometry);
+      gui.add(params, 'startRadius', 0, 2).onChange(updateLatheGeometry);
+      gui.add(params, 'endRadius', 0, 2).onChange(updateLatheGeometry);
+      gui.add(params, 'startHeight', 0, 5).onChange(updateLatheGeometry);
+      gui.add(params, 'endHeight', 0, 5).onChange(updateLatheGeometry);
       gui.add(params, 'segments', 5, 50, 1).onChange(updateLatheGeometry);
 
     </script>
