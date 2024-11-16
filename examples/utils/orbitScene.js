@@ -30,9 +30,9 @@ export function createOrbitScene() {
   const handlers = [];
 
   renderer.setAnimationLoop(() => {
+    controls.update();
     handlers.forEach((handler) => handler());
     renderer.render(scene, camera);
-    controls.update();
   });
 
   window.addEventListener("resize", () => {
