@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+
+      const scene = new THREE.Scene();
+
+      // Create the camera
+      const camera = new THREE.OrthographicCamera(
+        -1,
+        1,
+        1,
+        -1,
+        0,
+        1, // Near and far clipping planes
+      );
+
+      // Create the renderer
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Shader material
+      const material = new THREE.ShaderMaterial({
+        uniforms: {
+          uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+        },
+        vertexShader: `
+          void main() {
+            gl_Position = vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec2 uResolution;
+          void main() {
+            vec2 st = gl_FragCoord.xy / uResolution;
+            gl_FragColor = vec4(st.x, st.y, abs(sin(st.x * 10.0)), 1.0);
+          }
+        `,
+      });
+
+      // Full-screen plane geometry
+      const geometry = new THREE.PlaneGeometry(2, 2);
+      const mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+
+      const handlers = [];
+
+      renderer.setAnimationLoop(() => {
+        handlers.forEach((handler) => handler());
+        renderer.render(scene, camera);
+      });
+
+      // Add event listener to handle resizing
+      window.addEventListener("resize", () => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        material.uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+</html>
