@@ -38,12 +38,11 @@
         pageColor: "#ffffff",
       };
 
-      // Add controls for each parameter and listen for changes
-      gui.add(params, "width", 0.1, 5).step(0.1).name("Width").onChange(updateGeometry);
-      gui.add(params, "height", 0.1, 5).step(0.1).name("Height").onChange(updateGeometry);
-      gui.add(params, "depth", 0.1, 5).step(0.1).name("Depth").onChange(updateGeometry);
-      gui.add(params, "coverThickness", 0.01, 0.25).step(0.05).name("Cover Thickness").onChange(updateGeometry);
-      gui.add(params, "pageIndent", 0.01, 0.25).step(0.05).name("Page Indent").onChange(updateGeometry);
+      gui.add(params, "width", 0.1, 5).step(0.001).name("Width").onChange(updateGeometry);
+      gui.add(params, "height", 0.1, 5).step(0.001).name("Height").onChange(updateGeometry);
+      gui.add(params, "depth", 0.1, 2).step(0.001).name("Depth").onChange(updateGeometry);
+      gui.add(params, "coverThickness", 0.01, 0.25).step(0.001).name("Cover Thickness").onChange(updateGeometry);
+      gui.add(params, "pageIndent", 0.0, 0.25).step(0.001).name("Page Indent").onChange(updateGeometry);
       gui.addColor(params, "coverColor").name("Cover Color").onChange(updateGeometry);
       gui.addColor(params, "pageColor").name("Page Color").onChange(updateGeometry);
 
