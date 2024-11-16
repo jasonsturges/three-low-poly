@@ -1,9 +1,9 @@
 import { BackSide, Mesh, ShaderMaterial, SphereGeometry } from "three";
-import { nightSkyShader } from "../shaders/nightSkyShader";
+import { nightSkyShader, NightSkyUniforms } from "../shaders/nightSkyShader";
 
 class NightSkybox extends Mesh {
   geometry: SphereGeometry;
-  material: ShaderMaterial;
+  material: ShaderMaterial & { uniforms: NightSkyUniforms };
 
   constructor(size = 1000) {
     super();
@@ -15,7 +15,7 @@ class NightSkybox extends Mesh {
       fragmentShader: nightSkyShader.fragmentShader,
       uniforms: nightSkyShader.uniforms,
       side: BackSide,
-    });
+    }) as ShaderMaterial & { uniforms: NightSkyUniforms };
   }
 }
 
