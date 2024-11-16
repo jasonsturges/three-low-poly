@@ -15,13 +15,43 @@
   </head>
   <body>
     <script type="module">
+      import { GUI } from 'lil-gui';
       import { NightSkybox } from "../../src/index.js";
       import { createOrbitScene } from "../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
 
-      let nightSkybox = new NightSkybox(990);
+      const nightSkybox = new NightSkybox(990);
+      const uniforms = nightSkybox.material.uniforms;
       scene.add(nightSkybox);
+
+      const gui = new GUI();
+
+      gui.addColor({ topColor: `#${uniforms.topColor.value.getHexString()}` }, 'topColor')
+        .name('Top Color')
+        .onChange((value) => {
+          uniforms.topColor.value.set(value);
+        });
+
+      gui.addColor({ bottomColor: `#${uniforms.bottomColor.value.getHexString()}` }, 'bottomColor')
+        .name('Bottom Color')
+        .onChange((value) => {
+          uniforms.bottomColor.value.set(value);
+        });
+
+      gui.add(uniforms.offset, 'value', 0, 50)
+        .name('Offset')
+        .step(0.001)
+        .onChange((value) => {
+          uniforms.offset.value = value;
+        });
+
+      gui.add(uniforms.exponent, 'value', 0, 3)
+        .name('Exponent')
+        .step(0.001)
+        .onChange((value) => {
+          uniforms.exponent.value = value;
+        });
     </script>
   </body>
 </html>
