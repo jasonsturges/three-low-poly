@@ -1,7 +1,7 @@
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
-import { fadeShader } from "../shaders/fadeShader.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer";
+import { RenderPass } from "three/addons/postprocessing/RenderPass";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass";
+import { fadeShader } from "../shaders/fadeShader";
 
 class SceneUtils {
   static dispose(scene) {

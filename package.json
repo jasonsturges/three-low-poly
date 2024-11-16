@@ -18,6 +18,7 @@
     "3d"
   ],
   "type": "module",
+  "types": "dist/index.d.ts",
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
   "browser": "dist/index.iife.js",
@@ -27,7 +28,8 @@
       "require": "./dist/index.cjs.js",
       "import": "./dist/index.es.js",
       "browser": "./dist/index.iife.js",
-      "umd": "./dist/index.umd.js"
+      "umd": "./dist/index.umd.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "files": [
@@ -35,16 +37,22 @@
   ],
   "scripts": {
     "dev": "vite build --watch",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "start:examples": "vite --host --open --config vite-examples.config.js",
     "build:examples": "vite build --config vite-examples.config.js"
   },
   "dependencies": {
     "lil-gui": "^0.19.2",
-    "three": "^0.169.0"
+    "three": "^0.170.0",
+    "three-stdlib": "^2.34.0"
   },
   "devDependencies": {
+    "@types/three": "^0.170.0",
     "prettier": "^3.3.3",
-    "vite": "^5.4.10"
+    "tslib": "^2.8.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "vite-plugin-dts": "^4.3.0",
+    "vite-plugin-typescript": "^1.0.4"
   }
 }
