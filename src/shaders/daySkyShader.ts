@@ -1,5 +1,23 @@
-import { Color } from "three";
+import { Color, Uniform } from "three";
 
+export interface DaySkyUniforms {
+  topColor: Uniform<Color>;
+  bottomColor: Uniform<Color>;
+}
+
+/**
+ * Shader for a day skybox.
+ *
+ * Example:
+ * ```
+ * this.material = new ShaderMaterial({
+ *   uniforms: daySkyShader.uniforms,
+ *   vertexShader: daySkyShader.vertexShader,
+ *   fragmentShader: daySkyShader.fragmentShader,
+ *   side: BackSide,
+ * }) as ShaderMaterial & { uniforms: DaySkyUniforms };
+ * ```
+ */
 export const daySkyShader = {
   uniforms: {
     topColor: { value: new Color(0.5, 0.8, 1.0) },
