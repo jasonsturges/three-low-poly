@@ -2,6 +2,9 @@ import { BackSide, Mesh, ShaderMaterial, SphereGeometry } from "three";
 import { nightSkyShader } from "../shaders/nightSkyShader";
 
 class NightSkybox extends Mesh {
+  geometry: SphereGeometry;
+  material: ShaderMaterial;
+
   constructor(size = 1000) {
     super();
 
