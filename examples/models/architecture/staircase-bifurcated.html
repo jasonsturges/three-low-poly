@@ -17,11 +17,9 @@
     <script type="module">
       import * as THREE from "three";
       import { BifurcatedStaircaseGeometry } from "../../../src/index.js";
-      import { createOrbitScene } from "../../utils/orbitScene.js";
+      import { createOrthographicScene } from "../../utils/orthographicScene.js";
 
-      const { scene, camera, controls } = createOrbitScene();
-      camera.position.set(0, 1, 2);
-      controls.target.set(0, 1, 0);
+      const { scene, camera, controls } = createOrthographicScene();
 
       const bifurcatedStaircaseGeometry = new BifurcatedStaircaseGeometry(2, 0.3, 0.5, 5, 5, Math.PI / 4);
       const material = new THREE.MeshStandardMaterial({ color: 0x8b4513, side: THREE.DoubleSide });

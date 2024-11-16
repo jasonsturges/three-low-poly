@@ -16,16 +16,15 @@
   <body>
     <script type="module">
       import * as THREE from "three";
-      import { StaircaseGeometry } from "../../../src/index.js";
+      import { SpiralStaircaseGeometry } from "../../../src/index.js";
       import { createOrthographicScene } from "../../utils/orthographicScene.js";
 
       const { scene, camera, controls } = createOrthographicScene();
 
-      const staircaseGeometry = new StaircaseGeometry(2, 0.3, 0.5, 10);
+      const spiralStaircaseGeometry = new SpiralStaircaseGeometry(2, 0.8, 0.2, 20, 1, Math.PI / 8);
       const material = new THREE.MeshStandardMaterial({ color: 0x8b4513, side: THREE.DoubleSide });
-      const staircaseMesh = new THREE.Mesh(staircaseGeometry, material);
-      staircaseMesh.rotation.y = Math.PI;
-      scene.add(staircaseMesh);
+      const spiralStaircaseMesh = new THREE.Mesh(spiralStaircaseGeometry, material);
+      scene.add(spiralStaircaseMesh);
     </script>
   </body>
 </html>
