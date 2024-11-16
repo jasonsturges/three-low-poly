@@ -32,13 +32,6 @@ export function createOrthographicScene() {
   const hemiLight = new THREE.HemisphereLight(0xaaaaaa, 0x444444, 0.6);
   scene.add(hemiLight);
 
-  // Sample Geometry (optional)
-  const geometry = new THREE.BoxGeometry(1, 1, 1);
-  const material = new THREE.MeshStandardMaterial({ color: 0x0077ff });
-  const cube = new THREE.Mesh(geometry, material);
-  cube.castShadow = true;
-  scene.add(cube);
-
   // Controls
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.update();
