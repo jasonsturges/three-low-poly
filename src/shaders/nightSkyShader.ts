@@ -1,5 +1,25 @@
-import { Color } from "three";
+import { Color, Uniform } from "three";
 
+export interface NightSkyUniforms {
+  topColor: Uniform<Color>;
+  bottomColor: Uniform<Color>;
+  offset: Uniform<number>;
+  exponent: Uniform<number>;
+}
+
+/**
+ * Shader for a night skybox.
+ *
+ * Example:
+ * ```
+ * this.material = new ShaderMaterial({
+ *   vertexShader: nightSkyShader.vertexShader,
+ *   fragmentShader: nightSkyShader.fragmentShader,
+ *   uniforms: nightSkyShader.uniforms,
+ *   side: BackSide,
+ * }) as ShaderMaterial & { uniforms: NightSkyUniforms };
+ * ```
+ */
 export const nightSkyShader = {
   uniforms: {
     topColor: { value: new Color(0x000033) },
