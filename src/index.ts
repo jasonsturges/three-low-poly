@@ -161,10 +161,10 @@ export { Mound } from "./models/terrain/Mound";
 
 export { addWaterDisplacement, updateWaterDisplacementTime } from "./shaders/addWaterDisplacement";
 export { addNoiseDisplacement, updateNoiseDisplacementTime } from "./shaders/addNoiseDisplacement";
-export { atmosphericShader, AtmosphericShaderUniforms } from "./shaders/atmosphericShader";
-export { daySkyShader, DaySkyUniforms } from "./shaders/daySkyShader";
+export { atmosphericShader, type AtmosphericShaderUniforms } from "./shaders/atmosphericShader";
+export { daySkyShader, type DaySkyUniforms } from "./shaders/daySkyShader";
 export { fadeShader } from "./shaders/fadeShader";
-export { nightSkyShader, NightSkyUniforms } from "./shaders/nightSkyShader";
+export { nightSkyShader, type NightSkyUniforms } from "./shaders/nightSkyShader";
 
 //------------------------------
 //  Shapes
