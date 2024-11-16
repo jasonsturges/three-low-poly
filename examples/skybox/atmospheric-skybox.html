@@ -16,19 +16,20 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { TwilightSkybox } from "../../src/index.js";
+      import { AtmosphericSkybox } from "../../src/index.js";
+      import { MathUtils } from "three";
       import { createOrbitScene } from "../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
 
-      let twilightSkybox = new TwilightSkybox();
+      let twilightSkybox = new AtmosphericSkybox();
       scene.add(twilightSkybox);
 
       // Create GUI
       const gui = new GUI();
       const parameters = {
-        theta: Math.PI * 0.49,
-        phi: 2 * Math.PI * 0.25,
+        theta: MathUtils.degToRad(89),
+        phi: MathUtils.degToRad(180),
         turbidity: 10,
         rayleigh: 2,
         mieCoefficient: 0.005,
@@ -45,13 +46,12 @@
 
       // Update sun position function
       function update() {
-        twilightSkybox.skyUniforms.turbidity.value = parameters.turbidity;
-        twilightSkybox.skyUniforms.rayleigh.value = parameters.rayleigh;
-        twilightSkybox.skyUniforms.mieCoefficient.value = parameters.mieCoefficient;
-        twilightSkybox.skyUniforms.mieDirectionalG.value = parameters.mieDirectionalG;
+        twilightSkybox.material.uniforms.turbidity.value = parameters.turbidity;
+        twilightSkybox.material.uniforms.rayleigh.value = parameters.rayleigh;
+        twilightSkybox.material.uniforms.mieCoefficient.value = parameters.mieCoefficient;
+        twilightSkybox.material.uniforms.mieDirectionalG.value = parameters.mieDirectionalG;
         twilightSkybox.sunPosition(parameters.theta, parameters.phi);
       }
-
     </script>
   </body>
 </html>
