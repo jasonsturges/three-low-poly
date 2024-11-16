@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+      import {
+        dollyAnimation,
+        flythroughAnimation,
+        orbitAnimation,
+        pendulumAnimation,
+        spiralAscensionAnimation,
+        wobbleAnimation,
+        zoomInAnimation,
+      } from "../../src/index.js";
+
+      const { scene, camera, controls } = createOrbitScene();
+      camera.position.set(0, 2, 5);
+
+      // Blue Cube
+      const blueMaterial = new THREE.MeshStandardMaterial({ color: 0x0077ff });
+      const blueCube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), blueMaterial);
+      blueCube.position.set(0, 0.5, 0);
+      blueCube.castShadow = true;
+      scene.add(blueCube);
+
+      // Orange Cone
+      const orangeMaterial = new THREE.MeshStandardMaterial({ color: 0xff7700 });
+      const orangeCone = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.5, 16), orangeMaterial);
+      orangeCone.position.set(-3, 0.75, -2.5);
+      orangeCone.castShadow = true;
+      scene.add(orangeCone);
+
+      // Yellow Sphere
+      const yellowMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 });
+      const yellowSphere = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), yellowMaterial);
+      yellowSphere.position.set(1.5, 0.5, 2);
+      yellowSphere.castShadow = true;
+      scene.add(yellowSphere);
+
+      // Green Cylinder
+      const greenMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+      const greenCylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1, 16), greenMaterial);
+      greenCylinder.position.set(3, 0.5, -4);
+      greenCylinder.castShadow = true;
+      scene.add(greenCylinder);
+
+      // Purple Torus
+      const purpleMaterial = new THREE.MeshStandardMaterial({ color: 0x800080 });
+      const purpleTorus = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.2, 16, 32), purpleMaterial);
+      purpleTorus.position.set(-1.25, 0.2, 1.5); // Diagonal from the cube
+      purpleTorus.rotation.x = Math.PI / 2;
+      purpleTorus.castShadow = true;
+      scene.add(purpleTorus);
+
+      // Plane
+      const planeGeometry = new THREE.PlaneGeometry(20, 20);
+      const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x808080, side: THREE.DoubleSide });
+      const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+      plane.rotation.x = -Math.PI / 2;
+      plane.receiveShadow = true;
+      scene.add(plane);
+
+      const gui = new GUI();
+      gui.add(
+        {
+          Dolly: () => {
+            dollyAnimation(camera, 5, 3000, () => {
+              console.log("Dolly animation complete");
+            });
+          },
+        },
+        "Dolly",
+      );
+      gui.add(
+        {
+          Flythrough: () => {
+            flythroughAnimation(
+              camera,
+              [new THREE.Vector3(0, 5, 5), new THREE.Vector3(0, 5, -25.5), new THREE.Vector3(-20.5, 5, 0)],
+              6000,
+              () => {
+                console.log("Flythrough animation complete");
+              },
+            );
+          },
+        },
+        "Flythrough",
+      );
+      gui.add(
+        {
+          Orbit: () => {
+            orbitAnimation(camera, new THREE.Vector3(0, 0, 0), 10, 5000, () => {
+              console.log("Orbit animation complete");
+            });
+          },
+        },
+        "Orbit",
+      );
+      gui.add(
+        {
+          Pendulum: () => {
+            pendulumAnimation(camera, new THREE.Vector3(0, 5, 5), 0.5, 9000, 3, () => {
+              console.log("Pendulum animation complete");
+            });
+          },
+        },
+        "Pendulum",
+      );
+      gui.add(
+        {
+          Spiral: () => {
+            spiralAscensionAnimation(camera, new THREE.Vector3(0, 0, 0), 10, 300, 5, 5000, () => {
+              console.log("Spiral ascension animation complete");
+            });
+          },
+        },
+        "Spiral",
+      );
+      gui.add(
+        {
+          Wobble: () => {
+            wobbleAnimation(camera, 0.5, 1000, () => {
+              console.log("Wobble animation complete");
+            });
+          },
+        },
+        "Wobble",
+      );
+      gui.add(
+        {
+          ZoomIn: () => {
+            zoomInAnimation(camera, new THREE.Vector3(0, 0, 0), 120, 75, 2000, () => {
+              console.log("Zoom in animation complete");
+            });
+          },
+        },
+        "ZoomIn",
+      );
+      gui.add(
+        {
+          Reset: () => {
+            camera.position.set(0, 2, 5);
+            camera.lookAt(0, 0, 0);
+          },
+        },
+        "Reset",
+      );
+    </script>
+  </body>
+</html>
