@@ -161,9 +161,10 @@ export { Mound } from "./models/terrain/Mound";
 
 export { addWaterDisplacement, updateWaterDisplacementTime } from "./shaders/addWaterDisplacement";
 export { addNoiseDisplacement, updateNoiseDisplacementTime } from "./shaders/addNoiseDisplacement";
-export { daySkyShader } from "./shaders/daySkyShader";
+export { atmosphericShader, AtmosphericShaderUniforms } from "./shaders/atmosphericShader";
+export { daySkyShader, DaySkyUniforms } from "./shaders/daySkyShader";
 export { fadeShader } from "./shaders/fadeShader";
-export { nightSkyShader } from "./shaders/nightSkyShader";
+export { nightSkyShader, NightSkyUniforms } from "./shaders/nightSkyShader";
 
 //------------------------------
 //  Shapes
@@ -178,9 +179,9 @@ export { StarShape } from "./shapes/StarShape";
 //  Skybox
 //------------------------------
 
+export { AtmosphericSkybox } from "./skybox/AtmosphericSkybox";
 export { DaySkybox } from "./skybox/DaySkybox";
 export { NightSkybox } from "./skybox/NightSkybox";
-export { TwilightSkybox } from "./skybox/TwilightSkybox";
 
 //------------------------------
 //  Textures
@@ -194,9 +195,9 @@ export { checkerboardTexture } from "./textures/checkerboard";
 
 export * from "./utils/GroupUtils";
 export * from "./utils/InstancedMeshUtils";
-export * from "./utils/InterpolateCurve"
+export * from "./utils/InterpolateCurve";
 export * from "./utils/MeshUtils";
-export * from "./utils/ParametricCurveUtils"
+export * from "./utils/ParametricCurveUtils";
 export * from "./utils/RandomNumberUtils";
 export * from "./utils/SphericalGeometryUtils";
 export * from "./utils/VertexUtils";
