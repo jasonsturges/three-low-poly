@@ -1,4 +1,16 @@
 //------------------------------
+//  Animators
+//------------------------------
+
+export { dollyAnimation } from "./animators/dollyAnimation";
+export { flythroughAnimation } from "./animators/flythroughAnimation";
+export { orbitAnimation } from "./animators/orbitAnimation";
+export { pendulumAnimation } from "./animators/pendulumAnimation";
+export { spiralAscensionAnimation } from "./animators/spiralAscentionAnimation";
+export { wobbleAnimation } from "./animators/wobbleAnimation";
+export { zoomInAnimation } from "./animators/zoomInAnimation";
+
+//------------------------------
 //  Brushes
 //------------------------------
 
