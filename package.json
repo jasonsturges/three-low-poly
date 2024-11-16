@@ -19,10 +19,8 @@
   ],
   "type": "module",
   "types": "dist/index.d.ts",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.es.js",
-  "browser": "dist/index.iife.js",
-  "umd": "dist/index.umd.js",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.es.js",
   "exports": {
     ".": {
       "require": "./dist/index.cjs.js",
