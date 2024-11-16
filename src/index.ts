@@ -1,5 +1,5 @@
 //------------------------------
-//  Constants
+//  Brushes
 //------------------------------
 
 export { displacementBrush } from "./brushes/DisplacementBrush";
