@@ -3,18 +3,31 @@ import { Camera, Vector3 } from "three";
 /**
  * The camera swings back and forth like a pendulum.
  *
- * Examples:
+ * Example:
  * ```
- * pendulumAnimation(camera, new THREE.Vector3(0, 5, 5), 0.5, 3000)
+ * pendulumAnimation(camera, new THREE.Vector3(0, 5, 5), 0.5, 9000, 3, () => {
+ *   console.log("Pendulum animation complete");
+ * });
  * ```
  */
-export function pendulumAnimation(camera: Camera, center: Vector3, radius: number, duration: number): void {
+export function pendulumAnimation(
+  camera: Camera,
+  center: Vector3,
+  radius: number,
+  duration: number,
+  oscillations: number,
+  onComplete?: () => void,
+): void {
   let startTime: number | null = null;
+  let oscillationCount = 0;
 
   function animate(time: number): void {
     if (startTime === null) startTime = time;
     const elapsed = time - startTime;
-    const progress = (elapsed / duration) % 1; // Loop indefinitely
+
+    // Calculate progress through a single oscillation
+    const oscillationDuration = duration / oscillations;
+    const progress = (elapsed % oscillationDuration) / oscillationDuration;
 
     // Calculate pendulum angle
     const angle = (Math.sin(progress * Math.PI * 2) * Math.PI) / 6; // Swing between -30° and +30°
@@ -23,6 +36,17 @@ export function pendulumAnimation(camera: Camera, center: Vector3, radius: numbe
 
     camera.position.set(x, camera.position.y, z);
     camera.lookAt(center);
+
+    // Increment oscillation count when completing a cycle
+    if (elapsed >= (oscillationCount + 1) * oscillationDuration) {
+      oscillationCount++;
+    }
+
+    // Stop after the specified number of oscillations
+    if (oscillationCount >= oscillations) {
+      if (onComplete) onComplete();
+      return;
+    }
 
     requestAnimationFrame(animate);
   }
