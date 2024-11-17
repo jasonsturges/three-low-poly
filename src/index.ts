@@ -34,7 +34,7 @@ export * from "./constants/ParametricCurve";
 //  Effects
 //------------------------------
 
-export { BubblingEffect } from "./effects/BubblingEffect";
+export { BubblingEffect, type BubblingEffectOptions } from "./effects/BubblingEffect";
 export { LeafEffect, type LeafEffectOptions } from "./effects/LeafEffect";
 
 //------------------------------
