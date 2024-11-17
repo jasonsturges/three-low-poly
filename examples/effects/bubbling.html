@@ -16,41 +16,61 @@
   </head>
   <body>
     <script type="module">
+      import * as THREE from "three";
       import GUI from "lil-gui";
       import { BubblingEffect, centerInstancedMesh } from "../../src/index.js";
       import { createOrbitScene } from "../utils/orbitScene.js";
 
-      const { scene, camera } = createOrbitScene();
+      const { scene, camera, handlers } = createOrbitScene();
 
       // GUI setup
       const gui = new GUI();
       const params = {
-        bubbleCount: 20,
-        maxHeight: 3,
-        maxWidth: 1.75,
-        maxDepth: 1.75,
+        count: 20,
+        height: 3,
+        width: 1.75,
+        depth: 1.75,
       };
 
-      let bubbling = new BubblingEffect(params);
-      scene.add(bubbling);
-      centerInstancedMesh(bubbling);
+      const bubbleGeometry = new THREE.SphereGeometry(0.1, 6, 6);
+      const bubbleMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.6,
+        roughness: 0.3,
+        metalness: 0.3,
+      });
+
+      let bubblingEffect = new BubblingEffect({
+        geometry: bubbleGeometry,
+        material: bubbleMaterial,
+        ...params,
+      });
+      scene.add(bubblingEffect);
+      centerInstancedMesh(bubblingEffect);
+      handlers.push(() => bubblingEffect.update());
 
       gui.title("Bubbling Effect");
-      gui.add(params, "bubbleCount", 3, 250, 1).name("Bubble Count").onChange(() => update());
-      gui.add(params, "maxHeight", 0.5, 10, 0.001).name("Max Height").onChange(() => update());
-      gui.add(params, "maxWidth", 0.1, 10, 0.001).name("Max Width").onChange(() => update());
-      gui.add(params, "maxDepth", 0.1, 10, 0.001).name("Max Depth").onChange(() => update());
+      gui.add(params, "count", 3, 250, 1).name("Count").onChange(() => update());
+      gui.add(params, "height", 0.5, 10, 0.001).name("Height").onChange(() => update());
+      gui.add(params, "width", 0.1, 10, 0.001).name("Width").onChange(() => update());
+      gui.add(params, "depth", 0.1, 10, 0.001).name("Depth").onChange(() => update());
 
       function update() {
-        scene.remove(bubbling);
-        bubbling = new BubblingEffect({
-          bubbleCount: params.bubbleCount,
-          maxHeight: params.maxHeight,
-          maxWidth: params.maxWidth,
-          maxDepth: params.maxDepth,
+        scene.remove(bubblingEffect);
+        handlers.length = 0;
+
+        bubblingEffect = new BubblingEffect({
+          geometry: bubbleGeometry,
+          material: bubbleMaterial,
+          count: params.count,
+          height: params.height,
+          width: params.width,
+          depth: params.depth,
         });
-        scene.add(bubbling);
-        centerInstancedMesh(bubbling);
+        scene.add(bubblingEffect);
+        centerInstancedMesh(bubblingEffect);
+        handlers.push(() => bubblingEffect.update());
       }
     </script>
   </body>
