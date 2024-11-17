@@ -1,20 +1,13 @@
-import { DoubleSide, Euler, Group, InstancedMesh, Matrix4, MeshStandardMaterial, Vector3 } from "three";
+import { DoubleSide, Euler, InstancedMesh, Matrix4, MeshStandardMaterial, Vector3 } from "three";
 import { EllipticLeafGeometry } from "../geometry/leafs/EllipticLeafGeometry";
 
-export class LeafEffect extends Group {
-  private leafGeometry: EllipticLeafGeometry;
-  private leafMaterial: MeshStandardMaterial;
-  private numLeaves: number;
-  private leavesMesh: InstancedMesh;
+export class LeafEffect extends InstancedMesh {
   private dummyMatrix: Matrix4;
   private leafVelocities: Vector3[];
 
   constructor(numLeaves: number = 200) {
-    super();
-
-    // Create Leaf Geometry and Material
-    this.leafGeometry = new EllipticLeafGeometry();
-    this.leafMaterial = new MeshStandardMaterial({
+    const leafGeometry = new EllipticLeafGeometry();
+    const leafMaterial = new MeshStandardMaterial({
       color: 0x88aa33,
       side: DoubleSide, // Leaves should be visible from both sides
       flatShading: true,
@@ -22,17 +15,14 @@ export class LeafEffect extends Group {
       roughness: 0.8,
     });
 
-    // Number of leaves to instance
-    this.numLeaves = numLeaves;
+    // Call the InstancedMesh constructor
+    super(leafGeometry, leafMaterial, numLeaves);
 
-    // Create an InstancedMesh
-    this.leavesMesh = new InstancedMesh(this.leafGeometry, this.leafMaterial, this.numLeaves);
-
-    // Set up transformation matrices for each instance
+    // Set up transformation matrices and velocities
     this.dummyMatrix = new Matrix4();
-    this.leafVelocities = []; // To store velocity data for each leaf
+    this.leafVelocities = [];
 
-    for (let i = 0; i < this.numLeaves; i++) {
+    for (let i = 0; i < numLeaves; i++) {
       // Random position for each leaf
       const x = (Math.random() - 0.5) * 20;
       const y = Math.random() * 9 + 0.5;
@@ -48,7 +38,7 @@ export class LeafEffect extends Group {
       this.dummyMatrix.setPosition(x, y, z);
 
       // Apply the transformation to the instance
-      this.leavesMesh.setMatrixAt(i, this.dummyMatrix);
+      this.setMatrixAt(i, this.dummyMatrix);
 
       // Store velocity for animation purposes
       const velocity = new Vector3(
@@ -59,15 +49,15 @@ export class LeafEffect extends Group {
       this.leafVelocities.push(velocity);
     }
 
-    // Add the InstancedMesh to the group
-    this.add(this.leavesMesh);
+    // Mark instance matrices as needing an update
+    this.instanceMatrix.needsUpdate = true;
   }
 
   // Method to update leaf positions (e.g., for animation purposes)
   update(): void {
-    for (let i = 0; i < this.numLeaves; i++) {
+    for (let i = 0; i < this.count; i++) {
       const matrix = new Matrix4();
-      this.leavesMesh.getMatrixAt(i, matrix);
+      this.getMatrixAt(i, matrix);
 
       const position = new Vector3();
       position.setFromMatrixPosition(matrix);
@@ -86,8 +76,8 @@ export class LeafEffect extends Group {
 
       // Set the updated position back to the matrix
       matrix.setPosition(position);
-      this.leavesMesh.setMatrixAt(i, matrix);
+      this.setMatrixAt(i, matrix);
     }
-    this.leavesMesh.instanceMatrix.needsUpdate = true;
+    this.instanceMatrix.needsUpdate = true;
   }
 }
