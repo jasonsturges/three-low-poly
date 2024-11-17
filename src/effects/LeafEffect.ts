@@ -1,59 +1,72 @@
-import { DoubleSide, Euler, InstancedMesh, Matrix4, MeshStandardMaterial, Vector3 } from "three";
+import { BufferGeometry, DoubleSide, Euler, InstancedMesh, Material, Matrix4, MeshStandardMaterial, Vector3 } from "three";
 import { EllipticLeafGeometry } from "../geometry/leafs/EllipticLeafGeometry";
+
+export interface LeafEffectOptions {
+  geometry?: BufferGeometry;
+  material?: Material;
+  count?: number;
+  width?: number; // Width of the area
+  height?: number; // Height of the area
+  depth?: number; // Depth of the area
+}
 
 export class LeafEffect extends InstancedMesh {
   private dummyMatrix: Matrix4;
-  private leafVelocities: Vector3[];
+  private velocities: Vector3[];
+  private width: number;
+  private height: number;
+  private depth: number;
 
-  constructor(numLeaves: number = 200) {
-    const leafGeometry = new EllipticLeafGeometry();
-    const leafMaterial = new MeshStandardMaterial({
-      color: 0x88aa33,
-      side: DoubleSide, // Leaves should be visible from both sides
-      flatShading: true,
-      metalness: 0.1,
-      roughness: 0.8,
-    });
+  constructor(options: LeafEffectOptions = {}) {
+    const {
+      geometry = new EllipticLeafGeometry(), // Default to an empty geometry
+      material = new MeshStandardMaterial({
+        color: 0x88aa33,
+        metalness: 0.1,
+        roughness: 0.8,
+        flatShading: true,
+        side: DoubleSide,
+      }),
+      count = 200,
+      width = 20, // Default width of the effect area
+      height = 10, // Default height of the effect area
+      depth = 20, // Default depth of the effect area
+    } = options;
 
-    // Call the InstancedMesh constructor
-    super(leafGeometry, leafMaterial, numLeaves);
+    super(geometry, material, count);
 
-    // Set up transformation matrices and velocities
     this.dummyMatrix = new Matrix4();
-    this.leafVelocities = [];
+    this.velocities = [];
+    this.width = width;
+    this.height = height;
+    this.depth = depth;
 
-    for (let i = 0; i < numLeaves; i++) {
-      // Random position for each leaf
-      const x = (Math.random() - 0.5) * 20;
-      const y = Math.random() * 9 + 0.5;
-      const z = (Math.random() - 0.5) * 20;
+    // Initialize instances
+    for (let i = 0; i < count; i++) {
+      // Random position within specified area
+      const x = (Math.random() - 0.5) * width;
+      const y = Math.random() * (height - 1) + 0.5;
+      const z = (Math.random() - 0.5) * depth;
 
       // Random rotation
       const rotationX = (Math.random() - 0.5) * Math.PI;
       const rotationY = (Math.random() - 0.5) * Math.PI;
       const rotationZ = (Math.random() - 0.5) * Math.PI;
 
-      // Set position and rotation for the instance
+      // Set position and rotation
       this.dummyMatrix.makeRotationFromEuler(new Euler(rotationX, rotationY, rotationZ));
       this.dummyMatrix.setPosition(x, y, z);
 
-      // Apply the transformation to the instance
       this.setMatrixAt(i, this.dummyMatrix);
 
-      // Store velocity for animation purposes
-      const velocity = new Vector3(
-        (Math.random() - 0.5) * 0.01, // SpeedX
-        -0.005, // SpeedY
-        (Math.random() - 0.5) * 0.01, // SpeedZ
-      );
-      this.leafVelocities.push(velocity);
+      // Store velocity for animation
+      const velocity = new Vector3((Math.random() - 0.5) * 0.01, -0.005, (Math.random() - 0.5) * 0.01);
+      this.velocities.push(velocity);
     }
 
-    // Mark instance matrices as needing an update
     this.instanceMatrix.needsUpdate = true;
   }
 
-  // Method to update leaf positions (e.g., for animation purposes)
   update(): void {
     for (let i = 0; i < this.count; i++) {
       const matrix = new Matrix4();
@@ -62,19 +75,22 @@ export class LeafEffect extends InstancedMesh {
       const position = new Vector3();
       position.setFromMatrixPosition(matrix);
 
-      // Update position using velocity
-      const velocity = this.leafVelocities[i];
+      // Update position
+      const velocity = this.velocities[i];
       position.add(velocity);
 
-      // Reset leaf if it falls below the ground
+      // Reset position if below ground
       if (position.y < 0) {
-        position.set((Math.random() - 0.5) * 20, Math.random() * 9 + 0.5, (Math.random() - 0.5) * 20);
+        position.set(
+          (Math.random() - 0.5) * this.width,
+          Math.random() * (this.height - 1) + 0.5,
+          (Math.random() - 0.5) * this.depth,
+        );
 
-        // Update velocity for new variability
+        // Update velocity
         velocity.set((Math.random() - 0.5) * 0.01, -0.005, (Math.random() - 0.5) * 0.01);
       }
 
-      // Set the updated position back to the matrix
       matrix.setPosition(position);
       this.setMatrixAt(i, matrix);
     }
