@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+        color: #dfd9bc;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { centerInstancedMesh, EllipticLeafGeometry, LeafEffect } from "../../src/index.js";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+
+      const { scene, camera, handlers } = createOrbitScene();
+
+      // GUI setup
+      const gui = new GUI();
+      const params = {
+        count: 200,
+        width: 20,
+        height: 10,
+        depth: 20,
+      };
+
+      const leafGeometry = new EllipticLeafGeometry();
+      const leafMaterial = new THREE.MeshStandardMaterial({
+        color: 0x88aa33,
+        side: THREE.DoubleSide, // Leaves should be visible from both sides
+        flatShading: true,
+        metalness: 0.1,
+        roughness: 0.8,
+      });
+
+      let leafEffect = new LeafEffect({
+        geometry: leafGeometry,
+        material: leafMaterial,
+        ...params
+      });
+      scene.add(leafEffect);
+      centerInstancedMesh(leafEffect);
+      handlers.push(() => leafEffect.update());
+
+      gui.title("Bubbling Effect");
+      gui.add(params, "count", 1, 1000, 1).name("Count").onChange(() => update());
+      gui.add(params, "height", 0.5, 20, 0.001).name("Height").onChange(() => update());
+      gui.add(params, "width", 0.1, 20, 0.001).name("Width").onChange(() => update());
+      gui.add(params, "depth", 0.1, 20, 0.001).name("Depth").onChange(() => update());
+
+      function update() {
+        scene.remove(leafEffect);
+        handlers.length = 0;
+
+        leafEffect = new LeafEffect({
+          geometry: leafGeometry,
+          material: leafMaterial,
+          count: params.count,
+          height: params.height,
+          width: params.width,
+          depth: params.depth,
+        });
+        scene.add(leafEffect);
+        centerInstancedMesh(leafEffect);
+        handlers.push(() => leafEffect.update());
+      }
+    </script>
+  </body>
+</html>
