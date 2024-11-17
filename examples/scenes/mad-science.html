@@ -75,10 +75,10 @@
       flask.scale.set(0.25, 0.25, 0.25);
       flask.position.set(-1, 3.3, -1);
       scene.add(flask);
-      const bubbleEffect = new BubblingEffect();
-      bubbleEffect.position.set(-1, 3.3, -1);
-      bubbleEffect.scale.set(0.25, 0.25, 0.25);
-      scene.add(bubbleEffect);
+      const bubblingEffect = new BubblingEffect();
+      bubblingEffect.position.set(-1, 3.3, -1);
+      bubblingEffect.scale.set(0.25, 0.25, 0.25);
+      scene.add(bubblingEffect);
 
       const mortarAndPestle = new MortarAndPestle();
       mortarAndPestle.scale.set(0.15, 0.15, 0.15);
@@ -109,6 +109,7 @@
       renderer.setAnimationLoop(() => {
         renderer.render(scene, camera);
         controls.update();
+        bubblingEffect.update();
       });
 
       window.addEventListener("resize", () => {
