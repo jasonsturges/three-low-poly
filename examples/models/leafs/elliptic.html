@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+        color: #dfd9bc;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import { EllipticLeafGeometry } from "../../../src/index.js";
+      import { createOrbitScene } from "../../utils/orbitScene.js";
+
+      const { scene, camera } = createOrbitScene();
+      camera.position.set(0, 0, 1);
+
+      const geometry = new EllipticLeafGeometry();
+      const material = new THREE.MeshStandardMaterial({
+        color: 0x88aa33,
+        flatShading: true,
+        metalness: 0.1,
+        roughness: 0.8,
+        side: THREE.DoubleSide,
+      });
+
+      const mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+    </script>
+  </body>
+</html>
