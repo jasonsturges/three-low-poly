@@ -64,7 +64,7 @@ export class BubblingEffect extends InstancedMesh {
    * Updates bubble positions, moving them upward and resetting them
    * to the bottom if they reach the top.
    */
-  private update(): void {
+  public update(): void {
     for (let i = 0; i < this.count; i++) {
       const position = this.bubblePositions[i];
       position.y += this.velocities[i]; // Move bubble upwards
