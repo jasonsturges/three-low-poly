@@ -35,7 +35,7 @@ export * from "./constants/ParametricCurve";
 //------------------------------
 
 export { BubblingEffect } from "./effects/BubblingEffect";
-export { LeafEffect } from "./effects/LeafEffect";
+export { LeafEffect, type LeafEffectOptions } from "./effects/LeafEffect";
 
 //------------------------------
 //  Factory
