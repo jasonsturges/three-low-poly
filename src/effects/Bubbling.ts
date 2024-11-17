@@ -1,22 +1,20 @@
-import {
-  Group,
-  Mesh,
-  MeshStandardMaterial,
-  SphereGeometry,
-  Vector3,
-} from "three";
+import { InstancedMesh, Matrix4, MeshStandardMaterial, SphereGeometry, Vector3 } from "three";
+import { randomFloat } from "../utils/RandomNumberUtils";
 
-/**
- * Bubbling class creates a group of small, semi-transparent bubbles that
- * rise upwards in a loop, mimicking bubbling inside a flask.
- */
-class Bubbling extends Group {
-  private bubbles: Mesh[] = [];
+export class Bubbling extends InstancedMesh {
   private bubbleCount: number = 20;
+  private bubblePositions: Vector3[] = [];
+  private bubbleSpeeds: number[] = [];
+  private maxHeight: number = 3;
+  private maxWidth: number = 1.5;
+  private maxDepth: number = 1.5;
 
-  constructor() {
-    super();
-
+  constructor({
+    bubbleCount = 20, //
+    maxHeight = 3,
+    maxWidth = 1.5,
+    maxDepth = 1.5,
+  } = {}) {
     // Bubble geometry and material
     const bubbleGeometry = new SphereGeometry(0.1, 6, 6); // Small spheres
     const bubbleMaterial = new MeshStandardMaterial({
@@ -27,16 +25,23 @@ class Bubbling extends Group {
       metalness: 0.3,
     });
 
-    // Create bubbles and add to group
+    super(bubbleGeometry, bubbleMaterial, bubbleCount); // Initialize InstancedMesh with count
+
+    this.bubbleCount = bubbleCount;
+    this.maxHeight = maxHeight;
+    this.maxWidth = maxWidth;
+    this.maxDepth = maxDepth;
+
+    // Initialize bubble positions and speeds
     for (let i = 0; i < this.bubbleCount; i++) {
-      const bubble = new Mesh(bubbleGeometry, bubbleMaterial);
-      bubble.position.set(
-        (Math.random() - 0.5) * 1.5, // Random x position within flask
-        Math.random() * 3, // Random y position within flask height
-        (Math.random() - 0.5) * 1.5, // Random z position within flask
+      const position = new Vector3(
+        randomFloat(-(maxWidth / 2), maxWidth / 2),
+        Math.random() * maxHeight,
+        randomFloat(-(maxDepth / 2), maxDepth / 2),
       );
-      this.bubbles.push(bubble);
-      this.add(bubble);
+      this.bubblePositions.push(position);
+      this.bubbleSpeeds.push(0.01 + Math.random() * 0.02);
+      this.updateInstanceMatrix(i);
     }
 
     // Start the animation loop
@@ -44,20 +49,33 @@ class Bubbling extends Group {
   }
 
   /**
+   * Updates the position of a specific bubble instance in the InstancedMesh.
+   */
+  private updateInstanceMatrix(index: number): void {
+    const position = this.bubblePositions[index];
+    const matrix = new Matrix4().setPosition(position);
+    this.setMatrixAt(index, matrix);
+    this.instanceMatrix.needsUpdate = true;
+  }
+
+  /**
    * Updates bubble positions, moving them upward and resetting them
    * to the bottom if they reach the top.
    */
   private updateBubbles(): void {
-    this.bubbles.forEach((bubble) => {
-      bubble.position.y += 0.02; // Move bubble upwards
+    for (let i = 0; i < this.bubbleCount; i++) {
+      const position = this.bubblePositions[i];
+      position.y += this.bubbleSpeeds[i]; // Move bubble upwards
 
-      // Reset bubble to bottom if it reaches top
-      if (bubble.position.y > 3) {
-        bubble.position.y = 0;
-        bubble.position.x = (Math.random() - 0.5) * 1.5; // Randomize x position again
-        bubble.position.z = (Math.random() - 0.5) * 1.5; // Randomize z position again
+      // Reset bubble to bottom if it reaches the top
+      if (position.y > this.maxHeight) {
+        position.y = 0;
+        position.x = randomFloat(-(this.maxWidth / 2), this.maxWidth / 2); // Randomize x position
+        position.z = randomFloat(-(this.maxDepth / 2), this.maxDepth / 2); // Randomize z position
       }
-    });
+
+      this.updateInstanceMatrix(i);
+    }
   }
 
   /**
@@ -71,5 +89,3 @@ class Bubbling extends Group {
     animate();
   }
 }
-
-export { Bubbling };
