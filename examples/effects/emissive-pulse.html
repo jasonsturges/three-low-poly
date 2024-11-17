@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+        color: #dfd9bc;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { EmissivePulseEffect, PanelLight, centerMesh } from "../../src/index.js";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+
+      const { scene, camera, handlers } = createOrbitScene();
+
+      const gui = new GUI();
+      const params = {
+        color: 0xffc7c7,
+        emissive: 0xff0000,
+        speed: 2,
+        maxIntensity: 0.8,
+        minIntensity: 0.2,
+      };
+
+      const panelLight = new PanelLight({
+        color: params.color,
+        emissive: params.emissive,
+      });
+      scene.add(panelLight);
+      centerMesh(panelLight);
+
+      const pulseEffect = new EmissivePulseEffect({
+        material: panelLight.material,
+        speed: params.speed,
+        maxIntensity: params.maxIntensity,
+        minIntensity: params.minIntensity,
+      });
+
+      const clock = new THREE.Clock();
+      handlers.push(() => pulseEffect.update(clock.getElapsedTime()));
+
+      gui.title("Emissive Pulse Effect");
+      gui.addColor(params, "color").name("Color").onChange(update);
+      gui.addColor(params, "emissive").name("Emissive").onChange(update);
+      gui.add(params, "speed", 1, 10, 0.01).name("Speed").onChange(() => update());
+      gui.add(params, "maxIntensity", 0, 1, 0.001).name("Max Intensity").onChange(() => update());
+      gui.add(params, "minIntensity", 0, 1, 0.001).name("Min Intensity").onChange(() => update());
+
+      function update() {
+        panelLight.material.color.set(params.color);
+        panelLight.material.emissive.set(params.emissive);
+        pulseEffect.speed = params.speed;
+        pulseEffect.maxIntensity = params.maxIntensity;
+        pulseEffect.minIntensity = params.minIntensity;
+      }
+    </script>
+  </body>
+</html>
