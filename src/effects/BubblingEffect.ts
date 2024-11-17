@@ -1,7 +1,7 @@
 import { InstancedMesh, Matrix4, MeshStandardMaterial, SphereGeometry, Vector3 } from "three";
 import { randomFloat } from "../utils/RandomNumberUtils";
 
-export class Bubbling extends InstancedMesh {
+export class BubblingEffect extends InstancedMesh {
   private bubbleCount: number = 20;
   private bubblePositions: Vector3[] = [];
   private bubbleSpeeds: number[] = [];

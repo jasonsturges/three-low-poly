@@ -34,7 +34,7 @@ export * from "./constants/ParametricCurve";
 //  Effects
 //------------------------------
 
-export { Bubbling } from "./effects/Bubbling";
+export { BubblingEffect } from "./effects/BubblingEffect";
 
 //------------------------------
 //  Factory

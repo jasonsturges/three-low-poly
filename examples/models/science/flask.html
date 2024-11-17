@@ -16,14 +16,14 @@
   <body>
     <script type="module">
       import { Flask } from "../../../src/index.js";
-      import { Bubbling } from "../../../src/index.js";
+      import { BubblingEffect } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
 
       const flask = new Flask();
       scene.add(flask);
-      const bubbling = new Bubbling();
+      const bubbling = new BubblingEffect();
       scene.add(bubbling);
     </script>
   </body>

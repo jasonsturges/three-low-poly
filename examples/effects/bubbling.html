@@ -17,7 +17,7 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { Bubbling, centerInstancedMesh } from "../../src/index.js";
+      import { BubblingEffect, centerInstancedMesh } from "../../src/index.js";
       import { createOrbitScene } from "../utils/orbitScene.js";
 
       const { scene, camera } = createOrbitScene();
@@ -31,7 +31,7 @@
         maxDepth: 1.75,
       };
 
-      let bubbling = new Bubbling(params);
+      let bubbling = new BubblingEffect(params);
       scene.add(bubbling);
       centerInstancedMesh(bubbling);
 
@@ -43,7 +43,7 @@
 
       function update() {
         scene.remove(bubbling);
-        bubbling = new Bubbling({
+        bubbling = new BubblingEffect({
           bubbleCount: params.bubbleCount,
           maxHeight: params.maxHeight,
           maxWidth: params.maxWidth,
