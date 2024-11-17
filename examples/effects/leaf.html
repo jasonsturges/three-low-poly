@@ -18,7 +18,7 @@
     <script type="module">
       import * as THREE from "three";
       import GUI from "lil-gui";
-      import { centerInstancedMesh, EllipticLeafGeometry, LeafEffect } from "../../src/index.js";
+      import { EllipticLeafGeometry, LeafEffect, centerInstancedMesh } from "../../src/index.js";
       import { createOrbitScene } from "../utils/orbitScene.js";
 
       const { scene, camera, handlers } = createOrbitScene();
@@ -50,7 +50,7 @@
       centerInstancedMesh(leafEffect);
       handlers.push(() => leafEffect.update());
 
-      gui.title("Bubbling Effect");
+      gui.title("Leaf Effect");
       gui.add(params, "count", 1, 1000, 1).name("Count").onChange(() => update());
       gui.add(params, "height", 0.5, 20, 0.001).name("Height").onChange(() => update());
       gui.add(params, "width", 0.1, 20, 0.001).name("Width").onChange(() => update());
