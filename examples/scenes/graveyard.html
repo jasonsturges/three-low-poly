@@ -21,6 +21,7 @@
         Bone,
         Candle,
         CrossHeadstone,
+        EllipticLeafGeometry,
         FenceColumn,
         Lantern,
         LeafEffect,
@@ -32,6 +33,7 @@
         SquareHeadstone,
         WroughtIronFence,
       } from "../../src/index.js";
+      import { DoubleSide, MeshStandardMaterial } from "three";
 
       const scene = new THREE.Scene();
       scene.fog = new THREE.Fog(0x010101, 5, 35);
@@ -164,7 +166,19 @@
       scene.add(moon);
 
       // Leaf effect
-      const leafEffect = new LeafEffect();
+      const leafGeometry = new EllipticLeafGeometry();
+      const leafMaterial = new MeshStandardMaterial({
+        color: 0x88aa33,
+        side: DoubleSide, // Leaves should be visible from both sides
+        flatShading: true,
+        metalness: 0.1,
+        roughness: 0.8,
+      });
+
+      const leafEffect = new LeafEffect({
+        geometry: leafGeometry,
+        material: leafMaterial,
+      });
       scene.add(leafEffect);
 
       // Lighting
