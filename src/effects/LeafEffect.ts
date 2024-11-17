@@ -1,19 +1,13 @@
 import { DoubleSide, Euler, Group, InstancedMesh, Matrix4, MeshStandardMaterial, Vector3 } from "three";
 import { EllipticLeafGeometry } from "../geometry/leafs/EllipticLeafGeometry";
 
-interface RandomValues {
-  speedX: number;
-  speedY: number;
-  speedZ: number;
-}
-
 export class LeafEffect extends Group {
   private leafGeometry: EllipticLeafGeometry;
   private leafMaterial: MeshStandardMaterial;
   private numLeaves: number;
   private leavesMesh: InstancedMesh;
   private dummyMatrix: Matrix4;
-  private randomValues: RandomValues[];
+  private leafVelocities: Vector3[];
 
   constructor(numLeaves: number = 200) {
     super();
@@ -36,7 +30,7 @@ export class LeafEffect extends Group {
 
     // Set up transformation matrices for each instance
     this.dummyMatrix = new Matrix4();
-    this.randomValues = []; // To store random data for each leaf (e.g., speed)
+    this.leafVelocities = []; // To store velocity data for each leaf
 
     for (let i = 0; i < this.numLeaves; i++) {
       // Random position for each leaf
@@ -56,12 +50,13 @@ export class LeafEffect extends Group {
       // Apply the transformation to the instance
       this.leavesMesh.setMatrixAt(i, this.dummyMatrix);
 
-      // Store random values for animation purposes
-      this.randomValues.push({
-        speedX: (Math.random() - 0.5) * 0.01,
-        speedY: -0.005,
-        speedZ: (Math.random() - 0.5) * 0.01,
-      });
+      // Store velocity for animation purposes
+      const velocity = new Vector3(
+        (Math.random() - 0.5) * 0.01, // SpeedX
+        -0.005, // SpeedY
+        (Math.random() - 0.5) * 0.01, // SpeedZ
+      );
+      this.leafVelocities.push(velocity);
     }
 
     // Add the InstancedMesh to the group
@@ -69,7 +64,7 @@ export class LeafEffect extends Group {
   }
 
   // Method to update leaf positions (e.g., for animation purposes)
-  public update(): void {
+  update(): void {
     for (let i = 0; i < this.numLeaves; i++) {
       const matrix = new Matrix4();
       this.leavesMesh.getMatrixAt(i, matrix);
@@ -77,18 +72,16 @@ export class LeafEffect extends Group {
       const position = new Vector3();
       position.setFromMatrixPosition(matrix);
 
-      position.x += this.randomValues[i].speedX;
-      position.y += this.randomValues[i].speedY;
-      position.z += this.randomValues[i].speedZ;
+      // Update position using velocity
+      const velocity = this.leafVelocities[i];
+      position.add(velocity);
 
       // Reset leaf if it falls below the ground
       if (position.y < 0) {
         position.set((Math.random() - 0.5) * 20, Math.random() * 9 + 0.5, (Math.random() - 0.5) * 20);
 
-        // Update speed for new variability
-        this.randomValues[i].speedX = (Math.random() - 0.5) * 0.01;
-        this.randomValues[i].speedY = -0.005;
-        this.randomValues[i].speedZ = (Math.random() - 0.5) * 0.01;
+        // Update velocity for new variability
+        velocity.set((Math.random() - 0.5) * 0.01, -0.005, (Math.random() - 0.5) * 0.01);
       }
 
       // Set the updated position back to the matrix
