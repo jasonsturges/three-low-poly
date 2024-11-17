@@ -23,6 +23,7 @@
         CrossHeadstone,
         FenceColumn,
         Lantern,
+        LeafEffect,
         Mausoleum,
         Moon,
         ObeliskHeadstone,
@@ -162,6 +163,10 @@
       moon.position.set(9, 15, -45); // Adjust position as desired
       scene.add(moon);
 
+      // Leaf effect
+      const leafEffect = new LeafEffect();
+      scene.add(leafEffect);
+
       // Lighting
       const spotlight = new THREE.SpotLight(0x23adf5, 100, 10, Math.PI / 8);
       spotlight.position.set(0, 9, -15);
@@ -198,6 +203,7 @@
       renderer.setAnimationLoop(() => {
         renderer.render(scene, camera);
         controls.update();
+        leafEffect.update();
       });
 
       window.addEventListener("resize", () => {
