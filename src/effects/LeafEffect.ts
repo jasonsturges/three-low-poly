@@ -5,9 +5,9 @@ export interface LeafEffectOptions {
   geometry?: BufferGeometry;
   material?: Material;
   count?: number;
-  width?: number; // Width of the area
-  height?: number; // Height of the area
-  depth?: number; // Depth of the area
+  width?: number;
+  height?: number;
+  depth?: number;
 }
 
 export class LeafEffect extends InstancedMesh {
@@ -19,7 +19,11 @@ export class LeafEffect extends InstancedMesh {
 
   constructor(options: LeafEffectOptions = {}) {
     const {
-      geometry = new EllipticLeafGeometry(), // Default to an empty geometry
+      count = 200,
+      width = 20,
+      height = 10,
+      depth = 20,
+      geometry = new EllipticLeafGeometry(),
       material = new MeshStandardMaterial({
         color: 0x88aa33,
         metalness: 0.1,
@@ -27,10 +31,6 @@ export class LeafEffect extends InstancedMesh {
         flatShading: true,
         side: DoubleSide,
       }),
-      count = 200,
-      width = 20, // Default width of the effect area
-      height = 10, // Default height of the effect area
-      depth = 20, // Default depth of the effect area
     } = options;
 
     super(geometry, material, count);
