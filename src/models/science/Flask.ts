@@ -1,4 +1,4 @@
-import {CylinderGeometry, Group, LatheGeometry, Mesh, MeshStandardMaterial, Vector2} from "three";
+import { CylinderGeometry, Group, LatheGeometry, Mesh, MeshStandardMaterial, Vector2 } from "three";
 
 class Flask extends Group {
   constructor() {
@@ -24,6 +24,7 @@ class Flask extends Group {
       opacity: 0.4,
       roughness: 0.1,
       metalness: 0.5,
+      depthWrite: false,
     });
 
     const corkMaterial = new MeshStandardMaterial({
