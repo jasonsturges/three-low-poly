@@ -16,7 +16,7 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { PanelLight, centerMesh } from "../../../src/index.js";
+      import { Panel, PanelLight } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
@@ -29,19 +29,21 @@
         emissiveIntensity: 0.5,
       };
 
-      let panelLight = new PanelLight(params);
+      const panel = new Panel();
+      scene.add(panel);
+
+      const panelLight = new PanelLight(params);
+      panelLight.position.set(0, 0, 0.1);
       scene.add(panelLight);
-      centerMesh(panelLight);
 
       gui.addColor(params, "color").name("Color").onChange(update);
       gui.addColor(params, "emissive").name("Emissive").onChange(update);
       gui.add(params, "emissiveIntensity", 0, 1, 0.001).name("Emissive Intensity").onChange(update);
 
       function update() {
-        scene.remove(panelLight);
-        panelLight = new PanelLight(params);
-        scene.add(panelLight);
-        centerMesh(panelLight);
+        panelLight.material.color.set(params.color);
+        panelLight.material.emissive.set(params.emissive);
+        panelLight.material.emissiveIntensity = params.emissiveIntensity;
       }
     </script>
   </body>
