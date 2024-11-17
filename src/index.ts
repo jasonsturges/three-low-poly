@@ -145,6 +145,7 @@ export { Flask } from "./models/science/Flask";
 export { LeverPanel } from "./models/science/LeverPanel";
 export { Microscope } from "./models/science/Microscope";
 export { MortarAndPestle } from "./models/science/MortarAndPestle";
+export { PanelLight, type PanelLightOptions } from "./models/science/PanelLight";
 export { SpiralTube } from "./models/science/SpiralTube";
 export { Stand } from "./models/science/Stand";
 export { TeslaCoil } from "./models/science/TeslaCoil";
