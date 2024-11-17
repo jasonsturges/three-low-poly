@@ -67,7 +67,7 @@ export class LeafEffect extends InstancedMesh {
     this.instanceMatrix.needsUpdate = true;
   }
 
-  update(): void {
+  public update(): void {
     for (let i = 0; i < this.count; i++) {
       const matrix = new Matrix4();
       this.getMatrixAt(i, matrix);
