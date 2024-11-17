@@ -1,6 +1,6 @@
 import { BufferGeometry, Float32BufferAttribute } from "three";
 
-class SimpleLeafGeometry extends BufferGeometry {
+export class EllipticLeafGeometry extends BufferGeometry {
   constructor(size = 0.1) {
     super();
 
@@ -41,5 +41,3 @@ class SimpleLeafGeometry extends BufferGeometry {
     this.computeVertexNormals();
   }
 }
-
-export { SimpleLeafGeometry };
