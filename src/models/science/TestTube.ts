@@ -16,6 +16,7 @@ class TestTube extends Group {
       metalness: 0.1,
       reflectivity: 0.8,
       transmission: 0.9, // For glass effect
+      depthWrite: false,
       side: DoubleSide,
     });
 

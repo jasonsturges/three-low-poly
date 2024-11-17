@@ -23,6 +23,7 @@ class TestTubeRack extends Group {
       opacity: 0.4,
       roughness: 0.1,
       metalness: 0.5,
+      depthWrite: false,
       side: DoubleSide,
     });
 
