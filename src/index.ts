@@ -216,4 +216,5 @@ export * from "./utils/MeshUtils";
 export * from "./utils/ParametricCurveUtils";
 export * from "./utils/RandomNumberUtils";
 export * from "./utils/SphericalGeometryUtils";
+export * from "./utils/TimerUtils";
 export * from "./utils/VertexUtils";
