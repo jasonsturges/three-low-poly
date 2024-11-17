@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+        color: #dfd9bc;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import GUI from "lil-gui";
+      import { Bubbling, centerInstancedMesh } from "../../src/index.js";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+
+      const { scene, camera } = createOrbitScene();
+
+      // GUI setup
+      const gui = new GUI();
+      const params = {
+        bubbleCount: 20,
+        maxHeight: 3,
+        maxWidth: 1.75,
+        maxDepth: 1.75,
+      };
+
+      let bubbling = new Bubbling(params);
+      scene.add(bubbling);
+      centerInstancedMesh(bubbling);
+
+      gui.title("Bubbling Effect");
+      gui.add(params, "bubbleCount", 3, 250, 1).name("Bubble Count").onChange(() => update());
+      gui.add(params, "maxHeight", 0.5, 10, 0.001).name("Max Height").onChange(() => update());
+      gui.add(params, "maxWidth", 0.1, 10, 0.001).name("Max Width").onChange(() => update());
+      gui.add(params, "maxDepth", 0.1, 10, 0.001).name("Max Depth").onChange(() => update());
+
+      function update() {
+        scene.remove(bubbling);
+        bubbling = new Bubbling({
+          bubbleCount: params.bubbleCount,
+          maxHeight: params.maxHeight,
+          maxWidth: params.maxWidth,
+          maxDepth: params.maxDepth,
+        });
+        scene.add(bubbling);
+        centerInstancedMesh(bubbling);
+      }
+    </script>
+  </body>
+</html>
