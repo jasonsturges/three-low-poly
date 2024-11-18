@@ -28,7 +28,9 @@ class MortarAndPestle extends Group {
 
     // Meshes
     const mortar = new Mesh(mortarGeometry, mortarMaterial);
+    mortar.castShadow = true;
     const pestle = new Mesh(pestleGeometry, pestleMaterial);
+    pestle.castShadow = true;
 
     // Position and rotate the pestle to rest in the mortar
     pestle.position.set(0.3, 1.3, 0);

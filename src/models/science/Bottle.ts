@@ -39,6 +39,8 @@ class Bottle extends Group {
 
     // Meshes
     const bottle = new Mesh(bottleGeometry, glassMaterial);
+    bottle.castShadow = true;
+
     const liquid = new Mesh(bottleGeometry, liquidMaterial);
     const cork = new Mesh(corkGeometry, corkMaterial);
 

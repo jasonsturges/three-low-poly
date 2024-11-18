@@ -34,6 +34,7 @@ class Flask extends Group {
 
     // Meshes
     const flask = new Mesh(flaskGeometry, glassMaterial);
+    flask.castShadow = true;
     const cork = new Mesh(corkGeometry, corkMaterial);
 
     // Position cork on top of the flask
