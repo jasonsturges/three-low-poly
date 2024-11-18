@@ -19,16 +19,29 @@
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
       import {
         Book,
+        Bookshelf,
         Bottle,
         BubblingEffect,
         Desk,
+        EmissivePulseEffect,
+        ErlenmeyerFlask,
         Flask,
         FlorenceFlask,
+        LightningEffect,
         MortarAndPestle,
+        Panel,
+        PanelLight,
         Stand,
-        TestTubeRack
+        TestTubeRack,
+        logarithmicRandomMax,
+        randomFloat,
+        setRandomInterval,
       } from "../../src/index.js";
-      import { Group } from "three";
+      import { Group, PointLight } from "three";
+
+      //------------------------------
+      //  Scene
+      //------------------------------
 
       const scene = new THREE.Scene();
 
@@ -41,18 +54,56 @@
       renderer.shadowMap.enabled = true;
       document.body.appendChild(renderer.domElement);
 
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      directionalLight.position.set(-5, 10, 5);
+      directionalLight.castShadow = true;
+      scene.add(directionalLight);
+
+      const spotLight = new THREE.SpotLight(0xffffff, 25, 50, Math.PI / 4, 1, 0.9);
+      spotLight.position.set(-3, 8, 0);
+      spotLight.target.position.set(-11, 0, 0);
+      spotLight.castShadow = true;
+      scene.add(spotLight);
+      scene.add(spotLight.target);
+
+      const hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, 0.5);
+      hemisphereLight.position.set(0, 10, 0);
+      scene.add(hemisphereLight);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.target.set(0, 3, 0);
+      controls.update();
+
+      //------------------------------
+      //  Objects
+      //------------------------------
+
+      const planeGeometry = new THREE.PlaneGeometry(40, 40);
+      const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x0a0a0a });
+      const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+      plane.rotation.x = -Math.PI / 2;
+      plane.receiveShadow = true;
+      scene.add(plane);
+
       const desk = new Desk();
+      desk.receiveShadow = true;
+      desk.castShadow = true;
       scene.add(desk);
 
-      const beakerGroup = new Group();
       const stand = new Stand();
-      beakerGroup.add(stand);
-      const beaker = new FlorenceFlask();
-      beakerGroup.add(beaker);
-      beaker.scale.set(0.35, 0.35, 0.35);
-      beaker.position.set(0, 0.6, 0);
-      scene.add(beakerGroup);
-      beakerGroup.position.set(-2, 3.3, -0.5);
+      stand.castShadow = true;
+      const florenceFlask = new FlorenceFlask();
+      florenceFlask.castShadow = true;
+      florenceFlask.scale.set(0.35, 0.35, 0.35);
+      florenceFlask.position.set(0, 0.6, 0);
+      const florenceFlaskGroup = new Group();
+      florenceFlaskGroup.add(stand);
+      florenceFlaskGroup.add(florenceFlask);
+      florenceFlaskGroup.position.set(-2, 3.3, -0.5);
+      scene.add(florenceFlaskGroup);
 
       const book = new Book({
         width: 0.8,
@@ -64,16 +115,19 @@
       book.position.set(0, 3.3, -0.25);
       book.rotation.x = Math.PI / 2;
       book.rotation.z = Math.PI / 6;
+      book.castShadow = true;
       scene.add(book);
 
       const bottle = new Bottle();
       bottle.scale.set(0.25, 0.25, 0.25);
       bottle.position.set(-0, 3.3, -1);
+      bottle.castShadow = true;
       scene.add(bottle);
 
       const flask = new Flask();
       flask.scale.set(0.25, 0.25, 0.25);
       flask.position.set(-1, 3.3, -1);
+      flask.castShadow = true;
       scene.add(flask);
       const bubblingEffect = new BubblingEffect();
       bubblingEffect.position.set(-1, 3.3, -1);
@@ -83,32 +137,157 @@
       const mortarAndPestle = new MortarAndPestle();
       mortarAndPestle.scale.set(0.15, 0.15, 0.15);
       mortarAndPestle.position.set(1, 3.3, -1);
+      mortarAndPestle.castShadow = true;
       scene.add(mortarAndPestle);
 
       const testTubeRack = new TestTubeRack();
       testTubeRack.scale.set(0.3, 0.3, 0.3);
       testTubeRack.position.set(2, 3.2, -1);
+      testTubeRack.castShadow = true;
       scene.add(testTubeRack);
 
-      const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
-      scene.add(ambientLight);
+      // Shelves
 
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-      directionalLight.position.set(-5, 10, 5);
-      directionalLight.castShadow = true;
-      scene.add(directionalLight);
+      const makeShelf = () => {
+        const shelf = new THREE.Group();
+        const bookshelf = new Bookshelf({ open: true });
+        bookshelf.castShadow = true;
+        shelf.add(bookshelf);
+        for (let i = 0; i <= 4; i++) {
+          const shelfSpacing = (8 - 0.1) / (4 + 1);
 
-      const hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, 0.5);
-      hemisphereLight.position.set(0, 10, 0);
-      scene.add(hemisphereLight);
+          for (let j = -1.9; j <= 1.9; j += randomFloat(0.5, 1.5)) {
+            const flask = new ErlenmeyerFlask({
+              flaskRadius: logarithmicRandomMax(0.5, 0.1, 0.5),
+              neckRadius: logarithmicRandomMax(0.1, 0.05, 0.1),
+              height: logarithmicRandomMax(0.5, 0.2, 1),
+              neckHeight: logarithmicRandomMax(0.5, 0.1, 0.2),
+            });
+            flask.position.set(j, 0.1 / 2 + i * shelfSpacing, logarithmicRandomMax(0.5, -0.1, 0.1));
+            flask.castShadow = true;
+            shelf.add(flask);
+          }
+        }
 
-      const controls = new OrbitControls(camera, renderer.domElement);
-      controls.target.set(0, 3, 0);
-      controls.update();
+        return shelf;
+      };
+
+      const shelf1 = makeShelf();
+      shelf1.rotation.y = Math.PI / 2;
+      shelf1.position.set(-10, 0, 0);
+      scene.add(shelf1);
+
+      const shelf2 = makeShelf();
+      shelf2.rotation.y = Math.PI / 2;
+      shelf2.position.set(-10, 0, 6);
+      scene.add(shelf2);
+
+      const shelf3 = makeShelf();
+      shelf3.rotation.y = Math.PI / 2;
+      shelf3.position.set(-10, 0, -6);
+      scene.add(shelf3);
+
+      const p1 = new PointLight(0x5dffe2, 2, 6, 0);
+      p1.position.set(-8, 4, 0);
+      scene.add(p1);
+
+      const p2 = new PointLight(0x5dffe2, 1, 6, 0.1);
+      p2.position.set(-8, 4, 6);
+      scene.add(p2);
+
+      const p3 = new PointLight(0x5dffe2, 1, 6, 0.1);
+      p3.position.set(-8, 4, -6);
+      scene.add(p3);
+
+      // Machines
+
+      const controlPanel1 = new THREE.Group();
+      controlPanel1.position.set(0, 0, -10);
+      scene.add(controlPanel1);
+
+      const boxGeometry = new THREE.BoxGeometry(3, 6, 1);
+      const boxMaterial = new THREE.MeshStandardMaterial({ color: 0x020202 });
+      const box = new THREE.Mesh(boxGeometry, boxMaterial);
+      box.position.set(0, 3, -0.5);
+      box.castShadow = true;
+      controlPanel1.add(box);
+
+      const panel = new Panel({
+        width: 2.75,
+        height: 1,
+        depth: 0.1,
+      });
+      panel.position.set(0, 5.25, 0);
+
+      const panelLightEffects = [];
+
+      for (let i = 0; i < 30; i++) {
+        const panelLight = new PanelLight({ radius: 0.05 });
+        panelLight.position.set(-1.25 + (i % 6) * 0.5, 5.55 - Math.floor(i / 6) * 0.15, 0.05);
+        panelLightEffects.push(
+          new EmissivePulseEffect({ material: panelLight.material, speed: randomFloat(0.2, 2), minIntensity: 0.01 }),
+        );
+
+        controlPanel1.add(panelLight);
+      }
+      controlPanel1.add(panel);
+
+      //------------------------------
+      //  Lightning effects
+      //------------------------------
+
+      const lightning1 = new THREE.DirectionalLight(0xffffff, 0);
+      lightning1.shadow.mapSize.width = 4096;
+      lightning1.shadow.mapSize.height = 4096;
+      lightning1.shadow.camera.left = -15; // Extend to the left
+      lightning1.shadow.camera.right = 15; // Extend to the right
+      lightning1.shadow.camera.top = 15; // Extend upwards
+      lightning1.shadow.camera.bottom = -15; // Extend downwards
+      lightning1.shadow.camera.near = 0.1;
+      lightning1.shadow.camera.far = 25;
+      lightning1.castShadow = true;
+      scene.add(lightning1);
+      lightning1.position.set(5, 10, -5);
+
+      const lightningEffect1 = new LightningEffect({ light: lightning1, minIntensity: 1, maxIntensity: 15 });
+      setRandomInterval(
+        () => {
+          lightningEffect1.triggerLightning();
+        },
+        50,
+        2500,
+      );
+
+      const lightning2 = new THREE.DirectionalLight(0xffffff, 0);
+      lightning2.shadow.mapSize.width = 4096;
+      lightning2.shadow.mapSize.height = 4096;
+      lightning2.shadow.camera.left = -15; // Extend to the left
+      lightning2.shadow.camera.right = 15; // Extend to the right
+      lightning2.shadow.camera.top = 15; // Extend upwards
+      lightning2.shadow.camera.bottom = -15; // Extend downwards
+      lightning2.shadow.camera.near = 0.1;
+      lightning2.shadow.camera.far = 25;
+      lightning2.castShadow = true;
+      scene.add(lightning2);
+      lightning2.position.set(-5, 10, 4);
+
+      const lightningEffect2 = new LightningEffect({ light: lightning2, minIntensity: 0.25, maxIntensity: 5 });
+      setRandomInterval(
+        () => {
+          lightningEffect2.triggerLightning();
+        },
+        1500,
+        3500,
+      );
+
+      const clock = new THREE.Clock();
 
       renderer.setAnimationLoop(() => {
         renderer.render(scene, camera);
         controls.update();
+        panelLightEffects.forEach((effect) => {
+          effect.update(clock.getElapsedTime());
+        });
         bubblingEffect.update();
       });
 
