@@ -1,7 +1,7 @@
 import { BufferGeometry, CylinderGeometry, SphereGeometry } from "three";
 import { mergeBufferGeometries } from "three-stdlib";
 
-export class BeakerGeometry extends BufferGeometry {
+export class FlorenceFlaskGeometry extends BufferGeometry {
   constructor() {
     super();
 
