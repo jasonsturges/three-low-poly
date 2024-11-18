@@ -72,6 +72,7 @@ export { WroughtIronFenceGeometry } from "./geometry/fence/WroughtIronFenceGeome
 
 // Furniture
 export { BookshelfGeometry } from "./geometry/furniture/BookshelfGeometry";
+export { DeskGeometry } from "./geometry/furniture/DeskGeometry";
 
 // Leafs
 export { EllipticLeafGeometry } from "./geometry/leafs/EllipticLeafGeometry";
