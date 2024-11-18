@@ -14,6 +14,7 @@ class TestTubeRack extends Group {
     });
     const rack = new Mesh(rackGeometry, rackMaterial);
     rack.position.y = 0.5;
+    rack.castShadow = true;
 
     // Test tube properties
     const testTubeGeometry = new TestTubeGeometry(0.1, 0.1, 1, 16);
@@ -33,6 +34,7 @@ class TestTubeRack extends Group {
       const testTube = new Mesh(testTubeGeometry, glassMaterial);
       const xPosition = (i - (count - 1) / 2) * 0.8;
       testTube.position.set(xPosition, 1, 0);
+      testTube.castShadow = true;
 
       // Liquid geometry and material with unique color
       const liquidGeometry = new TestTubeGeometry(0.099, 0.099, 0.5, 16, false);
