@@ -37,6 +37,7 @@ export * from "./constants/ParametricCurve";
 export { BubblingEffect, type BubblingEffectOptions } from "./effects/BubblingEffect";
 export { EmissivePulseEffect, type EmissivePulseEffectOptions } from "./effects/EmissivePulseEffect";
 export { LeafEffect, type LeafEffectOptions } from "./effects/LeafEffect";
+export { LightningEffect } from "./effects/LightningEffect";
 
 //------------------------------
 //  Factory
