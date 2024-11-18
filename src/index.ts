@@ -83,8 +83,8 @@ export { RockGeometry } from "./geometry/rocks/RockGeometry";
 export { BoneGeometry } from "./geometry/skeleton/BoneGeometry";
 
 // Science
-export { BeakerGeometry } from "./geometry/science/BeakerGeometry";
 export { ErlenmeyerFlaskGeometry } from "./geometry/science/ErlenmeyerFlaskGeometry";
+export { FlorenceFlaskGeometry } from "./geometry/science/FlorenceFlaskGeometry";
 export { MortarGeometry } from "./geometry/science/MortarGeometry";
 export { StandGeometry } from "./geometry/science/StandGeometry";
 export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
@@ -138,12 +138,12 @@ export { Rock } from "./models/rocks/Rock";
 export { Rocks } from "./models/rocks/Rocks";
 
 // Science
-export { Beaker } from "./models/science/Beaker";
 export { Bottle } from "./models/science/Bottle";
 export { BunsenBurner } from "./models/science/BunsenBurner";
 export { ElectricPanel } from "./models/science/ElectricPanel";
 export { ErlenmeyerFlask } from "./models/science/ErlenmeyerFlask";
 export { Flask } from "./models/science/Flask";
+export { FlorenceFlask } from "./models/science/FlorenceFlask";
 export { LeverPanel } from "./models/science/LeverPanel";
 export { Microscope } from "./models/science/Microscope";
 export { MortarAndPestle } from "./models/science/MortarAndPestle";
