@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+        color: #dfd9bc;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { LightningEffect, setRandomInterval } from "../../src/index.js";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+
+      const { scene, camera, handlers } = createOrbitScene();
+
+      // Add some objects to illuminate
+      const geometry = new THREE.SphereGeometry(1, 32, 32);
+      const material = new THREE.MeshStandardMaterial({ color: 0x5555ff });
+      const sphere = new THREE.Mesh(geometry, material);
+      scene.add(sphere);
+
+      const gui = new GUI();
+      const params = {
+        minIntensity: 15,
+        maxIntensity: 20,
+        minDuration: 50,
+        maxDuration: 250,
+      };
+
+      // Light that will receive effect
+      const lightning = new THREE.DirectionalLight(0xffffff, 0);
+      scene.add(lightning);
+      lightning.position.set(5, 10, -5);
+
+      const lightningEffect = new LightningEffect({ light: lightning, ...params });
+
+      setRandomInterval(() => {
+        lightningEffect.triggerLightning();
+      }, 250, 1250);
+
+      gui.title("Lightning Effect");
+      gui.add(params, "minIntensity", 0.1, 50, 0.1).name("Min Intensity").onChange(() => update());
+      gui.add(params, "maxIntensity", 0.1, 50, 0.1).name("Max Intensity").onChange(() => update());
+      gui.add(params, "minDuration", 1, 1000, 1).name("Min Duration").onChange(() => update());
+      gui.add(params, "maxDuration", 1, 1000, 1).name("Max Duration").onChange(() => update());
+
+      function update() {
+        lightningEffect.minIntensity = params.minIntensity;
+        lightningEffect.maxIntensity = params.maxIntensity;
+        lightningEffect.minDuration = params.minDuration;
+        lightningEffect.maxDuration = params.maxDuration;
+      }
+    </script>
+  </body>
+</html>
