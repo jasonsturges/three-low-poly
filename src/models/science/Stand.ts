@@ -1,7 +1,10 @@
 import { Mesh, MeshStandardMaterial } from "three";
 import { StandGeometry } from "../../geometry/science/StandGeometry";
 
-class Stand extends Mesh {
+export class Stand extends Mesh {
+  public geometry: StandGeometry;
+  public material: MeshStandardMaterial;
+
   constructor({
     radius = 0.3, //
     height = 0.4,
@@ -19,5 +22,3 @@ class Stand extends Mesh {
     });
   }
 }
-
-export { Stand };
