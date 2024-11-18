@@ -18,12 +18,12 @@
       import * as THREE from "three";
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
       import {
-        Beaker,
         Book,
         Bottle,
         BubblingEffect,
         Desk,
         Flask,
+        FlorenceFlask,
         MortarAndPestle,
         Stand,
         TestTubeRack
@@ -47,7 +47,7 @@
       const beakerGroup = new Group();
       const stand = new Stand();
       beakerGroup.add(stand);
-      const beaker = new Beaker();
+      const beaker = new FlorenceFlask();
       beakerGroup.add(beaker);
       beaker.scale.set(0.35, 0.35, 0.35);
       beaker.position.set(0, 0.6, 0);
