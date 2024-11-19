@@ -57,7 +57,6 @@ export function cubicUVMappingBatch(vertices: [number, number, number][]): [numb
   return vertices.map((vertex) => cubicUVMapping(vertex));
 }
 
-
 /**
  * Spherical UV Mapping
  * Wraps UVs around the geometry as if the texture were projected from a globe.
@@ -167,7 +166,7 @@ export function normalizeUV(
 
 /**
  * Batch Normalization for Multiple UVs
- * If you have multiple UVs, normalize them all based on the overall min/max bounds:
+ * If you have multiple UVs, normalize them all based on the overall min/max bounds.
  */
 export function normalizeUVBatch(
   uvs: [number, number][],
@@ -182,8 +181,7 @@ export function normalizeUVBatch(
 
 /**
  * Finding Bounds for a List of UVs
- * calculate the min and max values dynamically:
- * @param uvs
+ * calculate the min and max values dynamically.
  */
 export function calculateUVBounds(uvs: [number, number][]): { minBounds: [number, number]; maxBounds: [number, number] } {
   const minU = Math.min(...uvs.map((uv) => uv[0]));
