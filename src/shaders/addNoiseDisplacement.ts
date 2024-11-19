@@ -1,10 +1,10 @@
-import { Direction } from "../constants/Direction";
+import { Axis } from "../constants/Axis";
 import { Material, Vector3 } from "three";
 
 interface NoiseDisplacementOptions {
   time?: number;
   intensity?: number;
-  direction?: Vector3;
+  axis?: Vector3;
   scale?: number;
 }
 
@@ -14,24 +14,24 @@ interface NoiseDisplacementOptions {
  * @param {Object} options - Options for noise modification.
  * @param {number} [options.time=0.0] - The time value for the noise function.
  * @param {number} [options.intensity=1.0] - The intensity of the displacement.
- * @param {Vector3} [options.direction=new Vector3(1, 1, 1)] - The direction of displacement.
+ * @param {Vector3} [options.axis=new Vector3(1, 1, 1)] - The axis of displacement.
  * @param {number} [options.scale=10.0] - The scale of the noise effect.
  */
 export function addNoiseDisplacement<T extends Material>(
   material: T,
-  { time = 0.0, intensity = 1.0, direction = Direction.XYZ, scale = 10.0 }: NoiseDisplacementOptions = {},
+  { time = 0.0, intensity = 1.0, axis = Axis.XYZ, scale = 10.0 }: NoiseDisplacementOptions = {},
 ) {
   material.onBeforeCompile = (shader) => {
-    // Add uniforms for time, direction, intensity, and scale
+    // Add uniforms for time, axis, intensity, and scale
     shader.uniforms.time = { value: time };
-    shader.uniforms.direction = { value: direction };
+    shader.uniforms.axis = { value: axis };
     shader.uniforms.intensity = { value: intensity };
     shader.uniforms.scale = { value: scale };
 
     // Add noise function and modify the vertex shader to displace vertices
     shader.vertexShader = `
       uniform float time;
-      uniform vec3 direction;
+      uniform vec3 axis;
       uniform float intensity;
       uniform float scale;
 
@@ -68,7 +68,7 @@ export function addNoiseDisplacement<T extends Material>(
       `
         vec3 transformed = vec3(position);
         float n = noise(transformed * scale + time);
-        transformed += normalize(direction) * n * intensity;
+        transformed += normalize(axis) * n * intensity;
         vec3 transformedNormal = normal;
       `,
     );

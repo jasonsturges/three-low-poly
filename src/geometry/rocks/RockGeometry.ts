@@ -1,5 +1,5 @@
+import { Axis } from "../../constants/Axis";
 import { BufferGeometry, SphereGeometry } from "three";
-import { Direction } from "../../constants/Direction";
 import { randomTransformVertices } from "../../utils/VertexUtils";
 
 export class RockGeometry extends BufferGeometry {
@@ -7,7 +7,7 @@ export class RockGeometry extends BufferGeometry {
     super();
 
     const sphere = new SphereGeometry(radius, widthSegments, heightSegments);
-    this.copy(randomTransformVertices(sphere, Direction.XYZ, 0.5, 1.0));
+    this.copy(randomTransformVertices(sphere, Axis.XYZ, 0.5, 1.0));
     this.computeVertexNormals();
     this.center();
   }
