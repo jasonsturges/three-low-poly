@@ -14,7 +14,7 @@ import { Vector3 } from "three";
  * Procedural Geometry
  * ```
  * const vertex = new Vector3(0, 0, 0);
- * const axis = Axis.XZ; // Diagonal direction on XZ plane
+ * const axis = Axis.XZ; // Diagonal axis on XZ plane
  *
  * const offset = axis.clone().multiplyScalar(5);
  * vertex.add(offset); // Move vertex in axis
