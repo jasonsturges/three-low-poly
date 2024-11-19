@@ -25,6 +25,7 @@ export { twistBrush } from "./brushes/TwistBrush";
 //  Constants
 //------------------------------
 
+export { Axis } from "./constants/Axis";
 export { Direction } from "./constants/Direction";
 export * from "./constants/Easing";
 export { Falloff } from "./constants/Falloff";
