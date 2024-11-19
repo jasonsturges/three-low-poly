@@ -1,7 +1,9 @@
 import { Vector3 } from "three";
 
 /**
- * Examples
+ * Movement or orientation in a specific direction.
+ *
+ * Example usages:
  *
  * Moving an Object Along a Direction
  * ```
@@ -17,22 +19,6 @@ import { Vector3 } from "three";
  * const snapDirection = Direction.UP; // Align upwards
  *
  * object.position.copy(targetPosition.clone().add(snapDirection.clone().multiplyScalar(10)));
- * ```
- *
- * Rotating or Orienting an Object
- * ```
- * const targetDirection = Direction.XY; // Diagonal upward
- * object.lookAt(object.position.clone().add(targetDirection));
- * ```
- *
- * Procedural Geometry
- * ```
- * const vertex = new Vector3(0, 0, 0);
- * const direction = Direction.XZ; // Diagonal direction on XZ plane
- *
- * const offset = direction.clone().multiplyScalar(5);
- * vertex.add(offset); // Move vertex in direction
- * geometry.vertices.push(vertex);
  * ```
  *
  * Animating Along a Direction
@@ -87,11 +73,4 @@ export const Direction = {
   RIGHT: new Vector3(1, 0, 0),
   FORWARD: new Vector3(0, 0, 1),
   BACKWARD: new Vector3(0, 0, -1),
-  X: new Vector3(1, 0, 0),
-  Y: new Vector3(0, 1, 0),
-  Z: new Vector3(0, 0, 1),
-  XY: new Vector3(1, 1, 0).normalize(),
-  XZ: new Vector3(1, 0, 1).normalize(),
-  YZ: new Vector3(0, 1, 1).normalize(),
-  XYZ: new Vector3(1, 1, 1).normalize(),
 };
