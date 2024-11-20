@@ -1,14 +1,17 @@
-import { Group, Mesh, ShaderMaterial, SphereGeometry } from "three";
+import { Mesh, ShaderMaterial, SphereGeometry } from "three";
 
-class Moon extends Group {
+export class Moon extends Mesh {
+  public geometry: SphereGeometry;
+  public material: ShaderMaterial;
+
   constructor() {
     super();
 
     // Create moon geometry
-    const moonGeometry = new SphereGeometry(5, 32, 32);
+    this.geometry = new SphereGeometry(5, 32, 32);
 
     // Custom ShaderMaterial
-    const moonMaterial = new ShaderMaterial({
+    this.material = new ShaderMaterial({
       uniforms: {
         time: { value: 0.0 },
       },
@@ -50,13 +53,7 @@ class Moon extends Group {
           color *= 0.8 + 0.2 * n; // Modulate color by noise
           gl_FragColor = vec4(color, 1.0);
         }
-      `
+      `,
     });
-
-    // Create the moon mesh and add it to the scene
-    const moon = new Mesh(moonGeometry, moonMaterial);
-    this.add(moon);
   }
 }
-
-export { Moon };
