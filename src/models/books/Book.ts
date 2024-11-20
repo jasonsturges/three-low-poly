@@ -1,7 +1,15 @@
 import { Mesh, MeshStandardMaterial } from "three";
 import { BookGeometry } from "../../geometry/books/BookGeometry";
 
+/**
+ * Material Order:
+ *   1. Cover
+ *   2. Page
+ */
 export class Book extends Mesh {
+  public geometry: BookGeometry;
+  public material: MeshStandardMaterial[];
+
   constructor({
     width = 1,
     height = 1.5,
