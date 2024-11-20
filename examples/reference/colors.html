@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Three.js Color Palette Grid</title>
+  <style>
+    body {
+      margin: 0;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<script type="module">
+  import * as THREE from "three";
+  import { ColorPalette } from "../../src/index.js";
+  import { createOrbitScene } from "../utils/orbitScene.js";
+  import { createTextSprite } from "../utils/TextFactory.js";
+
+  const { scene, camera, controls } = createOrbitScene();
+  camera.position.set(0, -48, 80);
+  controls.target.set(0, -48, 0);
+
+  // Create a grid to display the color palette
+  const colorEntries = Object.entries(ColorPalette);
+  const gridCols = 6; // Number of columns in the grid
+  const gridSpacing = 12;
+
+  for (let i = 0; i < colorEntries.length; i++) {
+    const [name, color] = colorEntries[i];
+
+    // Create a plane to represent the color
+    const planeGeometry = new THREE.PlaneGeometry(10, 10);
+    const planeMaterial = new THREE.MeshBasicMaterial({ color: color });
+    const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+
+    // Position the plane in a grid
+    const col = i % gridCols;
+    const row = Math.floor(i / gridCols);
+    planeMesh.position.x = col * gridSpacing - (gridCols - 1) * gridSpacing * 0.5;
+    planeMesh.position.y = -row * gridSpacing;
+
+    scene.add(planeMesh);
+
+    // Add text below each plane with the color name
+    const textSprite = createTextSprite(name, {
+      size: 40,
+      x: planeMesh.position.x,
+      y: planeMesh.position.y - 6, // Position below the plane
+      z: 0,
+    });
+    scene.add(textSprite);
+  }
+</script>
+</body>
+</html>
