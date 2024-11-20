@@ -26,6 +26,7 @@ export { twistBrush } from "./brushes/TwistBrush";
 //------------------------------
 
 export { Axis } from "./constants/Axis";
+export { ColorPalette } from "./constants/ColorPalette"
 export { Direction } from "./constants/Direction";
 export * from "./constants/Easing";
 export { Falloff } from "./constants/Falloff";
