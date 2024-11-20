@@ -64,4 +64,5 @@ export const ColorPalette = {
   SILVER: 0xaaaaaa,        // Light Gray. It’s a soft, pale gray shade with a slightly metallic undertone.
   PALE_GRAY: 0xeeeeee,     // Very Light Gray or Soft Gray. It’s a pale, almost white shade of gray.
   WHITE_SMOKE: 0xf5f5f5,   // White Smoke or Light Gray. It’s a soft, pale gray shade with a hint of warmth.
+  WHITE: 0xffffff,         // Pure white, the brightest color possible.
  };
