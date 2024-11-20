@@ -1,9 +1,10 @@
 export const ColorPalette = {
   // Red
   CARDINAL_RED: 0xc61416,  // Bright Crimson or Cardinal Red. It’s a vivid, bold red shade with warm undertones.
+  CHERRY_RED: 0xd82424,    // Bold red with slightly warm undertones.
   CRIMSON: 0xc62828,       // Crimson Red or Firebrick Red. It’s a bold, deep red with a slightly cool undertone.
-  DARK_RED: 0x8b0000,      // Dark Red. It’s a deep, rich red shade resembling the color of garnets or dried blood.
   RUST: 0xc2452d,          // Red clay or Brick Red. It’s a warm, earthy red-orange shade, often associated with weathered metal, autumn leaves, or natural clay tones.
+  DARK_RED: 0x8b0000,      // Dark Red. It’s a deep, rich red shade resembling the color of garnets or dried blood.
 
   // Orange
   TANGERINE: 0xff5500,     // Tangerine or Bright Orange-Red. It’s a vibrant, warm shade of orange with red undertones with a  tropical feel.
@@ -16,7 +17,7 @@ export const ColorPalette = {
   YELLOW: 0xffff00,        // Bright, pure yellow shade.
 
   // Green
-  LIME_GREEN: 0xA4C400,    // Lime Green or Bright Chartreuse. It’s a vivid, energetic yellow-green shade
+  LIME_GREEN: 0xa4c400,    // Lime Green or Bright Chartreuse. It’s a vivid, energetic yellow-green shade
   SPRING_GREEN: 0x88cc55,  // Fresh, vibrant appearance, resembling new leaves or spring foliage
   MOSS_GREEN: 0x88aa33,    // Medium-light shade of green with yellow undertones, often seen in natural foliage.
   FERN_GREEN: 0x4b8b3b,    // It's a natural, medium-dark green with slightly muted tones, resembling the lush greenery of ferns or foliage.
@@ -27,6 +28,7 @@ export const ColorPalette = {
 
   // Blue
   SKY_BLUE: 0x88ccff,      // Sky Blue or Baby Blue. It’s a light, cheerful shade of blue with a slightly soft and pastel tone, evoking a sense of openness like a clear daytime sky.
+  CERULEAN_BLUE: 0x5dade2, // Cerulean Blue or Sky Blue. It’s a bright, vivid shade of blue with a slightly cool undertone, often associated with clear skies or tropical waters.
   AZURE: 0x0077ff,         // Azure Blue or Bright Blue. It’s a vibrant, rich shade of blue with a cool undertone, often associated with clear skies or digital interfaces.
   OCEAN_BLUE: 0x0077be,    // Ocean Blue or Azure Blue. It’s a vibrant medium blue shade with a slight teal undertone, often associated with clear skies or tropical waters.
   ROYAL_BLUE: 0x5555ff,    // Royal Blue or Bright Indigo. It’s a vibrant medium blue shade with a slightly cool and saturated tone.
