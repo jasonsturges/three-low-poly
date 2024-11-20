@@ -1,7 +1,7 @@
 import { Mesh, MeshStandardMaterial } from "three";
 import { WroughtIronFenceGeometry } from "../../geometry/fence/WroughtIronFenceGeometry";
 
-export class WroughtIronFence extends Mesh {
+export class WroughtIronFence extends Mesh<WroughtIronFenceGeometry, MeshStandardMaterial> {
   constructor({
     count = 20, //
     spacing = 0.4,
@@ -15,21 +15,21 @@ export class WroughtIronFence extends Mesh {
     railOffset = 0.0,
     radialSegments = 8,
   } = {}) {
-    super();
-
-    this.geometry = new WroughtIronFenceGeometry({
-      count,
-      spacing,
-      barHeight,
-      barRadius,
-      spikeHeight,
-      spikeRadius,
-      spikeScaleZ,
-      railHeight,
-      railDepth,
-      railOffset,
-      radialSegments,
-    });
-    this.material = new MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.4 });
+    super(
+      new WroughtIronFenceGeometry({
+        count,
+        spacing,
+        barHeight,
+        barRadius,
+        spikeHeight,
+        spikeRadius,
+        spikeScaleZ,
+        railHeight,
+        railDepth,
+        railOffset,
+        radialSegments,
+      }),
+      new MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.4 }),
+    );
   }
 }
