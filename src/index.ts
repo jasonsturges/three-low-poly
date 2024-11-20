@@ -184,6 +184,7 @@ export { addNoiseDisplacement, updateNoiseDisplacementTime } from "./shaders/add
 export { atmosphericShader, type AtmosphericShaderUniforms } from "./shaders/atmosphericShader";
 export { daySkyShader, type DaySkyUniforms } from "./shaders/daySkyShader";
 export { fadeShader } from "./shaders/fadeShader";
+export { moonShader } from "./shaders/moonShader";
 export { nightSkyShader, type NightSkyUniforms } from "./shaders/nightSkyShader";
 
 //------------------------------
