@@ -212,6 +212,7 @@ export { checkerboardTexture } from "./textures/checkerboard";
 //  Utils
 //------------------------------
 
+export * from "./utils/ColorUtils";
 export * from "./utils/GroupUtils";
 export * from "./utils/InstancedMeshUtils";
 export * from "./utils/InterpolateCurve";
