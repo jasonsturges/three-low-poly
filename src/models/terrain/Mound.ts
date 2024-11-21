@@ -19,7 +19,7 @@ import { radiusFromCapWidth } from "../../utils/SphericalGeometryUtils";
  * }
  * ```
  */
-export class Mound extends Mesh {
+export class Mound extends Mesh<MoundGeometry, MeshStandardMaterial> {
   constructor({
     radius = radiusFromCapWidth(5, Math.PI / 10), //
     widthSegments = 64,
@@ -28,17 +28,16 @@ export class Mound extends Mesh {
     phiLength = Math.PI * 2,
     thetaLength = Math.PI / 10,
   } = {}) {
-    super();
-
-    this.geometry = new MoundGeometry({
-      radius,
-      widthSegments,
-      heightSegments,
-      phiStart,
-      phiLength,
-      thetaLength,
-    });
-
-    this.material = new MeshStandardMaterial({ color: 0x00ff00, flatShading: true });
+    super(
+      new MoundGeometry({
+        radius,
+        widthSegments,
+        heightSegments,
+        phiStart,
+        phiLength,
+        thetaLength,
+      }),
+      new MeshStandardMaterial({ color: 0x00ff00, flatShading: true }),
+    );
   }
 }
