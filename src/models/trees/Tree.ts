@@ -2,7 +2,12 @@ import { Mesh, MeshStandardMaterial } from "three";
 import { TreeGeometry } from "../../geometry/trees/TreeGeometry";
 
 /**
- * @example
+ * Material indices:
+ * 0. Trunk
+ * 1. leafSize
+ *
+ * Example usage:
+ * ```
  * const tree = new Tree({
  *   trunkRadiusTop: 0.25,
  *   trunkRadiusBottom: 0.4,
@@ -15,8 +20,9 @@ import { TreeGeometry } from "../../geometry/trees/TreeGeometry";
  *   leafSpreadRadius: 1.5,
  *   leafColor: 0x228b22,
  * });
+ * ```
  */
-class Tree extends Mesh {
+export class Tree extends Mesh<TreeGeometry, MeshStandardMaterial[]> {
   constructor({
     trunkRadiusTop = 0.25,
     trunkRadiusBottom = 0.4,
@@ -29,36 +35,32 @@ class Tree extends Mesh {
     leafSpreadRadius = 1.5,
     leafColor = 0x228b22,
   } = {}) {
-    super();
+    super(
+      new TreeGeometry({
+        trunkRadiusTop: trunkRadiusTop,
+        trunkRadiusBottom: trunkRadiusBottom,
+        trunkHeight: trunkHeight,
+        trunkSegments: trunkSegments,
+        leafSize: leafSize,
+        leafCount: leafCount,
+        leafDetail: leafDetail,
+        leafSpreadRadius: leafSpreadRadius,
+      }),
+      [
+        new MeshStandardMaterial({
+          color: trunkColor,
+          roughness: 0.9,
+          metalness: 0,
+          flatShading: true,
+        }),
 
-    const treeGeometry = new TreeGeometry({
-      trunkRadiusTop: trunkRadiusTop,
-      trunkRadiusBottom: trunkRadiusBottom,
-      trunkHeight: trunkHeight,
-      trunkSegments: trunkSegments,
-      leafSize: leafSize,
-      leafCount: leafCount,
-      leafDetail: leafDetail,
-      leafSpreadRadius: leafSpreadRadius,
-    });
-
-    const trunkMaterial = new MeshStandardMaterial({
-      color: trunkColor,
-      roughness: 0.9,
-      metalness: 0,
-      flatShading: true,
-    });
-
-    const leafMaterial = new MeshStandardMaterial({
-      color: leafColor,
-      roughness: 0.8,
-      metalness: 0,
-      flatShading: true,
-    });
-
-    this.geometry = treeGeometry;
-    this.material = [trunkMaterial, leafMaterial];
+        new MeshStandardMaterial({
+          color: leafColor,
+          roughness: 0.8,
+          metalness: 0,
+          flatShading: true,
+        }),
+      ],
+    );
   }
 }
-
-export { Tree };
