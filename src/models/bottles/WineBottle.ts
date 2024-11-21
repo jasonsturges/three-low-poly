@@ -1,5 +1,5 @@
 import { Mesh, MeshPhysicalMaterial } from "three";
-import { WineBottleGeometry } from "../../geometry/science/WineBottleGeometry";
+import { WineBottleGeometry } from "../../geometry/bottles/WineBottleGeometry";
 
 export class WineBottle extends Mesh<WineBottleGeometry, MeshPhysicalMaterial> {
   constructor() {

@@ -61,6 +61,9 @@ export { StaircaseGeometry } from "./geometry/architecture/StaircaseGeometry";
 // Books
 export { BookGeometry } from "./geometry/books/BookGeometry";
 
+// Bottles
+export { WineBottleGeometry } from "./geometry/bottles/WineBottleGeometry";
+
 // Cemetery
 export { CrossHeadstoneGeometry } from "./geometry/cemetery/CrossHeadstoneGeometry";
 export { MausoleumGeometry } from "./geometry/cemetery/MausoleumGeometry";
@@ -92,7 +95,6 @@ export { FlorenceFlaskGeometry } from "./geometry/science/FlorenceFlaskGeometry"
 export { MortarGeometry } from "./geometry/science/MortarGeometry";
 export { StandGeometry } from "./geometry/science/StandGeometry";
 export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
-export { WineBottleGeometry } from "./geometry/science/WineBottleGeometry";
 
 // Terrain
 export { HillGeometry } from "./geometry/terrain/HillGeometry";
@@ -115,6 +117,10 @@ export { Moon } from "./models/astronomy/Moon";
 
 // Books
 export { Book } from "./models/books/Book";
+
+// Bottles
+export { WineBottle } from "./models/bottles/WineBottle";
+
 
 // Cemetery
 export { CrossHeadstone } from "./models/cemetery/CrossHeadstone";
@@ -158,7 +164,6 @@ export { Stand } from "./models/science/Stand";
 export { TeslaCoil } from "./models/science/TeslaCoil";
 export { TestTube } from "./models/science/TestTube";
 export { TestTubeRack } from "./models/science/TestTubeRack";
-export { WineBottle } from "./models/science/WineBottle";
 
 // Shapes
 export { Burst } from "./models/shapes/Burst";
