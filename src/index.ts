@@ -69,7 +69,7 @@ export { RoundedHeadstoneGeometry } from "./geometry/cemetery/RoundedHeadstoneGe
 export { SquareHeadstoneGeometry } from "./geometry/cemetery/SquareHeadstoneGeometry";
 
 // Fence
-export { FenceColumnGeometry } from "./geometry/fence/FenceColumnGeometry";
+export { StoneFencePostGeometry } from "./geometry/fence/StoneFencePostGeometry";
 export { WroughtIronBarGeometry } from "./geometry/fence/WroughtIronBarGeometry";
 export { WroughtIronFenceGeometry } from "./geometry/fence/WroughtIronFenceGeometry";
 

@@ -1,10 +1,10 @@
 import { BoxGeometry, BufferGeometry } from "three";
-import {mergeBufferGeometries} from "three-stdlib";
+import { mergeBufferGeometries } from "three-stdlib";
 
 /**
  * Fence Column Geometry, a stone slab fence column shape
  */
-export class FenceColumnGeometry extends BufferGeometry {
+export class StoneFencePostGeometry extends BufferGeometry {
   constructor({ height = 2.25 } = {}) {
     super();
 

@@ -1,10 +1,10 @@
 import { Mesh, MeshStandardMaterial } from "three";
-import { FenceColumnGeometry } from "../../geometry/fence/FenceColumnGeometry";
+import { StoneFencePostGeometry } from "../../geometry/fence/StoneFencePostGeometry";
 
-export class FenceColumn extends Mesh<FenceColumnGeometry, MeshStandardMaterial> {
+export class FenceColumn extends Mesh<StoneFencePostGeometry, MeshStandardMaterial> {
   constructor({ height = 2.25 } = {}) {
     super(
-      new FenceColumnGeometry({ height }),
+      new StoneFencePostGeometry({ height }),
       new MeshStandardMaterial({ color: 0x8b7d7b, flatShading: true })
     );
   }
