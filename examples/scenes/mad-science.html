@@ -20,7 +20,6 @@
       import {
         Book,
         Bookshelf,
-        Bottle,
         BubblingEffect,
         Desk,
         EmissivePulseEffect,
@@ -31,6 +30,7 @@
         MortarAndPestle,
         Panel,
         PanelLight,
+        PotionBottle,
         Stand,
         TestTubeRack,
         logarithmicRandomMax,
@@ -123,11 +123,11 @@
       book.castShadow = true;
       scene.add(book);
 
-      const bottle = new Bottle();
-      bottle.scale.set(0.25, 0.25, 0.25);
-      bottle.position.set(-0, 3.3, -1);
-      bottle.castShadow = true;
-      scene.add(bottle);
+      const potionBottle = new PotionBottle();
+      potionBottle.scale.set(0.25, 0.25, 0.25);
+      potionBottle.position.set(-0, 3.3, -1);
+      potionBottle.castShadow = true;
+      scene.add(potionBottle);
 
       const flask = new Flask();
       flask.scale.set(0.25, 0.25, 0.25);
