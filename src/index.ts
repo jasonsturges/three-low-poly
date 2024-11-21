@@ -224,11 +224,11 @@ export * from "./utils/ColorUtils";
 export * from "./utils/GroupUtils";
 export * from "./utils/InstancedMeshUtils";
 export * from "./utils/InterpolateCurve";
+export * from "./utils/LineEquations"
 export * from "./utils/MeshUtils";
 export * from "./utils/ParametricCurveUtils";
 export * from "./utils/QuadUtils";
 export * from "./utils/RandomNumberUtils";
-export * from "./utils/SlopeIntercept"
 export * from "./utils/SphericalGeometryUtils";
 export * from "./utils/TimerUtils";
 export * from "./utils/UVUtils";
