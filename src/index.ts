@@ -62,6 +62,7 @@ export { StaircaseGeometry } from "./geometry/architecture/StaircaseGeometry";
 export { BookGeometry } from "./geometry/books/BookGeometry";
 
 // Bottles
+export { PotionBottleGeometry } from "./geometry/bottles/PotionBottleGeometry";
 export { WineBottleGeometry } from "./geometry/bottles/WineBottleGeometry";
 
 // Cemetery
@@ -119,6 +120,7 @@ export { Moon } from "./models/astronomy/Moon";
 export { Book } from "./models/books/Book";
 
 // Bottles
+export { PotionBottle } from "./models/bottles/PotionBottle";
 export { WineBottle } from "./models/bottles/WineBottle";
 
 
