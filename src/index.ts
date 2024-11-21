@@ -124,7 +124,7 @@ export { RoundedHeadstone } from "./models/cemetery/RoundedHeadstone";
 export { SquareHeadstone } from "./models/cemetery/SquareHeadstone";
 
 // Fence
-export { FenceColumn } from "./models/fence/FenceColumn";
+export { StoneFencePost } from "./models/fence/StoneFencePost";
 export { WroughtIronBar } from "./models/fence/WroughtIronBar";
 export { WroughtIronFence } from "./models/fence/WroughtIronFence";
 

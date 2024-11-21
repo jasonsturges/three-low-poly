@@ -17,7 +17,7 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { centerMesh, FenceColumn } from "../../../src/index.js";
+      import { centerMesh, StoneFencePost } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
@@ -27,7 +27,7 @@
         height: 2.25,
       };
 
-      let fenceColumn = new FenceColumn(params);
+      let fenceColumn = new StoneFencePost(params);
       scene.add(fenceColumn);
       centerMesh(fenceColumn);
 
@@ -37,7 +37,7 @@
 
       function update() {
         scene.remove(fenceColumn);
-        fenceColumn = new FenceColumn(params);
+        fenceColumn = new StoneFencePost(params);
         scene.add(fenceColumn);
         centerMesh(fenceColumn);
       }

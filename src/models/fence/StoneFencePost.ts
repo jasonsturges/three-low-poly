@@ -1,7 +1,7 @@
 import { Mesh, MeshStandardMaterial } from "three";
 import { StoneFencePostGeometry } from "../../geometry/fence/StoneFencePostGeometry";
 
-export class FenceColumn extends Mesh<StoneFencePostGeometry, MeshStandardMaterial> {
+export class StoneFencePost extends Mesh<StoneFencePostGeometry, MeshStandardMaterial> {
   constructor({ height = 2.25 } = {}) {
     super(
       new StoneFencePostGeometry({ height }),

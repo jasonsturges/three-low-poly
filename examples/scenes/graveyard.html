@@ -22,7 +22,6 @@
         Candle,
         CrossHeadstone,
         EllipticLeafGeometry,
-        FenceColumn,
         Lantern,
         LeafEffect,
         Mausoleum,
@@ -31,6 +30,7 @@
         Rocks,
         RoundedHeadstone,
         SquareHeadstone,
+        StoneFencePost,
         WroughtIronFence,
       } from "../../src/index.js";
       import { DoubleSide, MeshStandardMaterial } from "three";
@@ -93,7 +93,7 @@
       }
 
       // Fence
-      const stoneColumn = new FenceColumn();
+      const stoneFencePost = new StoneFencePost();
       const wroughtIronFence = new WroughtIronFence({ count: 15 });
       const enclosedFenceGroup = new THREE.Group();
       const sideLength = 4;
@@ -101,7 +101,7 @@
 
       for (let side = 0; side < sideLength; side++) {
         for (let i = 0; i < sideLength; i++) {
-          const column = stoneColumn.clone();
+          const column = stoneFencePost.clone();
           const x = side === 1 || side === 3 ? i * columnSpacing : side === 0 ? 0 : (sideLength - 1) * columnSpacing;
           const z = side === 0 || side === 2 ? i * columnSpacing : side === 1 ? (sideLength - 1) * columnSpacing : 0;
           column.position.set(x, 0, z);
