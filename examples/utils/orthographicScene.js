@@ -20,7 +20,7 @@ export function createOrthographicScene() {
   camera.lookAt(0, 0, 0);
 
   // Grid Helper
-  const gridHelper = new THREE.GridHelper(20, 20, 0x666666, 0xcccccc);
+  const gridHelper = new THREE.GridHelper(20, 20, 0x696969, 0xcccccc);
   scene.add(gridHelper);
 
   // Lighting
