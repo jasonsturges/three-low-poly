@@ -21,12 +21,12 @@
   import { createTextSprite } from "../utils/TextFactory.js";
 
   const { scene, camera, controls } = createOrbitScene();
-  camera.position.set(0, -48, 80);
-  controls.target.set(0, -48, 0);
+  camera.position.set(0, -54, 84);
+  controls.target.set(0, -54, 0);
 
   // Create a grid to display the color palette
   const colorEntries = Object.entries(ColorPalette);
-  const gridCols = 6; // Number of columns in the grid
+  const gridCols = 7; // Number of columns in the grid
   const gridSpacing = 12;
 
   for (let i = 0; i < colorEntries.length; i++) {
