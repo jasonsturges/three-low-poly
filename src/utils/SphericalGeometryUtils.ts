@@ -23,6 +23,24 @@ export const capHeightFromRadius = (radius: number, thetaLength: number) => radi
 export const capWidthFromRadius = (radius: number, thetaLength: number) => 2 * radius * Math.sin(thetaLength);
 
 /**
+ * Calculate the thetaLength to achieve a specific hole radius in a sphere.
+ *   thetaLength = asin(w / (2 * R))
+ *
+ * Returns the thetaLength in radians.
+ *
+ * Example usage:
+ * ```
+ * const sphereRadius = 5; // Radius of the sphere
+ * const holeRadius = 1;   // Desired radius of the hole at the top
+ * const thetaLength = thetaLengthForRadius(sphereRadius, holeRadius);
+ * ```
+ */
+export const thetaLengthForRadius = (sphereRadius: number, holeRadius: number) => {
+  const holeDiameter = 2 * holeRadius; // Hole width
+  return Math.asin(holeDiameter / (2 * sphereRadius));
+};
+
+/**
  * Convert spherical coordinates to Cartesian coordinates.
  * @param {number} radius - The radius of the sphere.
  * @param {number} theta - The azimuthal angle in radians (from the x-axis in the x-y plane).
