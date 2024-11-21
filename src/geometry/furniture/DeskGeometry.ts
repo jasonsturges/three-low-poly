@@ -1,6 +1,11 @@
 import { BoxGeometry, BufferGeometry, LatheGeometry, Vector2 } from "three";
 import { mergeBufferGeometries } from "three-stdlib";
 
+/**
+ * Group indices:
+ * 0. Desk surface
+ * 1. Desk legs
+ */
 export class DeskGeometry extends BufferGeometry {
   constructor() {
     super();
