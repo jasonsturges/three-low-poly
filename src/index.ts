@@ -26,7 +26,7 @@ export { twistBrush } from "./brushes/TwistBrush";
 //------------------------------
 
 export { Axis } from "./constants/Axis";
-export { ColorPalette } from "./constants/ColorPalette"
+export { ColorPalette } from "./constants/ColorPalette";
 export { Direction } from "./constants/Direction";
 export * from "./constants/Easing";
 export { Falloff } from "./constants/Falloff";
@@ -63,6 +63,7 @@ export { BookGeometry } from "./geometry/books/BookGeometry";
 
 // Cemetery
 export { CrossHeadstoneGeometry } from "./geometry/cemetery/CrossHeadstoneGeometry";
+export { MausoleumGeometry } from "./geometry/cemetery/MausoleumGeometry";
 export { ObeliskHeadstoneGeometry } from "./geometry/cemetery/ObeliskHeadstoneGeometry";
 export { RoundedHeadstoneGeometry } from "./geometry/cemetery/RoundedHeadstoneGeometry";
 export { SquareHeadstoneGeometry } from "./geometry/cemetery/SquareHeadstoneGeometry";
