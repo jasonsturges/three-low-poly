@@ -14,5 +14,6 @@ export class FlorenceFlaskGeometry extends BufferGeometry {
     tubeGeometry.rotateX(Math.PI / 2);
 
     this.copy(mergeBufferGeometries([sphereGeometry, tubeGeometry], false) as BufferGeometry);
+    this.rotateX(-Math.PI / 2);
   }
 }
