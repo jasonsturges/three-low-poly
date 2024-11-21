@@ -20,7 +20,6 @@ export class ErlenmeyerFlask extends Mesh<ErlenmeyerFlaskGeometry, MeshPhysicalM
         reflectivity: 0.8,
         transmission: 0.9,
         side: DoubleSide,
-        wireframe: false,
       }),
     );
   }
