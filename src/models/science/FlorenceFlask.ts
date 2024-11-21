@@ -8,6 +8,7 @@ export class FlorenceFlask extends Mesh<FlorenceFlaskGeometry, MeshPhysicalMater
       new MeshPhysicalMaterial({
         color: 0x88ccff,
         transparent: true,
+        depthWrite: false,
         opacity: 0.4,
         roughness: 0.1,
         metalness: 0.1,
