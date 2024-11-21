@@ -9,7 +9,7 @@
  * console.log(`The x-position for y=${y} is x=${x.toFixed(4)}`);
  * ```
  */
-export function calculateXForY(x1: number, y1: number, x2: number, y2: number, y: number): number {
+export function getXFromSlopeIntercept(x1: number, y1: number, x2: number, y2: number, y: number): number {
   const m = (y2 - y1) / (x2 - x1); // slope
   return x1 + (y - y1) / m;
 }
@@ -25,7 +25,12 @@ export function calculateXForY(x1: number, y1: number, x2: number, y2: number, y
  * console.log(`The y-position for x=${x} is y=${y.toFixed(4)}`);
  * ```
  */
-export function calculateYForX(x1: number, y1: number, x2: number, y2: number, x: number): number {
+export function getYFromSlopeIntercept(x1: number, y1: number, x2: number, y2: number, x: number): number {
   const m = (y2 - y1) / (x2 - x1); // slope
   return y1 + m * (x - x1);
+}
+
+export const LineEquations = {
+  getXFromSlopeIntercept,
+  getYFromSlopeIntercept,
 }
