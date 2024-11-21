@@ -150,7 +150,6 @@ export { Rock } from "./models/rocks/Rock";
 export { Rocks } from "./models/rocks/Rocks";
 
 // Science
-export { Bottle } from "./models/science/Bottle";
 export { BunsenBurner } from "./models/science/BunsenBurner";
 export { ElectricPanel } from "./models/science/ElectricPanel";
 export { ErlenmeyerFlask } from "./models/science/ErlenmeyerFlask";
