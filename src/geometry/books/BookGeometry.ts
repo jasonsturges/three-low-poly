@@ -1,6 +1,13 @@
 import { BoxGeometry, BufferAttribute, BufferGeometry } from "three";
 import { mergeBufferGeometries } from "three-stdlib";
 
+/**
+ * Book
+ *
+ * Group indices:
+ * 0. cover
+ * 1. page
+ */
 export class BookGeometry extends BufferGeometry {
   constructor(width = 1, height = 1.5, depth = 0.5, coverThickness = 0.05, pageIndent = 0.05) {
     super();

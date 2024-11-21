@@ -3,9 +3,11 @@ import { BookGeometry } from "../../geometry/books/BookGeometry";
 import { ColorPalette } from "../../constants/ColorPalette";
 
 /**
- * Material Order:
- *   1. Cover
- *   2. Page
+ * Book prefab
+ *
+ * Material indices:
+ * 0. cover
+ * 1. page
  */
 export class Book extends Mesh<BookGeometry, MeshStandardMaterial[]> {
   constructor({
@@ -15,7 +17,7 @@ export class Book extends Mesh<BookGeometry, MeshStandardMaterial[]> {
     coverThickness = 0.05,
     pageIndent = 0.05,
     coverColor = ColorPalette.DARK_RED,
-    pageColor = ColorPalette.WHITE,
+    pageColor = ColorPalette.TITANIUM_WHITE,
   } = {}) {
     super(
       new BookGeometry(width, height, depth, coverThickness, pageIndent),
