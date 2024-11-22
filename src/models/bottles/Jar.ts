@@ -12,6 +12,7 @@ export class Jar extends Mesh<JarGeometry, MeshStandardMaterial[]> {
       new MeshStandardMaterial({
         color: 0x88ccaa,
         transparent: true,
+        depthWrite: false,
         opacity: 0.4,
         roughness: 0.1,
         metalness: 0.5,
