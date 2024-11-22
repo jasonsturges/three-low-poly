@@ -8,16 +8,24 @@ export interface EmissivePulseEffectOptions {
 }
 
 /**
- * Emissive pulse effect, designed for flickering lights.
+ * Emissive pulse animation, producing a flickering light effect for materials that have emissive properties.
  * The emissive intensity of the material will oscillate between `minIntensity` and `maxIntensity`.
- *
- * Use with materials that have emissive properties.
  *
  * Oscillation time = 2π / speed
  *  - Low speed values (e.g., 0.5) will result in a slow pulse
  *  - High speed values (e.g., 10) will result in a rapid flicker
  *
  *  Requires `update()` frame handler with `clock.getElapsedTime()` for animation.
+ *
+ *  Example usage:
+ *  ```
+ *  const pulseAnimation = new EmissivePulseAnimation();
+ *  const clock = new THREE.Clock();
+ *
+ *  function animate() {
+ *    pulseAnimation.update(clock.getElapsedTime());
+ *  }
+ *  ```
  */
 export class EmissivePulseAnimation {
   public speed: number;
