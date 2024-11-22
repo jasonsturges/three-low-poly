@@ -26,7 +26,7 @@
         ErlenmeyerFlask,
         FlorenceFlask,
         Jar,
-        LightningEffect,
+        LightningAnimation,
         MortarAndPestle,
         Panel,
         PanelLight,
@@ -254,7 +254,7 @@
       scene.add(lightning1);
       lightning1.position.set(5, 10, -5);
 
-      const lightningEffect1 = new LightningEffect({ light: lightning1, minIntensity: 1, maxIntensity: 15 });
+      const lightningEffect1 = new LightningAnimation({ light: lightning1, minIntensity: 1, maxIntensity: 15 });
       setRandomInterval(
         () => {
           lightningEffect1.triggerLightning();
@@ -276,7 +276,7 @@
       scene.add(lightning2);
       lightning2.position.set(-5, 10, 4);
 
-      const lightningEffect2 = new LightningEffect({ light: lightning2, minIntensity: 0.25, maxIntensity: 5 });
+      const lightningEffect2 = new LightningAnimation({ light: lightning2, minIntensity: 0.25, maxIntensity: 5 });
       setRandomInterval(
         () => {
           lightningEffect2.triggerLightning();

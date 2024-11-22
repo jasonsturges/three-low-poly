@@ -11,7 +11,7 @@ export interface LightningEffectOptions {
 }
 
 /**
- * A lightning effect that can be used to simulate a lightning storm.
+ * A lightning animation that can be used to simulate a lightning storm.
  * This effect is applied to a light source.
  *
  * Example usage:
@@ -20,12 +20,14 @@ export interface LightningEffectOptions {
  * scene.add(lightning);
  * lightning.position.set(5, 10, -5);
  *
+ * const lightningAnimation = new LightningAnimation();
+ *
  * setRandomInterval(() => {
  *   lightningEffect.triggerLightning();
  * }, 250, 1250);
  * ```
  */
-export class LightningEffect {
+export class LightningAnimation {
   private light?: Light;
   public minIntensity: number;
   public maxIntensity: number;

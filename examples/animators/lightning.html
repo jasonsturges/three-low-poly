@@ -18,7 +18,7 @@
     <script type="module">
       import * as THREE from "three";
       import GUI from "lil-gui";
-      import { LightningEffect, setRandomInterval } from "../../src/index.js";
+      import { LightningAnimation, setRandomInterval } from "../../src/index.js";
       import { createOrbitScene } from "../utils/orbitScene.js";
 
       const { scene, camera, handlers } = createOrbitScene();
@@ -42,10 +42,10 @@
       scene.add(lightning);
       lightning.position.set(5, 10, -5);
 
-      const lightningEffect = new LightningEffect({ light: lightning, ...params });
+      const lightningAnimation = new LightningAnimation({ light: lightning, ...params });
 
       setRandomInterval(() => {
-        lightningEffect.triggerLightning();
+        lightningAnimation.triggerLightning();
       }, 250, 1250);
 
       gui.title("Lightning Effect");

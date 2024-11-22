@@ -10,6 +10,7 @@ export { cameraSpiralAscensionAnimation } from "./animators/cameraSpiralAscentio
 export { cameraWobbleAnimation } from "./animators/cameraWobbleAnimation";
 export { cameraZoomInAnimation } from "./animators/cameraZoomInAnimation";
 export { EmissivePulseAnimation, type EmissivePulseEffectOptions } from "./animators/EmissivePulseAnimation";
+export { LightningAnimation } from "./animators/LightningAnimation";
 
 //------------------------------
 //  Brushes
@@ -39,7 +40,6 @@ export * from "./constants/ParametricCurve";
 
 export { BubblingEffect, type BubblingEffectOptions } from "./effects/BubblingEffect";
 export { LeafEffect, type LeafEffectOptions } from "./effects/LeafEffect";
-export { LightningEffect } from "./effects/LightningEffect";
 
 //------------------------------
 //  Factory
