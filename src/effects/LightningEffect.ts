@@ -1,6 +1,6 @@
 import { Light } from "three";
 import { randomFloat } from "../utils/RandomNumberUtils";
-import { setRandomTimeout } from "../utils/TimerUtils";
+import { setRandomTimeout } from "../utils/RandomTimer";
 
 export interface LightningEffectOptions {
   light?: Light;
