@@ -62,6 +62,7 @@ export { StaircaseGeometry } from "./geometry/architecture/StaircaseGeometry";
 export { BookGeometry } from "./geometry/books/BookGeometry";
 
 // Bottles
+export { JarGeometry } from "./geometry/bottles/JarGeometry";
 export { PotionBottleGeometry } from "./geometry/bottles/PotionBottleGeometry";
 export { WineBottleGeometry } from "./geometry/bottles/WineBottleGeometry";
 
@@ -85,7 +86,9 @@ export { DeskGeometry } from "./geometry/furniture/DeskGeometry";
 export { EllipticLeafGeometry } from "./geometry/leafs/EllipticLeafGeometry";
 
 // Rocks
+export { MossyRocksGeometry } from "./geometry/rocks/MossyRocksGeometry";
 export { RockGeometry } from "./geometry/rocks/RockGeometry";
+export { RocksGeometry } from "./geometry/rocks/RocksGeometry";
 
 // Skeleton
 export { BoneGeometry } from "./geometry/skeleton/BoneGeometry";
@@ -95,6 +98,7 @@ export { ErlenmeyerFlaskGeometry } from "./geometry/science/ErlenmeyerFlaskGeome
 export { FlorenceFlaskGeometry } from "./geometry/science/FlorenceFlaskGeometry";
 export { MortarGeometry } from "./geometry/science/MortarGeometry";
 export { StandGeometry } from "./geometry/science/StandGeometry";
+export { TeslaCoilGeometry } from "./geometry/science/TeslaCoilGeometry";
 export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
 
 // Terrain
@@ -120,9 +124,9 @@ export { Moon } from "./models/astronomy/Moon";
 export { Book } from "./models/books/Book";
 
 // Bottles
+export { Jar } from "./models/bottles/Jar";
 export { PotionBottle } from "./models/bottles/PotionBottle";
 export { WineBottle } from "./models/bottles/WineBottle";
-
 
 // Cemetery
 export { CrossHeadstone } from "./models/cemetery/CrossHeadstone";
@@ -153,7 +157,6 @@ export { Rocks } from "./models/rocks/Rocks";
 export { BunsenBurner } from "./models/science/BunsenBurner";
 export { ElectricPanel } from "./models/science/ElectricPanel";
 export { ErlenmeyerFlask } from "./models/science/ErlenmeyerFlask";
-export { Flask } from "./models/science/Flask";
 export { FlorenceFlask } from "./models/science/FlorenceFlask";
 export { LeverPanel } from "./models/science/LeverPanel";
 export { Microscope } from "./models/science/Microscope";
@@ -225,7 +228,7 @@ export * from "./utils/ColorUtils";
 export * from "./utils/GroupUtils";
 export * from "./utils/InstancedMeshUtils";
 export * from "./utils/InterpolateCurve";
-export * from "./utils/LineEquations"
+export * from "./utils/LineEquations";
 export * from "./utils/MeshUtils";
 export * from "./utils/ParametricCurveUtils";
 export * from "./utils/QuadUtils";
