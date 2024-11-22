@@ -19,7 +19,7 @@ import { Camera, Vector3 } from "three";
  * );
  * ```
  */
-export function flythroughAnimation(camera: Camera, waypoints: Vector3[], duration: number, onComplete?: () => void): void {
+export function cameraFlythroughAnimation(camera: Camera, waypoints: Vector3[], duration: number, onComplete?: () => void): void {
   const totalSegments = waypoints.length - 1;
   let startTime: number | null = null;
 

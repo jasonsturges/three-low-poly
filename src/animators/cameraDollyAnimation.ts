@@ -10,7 +10,7 @@ import { Camera, Vector3 } from "three";
  * });
  * ```
  */
-export function dollyAnimation(
+export function cameraDollyAnimation(
   camera: Camera,
   distance: number,
   duration: number,

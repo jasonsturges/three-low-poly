@@ -10,7 +10,7 @@ import { Camera, Vector3 } from "three";
  * });
  * ```
  */
-export function orbitAnimation(camera: Camera, target: Vector3, radius: number, duration: number, onComplete?: () => void) {
+export function cameraOrbitAnimation(camera: Camera, target: Vector3, radius: number, duration: number, onComplete?: () => void) {
   let startTime: number | null = null
 
   function animate(time: number) {

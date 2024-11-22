@@ -19,13 +19,13 @@
       import GUI from "lil-gui";
       import { createOrbitScene } from "../utils/orbitScene.js";
       import {
-        dollyAnimation,
-        flythroughAnimation,
-        orbitAnimation,
-        pendulumAnimation,
-        spiralAscensionAnimation,
-        wobbleAnimation,
-        zoomInAnimation,
+        cameraDollyAnimation,
+        cameraFlythroughAnimation,
+        cameraOrbitAnimation,
+        cameraPendulumAnimation,
+        cameraSpiralAscensionAnimation,
+        cameraWobbleAnimation,
+        cameraZoomInAnimation,
       } from "../../src/index.js";
 
       const { scene, camera, controls } = createOrbitScene();
@@ -79,7 +79,7 @@
       gui.add(
         {
           Dolly: () => {
-            dollyAnimation(camera, 5, 3000, () => {
+            cameraDollyAnimation(camera, 5, 3000, () => {
               console.log("Dolly animation complete");
             });
           },
@@ -89,7 +89,7 @@
       gui.add(
         {
           Flythrough: () => {
-            flythroughAnimation(
+            cameraFlythroughAnimation(
               camera,
               [new THREE.Vector3(0, 5, 5), new THREE.Vector3(0, 5, -25.5), new THREE.Vector3(-20.5, 5, 0)],
               6000,
@@ -104,7 +104,7 @@
       gui.add(
         {
           Orbit: () => {
-            orbitAnimation(camera, new THREE.Vector3(0, 0, 0), 10, 5000, () => {
+            cameraOrbitAnimation(camera, new THREE.Vector3(0, 0, 0), 10, 5000, () => {
               console.log("Orbit animation complete");
             });
           },
@@ -114,7 +114,7 @@
       gui.add(
         {
           Pendulum: () => {
-            pendulumAnimation(camera, new THREE.Vector3(0, 5, 5), 0.5, 9000, 3, () => {
+            cameraPendulumAnimation(camera, new THREE.Vector3(0, 5, 5), 0.5, 9000, 3, () => {
               console.log("Pendulum animation complete");
             });
           },
@@ -124,7 +124,7 @@
       gui.add(
         {
           Spiral: () => {
-            spiralAscensionAnimation(camera, new THREE.Vector3(0, 0, 0), 10, 300, 5, 5000, () => {
+            cameraSpiralAscensionAnimation(camera, new THREE.Vector3(0, 0, 0), 10, 300, 5, 5000, () => {
               console.log("Spiral ascension animation complete");
             });
           },
@@ -134,7 +134,7 @@
       gui.add(
         {
           Wobble: () => {
-            wobbleAnimation(camera, 0.5, 1000, () => {
+            cameraWobbleAnimation(camera, 0.5, 1000, () => {
               console.log("Wobble animation complete");
             });
           },
@@ -144,7 +144,7 @@
       gui.add(
         {
           ZoomIn: () => {
-            zoomInAnimation(camera, new THREE.Vector3(0, 0, 0), 120, 75, 2000, () => {
+            cameraZoomInAnimation(camera, new THREE.Vector3(0, 0, 0), 120, 75, 2000, () => {
               console.log("Zoom in animation complete");
             });
           },

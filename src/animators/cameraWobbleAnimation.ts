@@ -10,7 +10,7 @@ import { Camera, Vector3 } from "three";
  * });
  * ```
  */
-export function wobbleAnimation(camera: Camera, intensity: number, duration: number, onComplete?: () => void): void {
+export function cameraWobbleAnimation(camera: Camera, intensity: number, duration: number, onComplete?: () => void): void {
   const originalPosition = camera.position.clone();
   let startTime: number | null = null;
 

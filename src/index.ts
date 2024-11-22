@@ -2,13 +2,13 @@
 //  Animators
 //------------------------------
 
-export { dollyAnimation } from "./animators/dollyAnimation";
-export { flythroughAnimation } from "./animators/flythroughAnimation";
-export { orbitAnimation } from "./animators/orbitAnimation";
-export { pendulumAnimation } from "./animators/pendulumAnimation";
-export { spiralAscensionAnimation } from "./animators/spiralAscentionAnimation";
-export { wobbleAnimation } from "./animators/wobbleAnimation";
-export { zoomInAnimation } from "./animators/zoomInAnimation";
+export { cameraDollyAnimation } from "./animators/cameraDollyAnimation";
+export { cameraFlythroughAnimation } from "./animators/cameraFlythroughAnimation";
+export { cameraOrbitAnimation } from "./animators/cameraOrbitAnimation";
+export { cameraPendulumAnimation } from "./animators/cameraPendulumAnimation";
+export { cameraSpiralAscensionAnimation } from "./animators/cameraSpiralAscentionAnimation";
+export { cameraWobbleAnimation } from "./animators/cameraWobbleAnimation";
+export { cameraZoomInAnimation } from "./animators/cameraZoomInAnimation";
 
 //------------------------------
 //  Brushes

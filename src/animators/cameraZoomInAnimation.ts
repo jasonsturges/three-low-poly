@@ -11,7 +11,7 @@ import { MathUtils, PerspectiveCamera, Vector3 } from "three";
  * });
  * ```
  */
-export function zoomInAnimation(
+export function cameraZoomInAnimation(
   camera: PerspectiveCamera,
   target: Vector3,
   startFov: number,

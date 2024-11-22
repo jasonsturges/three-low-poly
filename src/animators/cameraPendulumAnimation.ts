@@ -10,7 +10,7 @@ import { Camera, Vector3 } from "three";
  * });
  * ```
  */
-export function pendulumAnimation(
+export function cameraPendulumAnimation(
   camera: Camera,
   center: Vector3,
   radius: number,

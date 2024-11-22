@@ -10,7 +10,7 @@ import { Camera, Vector3 } from "three";
  * });
  * ```
  */
-export function spiralAscensionAnimation(
+export function cameraSpiralAscensionAnimation(
   camera: Camera,
   center: Vector3,
   radius: number,
