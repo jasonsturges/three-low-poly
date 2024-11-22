@@ -24,8 +24,8 @@
         Desk,
         EmissivePulseEffect,
         ErlenmeyerFlask,
-        Flask,
         FlorenceFlask,
+        Jar,
         LightningEffect,
         MortarAndPestle,
         Panel,
@@ -129,11 +129,11 @@
       potionBottle.castShadow = true;
       scene.add(potionBottle);
 
-      const flask = new Flask();
-      flask.scale.set(0.25, 0.25, 0.25);
-      flask.position.set(-1, 3.3, -1);
-      flask.castShadow = true;
-      scene.add(flask);
+      const jar = new Jar();
+      jar.scale.set(0.25, 0.25, 0.25);
+      jar.position.set(-1, 3.3, -1);
+      jar.castShadow = true;
+      scene.add(jar);
       const bubblingEffect = new BubblingEffect();
       bubblingEffect.position.set(-1, 3.3, -1);
       bubblingEffect.scale.set(0.25, 0.25, 0.25);
