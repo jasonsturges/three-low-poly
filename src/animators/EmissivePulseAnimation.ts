@@ -19,7 +19,7 @@ export interface EmissivePulseEffectOptions {
  *
  *  Requires `update()` frame handler with `clock.getElapsedTime()` for animation.
  */
-export class EmissivePulseEffect {
+export class EmissivePulseAnimation {
   public speed: number;
   public maxIntensity: number;
   public minIntensity: number;

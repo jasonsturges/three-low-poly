@@ -18,7 +18,7 @@
     <script type="module">
       import * as THREE from "three";
       import GUI from "lil-gui";
-      import { EmissivePulseEffect, PanelLight, centerMesh } from "../../src/index.js";
+      import { EmissivePulseAnimation, PanelLight, centerMesh } from "../../src/index.js";
       import { createOrbitScene } from "../utils/orbitScene.js";
 
       const { scene, camera, handlers } = createOrbitScene();
@@ -39,7 +39,7 @@
       scene.add(panelLight);
       centerMesh(panelLight);
 
-      const pulseEffect = new EmissivePulseEffect({
+      const pulseAnimation = new EmissivePulseAnimation({
         material: panelLight.material,
         speed: params.speed,
         maxIntensity: params.maxIntensity,
@@ -47,7 +47,7 @@
       });
 
       const clock = new THREE.Clock();
-      handlers.push(() => pulseEffect.update(clock.getElapsedTime()));
+      handlers.push(() => pulseAnimation.update(clock.getElapsedTime()));
 
       gui.title("Emissive Pulse Effect");
       gui.addColor(params, "color").name("Color").onChange(update);
@@ -59,9 +59,9 @@
       function update() {
         panelLight.material.color.set(params.color);
         panelLight.material.emissive.set(params.emissive);
-        pulseEffect.speed = params.speed;
-        pulseEffect.maxIntensity = params.maxIntensity;
-        pulseEffect.minIntensity = params.minIntensity;
+        pulseAnimation.speed = params.speed;
+        pulseAnimation.maxIntensity = params.maxIntensity;
+        pulseAnimation.minIntensity = params.minIntensity;
       }
     </script>
   </body>

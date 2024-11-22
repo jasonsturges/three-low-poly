@@ -9,6 +9,7 @@ export { cameraPendulumAnimation } from "./animators/cameraPendulumAnimation";
 export { cameraSpiralAscensionAnimation } from "./animators/cameraSpiralAscentionAnimation";
 export { cameraWobbleAnimation } from "./animators/cameraWobbleAnimation";
 export { cameraZoomInAnimation } from "./animators/cameraZoomInAnimation";
+export { EmissivePulseAnimation, type EmissivePulseEffectOptions } from "./animators/EmissivePulseAnimation";
 
 //------------------------------
 //  Brushes
@@ -37,7 +38,6 @@ export * from "./constants/ParametricCurve";
 //------------------------------
 
 export { BubblingEffect, type BubblingEffectOptions } from "./effects/BubblingEffect";
-export { EmissivePulseEffect, type EmissivePulseEffectOptions } from "./effects/EmissivePulseEffect";
 export { LeafEffect, type LeafEffectOptions } from "./effects/LeafEffect";
 export { LightningEffect } from "./effects/LightningEffect";
 
@@ -111,7 +111,6 @@ export { TreeGeometry } from "./geometry/trees/TreeGeometry";
 //------------------------------
 //  Materials
 //------------------------------
-
 
 //------------------------------
 //  Models

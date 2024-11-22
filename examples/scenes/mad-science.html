@@ -22,7 +22,7 @@
         Bookshelf,
         BubblingEffect,
         Desk,
-        EmissivePulseEffect,
+        EmissivePulseAnimation,
         ErlenmeyerFlask,
         FlorenceFlask,
         Jar,
@@ -230,7 +230,7 @@
         const panelLight = new PanelLight({ radius: 0.05 });
         panelLight.position.set(-1.25 + (i % 6) * 0.5, 5.55 - Math.floor(i / 6) * 0.15, 0.05);
         panelLightEffects.push(
-          new EmissivePulseEffect({ material: panelLight.material, speed: randomFloat(0.2, 2), minIntensity: 0.01 }),
+          new EmissivePulseAnimation({ material: panelLight.material, speed: randomFloat(0.2, 2), minIntensity: 0.01 }),
         );
 
         controlPanel1.add(panelLight);
