@@ -1,7 +1,7 @@
 import { BackSide, Mesh, ShaderMaterial, SphereGeometry } from "three";
 import { nightSkyShader, NightSkyUniforms } from "../shaders/nightSkyShader";
 
-class NightSkybox extends Mesh {
+export class NightSkybox extends Mesh {
   geometry: SphereGeometry;
   material: ShaderMaterial & { uniforms: NightSkyUniforms };
 
@@ -18,5 +18,3 @@ class NightSkybox extends Mesh {
     }) as ShaderMaterial & { uniforms: NightSkyUniforms };
   }
 }
-
-export { NightSkybox };

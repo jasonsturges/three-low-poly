@@ -1,7 +1,7 @@
 import { BackSide, BoxGeometry, Mesh, ShaderMaterial } from "three";
 import { daySkyShader, DaySkyUniforms } from "../shaders/daySkyShader";
 
-class DaySkybox extends Mesh {
+export class DaySkybox extends Mesh {
   geometry: BoxGeometry;
   material: ShaderMaterial & { uniforms: DaySkyUniforms };
 
@@ -18,5 +18,3 @@ class DaySkybox extends Mesh {
     }) as ShaderMaterial & { uniforms: DaySkyUniforms };
   }
 }
-
-export { DaySkybox };
