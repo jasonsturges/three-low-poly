@@ -32,6 +32,7 @@
         SquareHeadstone,
         StoneFencePost,
         WroughtIronFence,
+        logarithmicRandomMax,
       } from "../../src/index.js";
       import { DoubleSide, MeshStandardMaterial } from "three";
 
@@ -150,12 +151,14 @@
       }
 
       // Candles
-      const candle = new Candle(0.2, 0.05);
-      candle.position.set(4.0, 0, 9.7);
-      scene.add(candle);
-
       for (let i = 0; i < 5; i++) {
-        const candle = new Candle(Math.random(), Math.random() * 0.1);
+        const candleRadius = logarithmicRandomMax(0.9, 0.05, 0.15);
+        const candleHeight = logarithmicRandomMax(0.7, 0.3, 1.0);
+        const candle = new Candle({
+          radiusTop: candleRadius,
+          radiusBottom: candleRadius,
+          height: candleHeight,
+        });
         candle.position.set(Math.random() * 24 - 12, 0, Math.random() * 24 - 12);
         scene.add(candle);
       }
