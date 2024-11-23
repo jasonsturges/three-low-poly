@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import GUI from "lil-gui";
+      import { Flame, FlameGeometry, centerMesh } from "../../../src/index.js";
+      import { createOrbitScene } from "../../utils/orbitScene.js";
+
+      const { scene } = createOrbitScene();
+
+      const params = {
+        height: 0.25,
+        radius: 0.05,
+        segmentsU: 16,
+        segmentsV: 16,
+      };
+
+      const candle = new Flame(params);
+      scene.add(candle);
+      centerMesh(candle);
+
+      const gui = new GUI();
+      gui.title("Flame");
+      gui.add(params, "height", 0.1, 5, 0.01).name("Height").onChange(update);
+      gui.add(params, "radius", 0.1, 2, 0.01).name("Flame Height").onChange(update);
+      gui.add(params, "segmentsU", 3, 32, 1).name("Segments U").onChange(update);
+      gui.add(params, "segmentsV", 3, 32, 1).name("Segments V").onChange(update);
+
+      function update() {
+        candle.geometry.dispose();
+        candle.geometry = new FlameGeometry(params);
+        centerMesh(candle);
+      }
+    </script>
+  </body>
+</html>
