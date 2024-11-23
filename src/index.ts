@@ -87,6 +87,7 @@ export { EllipticLeafGeometry } from "./geometry/leafs/EllipticLeafGeometry";
 
 // Lighting
 export { FlameGeometry } from "./geometry/lighting/FlameGeometry";
+export { CandleGeometry } from "./geometry/lighting/CandleGeometry";
 
 // Rocks
 export { MossyRocksGeometry } from "./geometry/rocks/MossyRocksGeometry";
