@@ -14,7 +14,7 @@ export class Candle extends Mesh<CandleGeometry, MeshStandardMaterial[]> {
     flameHeight = 0.25,
     flameRadius = 0.05,
     segments = 16,
-  }) {
+  } = {}) {
     super(
       new CandleGeometry({
         radiusTop,
