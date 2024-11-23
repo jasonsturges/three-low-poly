@@ -85,6 +85,9 @@ export { DeskGeometry } from "./geometry/furniture/DeskGeometry";
 // Leafs
 export { EllipticLeafGeometry } from "./geometry/leafs/EllipticLeafGeometry";
 
+// Lighting
+export { FlameGeometry } from "./geometry/lighting/FlameGeometry";
+
 // Rocks
 export { MossyRocksGeometry } from "./geometry/rocks/MossyRocksGeometry";
 export { RockGeometry } from "./geometry/rocks/RockGeometry";
@@ -145,6 +148,7 @@ export { Desk } from "./models/furniture/Desk";
 
 // Lighting
 export { Candle } from "./models/lighting/Candle";
+export { Flame } from "./models/lighting/Flame";
 export { Lantern } from "./models/lighting/Lantern";
 
 // Rocks
