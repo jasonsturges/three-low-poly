@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import GUI from "lil-gui";
+      import { Candle, CandleGeometry, centerMesh } from "../../../src/index.js";
+      import { createOrbitScene } from "../../utils/orbitScene.js";
+
+      const { scene } = createOrbitScene();
+
+      const params = {
+        radiusTop: 0.2,
+        radiusBottom: 0.2,
+        height: 1,
+        flameHeight: 0.25,
+        flameRadius: 0.05,
+        segments: 16,
+      };
+
+      const candle = new Candle(params);
+      scene.add(candle);
+      centerMesh(candle);
+
+      const gui = new GUI();
+      gui.title("Candle");
+      gui.add(params, "radiusTop", 0, 1, 0.01).name("Radius Top").onChange(update);
+      gui.add(params, "radiusBottom", 0, 1, 0.01).name("Radius Bottom").onChange(update);
+      gui.add(params, "height", 0.1, 5, 0.01).name("Height").onChange(update);
+      gui.add(params, "flameHeight", 0.1, 2, 0.01).name("Flame Height").onChange(update);
+      gui.add(params, "flameRadius", 0.01, 0.5, 0.01).name("Flame Radius").onChange(update);
+      gui.add(params, "segments", 3, 32, 1).name("Segments").onChange(update);
+
+      function update() {
+        candle.geometry.dispose();
+        candle.geometry = new CandleGeometry(params);
+        centerMesh(candle);
+      }
+    </script>
+  </body>
+</html>
