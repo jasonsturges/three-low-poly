@@ -90,6 +90,9 @@ export { EllipticLeafGeometry } from "./geometry/leafs/EllipticLeafGeometry";
 export { FlameGeometry } from "./geometry/lighting/FlameGeometry";
 export { CandleGeometry } from "./geometry/lighting/CandleGeometry";
 
+// Primitives
+export { ParallelogramBoxGeometry } from "./geometry/primitives/ParallelogramBoxGeometry";
+
 // Rocks
 export { MossyRocksGeometry } from "./geometry/rocks/MossyRocksGeometry";
 export { RockGeometry } from "./geometry/rocks/RockGeometry";
