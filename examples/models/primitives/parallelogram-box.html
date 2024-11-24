@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { ParallelogramBoxGeometry } from "../../../src/index.js";
+      import { VertexNormalsHelper } from "three-stdlib";
+      import { createOrbitScene } from "../../utils/orbitScene.js";
+
+      const { scene, camera, controls } = createOrbitScene();
+
+      // Material
+      const textureLoader = new THREE.TextureLoader();
+      const texture = textureLoader.load("https://threejs.org/examples/textures/uv_grid_opengl.jpg");
+      const material = new THREE.MeshStandardMaterial({
+        map: texture,
+        side: THREE.FrontSide,
+      });
+
+      // Mesh
+      const board = new ParallelogramBoxGeometry(5, 2, 0.5, Math.PI / 4); // Customize width, length, and angle
+      const mesh = new THREE.Mesh(board, material);
+      scene.add(mesh);
+
+      // Helpers
+      const normalsHelper = new VertexNormalsHelper(mesh, 1, 0xff0000);
+      scene.add(normalsHelper);
+
+      const axesHelper = new THREE.AxesHelper(5); // 5 is the length of the axes lines
+      scene.add(axesHelper);
+
+      // GUI
+      const params = {
+        width: 1,
+        height: 2,
+        depth: 0.5,
+        skew: Math.PI / 4,
+      };
+
+      const gui = new GUI();
+      gui.title("Parallelogram Box");
+      gui.add(params, "width", 0, 5, 0.01).name("Width").onChange(update);
+      gui.add(params, "height", 0, 5, 0.01).name("Height").onChange(update);
+      gui.add(params, "depth", 0, 5, 0.01).name("Depth").onChange(update);
+      gui.add(params, "skew", -Math.PI / 2, Math.PI / 2, 0.01).name("Skew").onChange(update);
+
+      function update() {
+        mesh.geometry.dispose();
+        mesh.geometry = new ParallelogramBoxGeometry(params.width, params.height, params.depth, params.skew);
+        normalsHelper.update();
+      }
+    </script>
+  </body>
+</html>
