@@ -13,6 +13,39 @@ export interface LightFlickerAnimationOptions {
   jitterZ: number;
 }
 
+/**
+ * Create a light flicker animation that will randomly change the intensity and position of a light.
+ * Effect resembles a flickering flame of candlelight.
+ *
+ * Example usage:
+ * ```
+ *    // Create a candle
+ *    const candle = new Candle({
+ *      height: 1,
+ *      flameHeight: 0.25,
+ *    });
+ *    scene.add(candle);
+ *
+ *    // Create a point light
+ *    const candleLight = new THREE.PointLight(0xffa500, 1, 5);
+ *    scene.add(candleLight);
+ *
+ *    // Apply the animator to the light
+ *    const lightAnimation = new LightFlickerAnimation({
+ *      light: candleLight,
+ *      maxIntensity: 2.2,
+ *      x: 0,
+ *      y: 1.125,
+ *      z: 0,
+ *    });
+ *    animations.push(lightAnimation);
+ *
+ *    // Update the light animation in the render loop
+ *    renderer.setAnimationLoop(() => {
+ *      lightAnimation.update();
+ *    });
+ * ```
+ */
 export class LightFlickerAnimation {
   private light?: Light;
   public minIntensity: number;
