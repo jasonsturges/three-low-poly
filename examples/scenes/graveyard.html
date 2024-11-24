@@ -24,6 +24,7 @@
         EllipticLeafGeometry,
         Lantern,
         LeafEffect,
+        LightFlickerAnimation,
         Mausoleum,
         Moon,
         ObeliskHeadstone,
@@ -151,6 +152,7 @@
       }
 
       // Candles
+      const lightAnimations = [];
       for (let i = 0; i < 5; i++) {
         const candleRadius = logarithmicRandomMax(0.9, 0.05, 0.15);
         const candleHeight = logarithmicRandomMax(0.7, 0.3, 1.0);
@@ -159,8 +161,22 @@
           radiusBottom: candleRadius,
           height: candleHeight,
         });
+        candle.castShadow = true;
         candle.position.set(Math.random() * 24 - 12, 0, Math.random() * 24 - 12);
         scene.add(candle);
+
+        const candleLight = new THREE.PointLight(0xffa500, 1, 5);
+        candleLight.position.set(candle.position.x, candle.position.y + candleHeight / 2 + 0.125, candle.position.z);
+        candleLight.castShadow = true;
+        scene.add(candleLight);
+
+        const lightAnimation = new LightFlickerAnimation({
+          light: candleLight,
+          x: candle.position.x,
+          y: candleHeight + 0.125,
+          z: candle.position.z,
+        });
+        lightAnimations.push(lightAnimation);
       }
 
       // Moon
@@ -221,6 +237,7 @@
         renderer.render(scene, camera);
         controls.update();
         leafEffect.update();
+        lightAnimations.forEach((animation) => animation.update());
       });
 
       window.addEventListener("resize", () => {
