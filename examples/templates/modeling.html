@@ -22,13 +22,6 @@
 
       const { scene } = createOrbitScene();
 
-      const textureLoader = new THREE.TextureLoader();
-      const texture = textureLoader.load("https://threejs.org/examples/textures/uv_grid_opengl.jpg");
-      const material = new THREE.MeshStandardMaterial({
-        map: texture,
-        side: THREE.FrontSide,
-      });
-
       export class ModelingGeometry extends THREE.BufferGeometry {
         constructor() {
           super();
@@ -67,12 +60,28 @@
         }
       }
 
+      // Geometry
       const geometry = new ModelingGeometry();
+
+      // Material
+      const textureLoader = new THREE.TextureLoader();
+      const texture = textureLoader.load("https://threejs.org/examples/textures/uv_grid_opengl.jpg");
+      const material = new THREE.MeshStandardMaterial({
+        map: texture,
+        side: THREE.FrontSide,
+      });
+
+      // Mesh
       const mesh = new THREE.Mesh(geometry, material);
       scene.add(mesh);
 
+      // Normals helper
       const helper = new VertexNormalsHelper(mesh, 1, 0xff0000);
       scene.add(helper);
+
+      // Axes helper
+      const axesHelper = new THREE.AxesHelper(5);
+      scene.add(axesHelper);
     </script>
   </body>
 </html>
