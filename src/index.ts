@@ -10,6 +10,7 @@ export { cameraSpiralAscensionAnimation } from "./animators/cameraSpiralAscentio
 export { cameraWobbleAnimation } from "./animators/cameraWobbleAnimation";
 export { cameraZoomInAnimation } from "./animators/cameraZoomInAnimation";
 export { EmissivePulseAnimation, type EmissivePulseEffectOptions } from "./animators/EmissivePulseAnimation";
+export { LightFlickerAnimation, type LightFlickerAnimationOptions } from "./animators/LightFlickerAnimation";
 export { LightningAnimation } from "./animators/LightningAnimation";
 
 //------------------------------
