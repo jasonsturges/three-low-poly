@@ -34,9 +34,9 @@ export interface LightFlickerAnimationOptions {
  *    const lightAnimation = new LightFlickerAnimation({
  *      light: candleLight,
  *      maxIntensity: 2.2,
- *      x: 0,
- *      y: 1.125,
- *      z: 0,
+ *      x: candle.position.x,
+ *      y: candle.position.y + 1 + 0.125, // height + half flame height
+ *      z: candle.position.z,
  *    });
  *    animations.push(lightAnimation);
  *
