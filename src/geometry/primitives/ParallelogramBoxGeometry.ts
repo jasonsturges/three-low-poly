@@ -4,7 +4,7 @@ import { BufferAttribute, BufferGeometry } from "three";
  * Prismatic parallelogram, with horizontal skew (offset in X for the slant).
  */
 export class ParallelogramBoxGeometry extends BufferGeometry {
-  constructor(width = 1, height = 2, depth = 0.5, angle = Math.PI / 6) {
+  constructor(width = 1, height = 2, depth = 0.5, angle = Math.PI / 4) {
     super();
 
     const s = height * Math.tan(angle); // skew
@@ -14,44 +14,44 @@ export class ParallelogramBoxGeometry extends BufferGeometry {
 
     // Bottom face vertices (X, Y, Z)
     const vertices = [
-      -w / 2, -h / 2, d / 2,              // Bottom-left
-      w / 2, -h / 2, d / 2,               // Bottom-right
-      w / 2 + s / 2, h / 2, d / 2,        // Top-right
-      -w / 2 + s / 2, h / 2, d / 2,       // Top-left
+      0, 0, 0,        // Front face
+      w, 0, 0,
+      w + s, h, 0,
+      s, h, 0,
 
-      w / 2, -h / 2, -d / 2,              // Back face
-      -w / 2, -h / 2, -d / 2,
-      -w / 2 + s / 2, h / 2, -d / 2,
-      w / 2 + s / 2, h / 2, -d / 2,
+      w, 0, -d,       // Back face
+      0, 0, -d,
+      s, h, -d,
+      w + s, h, -d,
 
-      -w / 2, -h / 2, -d / 2,             // Left face
-      -w / 2, -h / 2, d / 2,
-      -w / 2 + s / 2, h / 2, d / 2,
-      -w / 2 + s / 2, h / 2, -d / 2,
+      0, 0, -d,       // Left face
+      0, 0, 0,
+      s, h, 0,
+      s, h, -d,
 
-      w / 2, -h / 2, d / 2,               // Right face
-      w / 2, -h / 2, -d / 2,
-      w / 2 + s / 2, h / 2, -d / 2,
-      w / 2 + s / 2, h / 2, d / 2,
+      w, 0, 0,        // Right face
+      w, 0, -d,
+      w + s, h, -d,
+      w + s, h, 0,
 
-      -w / 2 + s / 2, h / 2, d / 2,       // Top face
-      w / 2 + s / 2, h / 2, d / 2,
-      w / 2 + s / 2, h / 2, -d / 2,
-      -w / 2 + s / 2, h / 2, -d / 2,
+      s, h, 0,        // Top face
+      w + s, h, 0,
+      w + s, h, -d,
+      s, h, -d,
 
-      -w / 2, -h / 2, -d / 2,             // Bottom face
-      w / 2, -h / 2, -d / 2,
-      w / 2, -h / 2, d / 2,
-      -w / 2, -h / 2, d / 2,
+      0, 0, -d,       // Bottom
+      w, 0, -d,
+      w, 0, 0,
+      0, 0, 0,
     ];
 
     const normals = [
-      0, 0, 1,    0, 0, 1,     0, 0, 1,    0, 0, 1,   // Front face
-      0, 0, -1,   0, 0, -1,    0, 0, -1,   0, 0, -1,  // Back face
-      -1, 0, 0,   -1, 0, 0,   -1, 0, 0,   -1, 0, 0,   // Left face
-      1, 0, 0,    1, 0, 0,     1, 0, 0,    1, 0, 0,   // Right face
-      0, 1, 0,    0, 1, 0,     0, 1, 0,    0, 1, 0,   // Top face
-      0, -1, 0,   0, -1, 0,    0, -1, 0,   0, -1, 0,  // Bottom face
+      0, 0, 1,    0, 0, 1,     0, 0, 1,    0, 0, 1,  // Front face
+      0, 0, -1,   0, 0, -1,    0, 0, -1,   0, 0, -1, // Back face
+      -1, 0, 0,   -1, 0, 0,   -1, 0, 0,   -1, 0, 0,  // Left face
+      1, 0, 0,    1, 0, 0,     1, 0, 0,    1, 0, 0,  // Right face
+      0, 1, 0,    0, 1, 0,     0, 1, 0,    0, 1, 0,  // Top face
+      0, -1, 0,   0, -1, 0,    0, -1, 0,   0, -1, 0, // Bottom face
     ]
 
     // Define indices for faces (triangles)
@@ -66,13 +66,14 @@ export class ParallelogramBoxGeometry extends BufferGeometry {
 
     // Define UV coordinates
     const uvs = new Float32Array([
-      0, 0,   1, 0,   1, 1,   0, 1,  // Front face UVs
-      0, 0,   1, 0,   1, 1,   0, 1,  // Back face UVs
-      0, 0,   1, 0,   1, 1,   0, 1,  // Left face UVs
-      0, 0,   1, 0,   1, 1,   0, 1,  // Right face UVs
-      0, 0,   1, 0,   1, 1,   0, 1,  // Top face UVs
-      0, 0,   1, 0,   1, 1,   0, 1,  // Bottom face UVs
+      0, 0,   1, 0,   1, 1,   0, 1,  // Front face
+      0, 0,   1, 0,   1, 1,   0, 1,  // Back face
+      0, 0,   1, 0,   1, 1,   0, 1,  // Left face
+      0, 0,   1, 0,   1, 1,   0, 1,  // Right face
+      0, 0,   1, 0,   1, 1,   0, 1,  // Top face
+      0, 0,   1, 0,   1, 1,   0, 1,  // Bottom face
     ]);
+
 
     const positions = new Float32Array(vertices);
     const normalArray = new Float32Array(normals);
@@ -83,5 +84,6 @@ export class ParallelogramBoxGeometry extends BufferGeometry {
     this.setAttribute('normal', new BufferAttribute(normalArray, 3));
     this.setAttribute('uv', new BufferAttribute(uvArray, 2));
     this.setIndex(new BufferAttribute(indexArray, 1));
+    this.center();
   }
 }
