@@ -14,10 +14,10 @@ export class ParallelogramBoxGeometry extends BufferGeometry {
 
     // Bottom face vertices (X, Y, Z)
     const vertices = [
-      0, 0, 0,        // Front face
-      w, 0, 0,
-      w + s, h, 0,
-      s, h, 0,
+      0, 0, 0,        // Front face, bottom left
+      w, 0, 0,        // Front face, bottom right
+      w + s, h, 0,    // Front face, top right
+      s, h, 0,        // Front face, top left
 
       w, 0, -d,       // Back face
       0, 0, -d,
