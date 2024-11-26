@@ -124,6 +124,9 @@ export { TreeGeometry } from "./geometry/trees/TreeGeometry";
 //  Models
 //------------------------------
 
+// Architecture
+export { Diorama } from "./models/architecture/Diorama";
+
 // Astronomy
 export { Moon } from "./models/astronomy/Moon";
 
