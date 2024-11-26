@@ -24,13 +24,16 @@ export function createOrthographicScene() {
   scene.add(gridHelper);
 
   // Lighting
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
   directionalLight.position.set(5, 10, 5);
   directionalLight.castShadow = true;
   scene.add(directionalLight);
 
-  const hemiLight = new THREE.HemisphereLight(0xaaaaaa, 0x444444, 0.6);
-  scene.add(hemiLight);
+  const hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x444444, 2);
+  scene.add(hemisphereLight);
+
+  const ambientLight = new THREE.AmbientLight(0x404040, 2);
+  scene.add(ambientLight);
 
   // Controls
   const controls = new OrbitControls(camera, renderer.domElement);
