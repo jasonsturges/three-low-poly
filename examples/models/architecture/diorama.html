@@ -15,16 +15,49 @@
   </head>
   <body>
     <script type="module">
-      import * as THREE from "three";
-      import { DioramaGeometry } from "../../../src/index.js";
+      import GUI from "lil-gui";
+      import { ColorPalette, Diorama, DioramaGeometry } from "../../../src/index.js";
       import { createOrthographicScene } from "../../utils/orthographicScene.js";
 
       const { scene, camera, controls } = createOrthographicScene();
 
-      const dioramaGeometry = new DioramaGeometry(5, 3, 5, 0.2);
-      const material = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, side: THREE.DoubleSide });
-      const customRoomMesh = new THREE.Mesh(dioramaGeometry, material);
-      scene.add(customRoomMesh);
+      // Create the lil-gui panel
+      const gui = new GUI();
+      const params = {
+        width: 5,
+        height: 3,
+        depth: 5,
+        wallThickness: 0.05,
+        interiorColor: ColorPalette.WHITE_SMOKE,
+        floorColor: ColorPalette.RAW_SIENNA,
+        exteriorColor: ColorPalette.GRAY,
+      };
+
+      // Create diorama
+      const diorama = new Diorama(params);
+      scene.add(diorama);
+
+      gui.title("Diorama");
+      gui.add(params, "width", 0.1, 5, 0.001).name("Width").onChange(update);
+      gui.add(params, "height", 0.1, 5, 0.002).name("Height").onChange(update);
+      gui.add(params, "depth", 0.1, 5, 0.001).name("Depth").onChange(update);
+      gui.add(params, "wallThickness", 0.01, 0.25, 0.001).name("Wall Thickness").onChange(update);
+      gui.addColor(params, "interiorColor").name("Interior Color").onChange(update);
+      gui.addColor(params, "floorColor").name("Floor Color").onChange(update);
+      gui.addColor(params, "exteriorColor").name("Exterior Color").onChange(update);
+
+      function update() {
+        diorama.geometry.dispose();
+        diorama.geometry = new DioramaGeometry({
+          width: params.width,
+          height: params.height,
+          depth: params.depth,
+          wallThickness: params.wallThickness,
+        });
+        diorama.material[0].color.set(params.interiorColor);
+        diorama.material[1].color.set(params.floorColor);
+        diorama.material[2].color.set(params.exteriorColor);
+      }
     </script>
   </body>
 </html>
