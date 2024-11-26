@@ -9,7 +9,7 @@ import { BufferAttribute, BufferGeometry } from "three";
  * 2: Exterior walls
  */
 export class DioramaGeometry extends BufferGeometry {
-  constructor({ width = 5, height = 3, depth = 5, wallThickness = 0.25 } = {}) {
+  constructor({ width = 5, height = 3, depth = 5, wallThickness = 0.05 } = {}) {
     super();
 
     const w = width;
