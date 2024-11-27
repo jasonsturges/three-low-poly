@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import { Easing } from "../../src/index.js";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+      import { createTextSprite } from "../utils/TextFactory";
+
+      const { scene, camera, controls } = createOrbitScene();
+      camera.position.set(0, -36, 70);
+      controls.target.set(0, -36, 0);
+
+      // Create a Curve class for easing functions
+      class EasingCurve extends THREE.Curve {
+        constructor(easingFunction, height = 10, scale = 5) {
+          super();
+          this.easingFunction = easingFunction;
+          this.height = height; // Total height of the curve
+          this.scale = scale; // Scaling factor for x-axis
+        }
+
+        getPoint(t) {
+          const x = this.easingFunction(t) * this.scale;
+          const y = t * this.height;
+          return new THREE.Vector2(x, y);
+        }
+      }
+
+      // Create a grid of easing function lathe geometries
+      const easingFunctions = Object.entries(Easing);
+      const gridCols = 5;
+      const gridSpacing = 15;
+
+      for (let i = 0; i < easingFunctions.length; i++) {
+        const [name, easingFunction] = easingFunctions[i];
+
+        // Create a curve using the easing function
+        const curve = new EasingCurve(easingFunction);
+
+        // Generate points from the curve
+        const points = curve.getPoints(100); // 100 segments for smooth curves
+
+        // Create lathe geometry and mesh
+        const latheGeometry = new THREE.LatheGeometry(points, 32);
+        const latheMaterial = new THREE.MeshStandardMaterial({
+          color: 0xc2452d,
+          emissive: 0xc2452d,
+          emissiveIntensity: 0.05,
+          metalness: 0.5,
+          roughness: 0.5,
+          side: THREE.DoubleSide,
+        });
+        const latheMesh = new THREE.Mesh(latheGeometry, latheMaterial);
+
+        // Position the lathe in the grid
+        const col = i % gridCols;
+        const row = Math.floor(i / gridCols);
+        latheMesh.position.x = col * gridSpacing - (gridCols - 1) * gridSpacing * 0.5;
+        latheMesh.position.y = -row * gridSpacing - gridSpacing * 0.5;
+
+        // Add mesh and label to the scene
+        scene.add(latheMesh);
+        scene.add(
+          createTextSprite(name, {
+            size: 80,
+            x: latheMesh.position.x,
+            y: latheMesh.position.y - 1,
+            z: 0,
+          }),
+        );
+      }
+    </script>
+  </body>
+</html>
