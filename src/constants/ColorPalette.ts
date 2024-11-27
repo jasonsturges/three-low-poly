@@ -5,10 +5,11 @@ export const ColorPalette = {
   CHERRY_RED: 0xd82424,       // Bold red with slightly warm undertones.
   CRIMSON: 0xc62828,          // Crimson Red or Firebrick Red. It’s a bold, deep red with a slightly cool undertone.
   ALIZARIN_CRIMSON: 0xb22222, // Deep, rich red with cool undertones.
-  RUST: 0xc2452d,             // Red clay or Brick Red. It’s a warm, earthy red-orange shade, often associated with weathered metal, autumn leaves, or natural clay tones.
   DARK_RED: 0x8b0000,         // Dark Red. It’s a deep, rich red shade resembling the color of garnets or dried blood.
+  RUST: 0xc2452d,             // Red clay or Brick Red. It’s a warm, earthy red-orange shade, often associated with weathered metal, autumn leaves, or natural clay tones.
 
   // Orange
+  CORAL_ORANGE: 0xff5733,     // Bold red-orange hue.
   TANGERINE: 0xff5500,        // Tangerine or Bright Orange-Red. It’s a vibrant, warm shade of orange with red undertones with a  tropical feel.
   ORANGE_PEEL: 0xff6600,      // Orange Peel or Bright Orange. It’s a vivid, energetic orange.
   CADMIUM_ORANGE: 0xff7f24,   // warm orange with strong red undertones, giving it a slightly richer and darker appearance.
@@ -34,13 +35,15 @@ export const ColorPalette = {
 
   // Blue
   PHTHALO_BLUE: 0x000f89,     // Phthalo Blue or Bright Navy.  Intense, rich blue with a slightly greenish cool undertone.
-  SKY_BLUE: 0x88ccff,         // Sky Blue or Baby Blue. It’s a light, cheerful shade of blue with a slightly soft and pastel tone, evoking a sense of openness like a clear daytime sky.
-  CERULEAN_BLUE: 0x5dade2,    // Cerulean Blue or Sky Blue. It’s a bright, vivid shade of blue with a slightly cool undertone, often associated with clear skies or tropical waters.
-  AZURE: 0x0077ff,            // Azure Blue or Bright Blue. It’s a vibrant, rich shade of blue with a cool undertone, often associated with clear skies or digital interfaces.
-  OCEAN_BLUE: 0x0077be,       // Ocean Blue or Azure Blue. It’s a vibrant medium blue shade with a slight teal undertone, often associated with clear skies or tropical waters.
+  AETHER_BLUE: 0x3498db,      // Bright and vivid shade of blue, sitting between the airy Sky Blue and rich Cerulean.
+  SKY_BLUE: 0x88ccff,         // Sky Blue or Baby Blue. It’s a light, cheerful shade of blue with a slightly soft and pastel tone.
+  CERULEAN_BLUE: 0x5dade2,    // Cerulean Blue or Sky Blue. It’s a bright, vivid shade of blue with a slightly cool undertone.
+  AZURE: 0x0077ff,            // Azure Blue or Bright Blue. It’s a vibrant, rich shade of blue with a cool undertone.
+  OCEAN_BLUE: 0x0077be,       // Ocean Blue or Azure Blue. It’s a vibrant medium blue shade with a slight teal undertone.
   ROYAL_BLUE: 0x5555ff,       // Royal Blue or Bright Indigo. It’s a vibrant medium blue shade with a slightly cool and saturated tone.
   MIDNIGHT_BLUE: 0x000033,    // A very deep, dark blue shade that evokes the feeling of a starless night sky or deep ocean depths, with subtle blue undertones.
   ULTRAMARINE_BLUE: 0x3f51b5, // Deep, rich blue with a slightly cool undertone.
+
 
   // Purple
   COBALT_VIOLET: 0x6a0dad,    // Soft, purple tone.
