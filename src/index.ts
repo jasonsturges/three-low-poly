@@ -235,12 +235,11 @@ export { checkerboardTexture } from "./textures/checkerboard";
 //  Utils
 //------------------------------
 
+export * from "./utils/AlignToSurface";
+export * from "./utils/Center";
 export * from "./utils/ColorUtils";
-export * from "./utils/GroupUtils";
-export * from "./utils/InstancedMeshUtils";
 export * from "./utils/InterpolateCurve";
 export * from "./utils/LineEquations";
-export * from "./utils/MeshUtils";
 export * from "./utils/ParametricCurveUtils";
 export * from "./utils/QuadUtils";
 export * from "./utils/RandomNumberUtils";
