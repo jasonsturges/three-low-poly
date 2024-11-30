@@ -16,16 +16,11 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { TestTube } from "../../../src/index.js";
+      import { TestTube, TestTubeGeometry } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
 
-      let testTube = new TestTube();
-      scene.add(testTube);
-
-      const gui = new GUI();
-      const geometryFolder = gui.addFolder("Geometry");
       const parameters = {
         radiusTop: 0.2,
         radiusBottom: 0.2,
@@ -33,15 +28,23 @@
         segments: 32,
       };
 
-      geometryFolder.add(parameters, "radiusTop", 0.05, 0.5).onChange(updateGeometry);
-      geometryFolder.add(parameters, "radiusBottom", 0.05, 0.5).onChange(updateGeometry);
-      geometryFolder.add(parameters, "height", 0.2, 3.0).onChange(updateGeometry);
-      geometryFolder.add(parameters, "segments", 3, 32).step(1).onChange(updateGeometry);
-      geometryFolder.open();
+      let testTube = new TestTube(parameters.radiusTop, parameters.radiusBottom, parameters.height, parameters.segments);
+      scene.add(testTube);
+
+      const gui = new GUI();
+      gui.add(parameters, "radiusTop", 0.05, 0.5).onChange(updateGeometry);
+      gui.add(parameters, "radiusBottom", 0.05, 0.5).onChange(updateGeometry);
+      gui.add(parameters, "height", 0.2, 3.0).onChange(updateGeometry);
+      gui.add(parameters, "segments", 3, 32).step(1).onChange(updateGeometry);
 
       function updateGeometry() {
-        scene.remove(testTube);
-        testTube = new TestTube(parameters.radiusTop, parameters.radiusBottom, parameters.height, parameters.segments);
+        testTube.geometry.dispose();
+        testTube.geometry = new TestTubeGeometry(
+          parameters.radiusTop,
+          parameters.radiusBottom,
+          parameters.height,
+          parameters.segments,
+        );
         scene.add(testTube);
       }
     </script>

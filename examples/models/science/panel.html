@@ -21,8 +21,6 @@
 
       const { scene } = createOrbitScene();
 
-      const gui = new GUI();
-
       const params = {
         width: 3,
         height: 4,
@@ -33,6 +31,7 @@
       scene.add(panel);
       centerObject(panel);
 
+      const gui = new GUI();
       gui.add(params, "width", 0, 5, 0.001).name("Width").onChange(update);
       gui.add(params, "height", 0, 5, 0.001).name("Height").onChange(update);
       gui.add(params, "depth", 0, 2, 0.001).name("Depth").onChange(update);
@@ -41,7 +40,7 @@
         scene.remove(panel);
         panel = new Panel(params);
         scene.add(panel);
-        centerObject(panel);
+        centerMesh(panel);
       }
     </script>
   </body>

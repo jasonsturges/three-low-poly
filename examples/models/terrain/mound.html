@@ -17,7 +17,7 @@
 <body>
 <script type="module">
   import GUI from "lil-gui";
-  import { Mound } from "../../../src/index.js";
+  import { Mound, MoundGeometry } from "../../../src/index.js";
   import { createOrbitScene } from "../../utils/orbitScene.js";
 
   const { scene } = createOrbitScene()
@@ -46,9 +46,8 @@
   gui.add(params, 'thetaLength', 0.1, Math.PI / 2).name('Theta Length').step(0.01).onChange(update);
 
   function update() {
-    scene.remove(mound);
-    mound = new Mound(params);
-    scene.add(mound);
+    mound.geometry.dispose();
+    mound.geometry = new MoundGeometry(params);
   }
 </script>
 </body>

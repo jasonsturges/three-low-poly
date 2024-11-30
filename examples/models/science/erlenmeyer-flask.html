@@ -16,7 +16,7 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { centerObject, ErlenmeyerFlask } from "../../../src/index.js";
+      import { ErlenmeyerFlask, ErlenmeyerFlaskGeometry, centerObject } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
@@ -42,9 +42,8 @@
       gui.add(params, "radialSegments", 3, 64).name("Radial Segments").step(1).onChange(update);
 
       function update() {
-        scene.remove(flask);
-        flask = new ErlenmeyerFlask(params);
-        scene.add(flask);
+        flask.geometry.dispose();
+        flask.geometry = new ErlenmeyerFlaskGeometry(params);
         centerObject(flask);
       }
     </script>

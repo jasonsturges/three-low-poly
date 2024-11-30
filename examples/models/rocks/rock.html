@@ -16,29 +16,29 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { Rock } from "../../../src/index.js";
+      import { Rock, RockGeometry } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
 
-      let rock = new Rock();
-      scene.add(rock);
-
-      const gui = new GUI();
       const parameters = {
         radius: 1,
         widthSegments: 4,
         heightSegments: 4,
       };
 
+      let rock = new Rock(parameters.radius, parameters.widthSegments, parameters.heightSegments);
+      scene.add(rock);
+
+      const gui = new GUI();
       gui.title("Rock");
-      gui.add(parameters, "radius", 0.5, 2).step(0.1).onChange(update);
-      gui.add(parameters, "widthSegments", 2, 8).step(1).onChange(update);
-      gui.add(parameters, "heightSegments", 2, 8).step(1).onChange(update);
+      gui.add(parameters, "radius", 0.25, 2, 0.01).onChange(update);
+      gui.add(parameters, "widthSegments", 2, 8, 1).onChange(update);
+      gui.add(parameters, "heightSegments", 2, 8, 1).onChange(update);
 
       function update() {
-        scene.remove(rock);
-        rock = new Rock(parameters.radius, parameters.widthSegments, parameters.heightSegments);
+        rock.geometry.dispose();
+        rock.geometry = new RockGeometry(parameters.radius, parameters.widthSegments, parameters.heightSegments);
         scene.add(rock);
       }
     </script>

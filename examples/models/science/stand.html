@@ -16,7 +16,7 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { centerObject, Stand } from "../../../src/index.js";
+      import { Stand, StandGeometry, centerObject } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
@@ -29,7 +29,7 @@
         radialSegments: 16,
       };
 
-      let stand = new Stand(params);
+      const stand = new Stand(params);
       scene.add(stand);
       centerObject(stand);
 
@@ -42,9 +42,8 @@
       gui.add(params, "radialSegments", 3, 64).name("Radial Segments").step(1).onChange(update);
 
       function update() {
-        scene.remove(stand);
-        stand = new Stand(params);
-        scene.add(stand);
+        stand.geometry.dispose();
+        stand.geometry = new StandGeometry(params);
         centerObject(stand);
       }
     </script>

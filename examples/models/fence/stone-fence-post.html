@@ -17,29 +17,27 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { centerObject, StoneFencePost } from "../../../src/index.js";
+      import { StoneFencePost, StoneFencePostGeometry, centerObject } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
 
-      // Default parameters
       const params = {
         height: 2.25,
       };
 
-      let fenceColumn = new StoneFencePost(params);
-      scene.add(fenceColumn);
-      centerObject(fenceColumn);
+      const fencePost = new StoneFencePost(params);
+      scene.add(fencePost);
+      centerObject(fencePost);
 
       const gui = new GUI();
 
       gui.add(params, "height", 0.1, 5).name("Height").step(0.1).onChange(update);
 
       function update() {
-        scene.remove(fenceColumn);
-        fenceColumn = new StoneFencePost(params);
-        scene.add(fenceColumn);
-        centerObject(fenceColumn);
+        fencePost.geometry.dispose();
+        fencePost.geometry = new StoneFencePostGeometry(params);
+        centerObject(fencePost);
       }
     </script>
   </body>
