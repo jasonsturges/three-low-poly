@@ -29,6 +29,7 @@ export { twistBrush } from "./brushes/TwistBrush";
 //------------------------------
 
 export { Axis } from "./constants/Axis";
+export { BoxSide } from "./constants/BoxSide";
 export { ColorPalette } from "./constants/ColorPalette";
 export { Direction } from "./constants/Direction";
 export * from "./constants/Easing";
@@ -235,6 +236,7 @@ export { checkerboardTexture } from "./textures/checkerboard";
 //  Utils
 //------------------------------
 
+export * from "./utils/AlignToEdge";
 export * from "./utils/AlignToSurface";
 export * from "./utils/Center";
 export * from "./utils/ColorUtils";
