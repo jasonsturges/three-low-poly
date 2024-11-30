@@ -237,6 +237,7 @@ export { checkerboardTexture } from "./textures/checkerboard";
 //------------------------------
 
 export * from "./utils/AlignToEdge";
+export * from "./utils/AlignToRow";
 export * from "./utils/AlignToSurface";
 export * from "./utils/Center";
 export * from "./utils/ColorUtils";
