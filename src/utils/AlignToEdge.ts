@@ -1,4 +1,4 @@
-import { Mesh, Vector3 } from "three";
+import { Mesh, Vector3, Box3 } from "three";
 import { BoxSide } from "../constants/BoxSide";
 
 /**
@@ -10,19 +10,28 @@ export function alignObjectsToEdge<T extends Mesh>(objects: T[], side: BoxSide):
     throw new Error("No objects provided for alignment.");
   }
 
+  // Precompute bounding boxes and world positions for all objects
+  const objectData = objects.map((object) => {
+    object.geometry.computeBoundingBox();
+    const boundingBox = object.geometry.boundingBox;
+
+    if (!boundingBox) {
+      throw new Error("Bounding box computation failed.");
+    }
+
+    const worldPosition = new Vector3();
+    object.getWorldPosition(worldPosition);
+
+    return {
+      object,
+      boundingBox,
+      worldPosition,
+    };
+  });
+
   // Compute the reference alignment value based on the specified side
-  const referenceValue = objects.reduce(
-    (acc, object) => {
-      object.geometry.computeBoundingBox();
-      const boundingBox = object.geometry.boundingBox;
-
-      if (!boundingBox) {
-        throw new Error("Bounding box computation failed.");
-      }
-
-      const worldPosition = new Vector3();
-      object.getWorldPosition(worldPosition);
-
+  const referenceValue = objectData.reduce(
+    (acc, { boundingBox, worldPosition }) => {
       switch (side) {
         case BoxSide.LEFT:
           return Math.min(acc, worldPosition.x + boundingBox.min.x);
@@ -44,17 +53,7 @@ export function alignObjectsToEdge<T extends Mesh>(objects: T[], side: BoxSide):
   );
 
   // Align each object to the computed reference value
-  objects.forEach((object) => {
-    object.geometry.computeBoundingBox();
-    const boundingBox = object.geometry.boundingBox;
-
-    if (!boundingBox) {
-      throw new Error("Bounding box computation failed.");
-    }
-
-    const worldPosition = new Vector3();
-    object.getWorldPosition(worldPosition); // Get the object's position in world space
-
+  objectData.forEach(({ object, boundingBox, worldPosition }) => {
     switch (side) {
       case BoxSide.LEFT:
         object.position.x += referenceValue - (worldPosition.x + boundingBox.min.x);
