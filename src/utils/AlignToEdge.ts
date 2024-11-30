@@ -1,50 +1,46 @@
-import { Mesh, Vector3 } from "three";
+import { Box3, Object3D, Vector3 } from "three";
 import { BoxSide } from "../constants/BoxSide";
 
 /**
- * Aligns an array of Mesh objects (or subclasses) to a specified side
+ * Aligns an array of Object3D objects (or subclasses) to a specified side
  * (left, right, top, bottom, front, or back) based on their world-space bounding boxes.
  */
-export function alignObjectsToEdge<T extends Mesh>(objects: T[], side: BoxSide): void {
+export function alignObjectsToEdge<T extends Object3D>(objects: T[], side: BoxSide): void {
   if (objects.length === 0) {
     throw new Error("No objects provided for alignment.");
   }
 
-  // Precompute bounding boxes and world positions for all objects
+  const worldBoundingBox = new Box3();
+  const worldPosition = new Vector3();
+
+  // Precompute world-space bounding boxes and positions for all objects
   const objectData = objects.map((object) => {
-    object.geometry.computeBoundingBox();
-    const boundingBox = object.geometry.boundingBox;
-
-    if (!boundingBox) {
-      throw new Error("Bounding box computation failed.");
-    }
-
-    const worldPosition = new Vector3();
+    worldBoundingBox.setFromObject(object); // Accounts for scale and rotation
     object.getWorldPosition(worldPosition);
 
     return {
       object,
-      boundingBox,
-      worldPosition,
+      boundingBox: worldBoundingBox.clone(), // Clone to avoid overwriting
+      worldPosition: worldPosition.clone(),
     };
   });
 
   // Compute the reference alignment value based on the specified side
   const referenceValue = objectData.reduce(
-    (acc, { boundingBox, worldPosition }) => {
+    (acc, { boundingBox }) => {
       switch (side) {
         case BoxSide.LEFT:
-          return Math.min(acc, worldPosition.x + boundingBox.min.x);
+          return Math.min(acc, boundingBox.min.x);
         case BoxSide.RIGHT:
-          return Math.max(acc, worldPosition.x + boundingBox.max.x);
+          return Math.max(acc, boundingBox.max.x);
         case BoxSide.BOTTOM:
-          return Math.min(acc, worldPosition.y + boundingBox.min.y);
+          return Math.min(acc, boundingBox.min.y);
         case BoxSide.TOP:
-          return Math.max(acc, worldPosition.y + boundingBox.max.y);
+          return Math.max(acc, boundingBox.max.y);
         case BoxSide.BACK:
-          return Math.min(acc, worldPosition.z + boundingBox.min.z);
+          return Math.min(acc, boundingBox.min.z);
         case BoxSide.FRONT:
-          return Math.max(acc, worldPosition.z + boundingBox.max.z);
+          return Math.max(acc, boundingBox.max.z);
         default:
           throw new Error(`Unsupported side type: ${side}`);
       }
@@ -53,25 +49,25 @@ export function alignObjectsToEdge<T extends Mesh>(objects: T[], side: BoxSide):
   );
 
   // Align each object to the computed reference value
-  objectData.forEach(({ object, boundingBox, worldPosition }) => {
+  objectData.forEach(({ object, boundingBox }) => {
     switch (side) {
       case BoxSide.LEFT:
-        object.position.x += referenceValue - (worldPosition.x + boundingBox.min.x);
+        object.position.x += referenceValue - boundingBox.min.x;
         break;
       case BoxSide.RIGHT:
-        object.position.x += referenceValue - (worldPosition.x + boundingBox.max.x);
+        object.position.x += referenceValue - boundingBox.max.x;
         break;
       case BoxSide.BOTTOM:
-        object.position.y += referenceValue - (worldPosition.y + boundingBox.min.y);
+        object.position.y += referenceValue - boundingBox.min.y;
         break;
       case BoxSide.TOP:
-        object.position.y += referenceValue - (worldPosition.y + boundingBox.max.y);
+        object.position.y += referenceValue - boundingBox.max.y;
         break;
       case BoxSide.BACK:
-        object.position.z += referenceValue - (worldPosition.z + boundingBox.min.z);
+        object.position.z += referenceValue - boundingBox.min.z;
         break;
       case BoxSide.FRONT:
-        object.position.z += referenceValue - (worldPosition.z + boundingBox.max.z);
+        object.position.z += referenceValue - boundingBox.max.z;
         break;
     }
   });
