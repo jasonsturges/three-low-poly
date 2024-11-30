@@ -73,3 +73,9 @@ export function centerMeshGeometry<T extends Mesh>(
     mesh.geometry.translate(translationOffset.x, translationOffset.y, translationOffset.z);
   }
 }
+
+export const Center = {
+  object: centerObject,
+  objectGeometry: centerObjectGeometry,
+  meshGeometry: centerMeshGeometry,
+};
