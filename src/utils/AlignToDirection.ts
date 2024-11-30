@@ -1,10 +1,10 @@
 import { Direction } from "../constants/Direction";
-import { Mesh, Vector3, Box3 } from "three";
+import { Box3, Object3D, Vector3 } from "three";
 
 /**
  * Aligns an array of `Object3D` objects along a specified direction with optional spacing.
  */
-export function alignObjectsInDirection<T extends Mesh>(
+export function alignObjectsInDirection<T extends Object3D>(
   objects: T[],
   direction: Vector3 = Direction.RIGHT,
   spacing: number = 0,
