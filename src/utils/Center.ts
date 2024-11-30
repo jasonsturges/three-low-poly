@@ -1,16 +1,46 @@
-import { Box3, Group, InstancedMesh, Mesh, Object3D, Vector3 } from "three";
+import { Box3, Mesh, Object3D, Vector3 } from "three";
 
 //------------------------------
 //  Object3D
 //------------------------------
 
-export function centerObject<T extends Object3D>(object: T): void {
+/**
+ * Centers an `Object3D` relative to a specified target position with an optional offset.
+ *
+ * This function calculates the bounding box center of the given `Object3D` and adjusts
+ * its position so that it is centered at the specified target position, with an optional
+ * offset applied. The centering respects the object's current transformation, including
+ * its scale and rotation.
+ */
+export function centerObject<T extends Object3D>(object: T, target = new Vector3(0, 0, 0), offset = new Vector3(0, 0, 0)) {
   const box = new Box3().setFromObject(object);
   const center = box.getCenter(new Vector3());
+  const totalOffset = new Vector3().addVectors(target, offset);
+  const adjustment = new Vector3().subVectors(totalOffset, center);
 
-  object.translateX(-center.x);
-  object.translateY(-center.y);
-  object.translateZ(-center.z);
+  object.position.add(adjustment);
+}
+
+/**
+ * Centers the geometry of an `Object3D` relative to a target position with an optional offset.
+ *
+ * This function calculates the bounding box center of the given `Object3D` and adjusts its
+ * geometry's position by translating it such that the geometry is centered at the specified
+ * target position, with an optional offset applied. Unlike modifying the `position` property,
+ * this function directly translates the geometry within the object's local space.
+ */
+export function centerObjectGeometry<T extends Object3D>(
+  object: T,
+  target: Vector3 = new Vector3(0, 0, 0),
+  offset: Vector3 = new Vector3(0, 0, 0),
+): void {
+  const box = new Box3().setFromObject(object);
+  const center = box.getCenter(new Vector3());
+  const totalTarget = new Vector3().addVectors(target, offset);
+
+  object.translateX(totalTarget.x - center.x);
+  object.translateY(totalTarget.y - center.y);
+  object.translateZ(totalTarget.z - center.z);
   object.updateMatrixWorld(true);
 }
 
@@ -19,77 +49,27 @@ export function centerObject<T extends Object3D>(object: T): void {
 //------------------------------
 
 /**
- * Centers the given mesh at the origin (0, 0, 0) of the scene by adjusting its position.
- * The mesh is moved so that its bounding box center is placed at the origin.
+ * Centers the geometry of a `Mesh` relative to a target position with an optional offset.
+ *
+ * This function calculates the bounding box center of the `Mesh` geometry and adjusts its
+ * position by translating the geometry such that it is centered at the specified target
+ * position, with an optional offset applied. The function modifies the geometry directly,
+ * leaving the `Mesh`'s transformation properties (`position`, `rotation`, `scale`) unchanged.
  */
-export function centerMesh<T extends Mesh>(mesh: T): void {
-  const box = new Box3().setFromObject(mesh);
-  const center = box.getCenter(new Vector3());
-
-  mesh.translateX(-center.x);
-  mesh.translateY(-center.y);
-  mesh.translateZ(-center.z);
-  mesh.updateMatrixWorld(true);
-}
-
-/**
- * Centers a Mesh at the specified target position.
- */
-export function centerMeshAtTarget<T extends Mesh>(mesh: T, target = new Vector3(0, 0, 0)) {
-  const box = new Box3().setFromObject(mesh);
-  const currentCenter = new Vector3();
-  box.getCenter(currentCenter);
-
-  const offset = new Vector3().subVectors(target, currentCenter);
-  mesh.position.add(offset);
-}
-
-/**
- * Centers the geometry of a Mesh at the specified target position.
- */
-export function centerMeshGeometryAtTarget<T extends Mesh>(mesh: T, target = new Vector3(0, 0, 0)) {
+export function centerMeshGeometry<T extends Mesh>(
+  mesh: T,
+  target: Vector3 = new Vector3(0, 0, 0),
+  offset: Vector3 = new Vector3(0, 0, 0),
+): void {
+  // Compute the bounding box for the geometry
   mesh.geometry.computeBoundingBox();
   const box = mesh.geometry.boundingBox;
 
   if (box) {
     const center = box.getCenter(new Vector3());
-    const offset = new Vector3().subVectors(target, center);
-    mesh.geometry.translate(offset.x, offset.y, offset.z);
+    const totalTarget = new Vector3().addVectors(target, offset);
+    const translationOffset = new Vector3().subVectors(totalTarget, center);
+
+    mesh.geometry.translate(translationOffset.x, translationOffset.y, translationOffset.z);
   }
-}
-
-//------------------------------
-//  Instanced Mesh
-//------------------------------
-
-export function centerInstancedMesh<T extends InstancedMesh>(mesh: T, offset: Vector3 = new Vector3(0, 0, 0)): void {
-  mesh.computeBoundingBox();
-  const box = mesh.boundingBox;
-
-  if (box) {
-    const center = box.getCenter(new Vector3());
-    mesh.translateX(-center.x + offset.x);
-    mesh.translateY(-center.y + offset.y);
-    mesh.translateZ(-center.z + offset.z);
-  }
-}
-
-//------------------------------
-//  Instanced Mesh
-//------------------------------
-
-export function centerGroup<T extends Group>(group: T) {
-  const box = new Box3().setFromObject(group);
-  const center = new Vector3();
-  box.getCenter(center);
-  group.position.sub(center);
-}
-
-export function centerGroupAtTarget<T extends Group>(group: T, target = new Vector3(0, 0, 0)) {
-  const box = new Box3().setFromObject(group);
-  const currentCenter = new Vector3();
-  box.getCenter(currentCenter);
-
-  const offset = new Vector3().subVectors(target, currentCenter);
-  group.position.add(offset);
 }
