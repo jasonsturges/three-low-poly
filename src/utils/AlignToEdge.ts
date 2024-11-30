@@ -5,7 +5,7 @@ import { BoxSide } from "../constants/BoxSide";
  * Aligns an array of Object3D objects (or subclasses) to a specified side
  * (left, right, top, bottom, front, or back) based on their world-space bounding boxes.
  */
-export function alignObjectsToEdge<T extends Object3D>(objects: T[], side: BoxSide): void {
+export function alignToEdge<T extends Object3D>(objects: T[], side: BoxSide): void {
   if (objects.length === 0) {
     throw new Error("No objects provided for alignment.");
   }
