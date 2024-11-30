@@ -17,7 +17,7 @@
     <script type="module">
       import * as THREE from "three";
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-      import { Bookshelf, centerGroupAtTarget, logarithmicRandomMin, rowOfBooksByLength } from "../../src/index.js";
+      import { Bookshelf, centerObject, logarithmicRandomMin, rowOfBooksByLength } from "../../src/index.js";
 
       //------------------------------
       //  Scene
@@ -209,27 +209,27 @@
       scene.add(plane);
 
       const back = makeBookshelves(8, 0);
-      centerGroupAtTarget(back, new THREE.Vector3(0, 4, -25.5));
+      centerObject(back, new THREE.Vector3(0, 4, -25.5));
       scene.add(back);
 
       const leftWall = makeBookshelves(10, 0);
       leftWall.rotation.y = Math.PI / 2;
-      centerGroupAtTarget(leftWall, new THREE.Vector3(-20.5, 4, 0));
+      centerObject(leftWall, new THREE.Vector3(-20.5, 4, 0));
       scene.add(leftWall);
 
       const rightWall = makeBookshelves(10, 0);
       rightWall.rotation.y = -Math.PI / 2;
-      centerGroupAtTarget(rightWall, new THREE.Vector3(20.5, 4, 0));
+      centerObject(rightWall, new THREE.Vector3(20.5, 4, 0));
       scene.add(rightWall);
 
       const left = makeBookshelves(5, 0.25);
       left.rotation.y = Math.PI / 2;
-      centerGroupAtTarget(left, new THREE.Vector3(-4, 4, 0));
+      centerObject(left, new THREE.Vector3(-4, 4, 0));
       scene.add(left);
 
       const right = makeBookshelves(5, 0.25);
       right.rotation.y = -Math.PI / 2;
-      centerGroupAtTarget(right, new THREE.Vector3(4, 4, 0));
+      centerObject(right, new THREE.Vector3(4, 4, 0));
       scene.add(right);
     </script>
   </body>
