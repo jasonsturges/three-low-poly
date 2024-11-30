@@ -16,7 +16,7 @@
   <body>
     <script type="module">
       import * as THREE from "three";
-      import { FlorenceFlask, centerMesh } from "../../../src/index.js";
+      import { FlorenceFlask, centerObject } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
@@ -24,7 +24,7 @@
 
       const florenceFlask = new FlorenceFlask();
       scene.add(florenceFlask);
-      centerMesh(florenceFlask);
+      centerObject(florenceFlask);
     </script>
   </body>
 </html>

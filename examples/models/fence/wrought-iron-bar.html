@@ -17,7 +17,7 @@
     <script type="module">
       import * as THREE from "three";
       import GUI from "lil-gui";
-      import { centerMesh, WroughtIronBar } from "../../../src/index.js";
+      import { centerObject, WroughtIronBar } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
@@ -35,7 +35,7 @@
 
       let wroughtIronBar = new WroughtIronBar(params);
       scene.add(wroughtIronBar);
-      centerMesh(wroughtIronBar);
+      centerObject(wroughtIronBar);
 
       const gui = new GUI();
 
@@ -50,7 +50,7 @@
         scene.remove(wroughtIronBar);
         wroughtIronBar = new WroughtIronBar(params);
         scene.add(wroughtIronBar);
-        centerMesh(wroughtIronBar);
+        centerObject(wroughtIronBar);
       }
     </script>
   </body>

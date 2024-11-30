@@ -18,7 +18,7 @@
     <script type="module">
       import * as THREE from "three";
       import GUI from "lil-gui";
-      import { centerMesh, WroughtIronFence } from "../../../src/index.js";
+      import { centerObject, WroughtIronFence } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
@@ -41,7 +41,7 @@
 
       let wroughtIronFence = new WroughtIronFence(params);
       scene.add(wroughtIronFence);
-      centerMesh(wroughtIronFence);
+      centerObject(wroughtIronFence);
 
       const gui = new GUI();
 
@@ -61,7 +61,7 @@
         scene.remove(wroughtIronFence);
         wroughtIronFence = new WroughtIronFence(params);
         scene.add(wroughtIronFence);
-        centerMesh(wroughtIronFence);
+        centerObject(wroughtIronFence);
       }
     </script>
   </body>

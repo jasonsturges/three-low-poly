@@ -16,7 +16,7 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { Bookshelf, centerMesh } from "../../../src/index.js";
+      import { Bookshelf, centerObject } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene, camera } = createOrbitScene();
@@ -34,7 +34,7 @@
 
       let bookshelf = new Bookshelf(params);
       scene.add(bookshelf);
-      centerMesh(bookshelf);
+      centerObject(bookshelf);
 
       const gui = new GUI();
 
@@ -49,7 +49,7 @@
         scene.remove(bookshelf);
         bookshelf = new Bookshelf(params);
         scene.add(bookshelf);
-        centerMesh(bookshelf);
+        centerObject(bookshelf);
       }
     </script>
   </body>

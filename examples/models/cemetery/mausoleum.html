@@ -15,7 +15,7 @@
   </head>
   <body>
     <script type="module">
-      import { Mausoleum, centerMesh } from "../../../src/index.js";
+      import { Mausoleum, centerObject } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene, camera } = createOrbitScene();
@@ -23,7 +23,7 @@
 
       const mausoleum = new Mausoleum();
       scene.add(mausoleum);
-      centerMesh(mausoleum);
+      centerObject(mausoleum);
     </script>
   </body>
 </html>

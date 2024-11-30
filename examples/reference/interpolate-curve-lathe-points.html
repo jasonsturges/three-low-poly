@@ -18,7 +18,7 @@
       import * as THREE from "three";
       import GUI from 'lil-gui';
       import { createOrbitScene } from "../utils/orbitScene.js";
-      import { Easing, centerMesh, interpolateCurve } from "../../src/index.js";
+      import { Easing, centerObject, interpolateCurve } from "../../src/index.js";
 
       const { scene } = createOrbitScene();
 
@@ -56,7 +56,7 @@
       const material = new THREE.MeshStandardMaterial({ color: 0x0077ff, metalness: 0.3, roughness: 0.7, side: THREE.DoubleSide });
       const latheMesh = new THREE.Mesh(latheGeometry, material);
       scene.add(latheMesh);
-      centerMesh(latheMesh);
+      centerObject(latheMesh);
 
       // Create GUI
       const gui = new GUI();

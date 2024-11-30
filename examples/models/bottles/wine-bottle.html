@@ -15,7 +15,7 @@
   </head>
   <body>
     <script type="module">
-      import { DaySkybox, WineBottle, centerMesh } from "../../../src/index.js";
+      import { DaySkybox, WineBottle, centerObject } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
@@ -23,7 +23,7 @@
 
       const wineBottle = new WineBottle();
       scene.add(wineBottle);
-      centerMesh(wineBottle);
+      centerObject(wineBottle);
     </script>
   </body>
 </html>

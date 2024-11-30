@@ -17,14 +17,14 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { Book, centerMesh } from "../../../src/index.js";
+      import { Book, centerObject } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
 
       let book = new Book();
       scene.add(book);
-      centerMesh(book);
+      centerObject(book);
 
       // Create the lil-gui panel
       const gui = new GUI();
@@ -57,7 +57,7 @@
           coverColor: params.coverColor,
           pageColor: params.pageColor,
         });
-        centerMesh(book);
+        centerObject(book);
         scene.add(book);
       }
     </script>

@@ -15,14 +15,14 @@
   </head>
   <body>
     <script type="module">
-      import { SpiralTube, centerMesh } from "../../../src/index.js";
+      import { SpiralTube, centerObject } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
 
       const spiralTube = new SpiralTube();
       scene.add(spiralTube);
-      centerMesh(spiralTube);
+      centerObject(spiralTube);
     </script>
   </body>
 </html>

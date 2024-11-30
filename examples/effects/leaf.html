@@ -18,7 +18,7 @@
     <script type="module">
       import * as THREE from "three";
       import GUI from "lil-gui";
-      import { EllipticLeafGeometry, LeafEffect, centerInstancedMesh } from "../../src/index.js";
+      import { EllipticLeafGeometry, LeafEffect, centerObject } from "../../src/index.js";
       import { createOrbitScene } from "../utils/orbitScene.js";
 
       const { scene, camera, handlers } = createOrbitScene();
@@ -47,7 +47,7 @@
         ...params
       });
       scene.add(leafEffect);
-      centerInstancedMesh(leafEffect);
+      centerObject(leafEffect);
       handlers.push(() => leafEffect.update());
 
       gui.title("Leaf Effect");
@@ -69,7 +69,7 @@
           depth: params.depth,
         });
         scene.add(leafEffect);
-        centerInstancedMesh(leafEffect);
+        centerObject(leafEffect);
         handlers.push(() => leafEffect.update());
       }
     </script>

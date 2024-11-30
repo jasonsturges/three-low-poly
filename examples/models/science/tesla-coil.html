@@ -15,14 +15,14 @@
   </head>
   <body>
     <script type="module">
-      import { TeslaCoil, centerMesh } from "../../../src/index.js";
+      import { TeslaCoil, centerObject } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
 
       const teslaCoil = new TeslaCoil();
       scene.add(teslaCoil);
-      centerMesh(teslaCoil);
+      centerObject(teslaCoil);
     </script>
   </body>
 </html>

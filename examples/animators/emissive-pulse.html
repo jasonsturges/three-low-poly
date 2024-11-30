@@ -18,7 +18,7 @@
     <script type="module">
       import * as THREE from "three";
       import GUI from "lil-gui";
-      import { EmissivePulseAnimation, PanelLight, centerMesh } from "../../src/index.js";
+      import { EmissivePulseAnimation, PanelLight, centerObject } from "../../src/index.js";
       import { createOrbitScene } from "../utils/orbitScene.js";
 
       const { scene, camera, handlers } = createOrbitScene();
@@ -37,7 +37,7 @@
         emissive: params.emissive,
       });
       scene.add(panelLight);
-      centerMesh(panelLight);
+      centerObject(panelLight);
 
       const pulseAnimation = new EmissivePulseAnimation({
         material: panelLight.material,

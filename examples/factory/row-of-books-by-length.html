@@ -18,7 +18,7 @@
     <script type="module">
       import * as THREE from "three";
       import GUI from "lil-gui";
-      import { centerInstancedMesh, rowOfBooksByLength } from "../../src/index.js";
+      import { centerObject, rowOfBooksByLength } from "../../src/index.js";
       import { createOrbitScene } from "../utils/orbitScene.js";
 
       const { scene, camera } = createOrbitScene();
@@ -65,7 +65,7 @@
           ...params,
         });
         mesh.rotation.y = Math.PI / 2;
-        centerInstancedMesh(mesh);
+        centerObject(mesh);
         scene.add(mesh);
       }
     </script>

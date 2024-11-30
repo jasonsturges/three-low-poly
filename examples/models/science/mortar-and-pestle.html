@@ -15,14 +15,14 @@
   </head>
   <body>
     <script type="module">
-      import { centerMesh, MortarAndPestle } from "../../../src/index.js";
+      import { centerObject, MortarAndPestle } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
 
       const mortarAndPestle = new MortarAndPestle();
       scene.add(mortarAndPestle);
-      centerMesh(mortarAndPestle);
+      centerObject(mortarAndPestle);
     </script>
   </body>
 </html>

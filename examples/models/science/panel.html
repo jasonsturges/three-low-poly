@@ -16,7 +16,7 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { Panel, centerMesh } from "../../../src/index.js";
+      import { Panel, centerObject } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
@@ -31,7 +31,7 @@
 
       let panel = new Panel(params);
       scene.add(panel);
-      centerMesh(panel);
+      centerObject(panel);
 
       gui.add(params, "width", 0, 5, 0.001).name("Width").onChange(update);
       gui.add(params, "height", 0, 5, 0.001).name("Height").onChange(update);
@@ -41,7 +41,7 @@
         scene.remove(panel);
         panel = new Panel(params);
         scene.add(panel);
-        centerMesh(panel);
+        centerObject(panel);
       }
     </script>
   </body>

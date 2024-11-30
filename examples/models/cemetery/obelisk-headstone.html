@@ -16,14 +16,14 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { ObeliskHeadstone, ObeliskHeadstoneGeometry, centerMesh } from "../../../src/index.js";
+      import { ObeliskHeadstone, ObeliskHeadstoneGeometry, centerObject } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene, camera } = createOrbitScene();
 
       let crossHeadstone = new ObeliskHeadstone();
       scene.add(crossHeadstone);
-      centerMesh(crossHeadstone);
+      centerObject(crossHeadstone);
 
       const gui = new GUI();
       const params = {
