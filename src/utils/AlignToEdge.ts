@@ -1,4 +1,4 @@
-import { Mesh, Vector3, Box3 } from "three";
+import { Mesh, Vector3 } from "three";
 import { BoxSide } from "../constants/BoxSide";
 
 /**
