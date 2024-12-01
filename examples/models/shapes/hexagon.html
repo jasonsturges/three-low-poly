@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import GUI from "lil-gui";
+      import { Hexagon, HexagonGeometry, centerObject } from "../../../src/index.js";
+      import { createOrbitScene } from "../../utils/orbitScene.js";
+
+      const { scene } = createOrbitScene();
+
+      // Initial values for constructor parameters
+      const params = {
+        radius: 1,
+        depth: 0.01,
+      };
+
+      const hexagon = new Hexagon(params);
+      scene.add(hexagon);
+
+      const gui = new GUI();
+      gui.title("Hexagon");
+      gui.add(params, "radius", 0.1, 2, 0.01).name("Radius").onChange(update);
+      gui.add(params, "depth", 0, 1, 0.01).name("Depth").onChange(update);
+
+      function update() {
+        hexagon.geometry.dispose();
+        hexagon.geometry = new HexagonGeometry(params.radius, params.depth);
+        centerObject(hexagon);
+      }
+
+      update();
+    </script>
+  </body>
+</html>
