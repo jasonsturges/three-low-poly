@@ -241,6 +241,7 @@ export * from "./utils/AlignToRow";
 export * from "./utils/AlignToSurface";
 export * from "./utils/Center";
 export * from "./utils/ColorUtils";
+export * from "./utils/FindClosestPoint"
 export * from "./utils/InterpolateCurve";
 export * from "./utils/LineEquations";
 export * from "./utils/ParametricCurveUtils";
