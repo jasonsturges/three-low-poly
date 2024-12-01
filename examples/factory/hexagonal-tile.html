@@ -23,7 +23,7 @@
       const { scene, camera, controls } = createOrbitScene();
       camera.position.set(0, 5, 5);
 
-      // Default parameters for the hexagonal tile floor
+      // Default parameters for the hexagonal tile
       const params = {
         width: 10,
         depth: 10,
@@ -33,25 +33,26 @@
         material: new THREE.MeshStandardMaterial({ color: ColorPalette.TITANIUM_WHITE }),
       };
 
-      let hexTileFloor;
+      let hexTile;
 
       // lil-gui setup
       const gui = new GUI();
-      gui.add(params, "width", 5, 20, 0.01).name("Width").onChange(updateFloor);
-      gui.add(params, "depth", 5, 20, 0.01).name("Depth").onChange(updateFloor);
-      gui.add(params, "height", 0.01, 1, 0.01).name("Tile Height").onChange(updateFloor);
-      gui.add(params, "radius", 0.1, 2, 0.01).name("Tile Radius").onChange(updateFloor);
-      gui.add(params, "gap", 0, 0.01, 0.001).name("Tile Gap").onChange(updateFloor);
+      gui.title("Hexagonal Tile");
+      gui.add(params, "width", 5, 20, 0.01).name("Width").onChange(update);
+      gui.add(params, "depth", 5, 20, 0.01).name("Depth").onChange(update);
+      gui.add(params, "height", 0.01, 1, 0.01).name("Tile Height").onChange(update);
+      gui.add(params, "radius", 0.1, 2, 0.01).name("Tile Radius").onChange(update);
+      gui.add(params, "gap", 0, 0.1, 0.001).name("Tile Gap").onChange(update);
 
-      // Function to update the hexagonal tile floor
-      function updateFloor() {
-        if (hexTileFloor) scene.remove(hexTileFloor);
-        hexTileFloor = createHexagonalTile(params);
-        scene.add(hexTileFloor);
+      // Function to update the hexagonal tile
+      function update() {
+        if (hexTile) scene.remove(hexTile);
+        hexTile = createHexagonalTile(params);
+        scene.add(hexTile);
       }
 
-      // Initial floor creation
-      updateFloor();
+      // Initial tile creation
+      update();
     </script>
   </body>
 </html>
