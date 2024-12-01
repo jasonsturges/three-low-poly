@@ -1,6 +1,6 @@
 import { Shape } from "three";
 
-class BurstShape extends Shape {
+export class BurstShape extends Shape {
   constructor(sides = 5, innerRadius = 0.5, outerRadius = 1.0) {
     super();
 
@@ -26,5 +26,3 @@ class BurstShape extends Shape {
     this.closePath();
   }
 }
-
-export { BurstShape };

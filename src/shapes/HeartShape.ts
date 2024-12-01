@@ -1,6 +1,6 @@
 import { Shape } from "three";
 
-class HeartShape extends Shape {
+export class HeartShape extends Shape {
   constructor(size = 1, width = 2.1, height = 1.4, tipDepth = 1.6) {
     super();
 
@@ -22,5 +22,3 @@ class HeartShape extends Shape {
     );
   }
 }
-
-export { HeartShape };

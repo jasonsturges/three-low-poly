@@ -1,6 +1,6 @@
 import { Path, Shape } from "three";
 
-class GearShape extends Shape {
+export class GearShape extends Shape {
   constructor(sides = 5, innerRadius = 0.5, outerRadius = 1, holeSides = 5, holeRadius = 0.25) {
     super();
 
@@ -32,5 +32,3 @@ class GearShape extends Shape {
     }
   }
 }
-
-export { GearShape };

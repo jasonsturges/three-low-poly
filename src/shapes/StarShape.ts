@@ -1,6 +1,6 @@
 import { Shape } from "three";
 
-class StarShape extends Shape {
+export class StarShape extends Shape {
   constructor(points = 5, innerRadius = 0.5, outerRadius = 1.0) {
     super();
 
@@ -16,5 +16,3 @@ class StarShape extends Shape {
     this.closePath();
   }
 }
-
-export { StarShape };
