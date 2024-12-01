@@ -18,7 +18,7 @@
       import * as THREE from "three";
       import GUI from "lil-gui";
       import { createOrbitScene } from "../utils/orbitScene.js";
-      import { ColorPalette, createHexagonalTile } from "../../src/index.js";
+      import { createHexagonalTilesByCount } from "../../src/index.js";
 
       const { scene, camera, controls } = createOrbitScene();
       camera.position.set(0, 5, 5);
@@ -28,9 +28,9 @@
         width: 10,
         depth: 10,
         height: 0.01,
-        radius: 0.1,
+        count: 24,
         gap: 0.01,
-        material: new THREE.MeshStandardMaterial({ color: ColorPalette.TITANIUM_WHITE }),
+        material: new THREE.MeshStandardMaterial({ color: 0xffffff }),
       };
 
       let hexTile;
@@ -41,13 +41,13 @@
       gui.add(params, "width", 5, 20, 0.01).name("Width").onChange(update);
       gui.add(params, "depth", 5, 20, 0.01).name("Depth").onChange(update);
       gui.add(params, "height", 0.01, 1, 0.01).name("Tile Height").onChange(update);
-      gui.add(params, "radius", 0.1, 2, 0.01).name("Tile Radius").onChange(update);
+      gui.add(params, "count", 1, 128, 1).name("Tile Count").onChange(update);
       gui.add(params, "gap", 0, 0.1, 0.001).name("Tile Gap").onChange(update);
 
       // Function to update the hexagonal tile
       function update() {
         if (hexTile) scene.remove(hexTile);
-        hexTile = createHexagonalTile(params);
+        hexTile = createHexagonalTilesByCount(params);
         scene.add(hexTile);
       }
 
