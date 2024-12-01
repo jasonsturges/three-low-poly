@@ -100,6 +100,13 @@ export { MossyRocksGeometry } from "./geometry/rocks/MossyRocksGeometry";
 export { RockGeometry } from "./geometry/rocks/RockGeometry";
 export { RocksGeometry } from "./geometry/rocks/RocksGeometry";
 
+// Shapes
+export { BurstGeometry } from "./geometry/shapes/BurstGeometry";
+export { GearGeometry } from "./geometry/shapes/GearGeometry";
+export { HeartGeometry } from "./geometry/shapes/HeartGeometry";
+export { HexagonGeometry } from "./geometry/shapes/HexagonGeometry";
+export { StarGeometry } from "./geometry/shapes/StarGeometry";
+
 // Skeleton
 export { BoneGeometry } from "./geometry/skeleton/BoneGeometry";
 
@@ -186,6 +193,7 @@ export { TestTubeRack } from "./models/science/TestTubeRack";
 export { Burst } from "./models/shapes/Burst";
 export { Gear } from "./models/shapes/Gear";
 export { Heart } from "./models/shapes/Heart";
+export { Hexagon } from "./models/shapes/Hexagon";
 export { Star } from "./models/shapes/Star";
 
 // Skeleton
@@ -217,6 +225,7 @@ export { nightSkyShader, type NightSkyUniforms } from "./shaders/nightSkyShader"
 export { BurstShape } from "./shapes/BurstShape";
 export { GearShape } from "./shapes/GearShape";
 export { HeartShape } from "./shapes/HeartShape";
+export { HexagonShape } from "./shapes/HexagonShape";
 export { StarShape } from "./shapes/StarShape";
 
 //------------------------------
