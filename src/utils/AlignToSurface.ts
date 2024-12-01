@@ -13,14 +13,16 @@ export function alignObjectToSurface(object: Object3D, targetPosition: Vector3, 
   if (!boundingBox.isEmpty()) {
     const min = boundingBox.min;
 
-    // Compute bottom center
+    // Compute bottom center in world space
     const bottomCenter = new Vector3((min.x + boundingBox.max.x) / 2, min.y, (min.z + boundingBox.max.z) / 2);
+    object.localToWorld(bottomCenter);
 
-    // Calculate adjustment vector
+    // Calculate adjustment vector in world space
     const adjustment = targetPosition.clone().sub(bottomCenter).add(offset);
 
-    // Apply adjustment to object
-    object.position.add(adjustment);
+    // Transform adjustment to local space and apply
+    const localAdjustment = object.worldToLocal(adjustment.clone());
+    object.position.add(localAdjustment);
   } else {
     console.warn("The object has no geometry or is not visible.");
   }
@@ -68,8 +70,9 @@ export function alignInstancedMeshToSurface(
     // Compute the adjustment needed to align the bottom of the InstancedMesh to the target position
     const adjustment = new Vector3(0, targetPosition.y - minY, 0).add(offset);
 
-    // Apply the adjustment to the InstancedMesh position
-    instancedMesh.position.add(adjustment);
+    // Transform adjustment to local space and apply to position
+    const localAdjustment = instancedMesh.worldToLocal(adjustment.clone());
+    instancedMesh.position.add(localAdjustment);
   } else {
     console.warn("The InstancedMesh has no geometry or is not visible.");
   }
@@ -99,8 +102,11 @@ export function alignInstancedMeshIndexToSurface(
     const scale = new Vector3();
     matrix.decompose(position, quaternion, scale);
 
+    // Transform targetPosition to the instanced mesh's local space
+    const localTargetPosition = instancedMesh.worldToLocal(targetPosition.clone());
+
     // Adjust the position of the instance
-    position.y = targetPosition.y - minY + offset.y;
+    position.y = localTargetPosition.y - minY + offset.y;
 
     // Recompose the matrix and update the instance
     matrix.compose(position, quaternion, scale);
