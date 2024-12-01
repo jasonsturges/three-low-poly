@@ -48,7 +48,7 @@ export { LeafEffect, type LeafEffectOptions } from "./effects/LeafEffect";
 //------------------------------
 
 export * from "./factory/BookFactory";
-export { createHexagonalTile, type HexagonalTileOptions } from "./factory/HexagonalTileFactory";
+export * from "./factory/HexagonalTileFactory";
 
 //------------------------------
 //  Geometries
