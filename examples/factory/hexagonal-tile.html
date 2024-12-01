@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+      import { ColorPalette, createHexagonalTile } from "../../src/index.js";
+
+      const { scene, camera, controls } = createOrbitScene();
+      camera.position.set(0, 5, 5);
+
+      // Default parameters for the hexagonal tile floor
+      const params = {
+        width: 10,
+        depth: 10,
+        height: 0.01,
+        radius: 0.1,
+        gap: 0.01,
+        material: new THREE.MeshStandardMaterial({ color: ColorPalette.TITANIUM_WHITE }),
+      };
+
+      let hexTileFloor;
+
+      // lil-gui setup
+      const gui = new GUI();
+      gui.add(params, "width", 5, 20, 0.01).name("Width").onChange(updateFloor);
+      gui.add(params, "depth", 5, 20, 0.01).name("Depth").onChange(updateFloor);
+      gui.add(params, "height", 0.01, 1, 0.01).name("Tile Height").onChange(updateFloor);
+      gui.add(params, "radius", 0.1, 2, 0.01).name("Tile Radius").onChange(updateFloor);
+      gui.add(params, "gap", 0, 0.01, 0.001).name("Tile Gap").onChange(updateFloor);
+
+      // Function to update the hexagonal tile floor
+      function updateFloor() {
+        if (hexTileFloor) scene.remove(hexTileFloor);
+        hexTileFloor = createHexagonalTile(params);
+        scene.add(hexTileFloor);
+      }
+
+      // Initial floor creation
+      updateFloor();
+    </script>
+  </body>
+</html>
