@@ -16,13 +16,10 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { Burst } from "../../../src/index.js";
+      import { Burst, BurstGeometry, centerObject } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
-
-      let burst = new Burst();
-      scene.add(burst);
 
       // Initial values for constructor parameters
       const params = {
@@ -30,26 +27,25 @@
         innerRadius: 0.5,
         outerRadius: 1.0,
         depth: 0.25,
-        wireframe: false,
       };
 
-      // Creating the lil-gui instance
+      const burst = new Burst(params);
+      scene.add(burst);
+
       const gui = new GUI();
+      gui.title("Burst");
+      gui.add(params, "steps", 2, 32, 1).name("Steps").onChange(update);
+      gui.add(params, "innerRadius", 0.1, 5.0, 0.1).name("Inner Radius").onChange(update);
+      gui.add(params, "outerRadius", 0.1, 5.0, 0.1).name("Outer Radius").onChange(update);
+      gui.add(params, "depth", 0, 5.0, 0.1).name("Depth").onChange(update);
 
-      // Add controls for the constructor parameters
-      gui.add(params, "steps", 2, 32).name("Steps").step(1).onChange(() => updateShape());
-      gui.add(params, "innerRadius", 0.1, 5.0).name("Inner Radius").step(0.1).onChange(() => updateShape());
-      gui.add(params, "outerRadius", 0.1, 5.0).name("Outer Radius").step(0.1).onChange(() => updateShape());
-      gui.add(params, "depth", 0, 5.0).name("Depth").step(0.1).onChange(() => updateShape());
-
-      function updateShape() {
-        scene.remove(burst);
-        burst = new Burst(params.steps, params.innerRadius, params.outerRadius, params.depth);
-        burst.material.wireframe = params.wireframe;
-        scene.add(burst);
+      function update() {
+        burst.geometry.dispose();
+        burst.geometry = new BurstGeometry(params.steps, params.innerRadius, params.outerRadius, params.depth);
+        centerObject(burst);
       }
 
-      updateShape();
+      update();
     </script>
   </body>
 </html>

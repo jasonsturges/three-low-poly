@@ -16,13 +16,10 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { Heart } from "../../../src/index.js";
+      import { Heart, HeartGeometry, centerObject } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
-
-      let heart = new Heart();
-      scene.add(heart);
 
       // Initial values for constructor parameters
       const params = {
@@ -34,24 +31,24 @@
         wireframe: false,
       };
 
-      // Creating the lil-gui instance
+      const heart = new Heart(params);
+      scene.add(heart);
+
       const gui = new GUI();
+      gui.title("Heart");
+      gui.add(params, "size", 1, 5, 0.1).name("Size").onChange(update);
+      gui.add(params, "width", 0.1, 5.0, 0.1).name("Width").onChange(update);
+      gui.add(params, "height", 0.1, 5.0, 0.1).name("height").onChange(update);
+      gui.add(params, "tipDepth", 0.1, 5.0, 0.1).name("Tip Depth").onChange(update);
+      gui.add(params, "depth", 0, 5.0, 0.1).name("Depth").onChange(update);
 
-      // Add controls for the constructor parameters
-      gui.add(params, "size", 1, 5).name("Size").step(1).onChange(() => updateShape());
-      gui.add(params, "width", 0.1, 5.0).name("Width").step(0.1).onChange(() => updateShape());
-      gui.add(params, "height", 0.1, 5.0).name("height").step(0.1).onChange(() => updateShape());
-      gui.add(params, "tipDepth", 0.1, 5.0).name("Tip Depth").step(0.1).onChange(() => updateShape());
-      gui.add(params, "depth", 0, 5.0).name("Depth").step(0.1).onChange(() => updateShape());
-
-      function updateShape() {
-        scene.remove(heart);
-        heart = new Heart(params.size, params.width, params.height, params.tipDepth, params.depth);
-        heart.material.wireframe = params.wireframe;
-        scene.add(heart);
+      function update() {
+        heart.geometry.dispose();
+        heart.geometry = new HeartGeometry(params.size, params.width, params.height, params.tipDepth, params.depth);
+        centerObject(heart);
       }
 
-      updateShape();
+      update();
     </script>
   </body>
 </html>

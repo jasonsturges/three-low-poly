@@ -16,13 +16,10 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { Gear } from "../../../src/index.js";
+      import { centerObject, Gear, GearGeometry } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene } = createOrbitScene();
-
-      let gear = new Gear();
-      scene.add(gear);
 
       // Initial values for constructor parameters
       const params = {
@@ -35,25 +32,32 @@
         wireframe: false,
       };
 
-      // Creating the lil-gui instance
+      const gear = new Gear(params);
+      scene.add(gear);
+
       const gui = new GUI();
+      gui.title("Gear");
+      gui.add(params, "sides", 2, 32, 1).name("Sides").onChange(update);
+      gui.add(params, "innerRadius", 0.1, 5.0, 0.1).name("Inner Radius").onChange(update);
+      gui.add(params, "outerRadius", 0.1, 5.0, 0.1).name("Outer Radius").onChange(update);
+      gui.add(params, "holeSides", 3, 32, 1).name("Hole Sides").onChange(update);
+      gui.add(params, "holeRadius", 0.1, 5.0, 0.1).name("Hole Radius").onChange(update);
+      gui.add(params, "depth", 0, 5.0, 0.1).name("Depth").onChange(update);
 
-      // Add controls for the constructor parameters
-      gui.add(params, "sides", 2, 32).name("Sides").step(1).onChange(() => updateShape());
-      gui.add(params, "innerRadius", 0.1, 5.0).name("Inner Radius").step(0.1).onChange(() => updateShape());
-      gui.add(params, "outerRadius", 0.1, 5.0).name("Outer Radius").step(0.1).onChange(() => updateShape());
-      gui.add(params, "holeSides", 3, 32).name("Hole Sides").step(1).onChange(() => updateShape());
-      gui.add(params, "holeRadius", 0.1, 5.0).name("Hole Radius").step(0.1).onChange(() => updateShape());
-      gui.add(params, "depth", 0, 5.0).name("Depth").step(0.1).onChange(() => updateShape());
-
-      function updateShape() {
-        scene.remove(gear);
-        gear = new Gear(params.sides, params.innerRadius, params.outerRadius, params.holeSides, params.holeRadius, params.depth);
-        gear.material.wireframe = params.wireframe;
-        scene.add(gear);
+      function update() {
+        gear.geometry.dispose();
+        gear.geometry = new GearGeometry(
+          params.sides,
+          params.innerRadius,
+          params.outerRadius,
+          params.holeSides,
+          params.holeRadius,
+          params.depth,
+        );
+        centerObject(gear);
       }
 
-      updateShape();
+      update();
     </script>
   </body>
 </html>
