@@ -48,6 +48,7 @@ export { LeafEffect, type LeafEffectOptions } from "./effects/LeafEffect";
 //------------------------------
 
 export * from "./factory/BookFactory";
+export { createHexagonalTile, type HexagonalTileOptions } from "./factory/HexagonalTileFactory";
 
 //------------------------------
 //  Geometries
@@ -241,7 +242,7 @@ export * from "./utils/AlignToRow";
 export * from "./utils/AlignToSurface";
 export * from "./utils/Center";
 export * from "./utils/ColorUtils";
-export * from "./utils/FindClosestPoint"
+export * from "./utils/FindClosestPoint";
 export * from "./utils/InterpolateCurve";
 export * from "./utils/LineEquations";
 export * from "./utils/ParametricCurveUtils";
