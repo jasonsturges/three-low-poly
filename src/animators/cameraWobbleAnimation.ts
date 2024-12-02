@@ -5,7 +5,7 @@ import { Camera, Vector3 } from "three";
  *
  * Example:
  * ```
- * wobbleAnimation(camera, 0.5, 1000, () => {
+ * cameraWobbleAnimation(camera, 0.5, 1000, () => {
  *   console.log("Wobble animation complete");
  * });
  * ```

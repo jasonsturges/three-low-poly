@@ -5,7 +5,7 @@ import { Camera, Vector3 } from "three";
  *
  * Example:
  * ```
- * dollyAnimation(camera, 5, 3000, () => {
+ * cameraDollyAnimation(camera, 5, 3000, () => {
  *   console.log("Dolly animation complete");
  * });
  * ```

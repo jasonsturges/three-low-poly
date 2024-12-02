@@ -6,7 +6,7 @@ import { MathUtils, PerspectiveCamera, Vector3 } from "three";
  *
  * Example:
  * ```
- * zoomInAnimation(camera, new THREE.Vector3(0, 0, 0), 120, 75, 2000, () => {
+ * cameraZoomInAnimation(camera, new THREE.Vector3(0, 0, 0), 120, 75, 2000, () => {
  *   console.log("Zoom in animation complete");
  * });
  * ```

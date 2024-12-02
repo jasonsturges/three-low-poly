@@ -5,7 +5,7 @@ import { Camera, Vector3 } from "three";
  *
  * Example:
  * ```
- * orbitAnimation(camera, new THREE.Vector3(0, 0, 0), 10, 5000, () => {
+ * cameraOrbitAnimation(camera, new THREE.Vector3(0, 0, 0), 10, 5000, () => {
  *   console.log("Orbit animation complete");
  * });
  * ```

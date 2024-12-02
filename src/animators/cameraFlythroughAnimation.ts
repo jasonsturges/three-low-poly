@@ -5,7 +5,7 @@ import { Camera, Vector3 } from "three";
  *
  * Example:
  * ```
- * flythroughAnimation(
+ * cameraFlythroughAnimation(
  *   camera,
  *   [
  *     new THREE.Vector3(0, 5, 5),

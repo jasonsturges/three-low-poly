@@ -5,7 +5,7 @@ import { Camera, Vector3 } from "three";
  *
  * Example:
  * ```
- * spiralAscensionAnimation(camera, new THREE.Vector3(0, 0, 0), 10, 300, 7, 12000, () => {
+ * cameraSpiralAscensionAnimation(camera, new THREE.Vector3(0, 0, 0), 10, 300, 7, 12000, () => {
  *   console.log("Spiral ascension animation complete");
  * });
  * ```

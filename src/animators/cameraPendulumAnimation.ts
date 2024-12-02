@@ -5,7 +5,7 @@ import { Camera, Vector3 } from "three";
  *
  * Example:
  * ```
- * pendulumAnimation(camera, new THREE.Vector3(0, 5, 5), 0.5, 9000, 3, () => {
+ * cameraPendulumAnimation(camera, new THREE.Vector3(0, 5, 5), 0.5, 9000, 3, () => {
  *   console.log("Pendulum animation complete");
  * });
  * ```
