@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { createHexagonalTilesByCount, addInstanceColor } from "../../src/index.js";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+
+      const { scene, camera, controls } = createOrbitScene();
+      camera.position.set(0, 5, 5);
+
+      // Material, with instance color shader
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0xffffff,
+        emissiveIntensity: 0.25,
+        metalness: 0.5,
+        roughness: 0.5,
+        flatShading: true,
+      });
+      addInstanceColor(material);
+
+      // Parameters
+      const params = {
+        count: 127,
+        interval: 24,
+      };
+
+      // Hexagonal tiles instanced mesh
+      let hexTile;
+
+      const gui = new GUI();
+      gui.title("Hexagonal Tile");
+      gui.add(params, "count", 2, 128, 1).name("Count").onChange(update);
+      gui.add(params, "interval", 0, 360, 1).name("Interval").onChange(update);
+
+      function update() {
+        if (hexTile) scene.remove(hexTile);
+
+        hexTile = createHexagonalTilesByCount({
+          width: 10,
+          depth: 10,
+          height: 0.01,
+          count: params.count,
+          gap: 0.01,
+          material: material,
+        });
+        scene.add(hexTile);
+
+        const colors = new Float32Array(hexTile.count * 3); // RGB for each instance
+        for (let i = 0; i < hexTile.count; i++) {
+          const color = i % params.interval === 0 ? [0x00 / 0xff, 0x0f / 0xff, 0x89 / 0xff] : [0.8, 0.8, 0.8];
+          colors.set(color, i * 3);
+        }
+
+        hexTile.geometry.setAttribute("instanceColor", new THREE.InstancedBufferAttribute(colors, 3));
+      }
+      update();
+    </script>
+  </body>
+</html>
