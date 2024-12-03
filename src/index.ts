@@ -210,6 +210,7 @@ export { Mound } from "./models/terrain/Mound";
 //  Shaders
 //------------------------------
 
+export { addInstanceColor } from "./shaders/addInstanceColor";
 export { addWaterDisplacement, updateWaterDisplacementTime } from "./shaders/addWaterDisplacement";
 export { addNoiseDisplacement, updateNoiseDisplacementTime } from "./shaders/addNoiseDisplacement";
 export { atmosphericShader, type AtmosphericShaderUniforms } from "./shaders/atmosphericShader";
