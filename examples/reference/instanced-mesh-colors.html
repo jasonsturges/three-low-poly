@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Three Low Poly</title>
+  <style>
+    body {
+      margin: 0;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<script type="module">
+  import * as THREE from "three";
+  import { createOrthographicScene } from "../utils/orthographicScene.js";
+  import { randomInteger } from "../../src/index.js";
+
+  const { scene, camera, controls, handlers } = createOrthographicScene();
+  camera.zoom = 0.7;
+  camera.updateProjectionMatrix();
+
+  // Number of instances
+  const count = 100;
+
+  // Create an instanced mesh
+  const geometry = new THREE.BoxGeometry(1, 1, 1);
+  const material = new THREE.MeshStandardMaterial();
+  const instancedMesh = new THREE.InstancedMesh(geometry, material, count);
+  scene.add(instancedMesh);
+
+  // Set individual instance transformations
+  const matrix = new THREE.Matrix4();
+  for (let i = 0; i < count; i++) {
+    const x = randomInteger(-10, 10);
+    const y = randomInteger(-10, 10);
+    const z = randomInteger(-10, 10);
+    matrix.setPosition(x, y, z); // Position each cube randomly
+    instancedMesh.setMatrixAt(i, matrix); // Apply the transformation matrix to the instance
+  }
+
+  // Assign instanceColor
+  const colors = new Float32Array(instancedMesh.count * 3); // RGB for 100 instances
+  for (let i = 0; i < instancedMesh.count; i++) {
+    const [r, g, b] = [Math.random(), Math.random(), Math.random()];
+    colors.set([r, g, b], i * 3); // Normalized to [0, 1]
+  }
+  instancedMesh.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
+</script>
+</body>
+</html>
