@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { addInstanceColor, createHexagonalTilesByCount, getAnalogousColors } from "../../src/index.js";
+      import { createOrbitScene } from "../utils/orbitScene.js";
+
+      const { scene, camera, controls } = createOrbitScene();
+      camera.position.set(0, 5, 5);
+
+      // Material, with instance color shader
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0xffffff,
+        emissiveIntensity: 0.25,
+        metalness: 0.5,
+        roughness: 0.5,
+        flatShading: true,
+      });
+      addInstanceColor(material);
+
+      // Parameters
+      const params = {
+        count: 24,
+        hue: 0,
+      };
+
+      // Hexagonal tiles instanced mesh
+      let hexTile;
+
+      const gui = new GUI();
+      gui.title("Analogous Colors");
+      gui.add(params, "count", 2, 128, 1).name("Count").onChange(update);
+      gui.add(params, "hue", 0, 360, 1).name("Hue").onChange(update);
+
+      function update() {
+        if (hexTile) scene.remove(hexTile);
+
+        hexTile = createHexagonalTilesByCount({
+          width: 10,
+          depth: 10,
+          height: 0.01,
+          count: params.count,
+          gap: 0.01,
+          material: material,
+        });
+        scene.add(hexTile);
+
+        const colors = new Float32Array(hexTile.count * 3); // RGB for each instance
+        for (let i = 0; i < hexTile.count; i++) {
+          getAnalogousColors(params.hue).forEach((color, index) => {
+            colors[i * 3 + index] = color / 0xff;
+          });
+        }
+
+        hexTile.geometry.setAttribute("instanceColor", new THREE.InstancedBufferAttribute(colors, 3));
+      }
+      update();
+    </script>
+  </body>
+</html>
