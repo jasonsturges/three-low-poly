@@ -44,7 +44,6 @@ export const ColorPalette = {
   MIDNIGHT_BLUE: 0x000033,    // A very deep, dark blue shade that evokes the feeling of a starless night sky or deep ocean depths, with subtle blue undertones.
   ULTRAMARINE_BLUE: 0x3f51b5, // Deep, rich blue with a slightly cool undertone.
 
-
   // Purple
   COBALT_VIOLET: 0x6a0dad,    // Soft, purple tone.
   DEEP_VIOLET: 0xaa00ff,      // Electric Purple or Deep Violet. It’s a bright, vibrant shade of purple with a strong blue undertone.
