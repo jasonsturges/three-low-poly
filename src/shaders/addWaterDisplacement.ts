@@ -1,4 +1,4 @@
-import {Material} from "three";
+import { Material } from "three";
 
 /**
  * Utility function to add water-like vertex displacement to an existing Three.js material.
