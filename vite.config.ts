@@ -6,6 +6,7 @@ export default defineConfig({
   base: "./",
   plugins: [dts({ rollupTypes: true, insertTypesEntry: true })],
   build: {
+    emptyOutDir: true,
     sourcemap: true,
     lib: {
       entry: path.resolve(__dirname, "src/index.ts"),

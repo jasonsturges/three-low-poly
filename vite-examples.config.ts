@@ -10,4 +10,8 @@ export default defineConfig({
       "../../src/index.js": resolve(__dirname, "src/index.ts"),
     },
   },
+  build: {
+    outDir: "../dist",
+    emptyOutDir: true,
+  },
 });
