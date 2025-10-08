@@ -1,5 +1,21 @@
+import fs from "fs";
 import { defineConfig } from "vite";
 import { resolve } from "node:path";
+
+function getAllHtmlFiles(path: string, files: string[] = []): string[] {
+  const folder = fs.readdirSync(path);
+
+  folder.forEach((file) => {
+    const filePath = resolve(path, file);
+    if (fs.statSync(filePath).isDirectory() && file !== "dist") {
+      files = getAllHtmlFiles(filePath, files);
+    } else if (file.endsWith(".html")) {
+      files.push(filePath);
+    }
+  });
+
+  return files;
+}
 
 export default defineConfig({
   base: "/three-low-poly",
@@ -13,5 +29,17 @@ export default defineConfig({
   build: {
     outDir: "../dist",
     emptyOutDir: true,
+    rollupOptions: {
+      input: getAllHtmlFiles(resolve(__dirname, "examples")).reduce(
+        (entries: Record<string, string>, file: string) => {
+          const name = file
+            .replace(resolve(__dirname, "examples") + "/", "")
+            .replace(".html", "");
+          entries[name] = file;
+          return entries;
+        },
+        {}
+      ),
+    },
   },
 });
