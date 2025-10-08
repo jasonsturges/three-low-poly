@@ -1,5 +1,4 @@
 import fs from "fs";
-import typescript from "vite-plugin-typescript";
 import { defineConfig, UserConfig } from "vite";
 import { resolve } from "path";
 
@@ -22,7 +21,6 @@ export default defineConfig({
   base: "/three-low-poly",
   root: "./examples",
   publicDir: "../public",
-  plugins: [typescript()],
   build: {
     outDir: "../dist",
     emptyOutDir: true,
