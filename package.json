@@ -35,8 +35,8 @@
   "scripts": {
     "dev": "vite build --watch",
     "build": "tsc && vite build",
-    "start:examples": "vite --host --open --config vite-examples.config.js",
-    "build:examples": "vite build --config vite-examples.config.js"
+    "start:examples": "vite --host --open --config vite-examples.config.ts",
+    "build:examples": "vite build --config vite-examples.config.ts"
   },
   "dependencies": {
     "lil-gui": "^0.19.2",
