@@ -8,6 +8,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "../../src/index.js": resolve(__dirname, "src/index.ts"),
+      "../../../src/index.js": resolve(__dirname, "src/index.ts"),
     },
   },
 });
