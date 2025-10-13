@@ -13,7 +13,7 @@
     "allowSyntheticDefaultImports": true,
     "useDefineForClassFields": true,
     "strict": true,
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "sourceMap": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
