@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly - Shadows</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x87ceeb);
+
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(15, 15, 15);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      document.body.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+
+      const handlers = [];
+
+      renderer.setAnimationLoop(() => {
+        handlers.forEach((handler) => handler());
+        renderer.render(scene, camera);
+        controls.update();
+      });
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // Add lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+      directionalLight.position.set(10, 15, 5);
+      directionalLight.castShadow = true;
+
+      // Configure shadow properties
+      directionalLight.shadow.mapSize.width = 2048;
+      directionalLight.shadow.mapSize.height = 2048;
+      directionalLight.shadow.camera.near = 0.5;
+      directionalLight.shadow.camera.far = 50;
+      directionalLight.shadow.camera.left = -20;
+      directionalLight.shadow.camera.right = 20;
+      directionalLight.shadow.camera.top = 20;
+      directionalLight.shadow.camera.bottom = -20;
+      directionalLight.shadow.bias = -0.0001;
+
+      scene.add(directionalLight);
+
+      // Optional: Add a helper to visualize the light's shadow camera
+      const shadowCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+      shadowCameraHelper.visible = false;
+      scene.add(shadowCameraHelper);
+
+      // Create a large ground plane to receive shadows
+      const planeGeometry = new THREE.PlaneGeometry(40, 40);
+      const planeMaterial = new THREE.MeshStandardMaterial({
+        color: 0x90c890,
+        roughness: 0.8
+      });
+      const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+      plane.rotation.x = -Math.PI / 2;
+      plane.receiveShadow = true;
+      scene.add(plane);
+
+      // Create various objects that cast shadows
+      const sphereGeometry = new THREE.SphereGeometry(1.5, 32, 32);
+      const boxGeometry = new THREE.BoxGeometry(2.5, 2.5, 2.5);
+      const coneGeometry = new THREE.ConeGeometry(1.5, 3, 32);
+      const torusGeometry = new THREE.TorusGeometry(1.5, 0.5, 16, 32);
+      const cylinderGeometry = new THREE.CylinderGeometry(1, 1, 3, 32);
+
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xff6b6b,
+        roughness: 0.5,
+        metalness: 0.2
+      });
+
+      // Sphere
+      const sphere = new THREE.Mesh(sphereGeometry, material.clone());
+      sphere.position.set(-8, 1.5, -5);
+      sphere.castShadow = true;
+      sphere.receiveShadow = true;
+      scene.add(sphere);
+
+      // Box
+      const box = new THREE.Mesh(boxGeometry, material.clone());
+      box.material.color.set(0x4ecdc4);
+      box.position.set(-4, 1.25, 0);
+      box.castShadow = true;
+      box.receiveShadow = true;
+      scene.add(box);
+
+      // Cone
+      const cone = new THREE.Mesh(coneGeometry, material.clone());
+      cone.material.color.set(0xffe66d);
+      cone.position.set(0, 1.5, -5);
+      cone.castShadow = true;
+      cone.receiveShadow = true;
+      scene.add(cone);
+
+      // Torus
+      const torus = new THREE.Mesh(torusGeometry, material.clone());
+      torus.material.color.set(0xa8e6cf);
+      torus.position.set(4, 2, 0);
+      torus.rotation.x = Math.PI / 4;
+      torus.castShadow = true;
+      torus.receiveShadow = true;
+      scene.add(torus);
+
+      // Cylinder
+      const cylinder = new THREE.Mesh(cylinderGeometry, material.clone());
+      cylinder.material.color.set(0xc7ceea);
+      cylinder.position.set(8, 1.5, -5);
+      cylinder.castShadow = true;
+      cylinder.receiveShadow = true;
+      scene.add(cylinder);
+
+      // Add a tall object to show shadow length
+      const tallBox = new THREE.Mesh(new THREE.BoxGeometry(1.5, 8, 1.5), material.clone());
+      tallBox.material.color.set(0xff8b94);
+      tallBox.position.set(-8, 4, 5);
+      tallBox.castShadow = true;
+      tallBox.receiveShadow = true;
+      scene.add(tallBox);
+
+      // Add some smaller objects for detail
+      const smallSphereGeometry = new THREE.SphereGeometry(0.75, 16, 16);
+      for (let i = 0; i < 5; i++) {
+        const smallSphere = new THREE.Mesh(smallSphereGeometry, material.clone());
+        smallSphere.material.color.setHSL(i / 5, 0.7, 0.6);
+        smallSphere.position.set(i * 2 - 4, 0.75, 8);
+        smallSphere.castShadow = true;
+        smallSphere.receiveShadow = true;
+        scene.add(smallSphere);
+      }
+
+      // Shadow settings
+      const shadowSettings = {
+        shadowMapType: "PCFSoft",
+        shadowMapSize: 2048,
+        shadowBias: -0.0001,
+        shadowRadius: 1,
+        showShadowCamera: false,
+      };
+
+      const shadowMapTypes = {
+        "Basic": THREE.BasicShadowMap,
+        "PCF": THREE.PCFShadowMap,
+        "PCFSoft": THREE.PCFSoftShadowMap,
+        "VSM": THREE.VSMShadowMap,
+      };
+
+      // Function to update shadow map type
+      function updateShadowMapType() {
+        renderer.shadowMap.type = shadowMapTypes[shadowSettings.shadowMapType];
+        renderer.shadowMap.needsUpdate = true;
+      }
+
+      // Function to update shadow map size
+      function updateShadowMapSize() {
+        directionalLight.shadow.mapSize.width = shadowSettings.shadowMapSize;
+        directionalLight.shadow.mapSize.height = shadowSettings.shadowMapSize;
+        directionalLight.shadow.map?.dispose();
+        directionalLight.shadow.map = null;
+        renderer.shadowMap.needsUpdate = true;
+      }
+
+      // Function to update shadow bias
+      function updateShadowBias() {
+        directionalLight.shadow.bias = shadowSettings.shadowBias;
+      }
+
+      // Function to update shadow radius (VSM only)
+      function updateShadowRadius() {
+        directionalLight.shadow.radius = shadowSettings.shadowRadius;
+      }
+
+      // Function to toggle shadow camera helper
+      function toggleShadowCamera() {
+        shadowCameraHelper.visible = shadowSettings.showShadowCamera;
+      }
+
+      // Set up lil-gui
+      const gui = new GUI();
+
+      const shadowFolder = gui.addFolder("Shadow Settings");
+
+      // Shadow map type selector
+      shadowFolder
+        .add(shadowSettings, "shadowMapType", Object.keys(shadowMapTypes))
+        .name("Shadow Map Type")
+        .onChange(() => updateShadowMapType());
+
+      // Shadow map size
+      shadowFolder
+        .add(shadowSettings, "shadowMapSize", [256, 512, 1024, 2048, 4096])
+        .name("Shadow Map Size")
+        .onChange(() => updateShadowMapSize());
+
+      // Shadow bias
+      shadowFolder
+        .add(shadowSettings, "shadowBias", -0.01, 0.01, 0.0001)
+        .name("Shadow Bias")
+        .onChange(() => updateShadowBias());
+
+      // Shadow radius (for VSM)
+      shadowFolder
+        .add(shadowSettings, "shadowRadius", 0, 10, 0.1)
+        .name("Shadow Radius (VSM)")
+        .onChange(() => updateShadowRadius());
+
+      shadowFolder.open();
+
+      // Light controls
+      const lightFolder = gui.addFolder("Light Controls");
+      lightFolder.add(directionalLight, "intensity", 0, 3).name("Light Intensity");
+      lightFolder.add(directionalLight.position, "x", -20, 20).name("Light Position X");
+      lightFolder.add(directionalLight.position, "y", 5, 30).name("Light Position Y");
+      lightFolder.add(directionalLight.position, "z", -20, 20).name("Light Position Z");
+
+      // Debug options
+      const debugFolder = gui.addFolder("Debug");
+      debugFolder
+        .add(shadowSettings, "showShadowCamera")
+        .name("Show Shadow Camera")
+        .onChange(() => toggleShadowCamera());
+
+      // Camera controls
+      const cameraFolder = gui.addFolder("Camera Position");
+      cameraFolder.add(camera.position, "x", -50, 50).name("X");
+      cameraFolder.add(camera.position, "y", -50, 50).name("Y");
+      cameraFolder.add(camera.position, "z", -50, 50).name("Z");
+    </script>
+  </body>
+</html>
