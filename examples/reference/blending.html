@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly - Blending Modes</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x1a1a1a);
+
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 5, 20);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      document.body.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+
+      const handlers = [];
+
+      renderer.setAnimationLoop(() => {
+        handlers.forEach((handler) => handler());
+        renderer.render(scene, camera);
+        controls.update();
+      });
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // Add lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(5, 10, 5);
+      scene.add(directionalLight);
+
+      // Create overlapping colored planes to show blending
+      const planeGeometry = new THREE.PlaneGeometry(8, 8);
+
+      // Red plane
+      const redMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff0000,
+        transparent: true,
+        opacity: 0.7,
+        side: THREE.DoubleSide,
+        blending: THREE.NormalBlending,
+      });
+      const redPlane = new THREE.Mesh(planeGeometry, redMaterial);
+      redPlane.position.set(-3, 2, 0);
+      redPlane.rotation.y = Math.PI / 6;
+      scene.add(redPlane);
+
+      // Green plane
+      const greenMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00ff00,
+        transparent: true,
+        opacity: 0.7,
+        side: THREE.DoubleSide,
+        blending: THREE.NormalBlending,
+      });
+      const greenPlane = new THREE.Mesh(planeGeometry, greenMaterial);
+      greenPlane.position.set(3, 2, 0);
+      greenPlane.rotation.y = -Math.PI / 6;
+      scene.add(greenPlane);
+
+      // Blue plane (in the middle)
+      const blueMaterial = new THREE.MeshBasicMaterial({
+        color: 0x0000ff,
+        transparent: true,
+        opacity: 0.7,
+        side: THREE.DoubleSide,
+        blending: THREE.NormalBlending,
+      });
+      const bluePlane = new THREE.Mesh(planeGeometry, blueMaterial);
+      bluePlane.position.set(0, 2, -2);
+      scene.add(bluePlane);
+
+      // Create overlapping spheres with emissive materials
+      const sphereGeometry = new THREE.SphereGeometry(1.5, 32, 32);
+
+      // Cyan sphere
+      const cyanMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00ffff,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending,
+      });
+      const cyanSphere = new THREE.Mesh(sphereGeometry, cyanMaterial);
+      cyanSphere.position.set(-2, -2, 2);
+      scene.add(cyanSphere);
+
+      // Magenta sphere
+      const magentaMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff00ff,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending,
+      });
+      const magentaSphere = new THREE.Mesh(sphereGeometry, magentaMaterial);
+      magentaSphere.position.set(2, -2, 2);
+      scene.add(magentaSphere);
+
+      // Yellow sphere
+      const yellowMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffff00,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending,
+      });
+      const yellowSphere = new THREE.Mesh(sphereGeometry, yellowMaterial);
+      yellowSphere.position.set(0, -2, 0);
+      scene.add(yellowSphere);
+
+      // Add some particle-like sprites for additional blending demo
+      const spriteGeometry = new THREE.PlaneGeometry(2, 2);
+      const sprites = [];
+
+      for (let i = 0; i < 20; i++) {
+        const spriteMaterial = new THREE.MeshBasicMaterial({
+          color: new THREE.Color().setHSL(i / 20, 1, 0.5),
+          transparent: true,
+          opacity: 0.5,
+          blending: THREE.AdditiveBlending,
+        });
+        const sprite = new THREE.Mesh(spriteGeometry, spriteMaterial);
+
+        const angle = (i / 20) * Math.PI * 2;
+        const radius = 8;
+        sprite.position.set(
+          Math.cos(angle) * radius,
+          Math.sin(angle * 3) * 2 + 6,
+          Math.sin(angle) * radius
+        );
+
+        scene.add(sprite);
+        sprites.push(sprite);
+      }
+
+      // Animate sprites
+      handlers.push(() => {
+        sprites.forEach((sprite, i) => {
+          sprite.rotation.z += 0.01;
+          sprite.lookAt(camera.position);
+        });
+      });
+
+      // Background gradient plane
+      const bgGeometry = new THREE.PlaneGeometry(50, 30);
+      const bgMaterial = new THREE.MeshBasicMaterial({
+        color: 0x2a2a4a,
+        transparent: true,
+        opacity: 0.3,
+      });
+      const bgPlane = new THREE.Mesh(bgGeometry, bgMaterial);
+      bgPlane.position.z = -10;
+      scene.add(bgPlane);
+
+      // Store all blendable materials
+      const blendableMaterials = [
+        redMaterial,
+        greenMaterial,
+        blueMaterial,
+        cyanMaterial,
+        magentaMaterial,
+        yellowMaterial,
+        ...sprites.map(s => s.material),
+      ];
+
+      // Blending settings
+      const blendingSettings = {
+        blendMode: "Normal",
+        opacity: 0.7,
+        depthWrite: true,
+        depthTest: true,
+      };
+
+      const blendModes = {
+        "Normal": THREE.NormalBlending,
+        "Additive": THREE.AdditiveBlending,
+        "Subtractive": THREE.SubtractiveBlending,
+        "Multiply": THREE.MultiplyBlending,
+        "Custom": THREE.CustomBlending,
+      };
+
+      // Function to update blending mode
+      function updateBlendMode() {
+        const mode = blendModes[blendingSettings.blendMode];
+        blendableMaterials.forEach(material => {
+          material.blending = mode;
+          material.needsUpdate = true;
+        });
+      }
+
+      // Function to update opacity
+      function updateOpacity() {
+        blendableMaterials.forEach(material => {
+          material.opacity = blendingSettings.opacity;
+        });
+      }
+
+      // Function to update depth write
+      function updateDepthWrite() {
+        blendableMaterials.forEach(material => {
+          material.depthWrite = blendingSettings.depthWrite;
+          material.needsUpdate = true;
+        });
+      }
+
+      // Function to update depth test
+      function updateDepthTest() {
+        blendableMaterials.forEach(material => {
+          material.depthTest = blendingSettings.depthTest;
+          material.needsUpdate = true;
+        });
+      }
+
+      // Set up lil-gui
+      const gui = new GUI();
+
+      const blendingFolder = gui.addFolder("Blending");
+
+      blendingFolder
+        .add(blendingSettings, "blendMode", Object.keys(blendModes))
+        .name("Blend Mode")
+        .onChange(() => updateBlendMode());
+
+      blendingFolder
+        .add(blendingSettings, "opacity", 0, 1, 0.01)
+        .name("Opacity")
+        .onChange(() => updateOpacity());
+
+      blendingFolder
+        .add(blendingSettings, "depthWrite")
+        .name("Depth Write")
+        .onChange(() => updateDepthWrite());
+
+      blendingFolder
+        .add(blendingSettings, "depthTest")
+        .name("Depth Test")
+        .onChange(() => updateDepthTest());
+
+      blendingFolder.open();
+
+      const cameraFolder = gui.addFolder("Camera Position");
+      cameraFolder.add(camera.position, "x", -30, 30).name("X");
+      cameraFolder.add(camera.position, "y", -30, 30).name("Y");
+      cameraFolder.add(camera.position, "z", -30, 30).name("Z");
+    </script>
+  </body>
+</html>
