@@ -61,7 +61,7 @@ export class CameraTransition {
     this.orthographicCamera = orthographicCamera;
     this.renderer = renderer;
     this.currentCamera = perspectiveCamera;
-    this.easingFunction = Easing.CUBIC_EASE_IN_OUT;
+    this.easingFunction = Easing.cubicInOut;
 
     // Create render targets for dual-camera rendering
     const size = renderer.getSize(new THREE.Vector2());

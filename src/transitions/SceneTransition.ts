@@ -65,7 +65,7 @@ export class SceneTransition {
 
   constructor(renderer: THREE.WebGLRenderer) {
     this.renderer = renderer;
-    this.easingFunction = Easing.CUBIC_EASE_IN_OUT;
+    this.easingFunction = Easing.cubicInOut;
 
     // Create render targets for dual-scene rendering
     const size = renderer.getSize(new THREE.Vector2());

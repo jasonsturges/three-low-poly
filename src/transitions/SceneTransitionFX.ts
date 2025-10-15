@@ -84,7 +84,7 @@ export class SceneTransitionFX {
   constructor(renderer: THREE.WebGLRenderer, composer: any) {
     this.renderer = renderer;
     this.composer = composer;
-    this.easingFunction = Easing.CUBIC_EASE_IN_OUT;
+    this.easingFunction = Easing.cubicInOut;
 
     // Get existing passes (assumes user has set up RenderPass)
     this.renderPass = composer.passes.find((pass: any) => pass.constructor.name === 'RenderPass');

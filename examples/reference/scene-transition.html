@@ -265,7 +265,7 @@
         targetScene: "Desert",
         transitionType: "fade",
         duration: 1500,
-        easing: "CUBIC_EASE_IN_OUT",
+        easing: "cubicInOut",
         fadeColor: "#000000",
         progress: 0,
         startTransition: () => {
@@ -328,14 +328,14 @@
 
       transitionFolder
         .add(transitionSettings, "easing", [
-          "LINEAR",
-          "QUADRATIC_EASE_IN",
-          "QUADRATIC_EASE_OUT",
-          "QUADRATIC_EASE_IN_OUT",
-          "CUBIC_EASE_IN",
-          "CUBIC_EASE_OUT",
-          "CUBIC_EASE_IN_OUT",
-          "QUARTIC_EASE_IN_OUT",
+          "linear",
+          "quadIn",
+          "quadOut",
+          "quadInOut",
+          "cubicIn",
+          "cubicOut",
+          "cubicInOut",
+          "quartInOut",
         ])
         .name("Easing");
 

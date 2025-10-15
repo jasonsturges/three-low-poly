@@ -360,7 +360,7 @@
         targetScene: "Crystal Cave",
         transitionType: "bloom",
         duration: 2000,
-        easing: "CUBIC_EASE_IN_OUT",
+        easing: "cubicInOut",
         maxBloom: 15.0,
         maxBlur: 10.0,
         fadeColor: "#000000",
@@ -435,14 +435,14 @@
 
       transitionFolder
         .add(transitionSettings, "easing", [
-          "LINEAR",
-          "QUADRATIC_EASE_IN",
-          "QUADRATIC_EASE_OUT",
-          "QUADRATIC_EASE_IN_OUT",
-          "CUBIC_EASE_IN",
-          "CUBIC_EASE_OUT",
-          "CUBIC_EASE_IN_OUT",
-          "QUARTIC_EASE_IN_OUT",
+          "linear",
+          "quadIn",
+          "quadOut",
+          "quadInOut",
+          "cubicIn",
+          "cubicOut",
+          "cubicInOut",
+          "quartInOut",
         ])
         .name("Easing");
 
