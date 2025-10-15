@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly - Color Space</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x222222);
+
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 5, 30);
+
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      document.body.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+
+      const handlers = [];
+
+      renderer.setAnimationLoop(() => {
+        handlers.forEach((handler) => handler());
+        renderer.render(scene, camera);
+        controls.update();
+      });
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // Add lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+      directionalLight.position.set(5, 10, 5);
+      scene.add(directionalLight);
+
+      // Create a ground plane
+      const planeGeometry = new THREE.PlaneGeometry(100, 100);
+      const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x404040 });
+      const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+      plane.rotation.x = -Math.PI / 2;
+      plane.position.y = -2;
+      scene.add(plane);
+
+      // Create gradient planes to visualize gamma differences
+      function createGradientTexture(vertical = false) {
+        const canvas = document.createElement('canvas');
+        canvas.width = vertical ? 256 : 1024;
+        canvas.height = vertical ? 1024 : 256;
+        const ctx = canvas.getContext('2d');
+
+        const gradient = vertical
+          ? ctx.createLinearGradient(0, 0, 0, canvas.height)
+          : ctx.createLinearGradient(0, 0, canvas.width, 0);
+
+        gradient.addColorStop(0, '#000000');
+        gradient.addColorStop(1, '#ffffff');
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        return new THREE.CanvasTexture(canvas);
+      }
+
+      // Grayscale gradient (most visible difference)
+      const gradientTexture1 = createGradientTexture(false);
+      const gradientMaterial1 = new THREE.MeshBasicMaterial({ map: gradientTexture1 });
+      const gradientPlane1 = new THREE.Mesh(new THREE.PlaneGeometry(20, 4), gradientMaterial1);
+      gradientPlane1.position.set(0, 8, -10);
+      scene.add(gradientPlane1);
+
+      // Create objects with vibrant colors to show color space differences
+      const sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
+      const boxGeometry = new THREE.BoxGeometry(2, 2, 2);
+      const coneGeometry = new THREE.ConeGeometry(1, 2, 32);
+
+      const distances = [-40, -30, -20, -10, 0, 10, 20, 30, 40];
+      const colors = [
+        0xff0000, // Pure red
+        0x00ff00, // Pure green
+        0x0000ff, // Pure blue
+        0xffff00, // Yellow
+        0xff00ff, // Magenta
+        0x00ffff, // Cyan
+        0xff8800, // Orange
+        0x8800ff, // Purple
+        0x00ff88, // Teal
+      ];
+
+      distances.forEach((distance, index) => {
+        const color = colors[index % colors.length];
+
+        // Sphere
+        const sphereMaterial = new THREE.MeshStandardMaterial({
+          color: color,
+          roughness: 0.3,
+          metalness: 0.7
+        });
+        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        sphere.position.set(-5, 1, distance);
+        scene.add(sphere);
+
+        // Box
+        const boxMaterial = new THREE.MeshStandardMaterial({
+          color: color,
+          roughness: 0.3,
+          metalness: 0.7
+        });
+        const box = new THREE.Mesh(boxGeometry, boxMaterial);
+        box.position.set(0, 1, distance);
+        scene.add(box);
+
+        // Cone
+        const coneMaterial = new THREE.MeshStandardMaterial({
+          color: color,
+          roughness: 0.3,
+          metalness: 0.7
+        });
+        const cone = new THREE.Mesh(coneGeometry, coneMaterial);
+        cone.position.set(5, 1, distance);
+        scene.add(cone);
+      });
+
+      // Create color swatches showing different brightness levels
+      const swatchColors = [
+        0x111111, 0x333333, 0x555555, 0x777777, 0x999999, 0xbbbbbb, 0xdddddd, 0xffffff
+      ];
+
+      swatchColors.forEach((color, index) => {
+        const swatchMaterial = new THREE.MeshBasicMaterial({ color: color });
+        const swatchPlane = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), swatchMaterial);
+        swatchPlane.position.set((index - 3.5) * 2.5, 4, -10);
+        scene.add(swatchPlane);
+      });
+
+      // Color space controls
+      const colorSpaceSettings = {
+        colorSpace: "sRGB",
+      };
+
+      const colorSpaceTypes = {
+        "sRGB": THREE.SRGBColorSpace,
+        "Linear-sRGB": THREE.LinearSRGBColorSpace,
+      };
+
+      // Function to update color space
+      function updateColorSpace() {
+        renderer.outputColorSpace = colorSpaceTypes[colorSpaceSettings.colorSpace];
+
+        // Update texture color space to match
+        gradientTexture1.colorSpace = colorSpaceTypes[colorSpaceSettings.colorSpace];
+        gradientTexture1.needsUpdate = true;
+
+        // Force all materials to update
+        scene.traverse((object) => {
+          if (object.isMesh && object.material) {
+            object.material.needsUpdate = true;
+          }
+        });
+      }
+
+      // Set up lil-gui
+      const gui = new GUI();
+
+      const colorSpaceFolder = gui.addFolder("Color Space");
+
+      // Color space selector
+      colorSpaceFolder
+        .add(colorSpaceSettings, "colorSpace", Object.keys(colorSpaceTypes))
+        .name("Output Color Space")
+        .onChange(() => updateColorSpace());
+
+      colorSpaceFolder.open();
+
+      // Camera position controls for exploration
+      const cameraFolder = gui.addFolder("Camera Position");
+      cameraFolder.add(camera.position, "x", -50, 50).name("X");
+      cameraFolder.add(camera.position, "y", -50, 50).name("Y");
+      cameraFolder.add(camera.position, "z", -50, 50).name("Z");
+
+      // Light controls to see color space effects with different lighting
+      const lightFolder = gui.addFolder("Lighting");
+      lightFolder.add(directionalLight, "intensity", 0, 3).name("Light Intensity");
+      lightFolder.add(ambientLight, "intensity", 0, 2).name("Ambient Intensity");
+    </script>
+  </body>
+</html>
