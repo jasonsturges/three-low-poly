@@ -1,3 +1,10 @@
+/**
+ * Easing function type for interpolating values over time.
+ * @param t - Progress value between 0 and 1
+ * @returns Eased value between 0 and 1
+ */
+export type EasingFunction = (t: number) => number;
+
 export const sineEaseIn = (t:number) => 1 - Math.cos((t * Math.PI) / 2);
 export const sineEaseOut = (t:number) => Math.sin((t * Math.PI) / 2);
 export const sineEaseInOut = (t:number) => -0.5 * (Math.cos(Math.PI * t) - 1);
@@ -45,6 +52,31 @@ export const gaussian = (t:number) => {
 
 /**
  * Easing functions for interpolating values over time.
+ *
+ * Use these functions to create smooth animations and transitions.
+ * All easing functions take a value t between 0 and 1 and return an eased value between 0 and 1.
+ *
+ * @example
+ * ```typescript
+ * import { Easing } from 'three-low-poly';
+ *
+ * // Using with transitions
+ * cameraTransition.transitionTo(camera, {
+ *   duration: 1000,
+ *   easing: 'CUBIC_EASE_IN_OUT'  // String reference
+ * });
+ *
+ * // Using the function directly
+ * const progress = 0.5;
+ * const easedValue = Easing.CUBIC_EASE_IN_OUT(progress);
+ *
+ * // Custom animation loop
+ * const startValue = 0;
+ * const endValue = 100;
+ * const t = elapsedTime / duration;
+ * const easedT = Easing.SINE_EASE_IN_OUT(t);
+ * const currentValue = startValue + (endValue - startValue) * easedT;
+ * ```
  */
 export const Easing = {
   SINE_EASE_IN: sineEaseIn,

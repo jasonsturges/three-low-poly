@@ -1,10 +1,9 @@
 import * as THREE from 'three';
-
-export type EasingFunction = (t: number) => number;
+import { Easing, EasingFunction } from '../constants/Easing';
 
 export interface SceneTransitionFXOptions {
   duration?: number;
-  easing?: EasingFunction | keyof typeof SceneTransitionFX.Easings;
+  easing?: EasingFunction | keyof typeof Easing;
   onUpdate?: (progress: number) => void;
   onComplete?: () => void;
 }
@@ -82,24 +81,10 @@ export class SceneTransitionFX {
   private onUpdateCallback?: (progress: number) => void;
   private onCompleteCallback?: () => void;
 
-  /**
-   * Common easing functions for scene transitions
-   */
-  static Easings = {
-    linear: (t: number) => t,
-    easeInQuad: (t: number) => t * t,
-    easeOutQuad: (t: number) => t * (2 - t),
-    easeInOutQuad: (t: number) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t),
-    easeInCubic: (t: number) => t * t * t,
-    easeOutCubic: (t: number) => (--t) * t * t + 1,
-    easeInOutCubic: (t: number) => (t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1),
-    easeInOutQuart: (t: number) => (t < 0.5 ? 8 * t * t * t * t : 1 - 8 * (--t) * t * t * t),
-  };
-
   constructor(renderer: THREE.WebGLRenderer, composer: any) {
     this.renderer = renderer;
     this.composer = composer;
-    this.easingFunction = SceneTransitionFX.Easings.easeInOutCubic;
+    this.easingFunction = Easing.CUBIC_EASE_IN_OUT;
 
     // Get existing passes (assumes user has set up RenderPass)
     this.renderPass = composer.passes.find((pass: any) => pass.constructor.name === 'RenderPass');
@@ -237,7 +222,7 @@ export class SceneTransitionFX {
     // Set easing function
     if (options.easing) {
       if (typeof options.easing === 'string') {
-        this.easingFunction = SceneTransitionFX.Easings[options.easing];
+        this.easingFunction = Easing[options.easing];
       } else {
         this.easingFunction = options.easing;
       }

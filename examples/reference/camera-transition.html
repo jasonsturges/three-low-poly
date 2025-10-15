@@ -191,7 +191,7 @@
       const transitionSettings = {
         currentCamera: "Perspective",
         duration: 1000,
-        easing: "easeInOutCubic",
+        easing: "CUBIC_EASE_IN_OUT",
         transitionToPerspective: () => {
           cameraTransition.transitionTo(perspectiveCamera, {
             duration: transitionSettings.duration,
@@ -238,14 +238,14 @@
 
       cameraFolder
         .add(transitionSettings, "easing", [
-          "linear",
-          "easeInQuad",
-          "easeOutQuad",
-          "easeInOutQuad",
-          "easeInCubic",
-          "easeOutCubic",
-          "easeInOutCubic",
-          "easeInOutQuart",
+          "LINEAR",
+          "QUADRATIC_EASE_IN",
+          "QUADRATIC_EASE_OUT",
+          "QUADRATIC_EASE_IN_OUT",
+          "CUBIC_EASE_IN",
+          "CUBIC_EASE_OUT",
+          "CUBIC_EASE_IN_OUT",
+          "QUARTIC_EASE_IN_OUT",
         ])
         .name("Easing");
 

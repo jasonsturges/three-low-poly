@@ -1,10 +1,9 @@
 import * as THREE from 'three';
-
-export type EasingFunction = (t: number) => number;
+import { Easing, EasingFunction } from '../constants/Easing';
 
 export interface SceneTransitionOptions {
   duration?: number;
-  easing?: EasingFunction | keyof typeof SceneTransition.Easings;
+  easing?: EasingFunction | keyof typeof Easing;
   onUpdate?: (progress: number) => void;
   onComplete?: () => void;
 }
@@ -64,23 +63,9 @@ export class SceneTransition {
   private onUpdateCallback?: (progress: number) => void;
   private onCompleteCallback?: () => void;
 
-  /**
-   * Common easing functions for scene transitions
-   */
-  static Easings = {
-    linear: (t: number) => t,
-    easeInQuad: (t: number) => t * t,
-    easeOutQuad: (t: number) => t * (2 - t),
-    easeInOutQuad: (t: number) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t),
-    easeInCubic: (t: number) => t * t * t,
-    easeOutCubic: (t: number) => (--t) * t * t + 1,
-    easeInOutCubic: (t: number) => (t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1),
-    easeInOutQuart: (t: number) => (t < 0.5 ? 8 * t * t * t * t : 1 - 8 * (--t) * t * t * t),
-  };
-
   constructor(renderer: THREE.WebGLRenderer) {
     this.renderer = renderer;
-    this.easingFunction = SceneTransition.Easings.easeInOutCubic;
+    this.easingFunction = Easing.CUBIC_EASE_IN_OUT;
 
     // Create render targets for dual-scene rendering
     const size = renderer.getSize(new THREE.Vector2());
@@ -239,7 +224,7 @@ export class SceneTransition {
     // Set easing function
     if (options.easing) {
       if (typeof options.easing === 'string') {
-        this.easingFunction = SceneTransition.Easings[options.easing];
+        this.easingFunction = Easing[options.easing];
       } else {
         this.easingFunction = options.easing;
       }
