@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly - Tone Mapping</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x000000);
+
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 5, 30);
+
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.0;
+      document.body.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+
+      const handlers = [];
+
+      renderer.setAnimationLoop(() => {
+        handlers.forEach((handler) => handler());
+        renderer.render(scene, camera);
+        controls.update();
+      });
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // Add dramatic lighting for HDR effects
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 3.0);
+      directionalLight.position.set(5, 10, 5);
+      scene.add(directionalLight);
+
+      // Add a bright point light
+      const pointLight = new THREE.PointLight(0xffffff, 50, 100);
+      pointLight.position.set(0, 8, 0);
+      scene.add(pointLight);
+
+      // Create a ground plane
+      const planeGeometry = new THREE.PlaneGeometry(100, 100);
+      const planeMaterial = new THREE.MeshStandardMaterial({
+        color: 0x333333,
+        roughness: 0.8,
+        metalness: 0.2
+      });
+      const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+      plane.rotation.x = -Math.PI / 2;
+      plane.position.y = -2;
+      scene.add(plane);
+
+      // Create objects at various depths with vibrant colors and some emissive materials
+      const sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
+      const boxGeometry = new THREE.BoxGeometry(2, 2, 2);
+      const coneGeometry = new THREE.ConeGeometry(1, 2, 32);
+
+      const distances = [-40, -30, -20, -10, 0, 10, 20, 30, 40];
+      const colors = [0xff6b6b, 0x4ecdc4, 0xffe66d, 0xa8e6cf, 0xff8b94, 0xc7ceea, 0xffd3b6, 0xaa96da, 0xfcbad3];
+
+      distances.forEach((distance, index) => {
+        const color = colors[index % colors.length];
+        const isEmissive = index % 3 === 0; // Make every third row emissive
+
+        // Sphere
+        const sphereMaterial = new THREE.MeshStandardMaterial({
+          color: color,
+          emissive: isEmissive ? color : 0x000000,
+          emissiveIntensity: isEmissive ? 0.5 : 0,
+          roughness: 0.4,
+          metalness: 0.6
+        });
+        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        sphere.position.set(-5, 1, distance);
+        scene.add(sphere);
+
+        // Box
+        const boxMaterial = new THREE.MeshStandardMaterial({
+          color: color,
+          emissive: isEmissive ? color : 0x000000,
+          emissiveIntensity: isEmissive ? 0.5 : 0,
+          roughness: 0.4,
+          metalness: 0.6
+        });
+        const box = new THREE.Mesh(boxGeometry, boxMaterial);
+        box.position.set(0, 1, distance);
+        scene.add(box);
+
+        // Cone
+        const coneMaterial = new THREE.MeshStandardMaterial({
+          color: color,
+          emissive: isEmissive ? color : 0x000000,
+          emissiveIntensity: isEmissive ? 0.5 : 0,
+          roughness: 0.4,
+          metalness: 0.6
+        });
+        const cone = new THREE.Mesh(coneGeometry, coneMaterial);
+        cone.position.set(5, 1, distance);
+        scene.add(cone);
+      });
+
+      // Add some bright emissive spheres to show HDR effects
+      const emissiveSphereGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+      const emissiveColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff];
+
+      emissiveColors.forEach((color, index) => {
+        const material = new THREE.MeshStandardMaterial({
+          color: color,
+          emissive: color,
+          emissiveIntensity: 2.0,
+        });
+        const sphere = new THREE.Mesh(emissiveSphereGeometry, material);
+        const angle = (index / emissiveColors.length) * Math.PI * 2;
+        sphere.position.set(Math.cos(angle) * 8, 3, Math.sin(angle) * 8);
+        scene.add(sphere);
+      });
+
+      // Tone mapping controls
+      const toneMappingSettings = {
+        type: "ACESFilmic",
+        exposure: 1.0,
+      };
+
+      const toneMappingTypes = {
+        "None": THREE.NoToneMapping,
+        "Linear": THREE.LinearToneMapping,
+        "Reinhard": THREE.ReinhardToneMapping,
+        "Cineon": THREE.CineonToneMapping,
+        "ACESFilmic": THREE.ACESFilmicToneMapping,
+        "AgX": THREE.AgXToneMapping,
+        "Neutral": THREE.NeutralToneMapping,
+      };
+
+      // Function to update tone mapping
+      function updateToneMapping() {
+        renderer.toneMapping = toneMappingTypes[toneMappingSettings.type];
+        renderer.toneMappingExposure = toneMappingSettings.exposure;
+      }
+
+      // Set up lil-gui
+      const gui = new GUI();
+
+      const toneMappingFolder = gui.addFolder("Tone Mapping");
+
+      // Tone mapping type selector
+      toneMappingFolder
+        .add(toneMappingSettings, "type", Object.keys(toneMappingTypes))
+        .name("Tone Mapping Type")
+        .onChange(() => updateToneMapping());
+
+      // Exposure control
+      toneMappingFolder
+        .add(toneMappingSettings, "exposure", 0.0, 3.0)
+        .name("Exposure")
+        .onChange(() => updateToneMapping());
+
+      toneMappingFolder.open();
+
+      // Camera position controls for exploration
+      const cameraFolder = gui.addFolder("Camera Position");
+      cameraFolder.add(camera.position, "x", -50, 50).name("X");
+      cameraFolder.add(camera.position, "y", -50, 50).name("Y");
+      cameraFolder.add(camera.position, "z", -50, 50).name("Z");
+
+      // Light intensity controls to experiment with HDR
+      const lightFolder = gui.addFolder("Lighting");
+      lightFolder.add(directionalLight, "intensity", 0, 10).name("Directional Intensity");
+      lightFolder.add(pointLight, "intensity", 0, 100).name("Point Light Intensity");
+    </script>
+  </body>
+</html>
