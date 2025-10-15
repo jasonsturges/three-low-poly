@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly - Camera Transition</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+      import { CameraTransition } from "../../src/index.js";
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x1a1a2e);
+
+      // Create both cameras
+      const perspectiveCamera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      perspectiveCamera.position.set(10, 10, 10);
+      perspectiveCamera.lookAt(0, 0, 0);
+
+      const aspect = window.innerWidth / window.innerHeight;
+      // Calculate frustum size to match perspective camera's view at the target distance
+      // Using FOV and distance to approximate the visible area
+      const distance = Math.sqrt(10 * 10 + 10 * 10 + 10 * 10); // Distance from camera to origin
+      const vFOV = (perspectiveCamera.fov * Math.PI) / 180; // Convert to radians
+      const frustumSize = 2 * Math.tan(vFOV / 2) * distance;
+
+      const orthographicCamera = new THREE.OrthographicCamera(
+        (frustumSize * aspect) / -2,
+        (frustumSize * aspect) / 2,
+        frustumSize / 2,
+        frustumSize / -2,
+        0.1,
+        1000
+      );
+      orthographicCamera.position.set(10, 10, 10);
+      orthographicCamera.lookAt(0, 0, 0);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      document.body.appendChild(renderer.domElement);
+
+      // Create camera transition instance
+      const cameraTransition = new CameraTransition(
+        perspectiveCamera,
+        orthographicCamera,
+        renderer
+      );
+
+      // OrbitControls - we'll update which camera it uses
+      let controls = new OrbitControls(perspectiveCamera, renderer.domElement);
+      controls.enableDamping = true;
+
+      // Add lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+      directionalLight.position.set(5, 10, 5);
+      directionalLight.castShadow = true;
+      scene.add(directionalLight);
+
+      // Create a colorful scene to show off the transition
+      const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
+      scene.add(gridHelper);
+
+      const axesHelper = new THREE.AxesHelper(5);
+      scene.add(axesHelper);
+
+      // Create various shapes at different positions
+      const shapes = [];
+
+      // Cubes
+      for (let i = 0; i < 5; i++) {
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshStandardMaterial({
+          color: new THREE.Color().setHSL(i / 5, 0.8, 0.5),
+        });
+        const cube = new THREE.Mesh(geometry, material);
+        cube.position.set(i * 2 - 4, 0.5, -3);
+        cube.castShadow = true;
+        cube.receiveShadow = true;
+        scene.add(cube);
+        shapes.push(cube);
+      }
+
+      // Spheres
+      for (let i = 0; i < 5; i++) {
+        const geometry = new THREE.SphereGeometry(0.75, 32, 32);
+        const material = new THREE.MeshStandardMaterial({
+          color: new THREE.Color().setHSL(i / 5, 0.8, 0.6),
+        });
+        const sphere = new THREE.Mesh(geometry, material);
+        sphere.position.set(i * 2 - 4, 0.75, 0);
+        sphere.castShadow = true;
+        sphere.receiveShadow = true;
+        scene.add(sphere);
+        shapes.push(sphere);
+      }
+
+      // Cones
+      for (let i = 0; i < 5; i++) {
+        const geometry = new THREE.ConeGeometry(0.75, 2, 32);
+        const material = new THREE.MeshStandardMaterial({
+          color: new THREE.Color().setHSL(i / 5, 0.8, 0.7),
+        });
+        const cone = new THREE.Mesh(geometry, material);
+        cone.position.set(i * 2 - 4, 1, 3);
+        cone.castShadow = true;
+        cone.receiveShadow = true;
+        scene.add(cone);
+        shapes.push(cone);
+      }
+
+      // Torus
+      const torusGeometry = new THREE.TorusGeometry(2, 0.5, 16, 32);
+      const torusMaterial = new THREE.MeshStandardMaterial({ color: 0xff00ff });
+      const torus = new THREE.Mesh(torusGeometry, torusMaterial);
+      torus.position.set(0, 3, 0);
+      torus.rotation.x = Math.PI / 4;
+      torus.castShadow = true;
+      torus.receiveShadow = true;
+      scene.add(torus);
+
+      // Animation loop
+      function animate() {
+        // Rotate shapes
+        shapes.forEach((shape, index) => {
+          shape.rotation.y += 0.01 * (index % 2 === 0 ? 1 : -1);
+        });
+        torus.rotation.y += 0.005;
+        torus.rotation.z += 0.003;
+
+        // Update camera transition
+        const currentCamera = cameraTransition.update(scene);
+
+        // Update controls if camera changed
+        if (controls.object !== currentCamera && !cameraTransition.getIsTransitioning()) {
+          controls.dispose();
+          controls = new OrbitControls(currentCamera, renderer.domElement);
+          controls.enableDamping = true;
+        }
+
+        controls.update();
+
+        // Render with camera transition
+        cameraTransition.render(scene);
+
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+
+      window.addEventListener("resize", () => {
+        const aspect = window.innerWidth / window.innerHeight;
+
+        // Update perspective camera
+        perspectiveCamera.aspect = aspect;
+        perspectiveCamera.updateProjectionMatrix();
+
+        // Update orthographic camera
+        orthographicCamera.left = (frustumSize * aspect) / -2;
+        orthographicCamera.right = (frustumSize * aspect) / 2;
+        orthographicCamera.top = frustumSize / 2;
+        orthographicCamera.bottom = frustumSize / -2;
+        orthographicCamera.updateProjectionMatrix();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        cameraTransition.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // GUI Controls
+      const gui = new GUI();
+
+      const transitionSettings = {
+        currentCamera: "Perspective",
+        duration: 1000,
+        easing: "easeInOutCubic",
+        transitionToPerspective: () => {
+          cameraTransition.transitionTo(perspectiveCamera, {
+            duration: transitionSettings.duration,
+            easing: transitionSettings.easing,
+            onUpdate: (progress) => {
+              progressController.setValue(progress);
+            },
+            onComplete: () => {
+              transitionSettings.currentCamera = "Perspective";
+              cameraController.setValue("Perspective");
+            },
+          });
+        },
+        transitionToOrthographic: () => {
+          cameraTransition.transitionTo(orthographicCamera, {
+            duration: transitionSettings.duration,
+            easing: transitionSettings.easing,
+            onUpdate: (progress) => {
+              progressController.setValue(progress);
+            },
+            onComplete: () => {
+              transitionSettings.currentCamera = "Orthographic";
+              cameraController.setValue("Orthographic");
+            },
+          });
+        },
+        progress: 0,
+      };
+
+      const cameraFolder = gui.addFolder("Camera Transition");
+
+      const cameraController = cameraFolder
+        .add(transitionSettings, "currentCamera", ["Perspective", "Orthographic"])
+        .name("Camera Type")
+        .onChange((value) => {
+          if (value === "Perspective") {
+            transitionSettings.transitionToPerspective();
+          } else {
+            transitionSettings.transitionToOrthographic();
+          }
+        });
+
+      cameraFolder.add(transitionSettings, "duration", 100, 3000, 100).name("Duration (ms)");
+
+      cameraFolder
+        .add(transitionSettings, "easing", [
+          "linear",
+          "easeInQuad",
+          "easeOutQuad",
+          "easeInOutQuad",
+          "easeInCubic",
+          "easeOutCubic",
+          "easeInOutCubic",
+          "easeInOutQuart",
+        ])
+        .name("Easing");
+
+      const progressController = cameraFolder.add(transitionSettings, "progress", 0, 1).name("Progress").listen();
+      progressController.disable();
+
+      cameraFolder.open();
+
+      // Quick buttons
+      const buttonsFolder = gui.addFolder("Quick Actions");
+      buttonsFolder.add(transitionSettings, "transitionToPerspective").name("→ Perspective");
+      buttonsFolder.add(transitionSettings, "transitionToOrthographic").name("→ Orthographic");
+      buttonsFolder.open();
+    </script>
+  </body>
+</html>
