@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly - Scene Transition FX</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+      import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+      import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+      import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+      import { GlitchPass } from "three/addons/postprocessing/GlitchPass.js";
+      import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+      import { SceneTransitionFX } from "../../src/index.js";
+
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      camera.position.set(0, 5, 15);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.shadowMap.enabled = true;
+      document.body.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+
+      // ========================================
+      // Set up EffectComposer with passes
+      // ========================================
+      const composer = new EffectComposer(renderer);
+
+      // Initial render pass (will be updated by transition system)
+      const renderPass = new RenderPass(null, camera);
+      composer.addPass(renderPass);
+
+      // Bloom pass (disabled by default, enabled during bloom transitions)
+      const bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        0, // strength (controlled by transition)
+        0.4, // radius
+        0.85 // threshold
+      );
+      bloomPass.enabled = false;
+      composer.addPass(bloomPass);
+
+      // Glitch pass (disabled by default, enabled during glitch transitions)
+      const glitchPass = new GlitchPass();
+      glitchPass.enabled = false;
+      composer.addPass(glitchPass);
+
+      // Blur pass using custom shader (disabled by default, enabled during blur transitions)
+      const blurShader = {
+        uniforms: {
+          tDiffuse: { value: null },
+          kernelSize: { value: 0.0 },
+          resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform sampler2D tDiffuse;
+          uniform float kernelSize;
+          uniform vec2 resolution;
+          varying vec2 vUv;
+
+          void main() {
+            vec2 texelSize = 1.0 / resolution;
+            vec4 color = vec4(0.0);
+            float total = 0.0;
+
+            // Box blur with dynamic kernel size
+            float radius = kernelSize;
+            for (float x = -10.0; x <= 10.0; x += 1.0) {
+              for (float y = -10.0; y <= 10.0; y += 1.0) {
+                float weight = 1.0 - (abs(x) + abs(y)) / (radius * 2.0 + 1.0);
+                if (weight > 0.0 && abs(x) <= radius && abs(y) <= radius) {
+                  vec2 offset = vec2(x, y) * texelSize * 2.0;
+                  color += texture2D(tDiffuse, vUv + offset) * weight;
+                  total += weight;
+                }
+              }
+            }
+
+            gl_FragColor = total > 0.0 ? color / total : texture2D(tDiffuse, vUv);
+          }
+        `
+      };
+      const blurPass = new ShaderPass(blurShader);
+      blurPass.enabled = false;
+      composer.addPass(blurPass);
+
+      // Fade pass using custom shader (disabled by default, enabled during fade transitions)
+      const fadeShader = {
+        uniforms: {
+          tDiffuse: { value: null },
+          fadeAmount: { value: 0.0 },
+          fadeColor: { value: new THREE.Color(0x000000) }
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform sampler2D tDiffuse;
+          uniform float fadeAmount;
+          uniform vec3 fadeColor;
+          varying vec2 vUv;
+
+          void main() {
+            vec4 texel = texture2D(tDiffuse, vUv);
+            gl_FragColor = mix(texel, vec4(fadeColor, 1.0), fadeAmount);
+          }
+        `
+      };
+      const fadePass = new ShaderPass(fadeShader);
+      fadePass.enabled = false;
+      composer.addPass(fadePass);
+
+      // ========================================
+      // Create scene transition FX instance
+      // ========================================
+      const sceneTransitionFX = new SceneTransitionFX(renderer, composer);
+      sceneTransitionFX.setBloomPass(bloomPass);
+      sceneTransitionFX.setGlitchPass(glitchPass);
+      sceneTransitionFX.setBlurPass(blurPass);
+      sceneTransitionFX.setFadePass(fadePass);
+
+      // ========================================
+      // Scene 1: Neon City (Cyberpunk vibes)
+      // ========================================
+      const neonScene = new THREE.Scene();
+      neonScene.background = new THREE.Color(0x0a0a1e);
+      neonScene.fog = new THREE.Fog(0x0a0a1e, 10, 50);
+
+      const neonAmbient = new THREE.AmbientLight(0x440044, 0.3);
+      neonScene.add(neonAmbient);
+
+      const neonGround = new THREE.Mesh(
+        new THREE.PlaneGeometry(50, 50),
+        new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x220066, emissiveIntensity: 0.2 })
+      );
+      neonGround.rotation.x = -Math.PI / 2;
+      neonGround.receiveShadow = true;
+      neonScene.add(neonGround);
+
+      // Neon buildings with emissive colors
+      const neonColors = [0xff00ff, 0x00ffff, 0xff0066, 0x00ff88, 0xffff00];
+      for (let i = 0; i < 15; i++) {
+        const height = 3 + Math.random() * 10;
+        const building = new THREE.Mesh(
+          new THREE.BoxGeometry(2, height, 2),
+          new THREE.MeshStandardMaterial({
+            color: 0x222222,
+            emissive: neonColors[i % neonColors.length],
+            emissiveIntensity: 0.5,
+          })
+        );
+        building.position.set((Math.random() - 0.5) * 40, height / 2, (Math.random() - 0.5) * 40);
+        building.castShadow = true;
+        neonScene.add(building);
+
+        // Neon point lights
+        const light = new THREE.PointLight(neonColors[i % neonColors.length], 3, 15);
+        light.position.copy(building.position);
+        light.position.y += height / 2 + 2;
+        neonScene.add(light);
+      }
+
+      // ========================================
+      // Scene 2: Crystal Cave (Magical)
+      // ========================================
+      const crystalScene = new THREE.Scene();
+      crystalScene.background = new THREE.Color(0x1a1a2e);
+
+      const crystalAmbient = new THREE.AmbientLight(0x6666ff, 0.4);
+      crystalScene.add(crystalAmbient);
+
+      const crystalGround = new THREE.Mesh(
+        new THREE.PlaneGeometry(50, 50),
+        new THREE.MeshStandardMaterial({ color: 0x2a2a4a, roughness: 0.8 })
+      );
+      crystalGround.rotation.x = -Math.PI / 2;
+      crystalScene.add(crystalGround);
+
+      // Glowing crystals
+      for (let i = 0; i < 20; i++) {
+        const crystalHeight = 2 + Math.random() * 4;
+        const crystal = new THREE.Mesh(
+          new THREE.ConeGeometry(0.5, crystalHeight, 6),
+          new THREE.MeshStandardMaterial({
+            color: 0x4466ff,
+            emissive: 0x6688ff,
+            emissiveIntensity: 0.8,
+            transparent: true,
+            opacity: 0.9,
+          })
+        );
+        crystal.position.set((Math.random() - 0.5) * 40, crystalHeight / 2, (Math.random() - 0.5) * 40);
+        crystalScene.add(crystal);
+
+        // Crystal lights
+        const light = new THREE.PointLight(0x6688ff, 4, 10);
+        light.position.copy(crystal.position);
+        light.position.y += crystalHeight / 2;
+        crystalScene.add(light);
+      }
+
+      // ========================================
+      // Scene 3: Lava World (Fire and brimstone)
+      // ========================================
+      const lavaScene = new THREE.Scene();
+      lavaScene.background = new THREE.Color(0x220000);
+      lavaScene.fog = new THREE.Fog(0x220000, 10, 50);
+
+      const lavaAmbient = new THREE.AmbientLight(0xff3300, 0.3);
+      lavaScene.add(lavaAmbient);
+
+      const lavaGround = new THREE.Mesh(
+        new THREE.PlaneGeometry(50, 50, 20, 20),
+        new THREE.MeshStandardMaterial({
+          color: 0x330000,
+          emissive: 0xff3300,
+          emissiveIntensity: 0.5,
+        })
+      );
+      lavaGround.rotation.x = -Math.PI / 2;
+      // Animate lava
+      const lavaPositions = lavaGround.geometry.attributes.position;
+      const lavaUpdate = () => {
+        const time = Date.now() * 0.0005;
+        for (let i = 0; i < lavaPositions.count; i++) {
+          const x = lavaPositions.getX(i);
+          const z = lavaPositions.getZ(i);
+          const y = Math.sin(x * 0.3 + time) * Math.cos(z * 0.3 + time) * 0.8;
+          lavaPositions.setY(i, y);
+        }
+        lavaGround.geometry.attributes.position.needsUpdate = true;
+        lavaGround.geometry.computeVertexNormals();
+      };
+      lavaScene.add(lavaGround);
+
+      // Lava rocks
+      for (let i = 0; i < 12; i++) {
+        const rock = new THREE.Mesh(
+          new THREE.DodecahedronGeometry(1 + Math.random()),
+          new THREE.MeshStandardMaterial({
+            color: 0x331100,
+            emissive: 0xff4400,
+            emissiveIntensity: 0.3,
+            roughness: 0.9,
+          })
+        );
+        rock.position.set((Math.random() - 0.5) * 40, 1, (Math.random() - 0.5) * 40);
+        lavaScene.add(rock);
+      }
+
+      // ========================================
+      // Scene 4: Arctic (Ice and snow)
+      // ========================================
+      const arcticScene = new THREE.Scene();
+      arcticScene.background = new THREE.Color(0xddddff);
+      arcticScene.fog = new THREE.Fog(0xddddff, 10, 50);
+
+      const arcticAmbient = new THREE.AmbientLight(0xffffff, 0.8);
+      arcticScene.add(arcticAmbient);
+
+      const arcticGround = new THREE.Mesh(
+        new THREE.PlaneGeometry(50, 50),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7, metalness: 0.3 })
+      );
+      arcticGround.rotation.x = -Math.PI / 2;
+      arcticScene.add(arcticGround);
+
+      // Ice crystals / snow mounds
+      for (let i = 0; i < 15; i++) {
+        const mound = new THREE.Mesh(
+          new THREE.IcosahedronGeometry(1 + Math.random() * 1.5, 0),
+          new THREE.MeshStandardMaterial({
+            color: 0xeeeeff,
+            roughness: 0.3,
+            metalness: 0.5,
+            transparent: true,
+            opacity: 0.8,
+          })
+        );
+        mound.position.set((Math.random() - 0.5) * 40, 1, (Math.random() - 0.5) * 40);
+        arcticScene.add(mound);
+      }
+
+      // Initialize with neon scene
+      const scenes = {
+        "Neon City": neonScene,
+        "Crystal Cave": crystalScene,
+        "Lava World": lavaScene,
+        "Arctic": arcticScene,
+      };
+
+      const sceneNames = Object.keys(scenes);
+      sceneTransitionFX.setCurrentScene(neonScene);
+
+      // Animation loop
+      function animate() {
+        // Update lava animation
+        lavaUpdate();
+
+        // Update transition
+        sceneTransitionFX.update();
+
+        // Render with effect composer
+        sceneTransitionFX.render();
+
+        controls.update();
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
+        sceneTransitionFX.setSize(window.innerWidth, window.innerHeight);
+
+        bloomPass.setSize(window.innerWidth, window.innerHeight);
+        blurPass.uniforms.resolution.value.set(window.innerWidth, window.innerHeight);
+      });
+
+      // GUI Controls
+      const gui = new GUI();
+
+      const transitionSettings = {
+        currentScene: "Neon City",
+        targetScene: "Crystal Cave",
+        transitionType: "bloom",
+        duration: 2000,
+        easing: "easeInOutCubic",
+        maxBloom: 15.0,
+        maxBlur: 10.0,
+        fadeColor: "#000000",
+        progress: 0,
+        startTransition: () => {
+          const fromScene = scenes[transitionSettings.currentScene];
+          const toScene = scenes[transitionSettings.targetScene];
+
+          const options = {
+            duration: transitionSettings.duration,
+            easing: transitionSettings.easing,
+            onUpdate: (progress) => {
+              progressController.setValue(progress);
+            },
+            onComplete: () => {
+              transitionSettings.currentScene = transitionSettings.targetScene;
+              currentSceneController.setValue(transitionSettings.currentScene);
+              currentSceneController.updateDisplay();
+
+              // Auto-advance target to next scene
+              const currentIndex = sceneNames.indexOf(transitionSettings.currentScene);
+              const nextIndex = (currentIndex + 1) % sceneNames.length;
+              transitionSettings.targetScene = sceneNames[nextIndex];
+              targetSceneController.setValue(transitionSettings.targetScene);
+              targetSceneController.updateDisplay();
+            },
+          };
+
+          if (transitionSettings.transitionType === "bloom") {
+            sceneTransitionFX.bloom(fromScene, toScene, camera, {
+              ...options,
+              maxBloom: transitionSettings.maxBloom,
+            });
+          } else if (transitionSettings.transitionType === "blur") {
+            sceneTransitionFX.blur(fromScene, toScene, camera, {
+              ...options,
+              maxBlur: transitionSettings.maxBlur,
+            });
+          } else if (transitionSettings.transitionType === "fade") {
+            sceneTransitionFX.fade(fromScene, toScene, camera, {
+              ...options,
+              color: transitionSettings.fadeColor,
+            });
+          } else if (transitionSettings.transitionType === "glitch") {
+            sceneTransitionFX.glitch(fromScene, toScene, camera, options);
+          }
+        },
+      };
+
+      const sceneFolder = gui.addFolder("Scene Selection");
+
+      const currentSceneController = sceneFolder
+        .add(transitionSettings, "currentScene", sceneNames)
+        .name("Current Scene")
+        .listen();
+
+      const targetSceneController = sceneFolder
+        .add(transitionSettings, "targetScene", sceneNames)
+        .name("Target Scene");
+
+      sceneFolder.open();
+
+      const transitionFolder = gui.addFolder("Transition Settings");
+
+      transitionFolder
+        .add(transitionSettings, "transitionType", ["bloom", "blur", "fade", "glitch"])
+        .name("FX Type");
+
+      transitionFolder
+        .add(transitionSettings, "duration", 200, 4000, 100)
+        .name("Duration (ms)");
+
+      transitionFolder
+        .add(transitionSettings, "easing", [
+          "linear",
+          "easeInQuad",
+          "easeOutQuad",
+          "easeInOutQuad",
+          "easeInCubic",
+          "easeOutCubic",
+          "easeInOutCubic",
+          "easeInOutQuart",
+        ])
+        .name("Easing");
+
+      transitionFolder
+        .add(transitionSettings, "maxBloom", 0.5, 20.0, 0.5)
+        .name("Max Bloom Strength");
+
+      transitionFolder
+        .add(transitionSettings, "maxBlur", 1.0, 25.0, 0.5)
+        .name("Max Blur Radius");
+
+      transitionFolder
+        .addColor(transitionSettings, "fadeColor")
+        .name("Fade Color");
+
+      const progressController = transitionFolder
+        .add(transitionSettings, "progress", 0, 1)
+        .name("Progress")
+        .listen();
+      progressController.disable();
+
+      transitionFolder.open();
+
+      const actionFolder = gui.addFolder("Actions");
+      actionFolder.add(transitionSettings, "startTransition").name("▶ Start FX Transition");
+      actionFolder.open();
+    </script>
+  </body>
+</html>
