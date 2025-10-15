@@ -55,9 +55,11 @@ canvas {
 }
 
 .subtitle {
-  margin: 0 0 2rem 0;
+  margin: 0 auto 2rem auto;
   font-size: 1.25rem;
   color: var(--color-text-muted);
+  max-width: 700px;
+  line-height: 1.5;
 }
 
 .search-container {
@@ -83,9 +85,13 @@ canvas {
 
 /* Main Container */
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem 4rem 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
 }
 
 /* Section Cards */
@@ -96,6 +102,22 @@ canvas {
   margin-bottom: 1.5rem;
   overflow: hidden;
   transition: border-color 0.3s;
+}
+
+/* Two-column layout helpers */
+.left-column {
+  grid-column: 1;
+}
+
+.right-column {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.right-column .section-card {
+  margin-bottom: 0;
 }
 
 .section-card:hover {
@@ -209,6 +231,13 @@ a:hover {
 
   .container {
     padding: 0 1rem 2rem 1rem;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .left-column,
+  .right-column {
+    grid-column: 1;
   }
 
   .category-grid {
