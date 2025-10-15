@@ -244,6 +244,14 @@ export { NightSkybox } from "./skybox/NightSkybox";
 export { checkerboardTexture } from "./textures/checkerboard";
 
 //------------------------------
+//  Transitions
+//------------------------------
+
+export { CameraTransition, type CameraTransitionOptions } from "./transitions/CameraTransition";
+export { SceneTransition, type SceneTransitionOptions } from "./transitions/SceneTransition";
+export { SceneTransitionFX, type SceneTransitionFXOptions } from "./transitions/SceneTransitionFX";
+
+//------------------------------
 //  Utils
 //------------------------------
 
