@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly - Antialiasing</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+      import GUI from "lil-gui";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+      import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+      import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+      import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+      import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
+      import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x1a1a2e);
+
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 5, 15);
+
+      // Check URL parameter for MSAA
+      const urlParams = new URLSearchParams(window.location.search);
+      const useMSAA = urlParams.get('msaa') === 'true';
+
+      const renderer = new THREE.WebGLRenderer({ antialias: useMSAA });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      document.body.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+
+      // Set up post-processing
+      const composer = new EffectComposer(renderer);
+      const renderPass = new RenderPass(scene, camera);
+      composer.addPass(renderPass);
+
+      // FXAA Pass
+      const fxaaPass = new ShaderPass(FXAAShader);
+      const pixelRatio = renderer.getPixelRatio();
+      fxaaPass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * pixelRatio);
+      fxaaPass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * pixelRatio);
+      fxaaPass.enabled = false;
+      composer.addPass(fxaaPass);
+
+      // SMAA Pass
+      const smaaPass = new SMAAPass(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
+      smaaPass.enabled = false;
+      composer.addPass(smaaPass);
+
+      const handlers = [];
+      let useComposer = false;
+
+      renderer.setAnimationLoop(() => {
+        handlers.forEach((handler) => handler());
+
+        if (useComposer) {
+          composer.render();
+        } else {
+          renderer.render(scene, camera);
+        }
+
+        controls.update();
+      });
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
+
+        const pixelRatio = renderer.getPixelRatio();
+        fxaaPass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * pixelRatio);
+        fxaaPass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * pixelRatio);
+
+        smaaPass.setSize(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
+      });
+
+      // Add lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+      directionalLight.position.set(5, 10, 5);
+      scene.add(directionalLight);
+
+      // Create geometry that shows aliasing clearly
+      // Thin lines and edges are most prone to aliasing
+
+      // Grid of thin wireframe cubes
+      const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+      const wireframeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00ffff,
+        wireframe: true
+      });
+
+      for (let x = -3; x <= 3; x++) {
+        for (let z = -3; z <= 3; z++) {
+          const cube = new THREE.Mesh(cubeGeometry, wireframeMaterial.clone());
+          cube.position.set(x * 2, 0.5, z * 2);
+          cube.rotation.y = Math.random() * Math.PI;
+          scene.add(cube);
+        }
+      }
+
+      // Rotating icosahedron (lots of edges)
+      const icosahedronGeometry = new THREE.IcosahedronGeometry(1.5, 0);
+      const icosahedronWireframe = new THREE.Mesh(
+        icosahedronGeometry,
+        new THREE.MeshBasicMaterial({ color: 0xff00ff, wireframe: true })
+      );
+      icosahedronWireframe.position.set(0, 3, 0);
+      scene.add(icosahedronWireframe);
+
+      // Animate the icosahedron
+      handlers.push(() => {
+        icosahedronWireframe.rotation.x += 0.01;
+        icosahedronWireframe.rotation.y += 0.01;
+      });
+
+      // Thin torus knot (complex geometry with thin edges)
+      const torusKnotGeometry = new THREE.TorusKnotGeometry(1, 0.15, 100, 16);
+      const torusKnotWireframe = new THREE.Mesh(
+        torusKnotGeometry,
+        new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true })
+      );
+      torusKnotWireframe.position.set(-5, 2, -5);
+      scene.add(torusKnotWireframe);
+
+      handlers.push(() => {
+        torusKnotWireframe.rotation.x += 0.005;
+        torusKnotWireframe.rotation.y += 0.01;
+      });
+
+      // Create some solid objects with thin edges at angles
+      const edgeGeometry = new THREE.BoxGeometry(0.1, 4, 0.1);
+      const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0xff6b6b });
+
+      for (let i = 0; i < 8; i++) {
+        const edge = new THREE.Mesh(edgeGeometry, edgeMaterial.clone());
+        const angle = (i / 8) * Math.PI * 2;
+        edge.position.set(Math.cos(angle) * 6, 2, Math.sin(angle) * 6);
+        edge.rotation.z = angle;
+        edge.material.color.setHSL(i / 8, 0.8, 0.6);
+        scene.add(edge);
+      }
+
+      // Add a ground plane with a grid pattern
+      const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
+      scene.add(gridHelper);
+
+      // Text showing current AA method (using sprites)
+      const textCanvas = document.createElement('canvas');
+      textCanvas.width = 512;
+      textCanvas.height = 128;
+      const textContext = textCanvas.getContext('2d');
+
+      const textTexture = new THREE.CanvasTexture(textCanvas);
+      const textMaterial = new THREE.SpriteMaterial({ map: textTexture });
+      const textSprite = new THREE.Sprite(textMaterial);
+      textSprite.position.set(0, 6, 0);
+      textSprite.scale.set(8, 2, 1);
+      scene.add(textSprite);
+
+      function updateTextSprite(text) {
+        textContext.fillStyle = '#000000';
+        textContext.fillRect(0, 0, textCanvas.width, textCanvas.height);
+        textContext.fillStyle = '#ffffff';
+        textContext.font = 'bold 48px Arial';
+        textContext.textAlign = 'center';
+        textContext.textBaseline = 'middle';
+        textContext.fillText(text, textCanvas.width / 2, textCanvas.height / 2);
+        textTexture.needsUpdate = true;
+      }
+
+      // Antialiasing settings
+      const aaSettings = {
+        method: useMSAA ? "MSAA (Native)" : "None",
+      };
+
+      const aaMethods = {
+        "None": () => {
+          if (useMSAA) {
+            // Need to reload without MSAA
+            window.location.search = '';
+            return;
+          }
+          useComposer = false;
+          fxaaPass.enabled = false;
+          smaaPass.enabled = false;
+          updateTextSprite("No Antialiasing");
+        },
+        "MSAA (Native)": () => {
+          if (!useMSAA) {
+            // Need to reload with MSAA
+            window.location.search = '?msaa=true';
+            return;
+          }
+          useComposer = false;
+          fxaaPass.enabled = false;
+          smaaPass.enabled = false;
+          updateTextSprite("MSAA (Multisample)");
+        },
+        "FXAA (Post)": () => {
+          useComposer = true;
+          fxaaPass.enabled = true;
+          smaaPass.enabled = false;
+          updateTextSprite("FXAA (Fast Approximate)");
+        },
+        "SMAA (Post)": () => {
+          useComposer = true;
+          fxaaPass.enabled = false;
+          smaaPass.enabled = true;
+          updateTextSprite("SMAA (Subpixel Morphological)");
+        },
+      };
+
+      // Function to update AA method
+      function updateAAMethod() {
+        const method = aaMethods[aaSettings.method];
+        if (method) {
+          method();
+        }
+      }
+
+      // Set up lil-gui
+      const gui = new GUI();
+
+      const aaFolder = gui.addFolder("Antialiasing");
+
+      aaFolder
+        .add(aaSettings, "method", Object.keys(aaMethods))
+        .name("AA Method")
+        .onChange(() => updateAAMethod());
+
+      aaFolder.open();
+
+      // Info section
+      const infoFolder = gui.addFolder("Info");
+      const info = {
+        msaaInfo: "Hardware-based, highest quality",
+        fxaaInfo: "Fast, post-process blur",
+        smaaInfo: "Better quality post-process",
+      };
+
+      const cameraFolder = gui.addFolder("Camera Position");
+      cameraFolder.add(camera.position, "x", -30, 30).name("X");
+      cameraFolder.add(camera.position, "y", -30, 30).name("Y");
+      cameraFolder.add(camera.position, "z", -30, 30).name("Z");
+
+      // Initialize with current method
+      updateAAMethod();
+    </script>
+  </body>
+</html>
