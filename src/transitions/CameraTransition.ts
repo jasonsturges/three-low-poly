@@ -42,7 +42,7 @@ export class CameraTransition {
   private transitionDuration = 1000;
   private transitionStartTime = 0;
   private isTransitioning = false;
-  private easingFunction: EasingFunction = CameraTransition.Easings.easeInOutCubic;
+  private easingFunction: EasingFunction;
 
   private renderTargetA: THREE.WebGLRenderTarget;
   private renderTargetB: THREE.WebGLRenderTarget;
@@ -76,6 +76,7 @@ export class CameraTransition {
     this.orthographicCamera = orthographicCamera;
     this.renderer = renderer;
     this.currentCamera = perspectiveCamera;
+    this.easingFunction = CameraTransition.Easings.easeInOutCubic;
 
     // Create render targets for dual-camera rendering
     const size = renderer.getSize(new THREE.Vector2());

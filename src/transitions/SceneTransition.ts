@@ -50,7 +50,7 @@ export class SceneTransition {
   private transitionStartTime = 0;
   private isTransitioning = false;
   private transitionType: 'fade' | 'crossfade' | 'blur' | null = null;
-  private easingFunction: EasingFunction = SceneTransition.Easings.easeInOutCubic;
+  private easingFunction: EasingFunction;
 
   private renderTargetA: THREE.WebGLRenderTarget;
   private renderTargetB: THREE.WebGLRenderTarget;
@@ -80,6 +80,7 @@ export class SceneTransition {
 
   constructor(renderer: THREE.WebGLRenderer) {
     this.renderer = renderer;
+    this.easingFunction = SceneTransition.Easings.easeInOutCubic;
 
     // Create render targets for dual-scene rendering
     const size = renderer.getSize(new THREE.Vector2());

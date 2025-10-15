@@ -66,7 +66,7 @@ export class SceneTransitionFX {
   private transitionStartTime = 0;
   private isTransitioning = false;
   private transitionType: 'blur' | 'bloom' | 'fade' | 'glitch' | null = null;
-  private easingFunction: EasingFunction = SceneTransitionFX.Easings.easeInOutCubic;
+  private easingFunction: EasingFunction;
 
   private renderPass: any; // RenderPass
   private bloomPass: any; // UnrealBloomPass
@@ -99,6 +99,7 @@ export class SceneTransitionFX {
   constructor(renderer: THREE.WebGLRenderer, composer: any) {
     this.renderer = renderer;
     this.composer = composer;
+    this.easingFunction = SceneTransitionFX.Easings.easeInOutCubic;
 
     // Get existing passes (assumes user has set up RenderPass)
     this.renderPass = composer.passes.find((pass: any) => pass.constructor.name === 'RenderPass');
