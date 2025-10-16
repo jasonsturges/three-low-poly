@@ -3,8 +3,8 @@
  *    /|         /|    ▀█▀ █ █ █▀▄ █▀▀ █▀▀   █   ▄▀▄ █   █   █▀▄ ▄▀▄ █   █ █
  *   5 -------- 6 |     █  █▀█ █▀▄ ██▄ ██▄   █▄▄ ▀▄▀ ▀▄▀▄▀   █▀  ▀▄▀ █▄▄ ▀▄▀
  *   | |        | |
- *   | 0 -------|-3    Author: Jason Sturges
- *   |/         |/
+ *   | 0 -------|-3    Procedurally generated low poly modeling for Three.js
+ *   |/         |/     Author: Jason Sturges
  *   1 -------- 2
  */
 
