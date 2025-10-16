@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly - Coordinate System Reference</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import GUI from "lil-gui";
+      import {
+        Scene,
+        PerspectiveCamera,
+        WebGLRenderer,
+        Color,
+        DirectionalLight,
+        AmbientLight,
+        AxesHelper,
+        GridHelper,
+        ArrowHelper,
+        Vector3,
+        BoxGeometry,
+        SphereGeometry,
+        Mesh,
+        MeshStandardMaterial,
+      } from "three";
+      import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+      import { createTextSprite } from "../utils/TextFactory.js";
+
+      // Scene setup
+      const scene = new Scene();
+      scene.background = new Color(0x1a1a1a);
+
+      const camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(8, 6, 8);
+
+      const renderer = new WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Orbit controls
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+
+      // Lighting
+      const ambientLight = new AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+
+      const directionalLight = new DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(5, 10, 5);
+      scene.add(directionalLight);
+
+      // Parameters
+      const params = {
+        showGrid: true,
+        showAxes: true,
+        showAxisLabels: true,
+        showAxisArrows: true,
+        showCoordinateMarkers: true,
+        gridSize: 20,
+        markerInterval: 2,
+        axisLength: 10,
+      };
+
+      // Grid helper
+      const gridHelper = new GridHelper(params.gridSize, params.gridSize, 0x444444, 0x222222);
+      scene.add(gridHelper);
+
+      // Axes helper (standard Three.js - Red=X, Green=Y, Blue=Z)
+      const axesHelper = new AxesHelper(params.axisLength);
+      scene.add(axesHelper);
+
+      // Create custom axis arrows with labels
+      const arrowHelpers = [];
+      const axisLabels = [];
+
+      function createAxisArrow(direction, color, label, length = 10) {
+        const origin = new Vector3(0, 0, 0);
+        const arrow = new ArrowHelper(direction, origin, length, color, 0.5, 0.3);
+        scene.add(arrow);
+        arrowHelpers.push(arrow);
+
+        // Label at the end of the arrow
+        const labelSprite = createTextSprite(label, {
+          size: 64,
+          scale: 0.8,
+          color: `#${color.toString(16).padStart(6, '0')}`,
+          x: direction.x * (length + 0.8),
+          y: direction.y * (length + 0.8),
+          z: direction.z * (length + 0.8),
+        });
+        scene.add(labelSprite);
+        axisLabels.push(labelSprite);
+
+        // Positive direction label
+        const posLabel = createTextSprite(`+${label}`, {
+          size: 48,
+          scale: 0.5,
+          color: `#${color.toString(16).padStart(6, '0')}`,
+          x: direction.x * (length * 0.7),
+          y: direction.y * (length * 0.7),
+          z: direction.z * (length * 0.7),
+        });
+        scene.add(posLabel);
+        axisLabels.push(posLabel);
+      }
+
+      // X-axis (Red) - Left/Right
+      createAxisArrow(new Vector3(1, 0, 0), 0xff0000, "X", params.axisLength);
+      createAxisArrow(new Vector3(-1, 0, 0), 0x880000, "-X", params.axisLength);
+
+      // Y-axis (Green) - Up/Down
+      createAxisArrow(new Vector3(0, 1, 0), 0x00ff00, "Y", params.axisLength);
+      createAxisArrow(new Vector3(0, -1, 0), 0x008800, "-Y", params.axisLength);
+
+      // Z-axis (Blue) - Forward/Back
+      createAxisArrow(new Vector3(0, 0, 1), 0x0000ff, "Z", params.axisLength);
+      createAxisArrow(new Vector3(0, 0, -1), 0x000088, "-Z", params.axisLength);
+
+      // Origin marker
+      const originGeometry = new SphereGeometry(0.2, 16, 16);
+      const originMaterial = new MeshStandardMaterial({
+        color: 0xffff00,
+        emissive: 0xffff00,
+        emissiveIntensity: 0.5,
+      });
+      const originMarker = new Mesh(originGeometry, originMaterial);
+      scene.add(originMarker);
+
+      // Origin label
+      const originLabel = createTextSprite("(0,0,0)", {
+        size: 64,
+        scale: 0.6,
+        color: "#ffff00",
+        x: 0,
+        y: 0.7,
+        z: 0,
+      });
+      scene.add(originLabel);
+
+      // Create coordinate markers along each axis
+      const coordinateMarkers = [];
+      const coordinateLabels = [];
+
+      function createCoordinateMarkers() {
+        // Clear existing markers
+        coordinateMarkers.forEach(m => scene.remove(m));
+        coordinateLabels.forEach(l => scene.remove(l));
+        coordinateMarkers.length = 0;
+        coordinateLabels.length = 0;
+
+        const markerGeometry = new BoxGeometry(0.15, 0.15, 0.15);
+        const interval = params.markerInterval;
+
+        // X-axis markers
+        for (let x = -params.axisLength; x <= params.axisLength; x += interval) {
+          if (x === 0) continue;
+
+          const material = new MeshStandardMaterial({
+            color: x > 0 ? 0xff0000 : 0x880000
+          });
+          const marker = new Mesh(markerGeometry, material);
+          marker.position.set(x, 0, 0);
+          scene.add(marker);
+          coordinateMarkers.push(marker);
+
+          const label = createTextSprite(`${x}`, {
+            size: 48,
+            scale: 0.4,
+            color: x > 0 ? "#ff0000" : "#880000",
+            x: x,
+            y: -0.6,
+            z: 0,
+          });
+          scene.add(label);
+          coordinateLabels.push(label);
+        }
+
+        // Y-axis markers
+        for (let y = -params.axisLength; y <= params.axisLength; y += interval) {
+          if (y === 0) continue;
+
+          const material = new MeshStandardMaterial({
+            color: y > 0 ? 0x00ff00 : 0x008800
+          });
+          const marker = new Mesh(markerGeometry, material);
+          marker.position.set(0, y, 0);
+          scene.add(marker);
+          coordinateMarkers.push(marker);
+
+          const label = createTextSprite(`${y}`, {
+            size: 48,
+            scale: 0.4,
+            color: y > 0 ? "#00ff00" : "#008800",
+            x: 0,
+            y: y,
+            z: -0.6,
+          });
+          scene.add(label);
+          coordinateLabels.push(label);
+        }
+
+        // Z-axis markers
+        for (let z = -params.axisLength; z <= params.axisLength; z += interval) {
+          if (z === 0) continue;
+
+          const material = new MeshStandardMaterial({
+            color: z > 0 ? 0x0000ff : 0x000088
+          });
+          const marker = new Mesh(markerGeometry, material);
+          marker.position.set(0, 0, z);
+          scene.add(marker);
+          coordinateMarkers.push(marker);
+
+          const label = createTextSprite(`${z}`, {
+            size: 48,
+            scale: 0.4,
+            color: z > 0 ? "#0000ff" : "#000088",
+            x: 0.6,
+            y: 0,
+            z: z,
+          });
+          scene.add(label);
+          coordinateLabels.push(label);
+        }
+      }
+
+      createCoordinateMarkers();
+
+      // GUI
+      const gui = new GUI();
+      gui.title("Coordinate System");
+
+      gui.add(params, "showGrid").name("Show Grid").onChange(v => {
+        gridHelper.visible = v;
+      });
+
+      gui.add(params, "showAxes").name("Show Axes Helper").onChange(v => {
+        axesHelper.visible = v;
+      });
+
+      gui.add(params, "showAxisLabels").name("Show Axis Labels").onChange(v => {
+        axisLabels.forEach(label => label.visible = v);
+      });
+
+      gui.add(params, "showAxisArrows").name("Show Axis Arrows").onChange(v => {
+        arrowHelpers.forEach(arrow => arrow.visible = v);
+      });
+
+      gui.add(params, "showCoordinateMarkers").name("Show Coordinate Markers").onChange(v => {
+        coordinateMarkers.forEach(marker => marker.visible = v);
+        coordinateLabels.forEach(label => label.visible = v);
+      });
+
+      gui.add(params, "gridSize", 10, 50, 1).name("Grid Size").onChange(v => {
+        scene.remove(gridHelper);
+        const newGrid = new GridHelper(v, v, 0x444444, 0x222222);
+        scene.add(newGrid);
+        Object.assign(gridHelper, newGrid);
+      });
+
+      gui.add(params, "markerInterval", 1, 5, 1).name("Marker Interval").onChange(() => {
+        createCoordinateMarkers();
+      });
+
+      gui.add(params, "axisLength", 5, 20, 1).name("Axis Length").onChange(() => {
+        // Would need to recreate arrows
+        createCoordinateMarkers();
+      });
+
+      // Info panel
+      const infoFolder = gui.addFolder("Coordinate System Info");
+      infoFolder.close();
+
+      const info = {
+        xAxis: "Red: Left (-) to Right (+)",
+        yAxis: "Green: Down (-) to Up (+)",
+        zAxis: "Blue: Back (-) to Forward (+)",
+        origin: "Yellow sphere at (0,0,0)",
+        rightHand: "Three.js uses right-hand coordinate system",
+      };
+
+      infoFolder.add(info, "xAxis").name("X-Axis").disable();
+      infoFolder.add(info, "yAxis").name("Y-Axis").disable();
+      infoFolder.add(info, "zAxis").name("Z-Axis").disable();
+      infoFolder.add(info, "origin").name("Origin").disable();
+      infoFolder.add(info, "rightHand").name("System").disable();
+
+      // Animation loop
+      function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      console.log("=== Three.js Coordinate System ===");
+      console.log("X-Axis (Red): Left (-X) to Right (+X)");
+      console.log("Y-Axis (Green): Down (-Y) to Up (+Y)");
+      console.log("Z-Axis (Blue): Back (-Z) to Forward (+Z)");
+      console.log("Origin: (0, 0, 0) marked with yellow sphere");
+      console.log("Right-hand coordinate system");
+      console.log("Grid on XZ plane (horizontal ground)");
+
+      animate();
+    </script>
+  </body>
+</html>
