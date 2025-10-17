@@ -12,7 +12,7 @@ export const flattenBrush = <T extends BufferGeometry>(
   targetHeight: number,
   strength: number,
   direction: Vector3 = Direction.UP,
-  falloffFn: (distance: number, radius: number) => number = Falloff.LINEAR
+  falloffFn: (distance: number, radius: number) => number = Falloff.linear
 ): void => {
   const positions = geometry.attributes.position;
   for (let i = 0; i < positions.count; i++) {

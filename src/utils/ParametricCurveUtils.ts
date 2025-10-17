@@ -180,7 +180,7 @@ export const createSigmoidCurvePoints = (start: Vector2, end: Vector2, a: number
   let curvePoints = [];
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
-    const x = ParametricCurve.SIGMOID(t, a) * (end.x - start.x) + start.x;
+    const x = ParametricCurve.sigmoid(t, a) * (end.x - start.x) + start.x;
     const y = start.y + t * (end.y - start.y);
     curvePoints.push(new Vector2(x, y));
   }

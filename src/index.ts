@@ -42,9 +42,9 @@ export { Axis } from "./constants/Axis";
 export { BoxSide } from "./constants/BoxSide";
 export { ColorPalette } from "./constants/ColorPalette";
 export { Direction } from "./constants/Direction";
-export * from "./constants/Easing";
-export { Falloff } from "./constants/Falloff";
-export * from "./constants/ParametricCurve";
+export { Easing, type EasingFunction } from "./constants/Easing";
+export { Falloff, type FalloffFunction } from "./constants/Falloff";
+export { ParametricCurve } from "./constants/ParametricCurve";
 
 //------------------------------
 //  Effects

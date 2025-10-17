@@ -10,7 +10,7 @@ export const spikeBrush = <T extends BufferGeometry>(
   radius: number,
   strength: number,
   inward: boolean = false,
-  falloffFn: (distance: number, radius: number) => number = Falloff.LINEAR
+  falloffFn: (distance: number, radius: number) => number = Falloff.linear
 ): void => {
   const positions = geometry.attributes.position;
   for (let i = 0; i < positions.count; i++) {

@@ -11,7 +11,7 @@ export const twistBrush = <T extends BufferGeometry>(
   radius: number,
   strength: number,
   direction: Vector3 = Direction.UP,
-  falloffFn: (distance: number, radius: number) => number = Falloff.LINEAR
+  falloffFn: (distance: number, radius: number) => number = Falloff.linear
 ): void => {
   const positions = geometry.attributes.position;
   const quaternion = new Quaternion();
