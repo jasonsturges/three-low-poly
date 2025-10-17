@@ -16,12 +16,25 @@
   <body>
     <script type="module">
       import GUI from "lil-gui";
-      import { GridHelper, MeshStandardMaterial } from "three";
+      import { GridHelper, MeshStandardMaterial, DirectionalLight, AmbientLight } from "three";
       import { createBrickWall } from "../../../src/index.js";
       import { createOrbitScene } from "../../utils/orbitScene.js";
 
       const { scene, camera } = createOrbitScene();
-      camera.position.set(0, 0, 15);
+      camera.position.set(0, 5, 15);
+
+      // Add additional lighting for better brick visibility
+      const frontLight = new DirectionalLight(0xffffff, 0.8);
+      frontLight.position.set(0, 5, 10);
+      scene.add(frontLight);
+
+      const backLight = new DirectionalLight(0xffffff, 0.3);
+      backLight.position.set(0, 2, -5);
+      scene.add(backLight);
+
+      // Increase ambient light
+      const extraAmbient = new AmbientLight(0x404040, 0.3);
+      scene.add(extraAmbient);
 
       // Default parameters
       const params = {
@@ -47,6 +60,8 @@
         brickColors: [0x8b4513, 0xa0522d, 0x6b3410, 0x9b5523],
       });
 
+      // Lift wall slightly above grid
+      brickWall.position.y = 4;
       scene.add(brickWall);
 
       // Add grid helper for scale reference
@@ -92,6 +107,7 @@
           brickColors: [0x8b4513, 0xa0522d, 0x6b3410, 0x9b5523],
         });
 
+        brickWall.position.y = 4;
         scene.add(brickWall);
       }
     </script>
