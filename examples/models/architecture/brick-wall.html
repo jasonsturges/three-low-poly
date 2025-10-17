@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Low Poly - Brick Wall Example</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import GUI from "lil-gui";
+      import { GridHelper, MeshStandardMaterial } from "three";
+      import { createBrickWall } from "../../../src/index.js";
+      import { createOrbitScene } from "../../utils/orbitScene.js";
+
+      const { scene, camera } = createOrbitScene();
+      camera.position.set(0, 0, 15);
+
+      // Default parameters
+      const params = {
+        wallWidth: 10,
+        wallHeight: 8,
+        brickWidth: 0.8,
+        brickHeight: 0.3,
+        brickDepth: 0.4,
+        mortarGap: 0.05,
+        offsetPattern: true,
+        colorVariation: true,
+        positionVariation: 0.02,
+        rotationVariation: 0.01,
+      };
+
+      let brickWall = createBrickWall({
+        ...params,
+        material: new MeshStandardMaterial({
+          color: 0x8b4513,
+          roughness: 0.9,
+          metalness: 0.1
+        }),
+        brickColors: [0x8b4513, 0xa0522d, 0x6b3410, 0x9b5523],
+      });
+
+      scene.add(brickWall);
+
+      // Add grid helper for scale reference
+      const gridHelper = new GridHelper(20, 20, 0x444444, 0x222222);
+      scene.add(gridHelper);
+
+      const gui = new GUI();
+      gui.title("Brick Wall");
+
+      const wallFolder = gui.addFolder("Wall Dimensions");
+      wallFolder.add(params, "wallWidth", 2, 20).name("Width").step(0.5).onChange(update);
+      wallFolder.add(params, "wallHeight", 2, 16).name("Height").step(0.5).onChange(update);
+      wallFolder.open();
+
+      const brickFolder = gui.addFolder("Brick Dimensions");
+      brickFolder.add(params, "brickWidth", 0.3, 1.5).name("Width").step(0.1).onChange(update);
+      brickFolder.add(params, "brickHeight", 0.1, 0.6).name("Height").step(0.05).onChange(update);
+      brickFolder.add(params, "brickDepth", 0.2, 0.8).name("Depth").step(0.1).onChange(update);
+      brickFolder.add(params, "mortarGap", 0, 0.2).name("Mortar Gap").step(0.01).onChange(update);
+
+      const patternFolder = gui.addFolder("Pattern & Variation");
+      patternFolder.add(params, "offsetPattern").name("Running Bond").onChange(update);
+      patternFolder.add(params, "colorVariation").name("Color Variation").onChange(update);
+      patternFolder.add(params, "positionVariation", 0, 0.1).name("Position Variation").step(0.01).onChange(update);
+      patternFolder.add(params, "rotationVariation", 0, 0.1).name("Rotation Variation").step(0.01).onChange(update);
+
+      function update() {
+        scene.remove(brickWall);
+        brickWall.geometry.dispose();
+        if (Array.isArray(brickWall.material)) {
+          brickWall.material.forEach(m => m.dispose());
+        } else {
+          brickWall.material.dispose();
+        }
+
+        brickWall = createBrickWall({
+          ...params,
+          material: new MeshStandardMaterial({
+            color: 0x8b4513,
+            roughness: 0.9,
+            metalness: 0.1
+          }),
+          brickColors: [0x8b4513, 0xa0522d, 0x6b3410, 0x9b5523],
+        });
+
+        scene.add(brickWall);
+      }
+    </script>
+  </body>
+</html>

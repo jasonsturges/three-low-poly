@@ -58,6 +58,7 @@ export { LeafEffect, type LeafEffectOptions } from "./effects/LeafEffect";
 //------------------------------
 
 export * from "./factory/BookFactory";
+export * from "./factory/BrickWallFactory";
 export * from "./factory/HexagonalTileFactory";
 
 //------------------------------
@@ -66,6 +67,7 @@ export * from "./factory/HexagonalTileFactory";
 
 // Architecture
 export { BifurcatedStaircaseGeometry } from "./geometry/architecture/BifurcatedStaircaseGeometry";
+export { BrickGeometry } from "./geometry/architecture/BrickGeometry";
 export { DioramaGeometry } from "./geometry/architecture/DioramaGeometry";
 export { LShapedStaircaseGeometry } from "./geometry/architecture/LShapedStaircaseGeometry";
 export { SpiralStaircaseGeometry } from "./geometry/architecture/SpiralStaircaseGeometry";
