@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { Easing, EasingFunction } from '../constants/Easing';
+import { crossfadeShader } from '../shaders/crossfadeShader';
+import { fadeTransitionSceneShader } from '../shaders/fadeTransitionSceneShader';
 
 export interface SceneTransitionOptions {
   duration?: number;
@@ -84,34 +86,8 @@ export class SceneTransition {
         mixRatio: { value: 0.0 },
         fadeColor: { value: new THREE.Color(0x000000) },
       },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform sampler2D tDiffuseA;
-        uniform sampler2D tDiffuseB;
-        uniform float mixRatio;
-        uniform vec3 fadeColor;
-        varying vec2 vUv;
-
-        void main() {
-          vec4 texelA = texture2D(tDiffuseA, vUv);
-          vec4 texelB = texture2D(tDiffuseB, vUv);
-
-          // Fade out to color, then fade in from color
-          float fadeOut = smoothstep(0.0, 0.5, mixRatio) * 2.0;
-          float fadeIn = smoothstep(0.5, 1.0, mixRatio) * 2.0 - 1.0;
-
-          vec3 colorA = mix(texelA.rgb, fadeColor, clamp(fadeOut, 0.0, 1.0));
-          vec3 colorB = mix(fadeColor, texelB.rgb, clamp(fadeIn, 0.0, 1.0));
-
-          gl_FragColor = vec4(mix(colorA, colorB, step(0.5, mixRatio)), 1.0);
-        }
-      `,
+      vertexShader: fadeTransitionSceneShader.vertexShader,
+      fragmentShader: fadeTransitionSceneShader.fragmentShader,
     });
 
     // Crossfade material (direct blend)
@@ -121,25 +97,8 @@ export class SceneTransition {
         tDiffuseB: { value: this.renderTargetB.texture },
         mixRatio: { value: 0.0 },
       },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform sampler2D tDiffuseA;
-        uniform sampler2D tDiffuseB;
-        uniform float mixRatio;
-        varying vec2 vUv;
-
-        void main() {
-          vec4 texelA = texture2D(tDiffuseA, vUv);
-          vec4 texelB = texture2D(tDiffuseB, vUv);
-          gl_FragColor = mix(texelA, texelB, mixRatio);
-        }
-      `,
+      vertexShader: crossfadeShader.vertexShader,
+      fragmentShader: crossfadeShader.fragmentShader,
     });
 
     const blendPlane = new THREE.PlaneGeometry(2, 2);

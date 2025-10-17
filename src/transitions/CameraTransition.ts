@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Easing, EasingFunction } from '../constants/Easing';
+import { crossfadeShader } from '../shaders/crossfadeShader';
 
 export interface CameraTransitionOptions {
   duration?: number;
@@ -78,29 +79,8 @@ export class CameraTransition {
         tDiffuseB: { value: this.renderTargetB.texture },
         mixRatio: { value: 0.0 },
       },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform sampler2D tDiffuseA;
-        uniform sampler2D tDiffuseB;
-        uniform float mixRatio;
-        varying vec2 vUv;
-
-        void main() {
-          vec4 texelA = texture2D(tDiffuseA, vUv);
-          vec4 texelB = texture2D(tDiffuseB, vUv);
-          // Use smoother blending that preserves brightness
-          float blend = mixRatio;
-          gl_FragColor = texelA * (1.0 - blend) + texelB * blend;
-          // Maintain proper alpha
-          gl_FragColor.a = max(texelA.a, texelB.a);
-        }
-      `,
+      vertexShader: crossfadeShader.vertexShader,
+      fragmentShader: crossfadeShader.fragmentShader,
     });
 
     const blendPlane = new THREE.PlaneGeometry(2, 2);

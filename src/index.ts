@@ -226,8 +226,11 @@ export { addInstanceColor } from "./shaders/addInstanceColor";
 export { addWaterDisplacement, updateWaterDisplacementTime } from "./shaders/addWaterDisplacement";
 export { addNoiseDisplacement, updateNoiseDisplacementTime } from "./shaders/addNoiseDisplacement";
 export { atmosphericShader, type AtmosphericShaderUniforms } from "./shaders/atmosphericShader";
+export { blurTransitionShader } from "./shaders/blurTransitionShader";
+export { crossfadeShader } from "./shaders/crossfadeShader";
 export { daySkyShader, type DaySkyUniforms } from "./shaders/daySkyShader";
 export { fadeShader } from "./shaders/fadeShader";
+export { fadeTransitionSceneShader } from "./shaders/fadeTransitionSceneShader";
 export { moonShader } from "./shaders/moonShader";
 export { nightSkyShader, type NightSkyUniforms } from "./shaders/nightSkyShader";
 

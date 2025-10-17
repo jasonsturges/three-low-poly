@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { Easing, EasingFunction } from '../constants/Easing';
+import { blurTransitionShader } from '../shaders/blurTransitionShader';
+import { fadeShader } from '../shaders/fadeShader';
 
 export interface SceneTransitionFXOptions {
   duration?: number;
@@ -34,6 +36,9 @@ export interface FadeTransitionOptions extends SceneTransitionFXOptions {
  * - Fade: Classic fade through a color (black, white, or custom)
  * - Glitch: Digital distortion/glitch effect with heavy artifacts
  *
+ * Built-in shader passes for blur and fade are automatically created. For bloom and glitch
+ * effects, you'll need to provide those passes manually.
+ *
  * Note: Requires post-processing imports from three/addons
  *
  * @example
@@ -44,12 +49,22 @@ export interface FadeTransitionOptions extends SceneTransitionFXOptions {
  * import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
  *
  * const composer = new EffectComposer(renderer);
- * const sceneTransitionFX = new SceneTransitionFX(renderer, composer);
+ * const renderPass = new RenderPass(sceneA, camera);
+ * composer.addPass(renderPass);
  *
- * sceneTransitionFX.bloom(sceneA, sceneB, camera, {
- *   duration: 2000,
- *   maxBloom: 15.0
- * });
+ * // Pass ShaderPass to enable built-in blur and fade effects
+ * const sceneTransitionFX = new SceneTransitionFX(renderer, composer, ShaderPass);
+ *
+ * // Blur and fade transitions work out of the box
+ * sceneTransitionFX.blur(sceneA, sceneB, camera, { duration: 2000 });
+ * sceneTransitionFX.fade(sceneA, sceneB, camera, { duration: 2000, color: 0x000000 });
+ *
+ * // For bloom, provide the pass manually
+ * const bloomPass = new UnrealBloomPass(new THREE.Vector2(width, height), 0, 0.4, 0.85);
+ * bloomPass.enabled = false;
+ * composer.addPass(bloomPass);
+ * sceneTransitionFX.setBloomPass(bloomPass);
+ * sceneTransitionFX.bloom(sceneA, sceneB, camera, { duration: 2000, maxBloom: 15.0 });
  * ```
  */
 export class SceneTransitionFX {
@@ -70,7 +85,7 @@ export class SceneTransitionFX {
   private renderPass: any; // RenderPass
   private bloomPass: any; // UnrealBloomPass
   private glitchPass: any; // GlitchPass
-  private blurPass: any; // KawaseBlurPass or similar
+  private blurPass: any; // ShaderPass for blur effect
   private fadePass: any; // ShaderPass for fade effect
 
   private maxBloomStrength = 3.0;
@@ -81,13 +96,60 @@ export class SceneTransitionFX {
   private onUpdateCallback?: (progress: number) => void;
   private onCompleteCallback?: () => void;
 
-  constructor(renderer: THREE.WebGLRenderer, composer: any) {
+  constructor(renderer: THREE.WebGLRenderer, composer: any, ShaderPass?: any) {
     this.renderer = renderer;
     this.composer = composer;
     this.easingFunction = Easing.cubicInOut;
 
     // Get existing passes (assumes user has set up RenderPass)
     this.renderPass = composer.passes.find((pass: any) => pass.constructor.name === 'RenderPass');
+
+    // Create default blur and fade passes if ShaderPass is provided
+    if (ShaderPass) {
+      this.createDefaultPasses(ShaderPass);
+    }
+  }
+
+  /**
+   * Create default shader passes for blur and fade effects
+   */
+  private createDefaultPasses(ShaderPass: any): void {
+    try {
+      // Create blur pass with proper uniforms
+      const blurShaderCopy = {
+        uniforms: {
+          tDiffuse: { value: null },
+          kernelSize: { value: 0.0 },
+          resolution: {
+            value: new THREE.Vector2(
+              this.renderer.domElement.width,
+              this.renderer.domElement.height
+            )
+          }
+        },
+        vertexShader: blurTransitionShader.vertexShader,
+        fragmentShader: blurTransitionShader.fragmentShader,
+      };
+      this.blurPass = new ShaderPass(blurShaderCopy);
+      this.blurPass.enabled = false;
+      this.composer.addPass(this.blurPass);
+
+      // Create fade pass with proper uniforms
+      const fadeShaderCopy = {
+        uniforms: {
+          tDiffuse: { value: null },
+          fadeAmount: { value: 0.0 },
+          fadeColor: { value: new THREE.Color(0x000000) },
+        },
+        vertexShader: fadeShader.vertexShader,
+        fragmentShader: fadeShader.fragmentShader,
+      };
+      this.fadePass = new ShaderPass(fadeShaderCopy);
+      this.fadePass.enabled = false;
+      this.composer.addPass(this.fadePass);
+    } catch (e) {
+      console.warn('SceneTransitionFX: Could not create default passes:', e);
+    }
   }
 
   /**
@@ -356,6 +418,11 @@ export class SceneTransitionFX {
    */
   setSize(width: number, height: number): void {
     this.composer.setSize(width, height);
+
+    // Update blur pass resolution uniform if it exists
+    if (this.blurPass && this.blurPass.uniforms && this.blurPass.uniforms.resolution) {
+      this.blurPass.uniforms.resolution.value.set(width, height);
+    }
   }
 
   /**
