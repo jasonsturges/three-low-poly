@@ -16,6 +16,12 @@ export interface SceneOptions {
   background?: ColorRepresentation;
   /** Initial camera position. Defaults to `[0, 0, 5]`. */
   cameraPosition?: [number, number, number];
+  /**
+   * Native MSAA. This is a WebGL context-creation attribute and is immutable
+   * after the renderer exists, so toggling it means disposing this scene and
+   * building a fresh one (see the antialiasing example). Defaults to `true`.
+   */
+  antialias?: boolean;
 }
 
 export interface SceneHandle {
@@ -48,7 +54,7 @@ export function createScene(container: HTMLElement, options: SceneOptions = {}):
   const [cx, cy, cz] = options.cameraPosition ?? [0, 0, 5];
   camera.position.set(cx, cy, cz);
 
-  const renderer = new WebGLRenderer({ antialias: true });
+  const renderer = new WebGLRenderer({ antialias: options.antialias ?? true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setClearColor(0x000000);
   renderer.shadowMap.enabled = true;
