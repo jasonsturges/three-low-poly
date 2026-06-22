@@ -21,8 +21,8 @@ export const createCubicCurvePoints = (start: Vector2, control1: Vector2, contro
   let curvePoints = [];
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
-    const x = ParametricCurve.CUBIC(t, start.x, control1.x, control2.x, end.x);
-    const y = ParametricCurve.CUBIC(t, start.y, control1.y, control2.y, end.y);
+    const x = ParametricCurve.cubic(t, start.x, control1.x, control2.x, end.x);
+    const y = ParametricCurve.cubic(t, start.y, control1.y, control2.y, end.y);
     curvePoints.push(new Vector2(x, y));
   }
   return curvePoints;
@@ -47,7 +47,7 @@ export const createDampedCurvePoints = (start: Vector2, end: Vector2, damping: n
   let curvePoints = [];
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
-    const x = ParametricCurve.DAMPED(t, damping) * (end.x - start.x) + start.x;
+    const x = ParametricCurve.damped(t, damping) * (end.x - start.x) + start.x;
     const y = start.y + t * (end.y - start.y);
     curvePoints.push(new Vector2(x, y));
   }
@@ -74,7 +74,7 @@ export const createExponentialCurvePoints = (start: Vector2, end: Vector2, base:
   let curvePoints = [];
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
-    const x = ParametricCurve.EXPONENTIAL(t, base, factor) * (end.x - start.x) + start.x;
+    const x = ParametricCurve.exponential(t, base, factor) * (end.x - start.x) + start.x;
     const y = start.y + t * (end.y - start.y);
     curvePoints.push(new Vector2(x, y));
   }
@@ -101,7 +101,7 @@ export const createLogarithmicCurvePoints = (start: Vector2, end: Vector2, base:
   let curvePoints = [];
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
-    const x = ParametricCurve.LOGARITHMIC(t, base, factor) * (end.x - start.x) + start.x;
+    const x = ParametricCurve.logarithmic(t, base, factor) * (end.x - start.x) + start.x;
     const y = start.y + t * (end.y - start.y);
     curvePoints.push(new Vector2(x, y));
   }
@@ -155,8 +155,8 @@ export const createQuadraticCurvePoints = (start: Vector2, control: Vector2, end
   let curvePoints = [];
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
-    const x = ParametricCurve.QUADRATIC(t, start.x, control.x, end.x);
-    const y = ParametricCurve.QUADRATIC(t, start.y, control.y, end.y);
+    const x = ParametricCurve.quadratic(t, start.x, control.x, end.x);
+    const y = ParametricCurve.quadratic(t, start.y, control.y, end.y);
     curvePoints.push(new Vector2(x, y));
   }
   return curvePoints;
