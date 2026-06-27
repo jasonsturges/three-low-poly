@@ -1,10 +1,13 @@
 :root {
-  --bg: #14151a;
-  --panel: #1c1e26;
-  --border: #2c2f3a;
-  --text: #d7dae0;
-  --muted: #8a8f9c;
-  --accent: #e64d4d;
+  --bg: #111318;
+  --panel: #181b22;
+  --panel-raised: #20242d;
+  --border: #2a2f3a;
+  --text: #e5e7eb;
+  --muted: #8b93a3;
+  --brand: #ff665e;
+  --interaction: #8aa4ff;
+  --interaction-soft: rgba(138, 164, 255, 0.14);
 }
 
 * {
@@ -17,11 +20,11 @@ body {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  font: 14px/1.5 system-ui, sans-serif;
+  font: 14px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 #layout {
-  display: flex;
+  position: relative;
   height: 100vh;
   overflow: hidden;
 }
@@ -30,83 +33,250 @@ body {
   Sidebar
 ------------------------------*/
 #sidebar {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  bottom: 12px;
+  left: 12px;
   width: 280px;
-  flex: 0 0 280px;
   display: flex;
   flex-direction: column;
-  background: var(--panel);
-  border-right: 1px solid var(--border);
+  background:
+    radial-gradient(circle at 0 0, rgba(255, 102, 94, 0.07), transparent 230px),
+    rgba(22, 25, 33, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.105);
+  border-radius: 13px;
   overflow: hidden;
-  transition: margin-left 0.2s ease;
+  box-shadow:
+    0 22px 55px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(22px) saturate(135%);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+  transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
 }
 
 #layout.collapsed #sidebar {
-  margin-left: -280px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(calc(-100% - 24px));
 }
 
 #sidebar-header {
-  padding: 16px;
+  padding: 18px 16px 16px;
   border-bottom: 1px solid var(--border);
 }
 
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 34px;
+  margin: 0 0 17px 42px; /* clear the fixed toggle button */
+}
+
+.brand-mark {
+  position: relative;
+  width: 29px;
+  height: 29px;
+  flex: 0 0 29px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9px;
+  background: linear-gradient(145deg, #ff756d, #d83d43);
+  box-shadow: 0 5px 16px rgba(230, 77, 77, 0.22);
+  transform: rotate(8deg);
+}
+
+.brand-mark::before,
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.brand-mark::before {
+  width: 1px;
+  height: 25px;
+  left: 13px;
+  top: 1px;
+  transform: rotate(-38deg);
+}
+
+.brand-mark::after {
+  width: 23px;
+  height: 1px;
+  left: 2px;
+  top: 14px;
+  transform: rotate(24deg);
+}
+
 #sidebar-header h1 {
-  margin: 0 0 12px;
-  padding-left: 40px; /* clear the fixed toggle button */
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+}
+
+#sidebar-header p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+}
+
+.search-field {
+  position: relative;
+  display: block;
+}
+
+.search-icon {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 12px;
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid var(--muted);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translateY(-58%);
+}
+
+.search-icon::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 1.5px;
+  right: -4px;
+  bottom: -2px;
+  border-radius: 2px;
+  background: var(--muted);
+  transform: rotate(45deg);
 }
 
 #search {
   width: 100%;
-  padding: 7px 10px;
+  height: 38px;
+  padding: 8px 12px 8px 35px;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
+  border-radius: 9px;
+  background: rgba(9, 11, 15, 0.52);
   color: var(--text);
   font: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+#search::placeholder {
+  color: #747b89;
 }
 
 #search:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--interaction);
+  background: rgba(9, 11, 15, 0.78);
+  box-shadow: 0 0 0 3px rgba(138, 164, 255, 0.11);
 }
 
 #nav {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 0 32px;
+  padding: 8px 10px 32px;
+  scrollbar-color: #373c47 transparent;
+  scrollbar-width: thin;
 }
 
-.nav-category {
-  padding: 14px 16px 4px;
-  font-size: 11px;
-  font-weight: 600;
+/* Sub-heading tier (depth >= 1): a nested taxonomy label. Uppercase keeps it
+   visually distinct from example links; the rail carries the hierarchy. */
+.nav-heading {
+  position: relative;
+  padding: 11px 10px 5px;
+  padding-left: calc(10px + var(--indent, 0) * 15px);
+  margin: 2px 0 0;
+  color: #929aaa;
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1.25;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
+  letter-spacing: 0.09em;
+}
+
+/* Top tier (depth 0): the bold uppercase section heading — no rule. */
+.nav-heading[data-depth="0"] {
+  padding-top: 15px;
+  padding-bottom: 5px;
+  letter-spacing: 0.115em;
+  color: #717988;
+}
+
+.nav-section {
+  position: relative;
+}
+
+.nav-section:not([data-depth="0"])::before {
+  content: "";
+  position: absolute;
+  left: calc(9px + (var(--indent, 1) - 1) * 15px);
+  top: 6px;
+  bottom: 5px;
+  width: 1px;
+  background: var(--border);
 }
 
 .nav-link {
+  position: relative;
   display: block;
-  padding: 6px 16px 6px 24px;
-  color: var(--text);
+  margin: 0;
+  padding: 5px 10px;
+  padding-left: calc(11px + var(--indent, 1) * 15px);
+  border-radius: 7px;
+  color: #cdd1d9;
   text-decoration: none;
-  border-left: 2px solid transparent;
+  transition: color 0.13s ease, background 0.13s ease, transform 0.13s ease;
 }
 
 .nav-link:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.nav-link.active {
-  border-left-color: var(--accent);
-  background: rgba(230, 77, 77, 0.1);
+  background: rgba(255, 255, 255, 0.045);
   color: #fff;
 }
 
+.nav-link:focus-visible {
+  outline: 2px solid var(--interaction);
+  outline-offset: -2px;
+}
+
+.nav-link.active {
+  background: linear-gradient(90deg, var(--interaction-soft), rgba(138, 164, 255, 0.055));
+  color: #fff;
+  font-weight: 550;
+  box-shadow: inset 0 0 0 1px rgba(138, 164, 255, 0.14);
+}
+
+.nav-link.active::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--interaction);
+  box-shadow: 0 0 8px rgba(138, 164, 255, 0.72);
+  transform: translateY(-50%);
+}
+
 .nav-link.hidden,
-.nav-category.hidden {
+.nav-section.hidden {
+  display: none;
+}
+
+.nav-empty {
+  padding: 18px 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.nav-empty[hidden] {
   display: none;
 }
 
@@ -114,9 +284,9 @@ body {
   Viewer
 ------------------------------*/
 #viewer {
-  position: relative;
-  flex: 1;
-  min-width: 0;
+  position: absolute;
+  z-index: 0;
+  inset: 0;
   background: #000;
 }
 
@@ -138,15 +308,66 @@ body {
 ------------------------------*/
 #toggle {
   position: fixed;
-  top: 12px;
-  left: 12px;
+  top: 20px;
+  left: 20px;
   z-index: 10;
   width: 34px;
   height: 34px;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  background: rgba(28, 30, 38, 0.85);
+  display: grid;
+  place-content: center;
+  gap: 3px;
+  border-radius: 9px;
+  background: rgba(31, 35, 44, 0.72);
   color: var(--text);
-  font-size: 16px;
   cursor: pointer;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+#toggle span {
+  width: 13px;
+  height: 1.5px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+#toggle:hover {
+  border-color: #444b58;
+  background: rgba(39, 43, 53, 0.92);
+}
+
+#toggle:focus-visible {
+  outline: 2px solid var(--interaction);
+  outline-offset: 2px;
+}
+
+/* Match lil-gui to the floating tool-surface treatment without coupling the
+   examples themselves to GUI setup details. */
+.lil-gui.lil-root.lil-auto-place,
+.lil-gui.lil-root.autoPlace {
+  top: 12px;
+  right: 12px;
+  max-height: calc(100% - 24px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.105);
+  border-radius: 11px;
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+  --background-color: rgba(22, 25, 33, 0.76);
+  --title-background-color: rgba(12, 14, 19, 0.64);
+  --widget-color: rgba(69, 75, 91, 0.96);
+  --hover-color: rgba(75, 82, 100, 0.98);
+  --focus-color: rgba(75, 82, 100, 0.98);
+  --number-color: #b7c5ff;
+  --widget-border-radius: 4px;
+}
+
+.lil-controller.lil-color input[type="text"] {
+  color: var(--number-color);
 }

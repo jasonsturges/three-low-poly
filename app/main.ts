@@ -7,17 +7,24 @@ interface ExampleModule {
 }
 
 interface ExampleEntry {
-  id: string; // e.g. "fence/wrought-iron-fence"
-  category: string; // e.g. "Fence"
-  title: string; // e.g. "Wrought Iron Fence"
+  id: string; // full path id, e.g. "models/bottles/wine-bottle"
+  title: string; // leaf label, e.g. "Wine Bottle"
+  segments: string[]; // path split, e.g. ["models", "bottles", "wine-bottle"]
   load: () => Promise<ExampleModule>;
+}
+
+/** A folder node in the sidebar tree: child folders plus leaf examples. */
+interface TreeGroup {
+  label: string;
+  groups: Map<string, TreeGroup>;
+  examples: ExampleEntry[];
 }
 
 /**
  * Auto-discovery: every `*.ts` under `examples/` becomes a gallery entry, lazily
  * loaded. Adding an example is just dropping a file in — there is no index to
- * maintain. Category and title are derived from the path; an example may export
- * `meta` to override the title.
+ * maintain. The sidebar mirrors the folder structure at any depth (see the tree
+ * build below); titles are derived from the path.
  */
 const modules = import.meta.glob<ExampleModule>("./examples/**/*.ts");
 
@@ -27,11 +34,11 @@ const titleCase = (segment: string): string =>
 const examples: ExampleEntry[] = Object.entries(modules)
   .map(([path, load]): ExampleEntry => {
     const id = path.replace(/^\.\/examples\//, "").replace(/\.ts$/, "");
-    const [category, ...rest] = id.split("/");
+    const segments = id.split("/");
     return {
       id,
-      category: titleCase(category),
-      title: titleCase(rest.join(" / ") || category),
+      title: titleCase(segments[segments.length - 1]),
+      segments,
       load: load as () => Promise<ExampleModule>,
     };
   })
@@ -45,45 +52,85 @@ const layout = document.getElementById("layout")!;
 const nav = document.getElementById("nav")!;
 const viewer = document.getElementById("viewer")!;
 const search = document.getElementById("search") as HTMLInputElement;
+document.getElementById("example-count")!.textContent = String(examples.length);
 
 const linkById = new Map<string, HTMLAnchorElement>();
 
-let currentCategory = "";
+// Build a tree mirroring the folders: every path segment but the last is a
+// folder (a heading); the last is the example (a link). Depth is arbitrary, so
+// a flat `fence/x` and a nested `models/bottles/x` coexist naturally.
+const tree: TreeGroup = { label: "", groups: new Map(), examples: [] };
 for (const example of examples) {
-  if (example.category !== currentCategory) {
-    currentCategory = example.category;
-    const heading = document.createElement("div");
-    heading.className = "nav-category";
-    heading.textContent = currentCategory;
-    heading.dataset.category = currentCategory;
-    nav.appendChild(heading);
+  let node = tree;
+  for (const folder of example.segments.slice(0, -1)) {
+    let child = node.groups.get(folder);
+    if (!child) {
+      child = { label: titleCase(folder), groups: new Map(), examples: [] };
+      node.groups.set(folder, child);
+    }
+    node = child;
   }
+  node.examples.push(example);
+}
+
+function createLink(example: ExampleEntry, indent: number): HTMLAnchorElement {
   const link = document.createElement("a");
   link.className = "nav-link";
   link.href = `#/${example.id}`;
   link.textContent = example.title;
   link.dataset.id = example.id;
-  link.dataset.search = `${example.category} ${example.title}`.toLowerCase();
-  nav.appendChild(link);
+  link.dataset.search = `${example.id.replace(/\//g, " ")} ${example.title}`.toLowerCase();
+  link.style.setProperty("--indent", String(indent));
   linkById.set(example.id, link);
+  return link;
 }
+
+// A section wraps its heading, its leaf links, and any nested sections, so the
+// whole subtree hides as a unit during search. `depth` drives the heading tier
+// (0 = uppercase section, 1+ = softer sub-heading) and the indent.
+function renderGroup(group: TreeGroup, depth: number): HTMLElement {
+  const section = document.createElement("div");
+  section.className = "nav-section";
+  section.dataset.depth = String(depth);
+  section.style.setProperty("--indent", String(depth));
+
+  const heading = document.createElement("div");
+  heading.className = "nav-heading";
+  heading.dataset.depth = String(depth);
+  heading.style.setProperty("--indent", String(depth));
+  heading.textContent = group.label;
+  section.appendChild(heading);
+
+  for (const example of group.examples) section.appendChild(createLink(example, depth + 1));
+  for (const child of group.groups.values()) section.appendChild(renderGroup(child, depth + 1));
+  return section;
+}
+
+for (const example of tree.examples) nav.appendChild(createLink(example, 0));
+for (const group of tree.groups.values()) nav.appendChild(renderGroup(group, 0));
+
+const noResults = document.createElement("div");
+noResults.className = "nav-empty";
+noResults.textContent = "No examples found";
+noResults.setAttribute("role", "status");
+noResults.hidden = true;
+nav.appendChild(noResults);
 
 search.addEventListener("input", () => {
   const term = search.value.trim().toLowerCase();
+  let visibleCount = 0;
   for (const link of linkById.values()) {
     const match = !term || (link.dataset.search ?? "").includes(term);
     link.classList.toggle("hidden", !match);
+    if (match) visibleCount++;
   }
-  // Hide category headings that have no visible links beneath them.
-  nav.querySelectorAll<HTMLElement>(".nav-category").forEach((heading) => {
-    let sibling = heading.nextElementSibling;
-    let anyVisible = false;
-    while (sibling && sibling.classList.contains("nav-link")) {
-      if (!sibling.classList.contains("hidden")) anyVisible = true;
-      sibling = sibling.nextElementSibling;
-    }
-    heading.classList.toggle("hidden", !anyVisible);
+  // Hide any section (at any depth) whose descendant links are all hidden.
+  nav.querySelectorAll<HTMLElement>(".nav-section").forEach((section) => {
+    const links = section.querySelectorAll<HTMLElement>(".nav-link");
+    const anyVisible = Array.from(links).some((link) => !link.classList.contains("hidden"));
+    section.classList.toggle("hidden", !anyVisible);
   });
+  noResults.hidden = visibleCount > 0;
 });
 
 //------------------------------
@@ -113,8 +160,11 @@ async function route(): Promise<void> {
   viewer.replaceChildren();
 
   activeLink?.classList.remove("active");
+  activeLink?.removeAttribute("aria-current");
   activeLink = id ? linkById.get(id) ?? null : null;
   activeLink?.classList.add("active");
+  activeLink?.setAttribute("aria-current", "page");
+  activeLink?.scrollIntoView({ block: "nearest", inline: "nearest" });
 
   if (!id) {
     showEmpty("Select an example");
@@ -150,6 +200,8 @@ void route();
 //  Sidebar collapse
 //------------------------------
 
-document.getElementById("toggle")!.addEventListener("click", () => {
+const toggle = document.getElementById("toggle")!;
+toggle.addEventListener("click", () => {
   layout.classList.toggle("collapsed");
+  toggle.setAttribute("aria-expanded", String(!layout.classList.contains("collapsed")));
 });

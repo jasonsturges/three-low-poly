@@ -10,13 +10,24 @@
     <div id="layout">
       <aside id="sidebar">
         <header id="sidebar-header">
-          <h1>Three Low Poly</h1>
-          <input id="search" type="search" placeholder="Search examples…" autocomplete="off" />
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <div>
+              <h1>Three Low Poly</h1>
+              <p><span id="example-count"></span> examples</p>
+            </div>
+          </div>
+          <label class="search-field">
+            <span class="search-icon" aria-hidden="true"></span>
+            <input id="search" type="search" placeholder="Find an example…" aria-label="Search examples" autocomplete="off" />
+          </label>
         </header>
         <nav id="nav"></nav>
       </aside>
       <main id="viewer"></main>
-      <button id="toggle" title="Toggle sidebar">☰</button>
+      <button id="toggle" type="button" title="Toggle sidebar" aria-label="Toggle examples sidebar" aria-expanded="true">
+        <span></span><span></span><span></span>
+      </button>
     </div>
     <script type="module" src="/main.ts"></script>
   </body>
