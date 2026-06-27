@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
 import { centerObject, WroughtIronFence, WroughtIronFenceGeometry } from "three-low-poly";
-import { createScene } from "../../framework/createScene";
+import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Wrought Iron Fence" };
 

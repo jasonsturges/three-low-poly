@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
 import { Book, BookGeometry, centerObject } from "three-low-poly";
-import { createScene } from "../../framework/createScene";
+import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Book" };
 
