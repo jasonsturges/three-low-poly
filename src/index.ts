@@ -48,9 +48,9 @@ export { ParametricCurve } from "./constants/ParametricCurve";
 //  Effects
 //------------------------------
 
-export { BubblingEffect, type BubblingEffectOptions } from "./effects/BubblingEffect";
+export { EffervescenceEffect, type EffervescenceEffectOptions } from "./effects/EffervescenceEffect";
 export { LightningEffect, type LightningEffectOptions } from "./effects/LightningEffect";
-export { LeafEffect, type LeafEffectOptions } from "./effects/LeafEffect";
+export { PetalDriftEffect, type PetalDriftEffectOptions } from "./effects/PetalDriftEffect";
 export { RainEffect, type RainEffectOptions } from "./effects/RainEffect";
 export {
   StarFieldEffect,

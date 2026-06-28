@@ -16,7 +16,7 @@ import {
   CrossHeadstone,
   EllipticLeafGeometry,
   Lantern,
-  LeafEffect,
+  PetalDriftEffect,
   LightFlickerAnimation,
   Mausoleum,
   Moon,
@@ -171,8 +171,14 @@ export default function (container: HTMLElement) {
     metalness: 0.1,
     roughness: 0.8,
   });
-  const leafEffect = new LeafEffect({ geometry: leafGeometry, material: leafMaterial });
-  scene.add(leafEffect);
+  const petalDrift = new PetalDriftEffect({
+    geometry: leafGeometry,
+    material: leafMaterial,
+    count: 120,
+    color: 0x88aa33,
+    flutter: 0.25,
+  });
+  scene.add(petalDrift);
 
   const spotlight = new SpotLight(0x23adf5, 100, 10, Math.PI / 8);
   spotlight.position.set(0, 9, -15);
@@ -200,13 +206,13 @@ export default function (container: HTMLElement) {
   hemisphereLight.position.set(0, 10, 0);
   scene.add(hemisphereLight);
 
-  onFrame(() => {
-    leafEffect.update();
+  onFrame((delta) => {
+    petalDrift.update(delta);
     lightAnimations.forEach((animation) => animation.update());
   });
 
   return () => {
-    leafEffect.dispose();
+    petalDrift.dispose();
     leafGeometry.dispose();
     leafMaterial.dispose();
     terrainMesh.geometry.dispose();

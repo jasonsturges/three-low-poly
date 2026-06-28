@@ -13,7 +13,7 @@ import {
 import {
   Book,
   Bookshelf,
-  BubblingEffect,
+  EffervescenceEffect,
   Desk,
   EmissivePulseAnimation,
   ErlenmeyerFlask,
@@ -106,10 +106,18 @@ export default function (container: HTMLElement) {
   jar.castShadow = true;
   scene.add(jar);
 
-  const bubblingEffect = new BubblingEffect();
-  bubblingEffect.position.set(-1, 3.3, -1);
-  bubblingEffect.scale.set(0.25, 0.25, 0.25);
-  scene.add(bubblingEffect);
+  const effervescence = new EffervescenceEffect({
+    count: 18,
+    width: 1.4,
+    height: 2.4,
+    depth: 1.4,
+    color: 0x4a8a6e,
+    opacity: 0.7,
+    emissiveIntensity: 0.32,
+  });
+  effervescence.position.set(-1, 3.3, -1);
+  effervescence.scale.set(0.25, 0.25, 0.25);
+  scene.add(effervescence);
 
   const mortarAndPestle = new MortarAndPestle();
   mortarAndPestle.scale.set(0.15, 0.15, 0.15);
@@ -228,13 +236,13 @@ export default function (container: HTMLElement) {
   onFrame((delta) => {
     elapsed += delta;
     panelLightEffects.forEach((effect) => effect.update(elapsed));
-    bubblingEffect.update();
+    effervescence.update(delta);
     storm1.update(delta);
     storm2.update(delta);
   });
 
   return () => {
-    bubblingEffect.dispose();
+    effervescence.dispose();
     plane.geometry.dispose();
     plane.material.dispose();
     box.geometry.dispose();
