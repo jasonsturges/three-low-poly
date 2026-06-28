@@ -21,8 +21,6 @@ export { cameraWobbleAnimation } from "./animators/cameraWobbleAnimation";
 export { cameraZoomInAnimation } from "./animators/cameraZoomInAnimation";
 export { EmissivePulseAnimation, type EmissivePulseEffectOptions } from "./animators/EmissivePulseAnimation";
 export { LightFlickerAnimation, type LightFlickerAnimationOptions } from "./animators/LightFlickerAnimation";
-export { LightningAnimation } from "./animators/LightningAnimation";
-
 //------------------------------
 //  Brushes
 //------------------------------
@@ -51,6 +49,7 @@ export { ParametricCurve } from "./constants/ParametricCurve";
 //------------------------------
 
 export { BubblingEffect, type BubblingEffectOptions } from "./effects/BubblingEffect";
+export { LightningEffect, type LightningEffectOptions } from "./effects/LightningEffect";
 export { LeafEffect, type LeafEffectOptions } from "./effects/LeafEffect";
 export { RainEffect, type RainEffectOptions } from "./effects/RainEffect";
 export {

@@ -19,7 +19,7 @@ import {
   ErlenmeyerFlask,
   FlorenceFlask,
   Jar,
-  LightningAnimation,
+  LightningEffect,
   MortarAndPestle,
   Panel,
   PanelLight,
@@ -28,7 +28,6 @@ import {
   TestTubeRack,
   logarithmicRandomMax,
   randomFloat,
-  setRandomInterval,
 } from "three-low-poly";
 import { clearDefaultLights } from "../../framework/clearDefaultLights";
 import { createScene } from "../../framework/createScene";
@@ -194,7 +193,7 @@ export default function (container: HTMLElement) {
   }
   controlPanel1.add(panel);
 
-  const lightning1 = new DirectionalLight(0xffffff, 0);
+  const lightning1 = new DirectionalLight(0xcdd8ff, 0);
   lightning1.shadow.mapSize.width = 4096;
   lightning1.shadow.mapSize.height = 4096;
   lightning1.shadow.camera.left = -15;
@@ -205,12 +204,10 @@ export default function (container: HTMLElement) {
   lightning1.shadow.camera.far = 25;
   lightning1.castShadow = true;
   lightning1.position.set(5, 10, -5);
-  scene.add(lightning1);
+  lightning1.target.position.set(0, 2, 0);
+  scene.add(lightning1, lightning1.target);
 
-  const lightningEffect1 = new LightningAnimation({ light: lightning1, minIntensity: 1, maxIntensity: 15 });
-  const clearLightning1 = setRandomInterval(() => lightningEffect1.triggerLightning(), 50, 2500);
-
-  const lightning2 = new DirectionalLight(0xffffff, 0);
+  const lightning2 = new DirectionalLight(0xcdd8ff, 0);
   lightning2.shadow.mapSize.width = 4096;
   lightning2.shadow.mapSize.height = 4096;
   lightning2.shadow.camera.left = -15;
@@ -221,21 +218,22 @@ export default function (container: HTMLElement) {
   lightning2.shadow.camera.far = 25;
   lightning2.castShadow = true;
   lightning2.position.set(-5, 10, 4);
-  scene.add(lightning2);
+  lightning2.target.position.set(0, 2, 0);
+  scene.add(lightning2, lightning2.target);
 
-  const lightningEffect2 = new LightningAnimation({ light: lightning2, minIntensity: 0.25, maxIntensity: 5 });
-  const clearLightning2 = setRandomInterval(() => lightningEffect2.triggerLightning(), 1500, 3500);
+  const storm1 = new LightningEffect({ light: lightning1, peak: 15, minGap: 3, maxGap: 8 });
+  const storm2 = new LightningEffect({ light: lightning2, peak: 5, minGap: 2.5, maxGap: 7 });
 
   let elapsed = 0;
   onFrame((delta) => {
     elapsed += delta;
     panelLightEffects.forEach((effect) => effect.update(elapsed));
     bubblingEffect.update();
+    storm1.update(delta);
+    storm2.update(delta);
   });
 
   return () => {
-    clearLightning1();
-    clearLightning2();
     bubblingEffect.dispose();
     plane.geometry.dispose();
     plane.material.dispose();
