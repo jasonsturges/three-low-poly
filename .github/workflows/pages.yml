@@ -35,7 +35,7 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build:examples
+        run: npm run build:host
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -43,7 +43,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./dist"
+          path: "./site"
 
       - name: Deploy to GitHub Pages
         id: deployment
