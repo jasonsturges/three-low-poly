@@ -3,13 +3,16 @@ import {
   CanvasTexture,
   Color,
   ColorRepresentation,
+  DoubleSide,
   DynamicDrawUsage,
   InstancedMesh,
   Material,
   MeshBasicMaterial,
   Object3D,
   PlaneGeometry,
+  Quaternion,
   SRGBColorSpace,
+  Vector3,
 } from "three";
 import { randomFloat } from "../utils/RandomNumberUtils";
 
@@ -40,10 +43,17 @@ export interface RainEffectOptions {
   speedMin?: number;
   /** Maximum fall speed (units/s). Defaults to `19`. */
   speedMax?: number;
-  /** World-space yaw so streaks lean together instead of billboarding to the camera. Defaults to `0.52`. */
-  windYaw?: number;
-  /** Base lean from vertical (radians). Defaults to `0.12`. */
-  windLean?: number;
+  /**
+   * Horizontal compass direction the wind blows (radians, 0 = +X, π/2 = +Z).
+   * Only used when {@link RainEffectOptions.windStrength} is greater than zero.
+   * Defaults to `0`.
+   */
+  windDirection?: number;
+  /**
+   * How much rain tilts and drifts from vertical, as `tan(angleFromVertical)`.
+   * `0` = straight down (default). `0.15` ≈ 8.5° lean with matching horizontal drift.
+   */
+  windStrength?: number;
   /**
    * Rainfall strength (0–1). Scales visible instance count, fall speed, and opacity.
    * Defaults to `0.5`.
@@ -72,9 +82,12 @@ function createStreakTexture(): CanvasTexture {
  * Misty rainfall as instanced vertical streaks.
  *
  * Each streak is a thin, gradient-textured quad animated through a bounded
- * volume. Streaks share a fixed world-space lean (not camera billboarding) so
- * the field reads as drizzle rather than flat cards. Scene fog dissolves
- * distant streaks when the material's `fog` flag is enabled.
+ * volume. By default streaks fall straight down with no rotation. Optional
+ * {@link RainEffectOptions.windDirection} / {@link RainEffectOptions.windStrength}
+ * tilt streaks **and** drift them horizontally together, so motion matches the
+ * visual angle. Streak materials use `DoubleSide` so thin quads stay visible
+ * from any camera angle. Scene fog dissolves distant streaks when the material's
+ * `fog` flag is enabled.
  *
  * **`intensity`** (0–1) scales how many instances draw, how fast they fall, and
  * their opacity — useful for storm ramps or lightning flashes.
@@ -100,8 +113,10 @@ export class RainEffect extends InstancedMesh {
   private readonly height: number;
   private readonly groundY: number;
   private readonly baseOpacity: number;
-  private readonly windYaw: number;
-  private readonly windLean: number;
+  private readonly windDirection: number;
+  private readonly windStrength: number;
+  private readonly fallDirection = new Vector3(0, -1, 0);
+  private readonly streakOrientation = new Quaternion();
   private readonly sx: Float32Array;
   private readonly sz: Float32Array;
   private readonly topY: Float32Array;
@@ -124,8 +139,8 @@ export class RainEffect extends InstancedMesh {
       lengthMax = 0.42,
       speedMin = 11,
       speedMax = 19,
-      windYaw = 0.52,
-      windLean = 0.12,
+      windDirection = 0,
+      windStrength = 0,
       intensity = 0.5,
       geometry = new PlaneGeometry(width, 1),
       material,
@@ -142,6 +157,7 @@ export class RainEffect extends InstancedMesh {
         depthWrite: false,
         toneMapped: false,
         fog: true,
+        side: DoubleSide,
       });
 
     super(geometry, rainMaterial, count);
@@ -153,8 +169,9 @@ export class RainEffect extends InstancedMesh {
     this.height = height;
     this.groundY = groundY;
     this.baseOpacity = opacity;
-    this.windYaw = windYaw;
-    this.windLean = windLean;
+    this.windDirection = windDirection;
+    this.windStrength = Math.max(0, windStrength);
+    this.updateFallDirection(0);
     this.intensity = intensity;
     this.streakTexture = streakTexture;
 
@@ -183,12 +200,29 @@ export class RainEffect extends InstancedMesh {
   update(dt: number): void {
     this.clock += dt;
 
+    const gust =
+      this.windStrength > 0 ? Math.sin(this.clock * 0.18) * 0.04 * this.windStrength : 0;
+    this.updateFallDirection(gust);
+
     const fall = 0.85 + this.intensity * 0.7;
     const top = this.groundY + this.height;
+    const driftX = this.fallDirection.x;
+    const driftZ = this.fallDirection.z;
+    const fallY = -this.fallDirection.y;
+
     for (let i = 0; i < this.maxCount; i++) {
-      this.topY[i] -= this.speed[i] * fall * dt;
+      const travel = this.speed[i] * fall * dt;
+      this.sx[i] += driftX * travel;
+      this.sz[i] += driftZ * travel;
+      this.topY[i] -= fallY * travel;
+
       if (this.topY[i] < this.groundY - this.len[i]) this.topY[i] += this.height;
       if (this.topY[i] > top) this.topY[i] -= this.height;
+
+      if (this.sx[i] < -this.area) this.sx[i] += this.area * 2;
+      else if (this.sx[i] > this.area) this.sx[i] -= this.area * 2;
+      if (this.sz[i] < -this.area) this.sz[i] += this.area * 2;
+      else if (this.sz[i] > this.area) this.sz[i] -= this.area * 2;
     }
 
     this.writeMatrices();
@@ -212,14 +246,31 @@ export class RainEffect extends InstancedMesh {
     mat.opacity = this.baseOpacity * (0.55 + 0.65 * this.intensity);
   }
 
+  private updateFallDirection(gust: number): void {
+    const lean = this.windStrength + gust;
+    if (lean <= 0) {
+      this.fallDirection.set(0, -1, 0);
+      this.streakOrientation.identity();
+      return;
+    }
+
+    const horizontal = lean;
+    const vertical = 1;
+    const invLength = 1 / Math.hypot(horizontal, vertical);
+    this.fallDirection.set(
+      Math.cos(this.windDirection) * horizontal * invLength,
+      -vertical * invLength,
+      Math.sin(this.windDirection) * horizontal * invLength,
+    );
+    this.streakOrientation.setFromUnitVectors(new Vector3(0, 1, 0), this.fallDirection);
+  }
+
   private writeMatrices(): void {
     const d = this.dummy;
     for (let i = 0; i < this.maxCount; i++) {
       const length = this.len[i];
-      const offset = this.sx[i] * 0.04;
-      const gust = Math.sin(this.clock * 0.18 - offset) * 0.022;
       d.position.set(this.sx[i], this.topY[i] - length / 2, this.sz[i]);
-      d.rotation.set(0, this.windYaw, -(this.windLean + gust));
+      d.quaternion.copy(this.streakOrientation);
       d.scale.set(1, length, 1);
       d.updateMatrix();
       this.setMatrixAt(i, d.matrix);

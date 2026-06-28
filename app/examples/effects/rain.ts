@@ -6,7 +6,7 @@ import { createScene } from "../../framework/createScene";
 export const meta = {
   title: "Rain",
   description:
-    "Instanced misty rainfall — gradient streaks with world-fixed wind lean. " +
+    "Instanced misty rainfall — vertical gradient streaks with optional wind drift. " +
     "Intensity scales density, speed, and opacity.",
 };
 
@@ -41,8 +41,8 @@ export default function (container: HTMLElement) {
     intensity: 0.45,
     opacity: 0.16,
     width: 0.009,
-    windYaw: 0.52,
-    windLean: 0.12,
+    windDirection: 0.8,
+    windStrength: 0,
     showReference: true,
   };
 
@@ -53,8 +53,8 @@ export default function (container: HTMLElement) {
       height: params.height,
       opacity: params.opacity,
       width: params.width,
-      windYaw: params.windYaw,
-      windLean: params.windLean,
+      windDirection: params.windDirection,
+      windStrength: params.windStrength,
       intensity: params.intensity,
     });
 
@@ -81,8 +81,16 @@ export default function (container: HTMLElement) {
   gui.add(params, "height", 4, 30, 0.5).name("Height").onChange(rebuild);
   gui.add(params, "opacity", 0.02, 0.5, 0.01).name("Opacity").onChange(rebuild);
   gui.add(params, "width", 0.003, 0.03, 0.001).name("Streak Width").onChange(rebuild);
-  gui.add(params, "windYaw", 0, Math.PI * 2, 0.01).name("Wind Yaw").onChange(rebuild);
-  gui.add(params, "windLean", 0, 0.4, 0.01).name("Wind Lean").onChange(rebuild);
+  const windFolder = gui.addFolder("Wind");
+  windFolder
+    .add(params, "windStrength", 0, 0.35, 0.01)
+    .name("Strength")
+    .onChange(rebuild);
+  windFolder
+    .add(params, "windDirection", 0, Math.PI * 2, 0.01)
+    .name("Direction")
+    .onChange(rebuild);
+  windFolder.open();
   gui
     .add(params, "showReference")
     .name("Ground / Grid")
