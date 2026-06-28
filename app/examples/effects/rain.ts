@@ -1,0 +1,102 @@
+import { DoubleSide, Fog, GridHelper, Mesh, MeshStandardMaterial, PlaneGeometry } from "three";
+import GUI from "lil-gui";
+import { RainEffect } from "three-low-poly";
+import { createScene } from "../../framework/createScene";
+
+export const meta = {
+  title: "Rain",
+  description:
+    "Instanced misty rainfall — gradient streaks with world-fixed wind lean. " +
+    "Intensity scales density, speed, and opacity.",
+};
+
+export default function (container: HTMLElement) {
+  const { scene, controls, onFrame, dispose } = createScene(container, {
+    background: 0x050508,
+    cameraPosition: [0, 5, 14],
+  });
+
+  scene.fog = new Fog(0x050508, 4, 28);
+
+  controls.target.set(0, 1.5, 0);
+  controls.update();
+
+  const groundSize = 24;
+
+  const ground = new Mesh(
+    new PlaneGeometry(groundSize, groundSize),
+    new MeshStandardMaterial({ color: 0x1a2430, roughness: 1, metalness: 0, side: DoubleSide }),
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  const grid = new GridHelper(groundSize, groundSize, 0x334455, 0x223344);
+  scene.add(grid);
+
+  const params = {
+    count: 1400,
+    area: 12,
+    height: 16,
+    intensity: 0.45,
+    opacity: 0.16,
+    width: 0.009,
+    windYaw: 0.52,
+    windLean: 0.12,
+    showReference: true,
+  };
+
+  const createRain = () =>
+    new RainEffect({
+      count: params.count,
+      area: params.area,
+      height: params.height,
+      opacity: params.opacity,
+      width: params.width,
+      windYaw: params.windYaw,
+      windLean: params.windLean,
+      intensity: params.intensity,
+    });
+
+  let rain = createRain();
+  scene.add(rain);
+
+  const rebuild = () => {
+    scene.remove(rain);
+    rain.dispose();
+    rain = createRain();
+    scene.add(rain);
+  };
+
+  onFrame((delta) => {
+    rain.intensity = params.intensity;
+    rain.update(delta);
+  });
+
+  const gui = new GUI();
+  gui.title("Rain Effect");
+  gui.add(params, "intensity", 0, 1, 0.01).name("Intensity");
+  gui.add(params, "count", 200, 4000, 100).name("Count").onChange(rebuild);
+  gui.add(params, "area", 4, 24, 0.5).name("Area").onChange(rebuild);
+  gui.add(params, "height", 4, 30, 0.5).name("Height").onChange(rebuild);
+  gui.add(params, "opacity", 0.02, 0.5, 0.01).name("Opacity").onChange(rebuild);
+  gui.add(params, "width", 0.003, 0.03, 0.001).name("Streak Width").onChange(rebuild);
+  gui.add(params, "windYaw", 0, Math.PI * 2, 0.01).name("Wind Yaw").onChange(rebuild);
+  gui.add(params, "windLean", 0, 0.4, 0.01).name("Wind Lean").onChange(rebuild);
+  gui
+    .add(params, "showReference")
+    .name("Ground / Grid")
+    .onChange((visible: boolean) => {
+      ground.visible = visible;
+      grid.visible = visible;
+    });
+
+  return () => {
+    gui.destroy();
+    scene.remove(rain);
+    rain.dispose();
+    ground.geometry.dispose();
+    (ground.material as MeshStandardMaterial).dispose();
+    dispose();
+  };
+}
