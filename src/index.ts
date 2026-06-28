@@ -52,6 +52,11 @@ export { ParametricCurve } from "./constants/ParametricCurve";
 
 export { BubblingEffect, type BubblingEffectOptions } from "./effects/BubblingEffect";
 export { LeafEffect, type LeafEffectOptions } from "./effects/LeafEffect";
+export {
+  StarFieldEffect,
+  type StarBurstShapeOptions,
+  type StarFieldEffectOptions,
+} from "./effects/StarFieldEffect";
 
 //------------------------------
 //  Factory
