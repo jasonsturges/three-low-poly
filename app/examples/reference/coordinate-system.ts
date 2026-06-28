@@ -215,6 +215,11 @@ export default function (container: HTMLElement) {
   infoFolder.add(info, "origin").name("Origin").disable();
   infoFolder.add(info, "rightHand").name("System").disable();
 
+  const cameraFolder = gui.addFolder("Camera Position");
+  cameraFolder.add(camera.position, "x", -50, 50).name("X").listen();
+  cameraFolder.add(camera.position, "y", -50, 50).name("Y").listen();
+  cameraFolder.add(camera.position, "z", -50, 50).name("Z").listen();
+
   return () => {
     gui.destroy();
     markerGeometry.dispose();
