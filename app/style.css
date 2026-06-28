@@ -287,7 +287,25 @@ body {
   position: absolute;
   z-index: 0;
   inset: 0;
+  display: flex;
+  flex-direction: column;
   background: #000;
+}
+
+.viewer-description {
+  flex: none;
+  margin: 0;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.viewer-host {
+  position: relative;
+  flex: 1;
+  min-height: 0;
 }
 
 #viewer canvas {

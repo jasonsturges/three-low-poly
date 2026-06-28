@@ -3,8 +3,8 @@ import { defineConfig, UserConfig } from "vite";
 
 /**
  * Host (app) mode Vite config — a standalone gallery and development harness for
- * the library. This is NOT the library build (see `vite.config.ts` for lib mode)
- * and NOT the legacy MPA examples (see `vite-examples.config.ts`). Host code
+ * the library. This is NOT the library build (see `vite.config.ts` for lib mode).
+ * Host code
  * lives in `app/` and is never published; `"files": ["dist"]` in package.json
  * enforces that.
  *

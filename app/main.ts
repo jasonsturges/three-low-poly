@@ -179,7 +179,19 @@ async function route(): Promise<void> {
   try {
     const module = await entry.load();
     if (token !== loadToken) return; // navigated away mid-load
-    const result = module.default(viewer);
+
+    const host = document.createElement("div");
+    host.className = "viewer-host";
+    viewer.appendChild(host);
+
+    if (module.meta?.description) {
+      const description = document.createElement("p");
+      description.className = "viewer-description";
+      description.textContent = module.meta.description;
+      viewer.insertBefore(description, host);
+    }
+
+    const result = module.default(host);
     cleanup = typeof result === "function" ? result : null;
   } catch (error) {
     if (token !== loadToken) return;
