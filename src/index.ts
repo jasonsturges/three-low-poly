@@ -49,6 +49,7 @@ export { ParametricCurve } from "./constants/ParametricCurve";
 
 export { EffervescenceEffect, type EffervescenceEffectOptions } from "./effects/EffervescenceEffect";
 export { FlameFlickerEffect, type FlameFlickerEffectOptions } from "./effects/FlameFlickerEffect";
+export { GroundFogEffect, type GroundFogEffectOptions } from "./effects/GroundFogEffect";
 export { GlowHalo, type GlowHaloOptions } from "./effects/GlowHalo";
 export {
   EmissivePulseEffect,

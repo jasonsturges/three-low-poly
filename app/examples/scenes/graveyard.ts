@@ -1,7 +1,9 @@
 import {
   AmbientLight,
+  Color,
+  DirectionalLight,
   DoubleSide,
-  Fog,
+  FogExp2,
   Group,
   HemisphereLight,
   Mesh,
@@ -14,7 +16,9 @@ import {
   BoneGeometry,
   CrossHeadstone,
   EllipticLeafGeometry,
+  GroundFogEffect,
   Lantern,
+  LightningEffect,
   PetalDriftEffect,
   WispEffect,
   Mausoleum,
@@ -31,20 +35,27 @@ import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Graveyard" };
 
+const BG_COLOR = new Color(0x05070c);
+const FOG_COLOR = new Color(0x080b12);
+const FLASH_COLOR = new Color(0x3a527e);
+
 export default function (container: HTMLElement) {
-  const { scene, camera, controls, renderer, onFrame, dispose } = createScene(container, {
+  const { scene, controls, renderer, onFrame, dispose } = createScene(container, {
+    background: BG_COLOR.clone(),
     cameraPosition: [0, 7, 13],
   });
   clearDefaultLights(scene);
-  scene.fog = new Fog(0x010101, 5, 35);
-  renderer.setClearColor(0x000000);
+
+  const fog = new FogExp2(FOG_COLOR.getHex(), 0.03);
+  scene.fog = fog;
+  renderer.setClearColor(BG_COLOR);
 
   controls.target.set(0, 3, 0);
   controls.update();
 
   const terrainMesh = new Mesh(
-    new PlaneGeometry(32, 32, 256, 256),
-    new MeshStandardMaterial({ color: 0x228b22, flatShading: true }),
+    new PlaneGeometry(32, 32, 64, 64),
+    new MeshStandardMaterial({ color: 0x1b211c, flatShading: true, roughness: 1 }),
   );
   terrainMesh.rotateX(-Math.PI / 2);
   terrainMesh.receiveShadow = true;
@@ -139,7 +150,7 @@ export default function (container: HTMLElement) {
 
   const leafGeometry = new EllipticLeafGeometry();
   const leafMaterial = new MeshStandardMaterial({
-    color: 0x88aa33,
+    color: 0x39472c,
     side: DoubleSide,
     flatShading: true,
     metalness: 0.1,
@@ -149,7 +160,7 @@ export default function (container: HTMLElement) {
     geometry: leafGeometry,
     material: leafMaterial,
     count: 120,
-    color: 0x88aa33,
+    color: 0x39472c,
     flutter: 0.25,
   });
   scene.add(petalDrift);
@@ -157,25 +168,72 @@ export default function (container: HTMLElement) {
   const wisps = new WispEffect({ count: 3 });
   scene.add(wisps);
 
-  const spotlight = new SpotLight(0x23adf5, 100, 10, Math.PI / 8);
+  const groundFog = new GroundFogEffect({
+    count: 16,
+    area: 16,
+    perimeterCount: 20,
+    plotHalf: 12,
+    terrainHalf: 16,
+    cameraFacing: { x: 0, z: 1 },
+  });
+  scene.add(groundFog);
+
+  const createBolt = (x: number, z: number, castShadow: boolean) => {
+    const bolt = new DirectionalLight(0xcdd8ff, 0);
+    bolt.position.set(x, 22, z);
+    bolt.target.position.set(0, 2, 0);
+    if (castShadow) {
+      bolt.castShadow = true;
+      bolt.shadow.mapSize.set(2048, 2048);
+      const cam = bolt.shadow.camera;
+      cam.left = -18;
+      cam.right = 18;
+      cam.top = 18;
+      cam.bottom = -18;
+      cam.near = 1;
+      cam.far = 60;
+      cam.updateProjectionMatrix();
+      bolt.shadow.bias = -0.0005;
+    }
+    scene.add(bolt, bolt.target);
+    return bolt;
+  };
+
+  const storm1 = new LightningEffect({
+    light: createBolt(9, 11, true),
+    peak: 9,
+    minGap: 6,
+    maxGap: 15,
+  });
+  const storm2 = new LightningEffect({
+    light: createBolt(-7, 7, false),
+    peak: 5,
+    minGap: 5,
+    maxGap: 13,
+  });
+
+  const spotlight = new SpotLight(0xaebfff, 40, 18, Math.PI / 8);
   spotlight.position.set(0, 9, -15);
   spotlight.target = mausoleum;
-  spotlight.distance = 15;
+  spotlight.distance = 18;
   spotlight.angle = Math.PI / 6;
   spotlight.penumbra = 0.5;
   spotlight.castShadow = true;
   scene.add(spotlight);
 
-  const pointLight = new PointLight(0xffffff, 1.2, 32);
+  const moonlight = new DirectionalLight(0xaebfff, 1.2);
+  moonlight.position.set(-13, 17, -30);
+  moonlight.target.position.set(0, 0, 0);
+  scene.add(moonlight, moonlight.target);
+
+  const pointLight = new PointLight(0xffffff, 0.6, 32);
   pointLight.position.set(4.4, 2, 1.7);
   pointLight.decay = 2;
-  pointLight.castShadow = true;
   scene.add(pointLight);
 
-  const pointLight2 = new PointLight(0xffffff, 1.2, 32);
+  const pointLight2 = new PointLight(0xffffff, 0.6, 32);
   pointLight2.position.set(-4.4, 2, 1.7);
   pointLight2.decay = 2;
-  pointLight2.castShadow = true;
   scene.add(pointLight2);
 
   scene.add(new AmbientLight(0x404040, 0.15));
@@ -183,14 +241,26 @@ export default function (container: HTMLElement) {
   hemisphereLight.position.set(0, 10, 0);
   scene.add(hemisphereLight);
 
+  const baseBg = BG_COLOR.clone();
+  const baseFog = FOG_COLOR.clone();
+
   onFrame((delta) => {
     petalDrift.update(delta);
     wisps.update(delta);
+    groundFog.update(delta);
+
+    storm1.update(delta);
+    storm2.update(delta);
+    const flash = Math.max(storm1.level, storm2.level);
+    const t = Math.min(1, flash * 0.6);
+    fog.color.copy(baseFog).lerp(FLASH_COLOR, t);
+    (scene.background as Color).copy(baseBg).lerp(FLASH_COLOR, t * 0.85);
   });
 
   return () => {
     petalDrift.dispose();
     wisps.dispose();
+    groundFog.dispose();
     leafGeometry.dispose();
     leafMaterial.dispose();
     terrainMesh.geometry.dispose();
