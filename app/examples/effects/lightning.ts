@@ -162,17 +162,6 @@ export default function (container: HTMLElement) {
   });
   scene.add(wall);
 
-  const hallwayFloorMaterial = new MeshStandardMaterial({
-    color: 0x1e2832,
-    roughness: 0.95,
-    metalness: 0,
-  });
-  const hallwayDepth = 16;
-  const hallwayFloor = new Mesh(new BoxGeometry(18, 0.06, hallwayDepth), hallwayFloorMaterial);
-  hallwayFloor.position.set(0, -0.03, wallZ + hallwayDepth / 2);
-  hallwayFloor.receiveShadow = true;
-  scene.add(hallwayFloor);
-
   const configureBoltShadow = (bolt: DirectionalLight) => {
     bolt.castShadow = true;
     bolt.shadow.mapSize.set(2048, 2048);
@@ -256,7 +245,6 @@ export default function (container: HTMLElement) {
     .onChange((visible: boolean) => {
       ground.visible = visible;
       grid.visible = visible;
-      hallwayFloor.visible = visible;
       wall.visible = visible;
     });
 
@@ -264,8 +252,6 @@ export default function (container: HTMLElement) {
     gui.destroy();
     ground.geometry.dispose();
     (ground.material as MeshStandardMaterial).dispose();
-    hallwayFloor.geometry.dispose();
-    hallwayFloorMaterial.dispose();
     wall.traverse((child) => {
       if (child instanceof Mesh) {
         child.geometry.dispose();
