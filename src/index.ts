@@ -19,7 +19,6 @@ export { cameraPendulumAnimation } from "./animators/cameraPendulumAnimation";
 export { cameraSpiralAscensionAnimation } from "./animators/cameraSpiralAscentionAnimation";
 export { cameraWobbleAnimation } from "./animators/cameraWobbleAnimation";
 export { cameraZoomInAnimation } from "./animators/cameraZoomInAnimation";
-export { EmissivePulseAnimation, type EmissivePulseEffectOptions } from "./animators/EmissivePulseAnimation";
 export { LightFlickerAnimation, type LightFlickerAnimationOptions } from "./animators/LightFlickerAnimation";
 //------------------------------
 //  Brushes
@@ -49,6 +48,11 @@ export { ParametricCurve } from "./constants/ParametricCurve";
 //------------------------------
 
 export { EffervescenceEffect, type EffervescenceEffectOptions } from "./effects/EffervescenceEffect";
+export {
+  EmissivePulseEffect,
+  type EmissivePulseEffectOptions,
+  type EmissivePulseMaterial,
+} from "./effects/EmissivePulseEffect";
 export { LightningEffect, type LightningEffectOptions } from "./effects/LightningEffect";
 export { PetalDriftEffect, type PetalDriftEffectOptions } from "./effects/PetalDriftEffect";
 export { RainEffect, type RainEffectOptions } from "./effects/RainEffect";

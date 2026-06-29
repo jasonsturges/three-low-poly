@@ -15,7 +15,7 @@ import {
   Bookshelf,
   EffervescenceEffect,
   Desk,
-  EmissivePulseAnimation,
+  EmissivePulseEffect,
   ErlenmeyerFlask,
   FlorenceFlask,
   Jar,
@@ -190,12 +190,17 @@ export default function (container: HTMLElement) {
   const panel = new Panel({ width: 2.75, height: 1, depth: 0.1 });
   panel.position.set(0, 5.25, 0);
 
-  const panelLightEffects: EmissivePulseAnimation[] = [];
+  const panelLightEffects: EmissivePulseEffect[] = [];
   for (let i = 0; i < 30; i++) {
     const panelLight = new PanelLight({ radius: 0.05 });
     panelLight.position.set(-1.25 + (i % 6) * 0.5, 5.55 - Math.floor(i / 6) * 0.15, 0.05);
     panelLightEffects.push(
-      new EmissivePulseAnimation({ material: panelLight.material, speed: randomFloat(0.2, 2), minIntensity: 0.01 }),
+      new EmissivePulseEffect({
+        material: panelLight.material,
+        speed: randomFloat(0.2, 1.1),
+        minIntensity: 0.05,
+        maxIntensity: 2,
+      }),
     );
     controlPanel1.add(panelLight);
   }
@@ -232,10 +237,8 @@ export default function (container: HTMLElement) {
   const storm1 = new LightningEffect({ light: lightning1, peak: 15, minGap: 3, maxGap: 8 });
   const storm2 = new LightningEffect({ light: lightning2, peak: 5, minGap: 2.5, maxGap: 7 });
 
-  let elapsed = 0;
   onFrame((delta) => {
-    elapsed += delta;
-    panelLightEffects.forEach((effect) => effect.update(elapsed));
+    panelLightEffects.forEach((pulse) => pulse.update(delta));
     effervescence.update(delta);
     storm1.update(delta);
     storm2.update(delta);
