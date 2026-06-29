@@ -100,6 +100,17 @@ export * from "./factory/HexagonalTileFactory";
 export { BifurcatedStaircaseGeometry } from "./geometry/architecture/BifurcatedStaircaseGeometry";
 export { BrickGeometry } from "./geometry/architecture/BrickGeometry";
 export { DioramaGeometry } from "./geometry/architecture/DioramaGeometry";
+export { DiamondLeadedWindowGeometry } from "./geometry/architecture/DiamondLeadedWindowGeometry";
+export {
+  buildDiamondLatticeParts,
+  clipSegmentToAabb,
+  diamondLatticeCellFromCount,
+  diamondLatticeCornerSpan,
+  diamondLatticeGridFromCells,
+  diamondLatticeSpacingFromGrid,
+  fitDiamondLatticeCell,
+  type DiamondLatticeGrid,
+} from "./geometry/architecture/diamondLattice";
 export { LShapedStaircaseGeometry } from "./geometry/architecture/LShapedStaircaseGeometry";
 export { SpiralStaircaseGeometry } from "./geometry/architecture/SpiralStaircaseGeometry";
 export { StaircaseGeometry } from "./geometry/architecture/StaircaseGeometry";
@@ -178,6 +189,7 @@ export { TreeGeometry } from "./geometry/trees/TreeGeometry";
 
 // Architecture
 export { Diorama } from "./models/architecture/Diorama";
+export { DiamondLeadedWindow } from "./models/architecture/DiamondLeadedWindow";
 
 // Astronomy
 export { Moon } from "./models/astronomy/Moon";
