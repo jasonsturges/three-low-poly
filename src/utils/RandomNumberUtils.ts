@@ -1,15 +1,20 @@
+import { createRandom, type RandomSource } from "./Random";
+
+/** Unseeded default — unique each runtime. Pass a {@link RandomSource} to override. */
+const defaultSource = createRandom();
+
 /**
  * Generates a random number between `min` and `max`.
  */
-export function randomFloat(min = 0, max = 1) {
-  return Math.random() * (max - min) + min;
+export function randomFloat(min = 0, max = 1, source: RandomSource = defaultSource) {
+  return source.float(min, max);
 }
 
 /**
  * Generates a random integer between `min` and `max`.
  */
-export function randomInteger(min = 0, max = 1) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+export function randomInteger(min = 0, max = 1, source: RandomSource = defaultSource) {
+  return source.int(min, max);
 }
 
 /**
@@ -22,8 +27,13 @@ export function randomInteger(min = 0, max = 1) {
  * @param {number} [max=1] - Maximum value of the range.
  * @returns {number} A random number between `min` and `max`, skewed towards `max`.
  */
-export function logarithmicRandomMax(exponent = 0.5, min = 0, max = 1) {
-  return min + (max - min) * Math.pow(Math.random(), exponent);
+export function logarithmicRandomMax(
+  exponent = 0.5,
+  min = 0,
+  max = 1,
+  source: RandomSource = defaultSource,
+) {
+  return source.skewMax(exponent, min, max);
 }
 
 /**
@@ -36,8 +46,13 @@ export function logarithmicRandomMax(exponent = 0.5, min = 0, max = 1) {
  * @param {number} [max=1] - Maximum value of the range.
  * @returns {number} A random number between `min` and `max`, skewed towards `min`.
  */
-export function logarithmicRandomMin(exponent = 0.5, min = 0, max = 1) {
-  return min + (max - min) * Math.pow(1 - Math.random(), exponent);
+export function logarithmicRandomMin(
+  exponent = 0.5,
+  min = 0,
+  max = 1,
+  source: RandomSource = defaultSource,
+) {
+  return source.skewMin(exponent, min, max);
 }
 
 /**
@@ -48,11 +63,8 @@ export function logarithmicRandomMin(exponent = 0.5, min = 0, max = 1) {
  * @returns {number} A random number between `min` and `max`, skewed towards the maximum.
  */
 
-function inverseLogarithmicRandomMax(min = 0, max = 1) {
-  // Generate the inverse-logarithmic skewed value between 0 and 1
-  const randomValue = 1 - Math.log(1 - Math.random()) / Math.log(2);
-
-  // Scale it to the desired range [min, max]
+function inverseLogarithmicRandomMax(min = 0, max = 1, source: RandomSource = defaultSource) {
+  const randomValue = 1 - Math.log(1 - source.next()) / Math.log(2);
   return min + (max - min) * randomValue;
 }
 
@@ -63,14 +75,9 @@ function inverseLogarithmicRandomMax(min = 0, max = 1) {
  * @param {number} [max=1] - Maximum value of the range.
  * @returns {number} A random number between `min` and `max`, skewed towards the minimum.
  */
-function inverseLogarithmicRandomMin(min = 0, max = 1) {
-  // Generate the inverse-logarithmic skewed value between 0 and 1, but reverse it to bias towards the minimum
-  const randomValue = Math.log(1 - Math.random()) / Math.log(2);
+function inverseLogarithmicRandomMin(min = 0, max = 1, source: RandomSource = defaultSource) {
+  const randomValue = Math.log(1 - source.next()) / Math.log(2);
   const adjustedValue = -randomValue;
-
-  // Clamp the adjusted value between 0 and 1 to prevent out-of-range values
   const clampedValue = Math.min(Math.max(adjustedValue, 0), 1);
-
-  // Scale it to the desired range [min, max]
   return min + (max - min) * clampedValue;
 }

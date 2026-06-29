@@ -1,0 +1,193 @@
+/**
+ * Randomness for procedural generation — unseeded by default, reproducible on demand.
+ *
+ * ---
+ *
+ * ### Layer 1 — stream primitive (portfolio parity)
+ *
+ * - {@link mulberry32} — fast seeded PRNG; returns a `() => number` closure yielding
+ *   floats in `[0, 1)`. Same algorithm as Gotham/Water on the portfolio site.
+ *
+ * ### Seed mixing
+ *
+ * - {@link splitmix32} — mixer only, **not** a stream. Maps one 32-bit value to another.
+ * - {@link deriveSubSeed} — `splitmix32(masterSeed ^ salt)`. Fan one user-facing master
+ *   seed into independent sub-streams per subsystem. Use stable hex salts per domain
+ *   (`0x101` books, `0x202` fog, `0x303` windows, …) instead of `seed + n` offsets.
+ *
+ * ### Layer 2 — library ergonomics
+ *
+ * - {@link createRandom} — **no seed** → wraps `Math.random()`, unique every runtime
+ *   (showcase default). **With seed** → {@link mulberry32} stream, same seed ⇒ same sequence.
+ * - Returns a {@link RandomSource}: `next`, `float`, `int`, `pick`, `boolean`, `skewMax`, `skewMin`.
+ * - {@link Random} namespace — grouped exports, same API as standalone functions (like {@link Easing}).
+ *
+ * ### Layer 3 — {@link RandomNumberUtils}
+ *
+ * Existing helpers (`randomFloat`, `logarithmicRandomMax`, …) accept an optional
+ * {@link RandomSource} as their last argument. Omit it for unseeded default behavior.
+ *
+ * ---
+ *
+ * @example Unique runtime (default)
+ * ```ts
+ * const rng = createRandom();
+ * rng.float(0, 10); // different every page load
+ * ```
+ *
+ * @example Reproducible layout with sub-seeds
+ * ```ts
+ * const master = 1337;
+ * const books = createRandom(deriveSubSeed(master, 0x101));
+ * const fog = createRandom(deriveSubSeed(master, 0x202));
+ * ```
+ *
+ * @example Namespace import
+ * ```ts
+ * const rng = Random.create(deriveSubSeed(1337, 0x101));
+ * ```
+ */
+
+/** Callable stream returning floats in [0, 1). */
+export type RandomStream = () => number;
+
+/**
+ * Random source — a stream plus distribution helpers.
+ * Returned by {@link createRandom}; also accepted by {@link RandomNumberUtils}.
+ */
+export interface RandomSource {
+  /** `true` when backed by {@link mulberry32}; `false` when using `Math.random()`. */
+  readonly seeded: boolean;
+  /** Next float in [0, 1). */
+  next(): number;
+  /** Float in [min, max). */
+  float(min?: number, max?: number): number;
+  /** Integer in [min, max] (inclusive). */
+  int(min?: number, max?: number): number;
+  /** Uniform element from a non-empty array. */
+  pick<T>(arr: readonly T[]): T;
+  /** `true` with given probability (default 0.5). */
+  boolean(probability?: number): boolean;
+  /**
+   * Skew toward `max`. Lower `exponent` = stronger bias.
+   * Mirrors {@link logarithmicRandomMax}.
+   */
+  skewMax(exponent?: number, min?: number, max?: number): number;
+  /**
+   * Skew toward `min`. Lower `exponent` = stronger bias.
+   * Mirrors {@link logarithmicRandomMin}.
+   */
+  skewMin(exponent?: number, min?: number, max?: number): number;
+}
+
+/**
+ * Fast seeded PRNG — portfolio Gotham/Water parity.
+ * Returns a closure yielding floats in [0, 1).
+ */
+export function mulberry32(seed: number): RandomStream {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Seed mixer — maps one 32-bit value to another well-distributed value.
+ * Use with {@link deriveSubSeed}, not as a drop-in stream replacement for
+ * {@link mulberry32}.
+ */
+export function splitmix32(seed: number): number {
+  let z = (seed >>> 0) + 0x9e3779b9;
+  z = Math.imul(z ^ (z >>> 16), 0x85ebca6b);
+  z ^= z >>> 13;
+  z = Math.imul(z ^ (z >>> 16), 0xc2b2ae35);
+  return (z ^ (z >>> 16)) >>> 0;
+}
+
+/**
+ * Derive an independent sub-stream seed from a master seed and domain salt.
+ *
+ * XOR the salt before mixing so each subsystem gets its own mulberry32 stream
+ * without sequential `seed + 1` collision risk. Use stable hex constants per
+ * domain (`0x101` books, `0x202` fog, `0x303` windows, …).
+ *
+ * @example
+ * ```ts
+ * const master = 1337;
+ * const bookRng = createRandom(deriveSubSeed(master, 0x101));
+ * const fogRng = createRandom(deriveSubSeed(master, 0x202));
+ * ```
+ */
+export function deriveSubSeed(masterSeed: number, salt: number): number {
+  return splitmix32((masterSeed >>> 0) ^ (salt >>> 0));
+}
+
+function buildSource(stream: RandomStream, seeded: boolean): RandomSource {
+  return {
+    seeded,
+    next: stream,
+    float(min = 0, max = 1) {
+      return min + (max - min) * stream();
+    },
+    int(min = 0, max = 1) {
+      return Math.floor(this.float(min, max + 1));
+    },
+    pick<T>(arr: readonly T[]): T {
+      if (!arr.length) throw new Error("RandomSource.pick() requires a non-empty array");
+      return arr[this.int(0, arr.length - 1)]!;
+    },
+    boolean(probability = 0.5) {
+      return stream() < probability;
+    },
+    skewMax(exponent = 0.5, min = 0, max = 1) {
+      return min + (max - min) * Math.pow(stream(), exponent);
+    },
+    skewMin(exponent = 0.5, min = 0, max = 1) {
+      return min + (max - min) * Math.pow(1 - stream(), exponent);
+    },
+  };
+}
+
+/**
+ * Create a random source.
+ *
+ * - **No seed** — wraps `Math.random()`. Unique every runtime; default for examples.
+ * - **With seed** — {@link mulberry32} stream. Same seed ⇒ same sequence.
+ */
+export function createRandom(seed?: number): RandomSource {
+  if (seed === undefined) return buildSource(Math.random, false);
+  return buildSource(mulberry32(seed >>> 0), true);
+}
+
+/** Float in [min, max) from any stream — website `range()` parity. */
+export function randomRange(stream: RandomStream, min: number, max: number): number {
+  return min + (max - min) * stream();
+}
+
+/** Pick from a non-empty array using any stream — website `pick()` parity. */
+export function randomPick<T>(stream: RandomStream, arr: readonly T[]): T {
+  if (!arr.length) throw new Error("randomPick() requires a non-empty array");
+  return arr[Math.floor(stream() * arr.length)]!;
+}
+
+/**
+ * Grouped exports — same function API, namespace import like {@link Easing}.
+ *
+ * @example
+ * ```ts
+ * import { Random } from "three-low-poly";
+ * const rng = Random.create(deriveSubSeed(1337, 0x101));
+ * ```
+ */
+export const Random = {
+  create: createRandom,
+  mulberry32,
+  splitmix32,
+  deriveSubSeed,
+  range: randomRange,
+  pick: randomPick,
+} as const;

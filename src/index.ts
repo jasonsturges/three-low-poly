@@ -293,6 +293,17 @@ export * from "./utils/InterpolateCurve";
 export * from "./utils/LineEquations";
 export * from "./utils/ParametricCurveUtils";
 export * from "./utils/QuadUtils";
+export {
+  Random,
+  createRandom,
+  deriveSubSeed,
+  mulberry32,
+  randomPick,
+  randomRange,
+  splitmix32,
+  type RandomSource,
+  type RandomStream,
+} from "./utils/Random";
 export * from "./utils/RandomNumberUtils";
 export * from "./utils/RandomTimer";
 export * from "./utils/SphericalCurve";
