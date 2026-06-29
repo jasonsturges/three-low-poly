@@ -10,6 +10,7 @@ import {
   Vector2,
   WebGLRenderer,
 } from "three";
+import { createWebGLRenderer } from "./createWebGLRenderer";
 
 export interface ShaderSceneOptions {
   /** Passed through to ShaderMaterial. `uResolution` is added automatically when omitted. */
@@ -65,7 +66,7 @@ export function createShaderScene(
   const scene = new Scene();
   const camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-  const renderer = new WebGLRenderer({ antialias });
+  const renderer = createWebGLRenderer({ antialias });
   renderer.setPixelRatio(window.devicePixelRatio);
   const canvas = renderer.domElement;
   canvas.style.display = "block";

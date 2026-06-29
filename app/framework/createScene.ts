@@ -11,6 +11,7 @@ import {
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { configureOrbitControls } from "./configureOrbitControls";
+import { createWebGLRenderer } from "./createWebGLRenderer";
 
 export interface SceneOptions {
   /** Scene background color. Left transparent/black if omitted. */
@@ -55,7 +56,7 @@ export function createScene(container: HTMLElement, options: SceneOptions = {}):
   const [cx, cy, cz] = options.cameraPosition ?? [0, 0, 5];
   camera.position.set(cx, cy, cz);
 
-  const renderer = new WebGLRenderer({ antialias: options.antialias ?? true });
+  const renderer = createWebGLRenderer({ antialias: options.antialias ?? true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setClearColor(0x000000);
   renderer.shadowMap.enabled = true;

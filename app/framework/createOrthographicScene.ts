@@ -11,6 +11,7 @@ import {
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { configureOrbitControls } from "./configureOrbitControls";
+import { createWebGLRenderer } from "./createWebGLRenderer";
 
 export interface OrthographicSceneOptions {
   /** Scene background color. Defaults to `0xeeeeee`. */
@@ -44,7 +45,7 @@ export function createOrthographicScene(
   const scene = new Scene();
   scene.background = new Color(options.background ?? 0xeeeeee);
 
-  const renderer = new WebGLRenderer({ antialias: true });
+  const renderer = createWebGLRenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
   const canvas = renderer.domElement;

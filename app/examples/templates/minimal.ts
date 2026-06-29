@@ -1,4 +1,5 @@
-import { Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, WebGLRenderer } from "three";
+import { Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry } from "three";
+import { createWebGLRenderer } from "../../framework/createWebGLRenderer";
 
 export const meta = {
   title: "Minimal",
@@ -16,7 +17,7 @@ export default function (container: HTMLElement) {
   const camera = new PerspectiveCamera(75, container.clientWidth / container.clientHeight || 1, 0.1, 1000);
   camera.position.z = 5;
 
-  const renderer = new WebGLRenderer({ antialias: true });
+  const renderer = createWebGLRenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   const canvas = renderer.domElement;
   canvas.style.display = "block";

@@ -8,10 +8,10 @@ import {
   MeshStandardMaterial,
   OrthographicCamera,
   Scene,
-  WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { configureOrbitControls } from "../../framework/configureOrbitControls";
+import { createWebGLRenderer } from "../../framework/createWebGLRenderer";
 
 export const meta = {
   title: "Orthographic",
@@ -26,7 +26,7 @@ export default function (container: HTMLElement) {
   const scene = new Scene();
   scene.background = new Color(0xeeeeee);
 
-  const renderer = new WebGLRenderer({ antialias: true });
+  const renderer = createWebGLRenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
   const canvas = renderer.domElement;

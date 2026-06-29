@@ -12,11 +12,11 @@ import {
   PlaneGeometry,
   PointLight,
   Scene,
-  WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import GUI from "lil-gui";
 import { SceneTransition, type EasingFunction } from "three-low-poly";
+import { createWebGLRenderer } from "../../framework/createWebGLRenderer";
 
 export const meta = { title: "Scene Transition" };
 
@@ -24,7 +24,7 @@ export default function (container: HTMLElement) {
   const camera = new PerspectiveCamera(75, container.clientWidth / container.clientHeight || 1, 0.1, 1000);
   camera.position.set(0, 5, 15);
 
-  const renderer = new WebGLRenderer({ antialias: true });
+  const renderer = createWebGLRenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
   const canvas = renderer.domElement;

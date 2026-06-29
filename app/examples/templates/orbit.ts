@@ -7,10 +7,10 @@ import {
   MeshStandardMaterial,
   PerspectiveCamera,
   Scene,
-  WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { configureOrbitControls } from "../../framework/configureOrbitControls";
+import { createWebGLRenderer } from "../../framework/createWebGLRenderer";
 
 export const meta = {
   title: "Orbit",
@@ -26,7 +26,7 @@ export default function (container: HTMLElement) {
   const camera = new PerspectiveCamera(75, container.clientWidth / container.clientHeight || 1, 0.1, 1000);
   camera.position.z = 5;
 
-  const renderer = new WebGLRenderer({ antialias: true });
+  const renderer = createWebGLRenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setClearColor(0x000000);
   renderer.shadowMap.enabled = true;

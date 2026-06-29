@@ -13,9 +13,9 @@ import {
   PointLight,
   Scene,
   Vector2,
-  WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { createWebGLRenderer } from "../../framework/createWebGLRenderer";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { GlitchPass } from "three/addons/postprocessing/GlitchPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -30,7 +30,7 @@ export default function (container: HTMLElement) {
   const camera = new PerspectiveCamera(75, container.clientWidth / container.clientHeight || 1, 0.1, 1000);
   camera.position.set(0, 5, 15);
 
-  const renderer = new WebGLRenderer({ antialias: true });
+  const renderer = createWebGLRenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
   const canvas = renderer.domElement;
