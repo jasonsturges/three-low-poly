@@ -1,8 +1,8 @@
 import {
   AmbientLight,
+  Clock,
   Color,
   DirectionalLight,
-  DoubleSide,
   FogExp2,
   Group,
   HemisphereLight,
@@ -11,15 +11,19 @@ import {
   PlaneGeometry,
   PointLight,
   SpotLight,
+  SRGBColorSpace,
+  Vector2,
 } from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import {
   BoneGeometry,
   CrossHeadstone,
-  EllipticLeafGeometry,
   GroundFogEffect,
   Lantern,
   LightningEffect,
-  PetalDriftEffect,
+  RainEffect,
   WispEffect,
   Mausoleum,
   Moon,
@@ -38,19 +42,26 @@ export const meta = { title: "Graveyard" };
 const BG_COLOR = new Color(0x05070c);
 const FOG_COLOR = new Color(0x080b12);
 const FLASH_COLOR = new Color(0x3a527e);
+const RAINFALL = 0.28;
 
 export default function (container: HTMLElement) {
-  const { scene, controls, renderer, onFrame, dispose } = createScene(container, {
+  const { scene, camera, controls, renderer, dispose } = createScene(container, {
     background: BG_COLOR.clone(),
-    cameraPosition: [0, 7, 13],
+    // Match portfolio orbital start: radius ~36, elevation ~0.58 rad, azimuth π/4.
+    cameraPosition: [21, 22, 21],
   });
   clearDefaultLights(scene);
+
+  // Portfolio graveyard uses a narrow FOV (~30°) — wide FOV makes misty streaks vanish.
+  camera.fov = 30;
+  camera.updateProjectionMatrix();
+  renderer.outputColorSpace = SRGBColorSpace;
 
   const fog = new FogExp2(FOG_COLOR.getHex(), 0.03);
   scene.fog = fog;
   renderer.setClearColor(BG_COLOR);
 
-  controls.target.set(0, 3, 0);
+  controls.target.set(0, 2, 0);
   controls.update();
 
   const terrainMesh = new Mesh(
@@ -148,35 +159,30 @@ export default function (container: HTMLElement) {
   moon.position.set(9, 15, -45);
   scene.add(moon);
 
-  const leafGeometry = new EllipticLeafGeometry();
-  const leafMaterial = new MeshStandardMaterial({
-    color: 0x39472c,
-    side: DoubleSide,
-    flatShading: true,
-    metalness: 0.1,
-    roughness: 0.8,
-  });
-  const petalDrift = new PetalDriftEffect({
-    geometry: leafGeometry,
-    material: leafMaterial,
-    count: 120,
-    color: 0x39472c,
-    flutter: 0.25,
-  });
-  scene.add(petalDrift);
-
-  const wisps = new WispEffect({ count: 3 });
-  scene.add(wisps);
-
   const groundFog = new GroundFogEffect({
     count: 16,
     area: 16,
     perimeterCount: 20,
     plotHalf: 12,
-    terrainHalf: 16,
-    cameraFacing: { x: 0, z: 1 },
+    terrainHalf: 26,
+    cameraFacing: { x: 1, z: 1 },
   });
   scene.add(groundFog);
+
+  const wisps = new WispEffect({ count: 3 });
+  scene.add(wisps);
+
+  const rain = new RainEffect({
+    area: 26,
+    height: 20,
+    count: 900,
+    width: 0.009,
+    opacity: 0.16,
+    groundY: -0.5,
+    intensity: RAINFALL,
+  });
+  rain.renderOrder = 2;
+  scene.add(rain);
 
   const createBolt = (x: number, z: number, castShadow: boolean) => {
     const bolt = new DirectionalLight(0xcdd8ff, 0);
@@ -244,8 +250,32 @@ export default function (container: HTMLElement) {
   const baseBg = BG_COLOR.clone();
   const baseFog = FOG_COLOR.clone();
 
-  onFrame((delta) => {
-    petalDrift.update(delta);
+  // Portfolio graveyard blooms tone-mapped-off streaks and moon — rain barely reads without it.
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const bloomPass = new UnrealBloomPass(
+    new Vector2(container.clientWidth, container.clientHeight),
+    0.9,
+    0.6,
+    0.6,
+  );
+  composer.addPass(bloomPass);
+
+  const syncComposer = () => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    if (!w || !h) return;
+    composer.setSize(w, h);
+  };
+  const composerObserver = new ResizeObserver(syncComposer);
+  composerObserver.observe(container);
+  syncComposer();
+
+  const frameClock = new Clock();
+  renderer.setAnimationLoop(() => {
+    const delta = frameClock.getDelta();
+    controls.update();
+
     wisps.update(delta);
     groundFog.update(delta);
 
@@ -255,14 +285,21 @@ export default function (container: HTMLElement) {
     const t = Math.min(1, flash * 0.6);
     fog.color.copy(baseFog).lerp(FLASH_COLOR, t);
     (scene.background as Color).copy(baseBg).lerp(FLASH_COLOR, t * 0.85);
+
+    rain.intensity = Math.min(1, RAINFALL + flash * 0.5);
+    rain.update(delta);
+
+    composer.render();
   });
 
   return () => {
-    petalDrift.dispose();
+    renderer.setAnimationLoop(null);
+    composerObserver.disconnect();
+    composer.dispose();
+    bloomPass.dispose();
+    rain.dispose();
     wisps.dispose();
     groundFog.dispose();
-    leafGeometry.dispose();
-    leafMaterial.dispose();
     terrainMesh.geometry.dispose();
     terrainMesh.material.dispose();
     dispose();
