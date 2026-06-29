@@ -9,13 +9,17 @@ export const meta = {
     "Soft petals drifting downward with gentle flutter — cherry-blossom float, not stiff tumble.",
 };
 
+const FOG_COLOR = 0x1a1420;
+/** Dusky mauve — same plum family as fog, not the cool gray used in other examples. */
+const GROUND_COLOR = 0x2a2230;
+
 export default function (container: HTMLElement) {
   const { scene, controls, onFrame, dispose } = createScene(container, {
-    background: 0x1a1420,
+    background: FOG_COLOR,
     cameraPosition: [0, 4, 14],
   });
 
-  scene.fog = new Fog(0x1a1420, 8, 28);
+  scene.fog = new Fog(FOG_COLOR, 8, 28);
 
   controls.target.set(0, 2, 0);
   controls.update();
@@ -23,13 +27,13 @@ export default function (container: HTMLElement) {
   const groundSize = 24;
   const ground = new Mesh(
     new PlaneGeometry(groundSize, groundSize),
-    new MeshStandardMaterial({ color: 0x2a3038, roughness: 1, metalness: 0, side: DoubleSide }),
+    new MeshStandardMaterial({ color: GROUND_COLOR, roughness: 1, metalness: 0, side: DoubleSide }),
   );
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   scene.add(ground);
 
-  const grid = new GridHelper(groundSize, groundSize, 0x443344, 0x332233);
+  const grid = new GridHelper(groundSize, groundSize, 0x3d3048, 0x2e2438);
   scene.add(grid);
 
   const params = {
