@@ -103,6 +103,15 @@ export { DioramaGeometry } from "./geometry/architecture/DioramaGeometry";
 export { DiamondLeadedWindowGeometry } from "./geometry/architecture/DiamondLeadedWindowGeometry";
 export { GeorgianWindowGeometry } from "./geometry/architecture/GeorgianWindowGeometry";
 export {
+  buildCathedralFrameParts,
+  cathedralLatticeSpots,
+  CATHEDRAL_LATTICE_SPACING_FACTOR,
+  createCathedralRingGeometry,
+  createOpeningClippingPlanes,
+  resolveCathedralCell,
+  type CathedralLatticeGrid,
+} from "./geometry/architecture/cathedralLattice";
+export {
   buildGeorgianGridParts,
   georgianGridFromCells,
   type GeorgianGrid,
@@ -197,6 +206,7 @@ export { TreeGeometry } from "./geometry/trees/TreeGeometry";
 export { Diorama } from "./models/architecture/Diorama";
 export { DiamondLeadedWindow } from "./models/architecture/DiamondLeadedWindow";
 export { GeorgianWindow } from "./models/architecture/GeorgianWindow";
+export { CathedralWindow } from "./models/architecture/CathedralWindow";
 
 // Astronomy
 export { Moon } from "./models/astronomy/Moon";

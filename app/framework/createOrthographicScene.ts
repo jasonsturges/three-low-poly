@@ -48,6 +48,7 @@ export function createOrthographicScene(
   const renderer = createWebGLRenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
+  renderer.localClippingEnabled = true;
   const canvas = renderer.domElement;
   canvas.style.display = "block";
   canvas.style.width = "100%";

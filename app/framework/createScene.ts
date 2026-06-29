@@ -60,6 +60,7 @@ export function createScene(container: HTMLElement, options: SceneOptions = {}):
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setClearColor(0x000000);
   renderer.shadowMap.enabled = true;
+  renderer.localClippingEnabled = true;
   const canvas = renderer.domElement;
   canvas.style.display = "block";
   canvas.style.width = "100%";
