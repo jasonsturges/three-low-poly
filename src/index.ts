@@ -101,6 +101,12 @@ export { BifurcatedStaircaseGeometry } from "./geometry/architecture/BifurcatedS
 export { BrickGeometry } from "./geometry/architecture/BrickGeometry";
 export { DioramaGeometry } from "./geometry/architecture/DioramaGeometry";
 export { DiamondLeadedWindowGeometry } from "./geometry/architecture/DiamondLeadedWindowGeometry";
+export { GeorgianWindowGeometry } from "./geometry/architecture/GeorgianWindowGeometry";
+export {
+  buildGeorgianGridParts,
+  georgianGridFromCells,
+  type GeorgianGrid,
+} from "./geometry/architecture/georgianGrid";
 export {
   buildDiamondLatticeParts,
   clipSegmentToAabb,
@@ -190,6 +196,7 @@ export { TreeGeometry } from "./geometry/trees/TreeGeometry";
 // Architecture
 export { Diorama } from "./models/architecture/Diorama";
 export { DiamondLeadedWindow } from "./models/architecture/DiamondLeadedWindow";
+export { GeorgianWindow } from "./models/architecture/GeorgianWindow";
 
 // Astronomy
 export { Moon } from "./models/astronomy/Moon";
