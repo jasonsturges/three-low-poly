@@ -12,12 +12,10 @@ import {
 } from "three";
 import {
   BoneGeometry,
-  Candle,
   CrossHeadstone,
   EllipticLeafGeometry,
   Lantern,
   PetalDriftEffect,
-  LightFlickerAnimation,
   Mausoleum,
   Moon,
   ObeliskHeadstone,
@@ -26,7 +24,6 @@ import {
   SquareHeadstone,
   StoneFencePost,
   WroughtIronFence,
-  logarithmicRandomMax,
 } from "three-low-poly";
 import { clearDefaultLights } from "../../framework/clearDefaultLights";
 import { createScene } from "../../framework/createScene";
@@ -135,30 +132,6 @@ export default function (container: HTMLElement) {
     scene.add(bone);
   }
 
-  const lightAnimations: LightFlickerAnimation[] = [];
-  for (let i = 0; i < 5; i++) {
-    const candleRadius = logarithmicRandomMax(0.9, 0.05, 0.15);
-    const candleHeight = logarithmicRandomMax(0.7, 0.3, 1.0);
-    const candle = new Candle({ radiusTop: candleRadius, radiusBottom: candleRadius, height: candleHeight });
-    candle.castShadow = true;
-    candle.position.set(Math.random() * 24 - 12, 0, Math.random() * 24 - 12);
-    scene.add(candle);
-
-    const candleLight = new PointLight(0xffa500, 1, 5);
-    candleLight.position.set(candle.position.x, candle.position.y + candleHeight / 2 + 0.125, candle.position.z);
-    candleLight.castShadow = true;
-    scene.add(candleLight);
-
-    lightAnimations.push(
-      new LightFlickerAnimation({
-        light: candleLight,
-        x: candle.position.x,
-        y: candleHeight + 0.125,
-        z: candle.position.z,
-      }),
-    );
-  }
-
   const moon = new Moon();
   moon.position.set(9, 15, -45);
   scene.add(moon);
@@ -206,10 +179,7 @@ export default function (container: HTMLElement) {
   hemisphereLight.position.set(0, 10, 0);
   scene.add(hemisphereLight);
 
-  onFrame((delta) => {
-    petalDrift.update(delta);
-    lightAnimations.forEach((animation) => animation.update());
-  });
+  onFrame((delta) => petalDrift.update(delta));
 
   return () => {
     petalDrift.dispose();

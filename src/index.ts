@@ -19,7 +19,7 @@ export { cameraPendulumAnimation } from "./animators/cameraPendulumAnimation";
 export { cameraSpiralAscensionAnimation } from "./animators/cameraSpiralAscentionAnimation";
 export { cameraWobbleAnimation } from "./animators/cameraWobbleAnimation";
 export { cameraZoomInAnimation } from "./animators/cameraZoomInAnimation";
-export { LightFlickerAnimation, type LightFlickerAnimationOptions } from "./animators/LightFlickerAnimation";
+
 //------------------------------
 //  Brushes
 //------------------------------
@@ -48,6 +48,8 @@ export { ParametricCurve } from "./constants/ParametricCurve";
 //------------------------------
 
 export { EffervescenceEffect, type EffervescenceEffectOptions } from "./effects/EffervescenceEffect";
+export { FlameFlickerEffect, type FlameFlickerEffectOptions } from "./effects/FlameFlickerEffect";
+export { GlowHalo, type GlowHaloOptions } from "./effects/GlowHalo";
 export {
   EmissivePulseEffect,
   type EmissivePulseEffectOptions,
