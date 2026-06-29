@@ -78,6 +78,7 @@ export default function (container: HTMLElement) {
     depth: 1.1,
     speedMin: 0.35,
     speedMax: 0.85,
+    spread: 0.88,
     emissiveIntensity: 0.28,
     showReference: true,
   };
@@ -90,6 +91,7 @@ export default function (container: HTMLElement) {
       depth: params.depth,
       speedMin: params.speedMin,
       speedMax: params.speedMax,
+      spread: params.spread,
       color: 0xb8ffe8,
       opacity: 0.72,
       emissiveIntensity: params.emissiveIntensity,
@@ -117,6 +119,7 @@ export default function (container: HTMLElement) {
   gui.add(params, "depth", 0.3, 2.5, 0.05).name("Depth").onChange(rebuild);
   gui.add(params, "speedMin", 0.05, 2, 0.01).name("Speed Min").onChange(rebuild);
   gui.add(params, "speedMax", 0.05, 2.5, 0.01).name("Speed Max").onChange(rebuild);
+  gui.add(params, "spread", 0.5, 1, 0.01).name("Spread Inset").onChange(rebuild);
   gui.add(params, "emissiveIntensity", 0, 1.2, 0.01).name("Glow").onChange(rebuild);
   gui
     .add(params, "showReference")
