@@ -53,9 +53,12 @@ export default function (container: HTMLElement) {
     metalness: 0.15,
     transparent: true,
     opacity: 0.35,
+    depthWrite: false,
+    side: DoubleSide,
   });
   const vessel = new Mesh(new CylinderGeometry(0.72, 0.82, 2.1, 24, 1, true), vesselMaterial);
   vessel.position.set(0, 1.95, 0);
+  vessel.renderOrder = 2;
   scene.add(vessel);
 
   const liquidMaterial = new MeshStandardMaterial({
@@ -66,9 +69,12 @@ export default function (container: HTMLElement) {
     metalness: 0.05,
     transparent: true,
     opacity: 0.55,
+    depthWrite: false,
+    side: DoubleSide,
   });
   const liquid = new Mesh(new CylinderGeometry(0.66, 0.76, 1.55, 20), liquidMaterial);
   liquid.position.set(0, 1.62, 0);
+  liquid.renderOrder = 1;
   scene.add(liquid);
 
   const params = {
@@ -99,6 +105,7 @@ export default function (container: HTMLElement) {
 
   let fizz = createFizz();
   fizz.position.set(0, 0.95, 0);
+  fizz.renderOrder = 0;
   scene.add(fizz);
 
   const rebuild = () => {
@@ -106,6 +113,7 @@ export default function (container: HTMLElement) {
     fizz.dispose();
     fizz = createFizz();
     fizz.position.set(0, 0.95, 0);
+    fizz.renderOrder = 0;
     scene.add(fizz);
   };
 

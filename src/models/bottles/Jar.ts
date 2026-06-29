@@ -1,4 +1,4 @@
-import { Mesh, MeshStandardMaterial } from "three";
+import { DoubleSide, Mesh, MeshStandardMaterial } from "three";
 import { JarGeometry } from "../../geometry/bottles/JarGeometry";
 
 /**
@@ -16,6 +16,7 @@ export class Jar extends Mesh<JarGeometry, MeshStandardMaterial[]> {
         opacity: 0.4,
         roughness: 0.1,
         metalness: 0.5,
+        side: DoubleSide,
       }),
       new MeshStandardMaterial({
         color: 0x8b4513,
