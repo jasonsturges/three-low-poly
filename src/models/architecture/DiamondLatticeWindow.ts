@@ -10,17 +10,16 @@ import {
 } from "three";
 import type { DiamondLatticeGrid } from "../../geometry/architecture/diamondLattice";
 import {
-  DiamondLeadedWindowGeometry,
-  type DiamondLeadedWindowGeometryOptions,
-} from "../../geometry/architecture/DiamondLeadedWindowGeometry";
+  DiamondLatticeWindowGeometry,
+  type DiamondLatticeWindowGeometryOptions,
+} from "../../geometry/architecture/DiamondLatticeWindowGeometry";
 
-export interface DiamondLeadedWindowOptions extends DiamondLeadedWindowGeometryOptions {
+export interface DiamondLatticeWindowOptions extends DiamondLatticeWindowGeometryOptions {
   /** Lead + outer frame tint. Defaults to `#0c0f14`. */
   leadColor?: ColorRepresentation;
   /**
    * Optional glass pane coplanar with the lattice (same Z center).
-   * Mad-science uses an emissive sky mesh in the scene instead; cathedral
-   * uses glowing glass — enable for either look.
+   * Mad-science uses an emissive sky mesh in the scene instead.
    */
   glass?: boolean;
   glassColor?: ColorRepresentation;
@@ -30,16 +29,13 @@ export interface DiamondLeadedWindowOptions extends DiamondLeadedWindowGeometryO
 }
 
 /**
- * Rectangular diamond leaded window — mad-science Room parity.
+ * Diamond lattice window — diagonal lead cames with axis-aligned quarrels (`<>`).
  *
  * Local frame: centered on the opening, XY plane facing +Z. Lead and optional
- * glass share `z = 0` so cames sit in the pane. Pair with a scene-owned backing
- * plane (storm sky, emissive) behind the wall for lightning flashes.
- *
- * Material indices on the lattice mesh: single lead/frame material.
+ * glass share `z = 0`. Pair with a scene-owned backing plane behind the wall.
  */
-export class DiamondLeadedWindow extends Group {
-  readonly lattice: Mesh<DiamondLeadedWindowGeometry, MeshStandardMaterial>;
+export class DiamondLatticeWindow extends Group {
+  readonly lattice: Mesh<DiamondLatticeWindowGeometry, MeshStandardMaterial>;
   readonly glass?: Mesh<PlaneGeometry, MeshPhysicalMaterial>;
   readonly cellsX: number;
   readonly cellsY: number;
@@ -52,10 +48,10 @@ export class DiamondLeadedWindow extends Group {
     glassEmissive,
     glassEmissiveIntensity = 0,
     ...geometryOptions
-  }: DiamondLeadedWindowOptions = {}) {
+  }: DiamondLatticeWindowOptions = {}) {
     super();
 
-    const geometry = new DiamondLeadedWindowGeometry(geometryOptions);
+    const geometry = new DiamondLatticeWindowGeometry(geometryOptions);
     this.cellsX = geometry.cellsX;
     this.cellsY = geometry.cellsY;
     this.fittedGrid = geometry.fittedGrid;

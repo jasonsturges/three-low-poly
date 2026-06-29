@@ -6,7 +6,7 @@ import {
   type DiamondLatticeGrid,
 } from "./diamondLattice";
 
-export interface DiamondLeadedWindowGeometryOptions {
+export interface DiamondLatticeWindowGeometryOptions {
   /** Opening width (world units). */
   width?: number;
   /** Opening height (world units). */
@@ -24,14 +24,14 @@ export interface DiamondLeadedWindowGeometryOptions {
 }
 
 /**
- * Rectangular leaded diamond lattice — outer frame plus diagonal cames.
+ * Diamond lattice window — outer frame plus diagonal cames.
  * Quarrel tips align to the vertical and horizontal axes (`<>`).
  * Built in the XY plane facing +Z.
  *
- * Glass is a separate pane on {@link DiamondLeadedWindow} — this geometry is
+ * Glass is a separate pane on {@link DiamondLatticeWindow} — this geometry is
  * lead and frame only (casts shadow; glass typically does not).
  */
-export class DiamondLeadedWindowGeometry extends BufferGeometry {
+export class DiamondLatticeWindowGeometry extends BufferGeometry {
   readonly cellsX: number;
   readonly cellsY: number;
   readonly fittedGrid: DiamondLatticeGrid;
@@ -44,7 +44,7 @@ export class DiamondLeadedWindowGeometry extends BufferGeometry {
     cellsX = 10,
     cellsY = 10,
     centerY = 0,
-  }: DiamondLeadedWindowGeometryOptions = {}) {
+  }: DiamondLatticeWindowGeometryOptions = {}) {
     super();
 
     this.cellsX = Math.max(1, Math.round(cellsX));
@@ -61,7 +61,7 @@ export class DiamondLeadedWindowGeometry extends BufferGeometry {
     });
 
     const merged = mergeBufferGeometries(parts);
-    if (!merged) throw new Error("DiamondLeadedWindowGeometry: merge failed");
+    if (!merged) throw new Error("DiamondLatticeWindowGeometry: merge failed");
 
     this.copy(merged);
     merged.dispose();

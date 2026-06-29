@@ -18,15 +18,15 @@ import {
 } from "three";
 import { mergeBufferGeometries } from "three-stdlib";
 import {
-  buildCathedralFrameParts,
-  cathedralLatticeSpots,
-  createCathedralRingGeometry,
+  buildRingLatticeFrameParts,
   createOpeningClippingPlanes,
-  resolveCathedralCell,
-  type CathedralLatticeGrid,
-} from "../../geometry/architecture/cathedralLattice";
+  createRingLatticeGeometry,
+  resolveRingLatticeCell,
+  ringLatticeSpots,
+  type RingLatticeGrid,
+} from "../../geometry/architecture/ringLattice";
 
-export interface CathedralWindowOptions {
+export interface RingLatticeWindowOptions {
   /** Opening width (world units). */
   width?: number;
   /** Opening height (world units). */
@@ -57,16 +57,15 @@ export interface CathedralWindowOptions {
 const STENCIL_REF = 1;
 
 /**
- * Cathedral lattice window — overlapping square rings on a uniform grid,
- * stencil-clipped to a rectangular opening. Portfolio parity without the
- * pointed arch, mullions, or hero effects.
+ * Ring lattice window — overlapping square rings on a uniform grid (diaper /
+ * trellis fretwork), stencil-clipped to a rectangular opening.
  */
-export class CathedralWindow extends Group {
+export class RingLatticeWindow extends Group {
   readonly lattice: InstancedMesh;
   readonly frame: Mesh;
   readonly glass?: Mesh<PlaneGeometry, MeshPhysicalMaterial>;
   readonly cell: number;
-  readonly fittedGrid: CathedralLatticeGrid;
+  readonly fittedGrid: RingLatticeGrid;
   private readonly clipPlanesLocal: Plane[];
   private readonly clipPlanesWorld: Plane[];
 
@@ -85,11 +84,11 @@ export class CathedralWindow extends Group {
     glassColor = "#6a7d8c",
     glassEmissive,
     glassEmissiveIntensity = 0,
-  }: CathedralWindowOptions = {}) {
+  }: RingLatticeWindowOptions = {}) {
     super();
 
-    this.cell = resolveCathedralCell(width, height, cellOption, cellsX);
-    const { spots, grid } = cathedralLatticeSpots({
+    this.cell = resolveRingLatticeCell(width, height, cellOption, cellsX);
+    const { spots, grid } = ringLatticeSpots({
       width,
       height,
       centerY,
@@ -137,9 +136,7 @@ export class CathedralWindow extends Group {
     mask.renderOrder = 1;
     this.add(mask);
 
-    const ringGeo = createCathedralRingGeometry(grid.ringOuter, ringThickness, ringDepth);
-    // WebGL enables stencil *test* only when stencilWrite is true — use writeMask 0
-    // so the lattice reads the mask without modifying it (WebGPU does not share this quirk).
+    const ringGeo = createRingLatticeGeometry(grid.ringOuter, ringThickness, ringDepth);
     const latticeMaterial = new MeshStandardMaterial({
       color: new Color(latticeColor),
       roughness: 0.7,
@@ -175,7 +172,7 @@ export class CathedralWindow extends Group {
     };
     this.add(this.lattice);
 
-    const frameParts = buildCathedralFrameParts({
+    const frameParts = buildRingLatticeFrameParts({
       width,
       height,
       centerY,
@@ -183,7 +180,7 @@ export class CathedralWindow extends Group {
       frameDepth,
     });
     const frameGeo = mergeBufferGeometries(frameParts);
-    if (!frameGeo) throw new Error("CathedralWindow: frame merge failed");
+    if (!frameGeo) throw new Error("RingLatticeWindow: frame merge failed");
     for (const part of frameParts) part.dispose();
 
     this.frame = new Mesh(

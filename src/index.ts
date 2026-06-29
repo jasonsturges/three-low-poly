@@ -100,22 +100,22 @@ export * from "./factory/HexagonalTileFactory";
 export { BifurcatedStaircaseGeometry } from "./geometry/architecture/BifurcatedStaircaseGeometry";
 export { BrickGeometry } from "./geometry/architecture/BrickGeometry";
 export { DioramaGeometry } from "./geometry/architecture/DioramaGeometry";
-export { DiamondLeadedWindowGeometry } from "./geometry/architecture/DiamondLeadedWindowGeometry";
-export { GeorgianWindowGeometry } from "./geometry/architecture/GeorgianWindowGeometry";
+export { DiamondLatticeWindowGeometry } from "./geometry/architecture/DiamondLatticeWindowGeometry";
+export { GregorianLatticeWindowGeometry } from "./geometry/architecture/GregorianLatticeWindowGeometry";
 export {
-  buildCathedralFrameParts,
-  cathedralLatticeSpots,
-  CATHEDRAL_LATTICE_SPACING_FACTOR,
-  createCathedralRingGeometry,
+  buildGregorianLatticeParts,
+  gregorianLatticeGridFromCells,
+  type GregorianLatticeGrid,
+} from "./geometry/architecture/gregorianLattice";
+export {
+  buildRingLatticeFrameParts,
   createOpeningClippingPlanes,
-  resolveCathedralCell,
-  type CathedralLatticeGrid,
-} from "./geometry/architecture/cathedralLattice";
-export {
-  buildGeorgianGridParts,
-  georgianGridFromCells,
-  type GeorgianGrid,
-} from "./geometry/architecture/georgianGrid";
+  createRingLatticeGeometry,
+  resolveRingLatticeCell,
+  ringLatticeSpots,
+  RING_LATTICE_SPACING_FACTOR,
+  type RingLatticeGrid,
+} from "./geometry/architecture/ringLattice";
 export {
   buildDiamondLatticeParts,
   clipSegmentToAabb,
@@ -204,9 +204,9 @@ export { TreeGeometry } from "./geometry/trees/TreeGeometry";
 
 // Architecture
 export { Diorama } from "./models/architecture/Diorama";
-export { DiamondLeadedWindow } from "./models/architecture/DiamondLeadedWindow";
-export { GeorgianWindow } from "./models/architecture/GeorgianWindow";
-export { CathedralWindow } from "./models/architecture/CathedralWindow";
+export { DiamondLatticeWindow } from "./models/architecture/DiamondLatticeWindow";
+export { GregorianLatticeWindow } from "./models/architecture/GregorianLatticeWindow";
+export { RingLatticeWindow } from "./models/architecture/RingLatticeWindow";
 
 // Astronomy
 export { Moon } from "./models/astronomy/Moon";

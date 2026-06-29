@@ -1,7 +1,7 @@
 import { BoxGeometry } from "three";
 
 /** Pane dimensions derived from opening size and cell counts. */
-export interface GeorgianGrid {
+export interface GregorianLatticeGrid {
   /** Width of each rectangular pane. */
   paneWidth: number;
   /** Height of each rectangular pane. */
@@ -14,12 +14,12 @@ export interface GeorgianGrid {
  * `cellsX` panes span the opening width; `cellsY` span the height. Mullions
  * divide the opening evenly so every segment is a full rectangle.
  */
-export function georgianGridFromCells(
+export function gregorianLatticeGridFromCells(
   width: number,
   height: number,
   cellsX: number,
   cellsY: number,
-): GeorgianGrid {
+): GregorianLatticeGrid {
   const cx = Math.max(1, Math.round(cellsX));
   const cy = Math.max(1, Math.round(cellsY));
   return {
@@ -28,7 +28,7 @@ export function georgianGridFromCells(
   };
 }
 
-export interface GeorgianGridPartOptions {
+export interface GregorianLatticePartOptions {
   width: number;
   height: number;
   /** Center Y of the opening in local space. Defaults to `0`. */
@@ -43,7 +43,7 @@ export interface GeorgianGridPartOptions {
  * Build merged box geometries for the outer frame and interior mullions.
  * Orthogonal grid — no clipping required; counts guarantee full panes.
  */
-export function buildGeorgianGridParts({
+export function buildGregorianLatticeParts({
   width,
   height,
   centerY = 0,
@@ -51,7 +51,7 @@ export function buildGeorgianGridParts({
   cellsY,
   mullionThickness: barT,
   mullionDepth: barD,
-}: GeorgianGridPartOptions): BoxGeometry[] {
+}: GregorianLatticePartOptions): BoxGeometry[] {
   const hw = width / 2;
   const hh = height / 2;
   const parts: BoxGeometry[] = [
@@ -61,7 +61,7 @@ export function buildGeorgianGridParts({
     new BoxGeometry(barT, height + barT, barD).translate(hw, centerY, 0),
   ];
 
-  const { paneWidth, paneHeight } = georgianGridFromCells(width, height, cellsX, cellsY);
+  const { paneWidth, paneHeight } = gregorianLatticeGridFromCells(width, height, cellsX, cellsY);
 
   for (let col = 1; col < cellsX; col++) {
     const x = -hw + paneWidth * col;

@@ -1,14 +1,14 @@
 import { DirectionalLight, HemisphereLight, Mesh, MeshStandardMaterial, PlaneGeometry } from "three";
 import GUI from "lil-gui";
-import { DiamondLeadedWindow } from "three-low-poly";
+import { DiamondLatticeWindow } from "three-low-poly";
 import { clearDefaultLights } from "../../../framework/clearDefaultLights";
 import { createScene } from "../../../framework/createScene";
 
-export const meta = { title: "Diamond Leaded Window" };
+export const meta = { title: "Diamond Lattice Window" };
 
 const WALL_T = 0.4;
 
-function disposeWindow(window: DiamondLeadedWindow): void {
+function disposeWindow(window: DiamondLatticeWindow): void {
   window.lattice.geometry.dispose();
   window.lattice.material.dispose();
   window.glass?.geometry.dispose();
@@ -68,7 +68,7 @@ export default function (container: HTMLElement) {
   };
 
   const makeWindow = () => {
-    const window = new DiamondLeadedWindow({
+    const window = new DiamondLatticeWindow({
       width: params.width,
       height: params.height,
       cellsX: params.cellsX,
@@ -98,7 +98,7 @@ export default function (container: HTMLElement) {
   };
 
   const gui = new GUI();
-  gui.title("Diamond Leaded Window");
+  gui.title("Diamond Lattice Window");
 
   const openingFolder = gui.addFolder("Opening");
   openingFolder.add(params, "width", 2, 8).name("Width").step(0.1).onChange(rebuild);

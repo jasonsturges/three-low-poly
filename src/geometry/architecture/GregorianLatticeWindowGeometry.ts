@@ -1,8 +1,12 @@
 import { BufferGeometry } from "three";
 import { mergeBufferGeometries } from "three-stdlib";
-import { buildGeorgianGridParts, georgianGridFromCells, type GeorgianGrid } from "./georgianGrid";
+import {
+  buildGregorianLatticeParts,
+  gregorianLatticeGridFromCells,
+  type GregorianLatticeGrid,
+} from "./gregorianLattice";
 
-export interface GeorgianWindowGeometryOptions {
+export interface GregorianLatticeWindowGeometryOptions {
   /** Opening width (world units). */
   width?: number;
   /** Opening height (world units). */
@@ -20,13 +24,13 @@ export interface GeorgianWindowGeometryOptions {
 }
 
 /**
- * Georgian window — outer frame plus orthogonal mullions in a rectangular grid.
+ * Gregorian lattice window — outer frame plus orthogonal mullions in a rectangular grid.
  * Built in the XY plane facing +Z.
  */
-export class GeorgianWindowGeometry extends BufferGeometry {
+export class GregorianLatticeWindowGeometry extends BufferGeometry {
   readonly cellsX: number;
   readonly cellsY: number;
-  readonly fittedGrid: GeorgianGrid;
+  readonly fittedGrid: GregorianLatticeGrid;
 
   constructor({
     width = 4.5,
@@ -36,14 +40,14 @@ export class GeorgianWindowGeometry extends BufferGeometry {
     cellsX = 4,
     cellsY = 6,
     centerY = 0,
-  }: GeorgianWindowGeometryOptions = {}) {
+  }: GregorianLatticeWindowGeometryOptions = {}) {
     super();
 
     this.cellsX = Math.max(1, Math.round(cellsX));
     this.cellsY = Math.max(1, Math.round(cellsY));
-    this.fittedGrid = georgianGridFromCells(width, height, this.cellsX, this.cellsY);
+    this.fittedGrid = gregorianLatticeGridFromCells(width, height, this.cellsX, this.cellsY);
 
-    const parts = buildGeorgianGridParts({
+    const parts = buildGregorianLatticeParts({
       width,
       height,
       centerY,
@@ -54,7 +58,7 @@ export class GeorgianWindowGeometry extends BufferGeometry {
     });
 
     const merged = mergeBufferGeometries(parts);
-    if (!merged) throw new Error("GeorgianWindowGeometry: merge failed");
+    if (!merged) throw new Error("GregorianLatticeWindowGeometry: merge failed");
 
     this.copy(merged);
     merged.dispose();

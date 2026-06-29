@@ -7,8 +7,8 @@ import {
   Vector3,
 } from "three";
 
-/** Portfolio ring-spacing factor — overlap tightens as this approaches 1. */
-export const CATHEDRAL_LATTICE_SPACING_FACTOR = 0.96;
+/** Ring-spacing factor — overlap tightens as this approaches 1. */
+export const RING_LATTICE_SPACING_FACTOR = 0.96;
 
 /**
  * Four clipping planes for a rectangular opening (shadow + mesh clip).
@@ -25,7 +25,7 @@ export function createOpeningClippingPlanes(width: number, height: number, cente
   ];
 }
 
-export interface CathedralLatticeGrid {
+export interface RingLatticeGrid {
   /** Requested ring-center spacing before the overlap factor. */
   cell: number;
   /** Effective center spacing (`cell × 0.96`). */
@@ -36,7 +36,7 @@ export interface CathedralLatticeGrid {
   count: number;
 }
 
-export interface CathedralLatticeSpotOptions {
+export interface RingLatticeSpotOptions {
   width: number;
   height: number;
   centerY?: number;
@@ -44,7 +44,7 @@ export interface CathedralLatticeSpotOptions {
 }
 
 /** Resolve uniform ring spacing — `cell` wins over the `cellsX` density hint. */
-export function resolveCathedralCell(
+export function resolveRingLatticeCell(
   width: number,
   _height: number,
   cell?: number,
@@ -56,13 +56,13 @@ export function resolveCathedralCell(
 }
 
 /** Ring-center positions overscanning the opening (stencil trims the excess). */
-export function cathedralLatticeSpots({
+export function ringLatticeSpots({
   width,
   height,
   centerY = 0,
   cell,
-}: CathedralLatticeSpotOptions): { spots: [number, number][]; grid: CathedralLatticeGrid } {
-  const latticeCell = cell * CATHEDRAL_LATTICE_SPACING_FACTOR;
+}: RingLatticeSpotOptions): { spots: [number, number][]; grid: RingLatticeGrid } {
+  const latticeCell = cell * RING_LATTICE_SPACING_FACTOR;
   const pad = latticeCell * 0.6;
   const hh = height / 2;
   const hw = width / 2 + pad;
@@ -90,7 +90,7 @@ export function cathedralLatticeSpots({
 }
 
 /** Hollow square profile extruded for one lattice ring (local XY, facing +Z). */
-export function createCathedralRingGeometry(outer: number, wall: number, depth: number): ExtrudeGeometry {
+export function createRingLatticeGeometry(outer: number, wall: number, depth: number): ExtrudeGeometry {
   const inner = Math.max(outer - wall, outer * 0.5);
   const ring = new Shape();
   ring.moveTo(-outer, -outer);
@@ -110,7 +110,7 @@ export function createCathedralRingGeometry(outer: number, wall: number, depth: 
   return new ExtrudeGeometry(ring, { depth, bevelEnabled: false });
 }
 
-export interface CathedralFramePartOptions {
+export interface RingLatticeFramePartOptions {
   width: number;
   height: number;
   centerY?: number;
@@ -118,14 +118,14 @@ export interface CathedralFramePartOptions {
   frameDepth: number;
 }
 
-/** Outer frame bars — same topology as diamond / Georgian openings. */
-export function buildCathedralFrameParts({
+/** Outer frame bars — shared topology across lattice window openings. */
+export function buildRingLatticeFrameParts({
   width,
   height,
   centerY = 0,
   frameThickness: barT,
   frameDepth: barD,
-}: CathedralFramePartOptions): BoxGeometry[] {
+}: RingLatticeFramePartOptions): BoxGeometry[] {
   const hw = width / 2;
   const hh = height / 2;
   return [
@@ -135,4 +135,3 @@ export function buildCathedralFrameParts({
     new BoxGeometry(barT, height + barT, barD).translate(hw, centerY, 0),
   ];
 }
-

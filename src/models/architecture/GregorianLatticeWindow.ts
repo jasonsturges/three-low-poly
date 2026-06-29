@@ -8,13 +8,13 @@ import {
   MeshStandardMaterial,
   PlaneGeometry,
 } from "three";
-import type { GeorgianGrid } from "../../geometry/architecture/georgianGrid";
+import type { GregorianLatticeGrid } from "../../geometry/architecture/gregorianLattice";
 import {
-  GeorgianWindowGeometry,
-  type GeorgianWindowGeometryOptions,
-} from "../../geometry/architecture/GeorgianWindowGeometry";
+  GregorianLatticeWindowGeometry,
+  type GregorianLatticeWindowGeometryOptions,
+} from "../../geometry/architecture/GregorianLatticeWindowGeometry";
 
-export interface GeorgianWindowOptions extends GeorgianWindowGeometryOptions {
+export interface GregorianLatticeWindowOptions extends GregorianLatticeWindowGeometryOptions {
   /** Frame + mullion tint. Defaults to `#5c4033` (wood). */
   mullionColor?: ColorRepresentation;
   /** Optional glass pane coplanar with the mullions (same Z center). */
@@ -25,17 +25,17 @@ export interface GeorgianWindowOptions extends GeorgianWindowGeometryOptions {
 }
 
 /**
- * Georgian window — rectangular pane grid with orthogonal mullions.
+ * Gregorian lattice window — rectangular pane grid with orthogonal mullions.
  *
  * Local frame: centered on the opening, XY plane facing +Z. Mullions and
  * optional glass share `z = 0`.
  */
-export class GeorgianWindow extends Group {
-  readonly mullions: Mesh<GeorgianWindowGeometry, MeshStandardMaterial>;
+export class GregorianLatticeWindow extends Group {
+  readonly mullions: Mesh<GregorianLatticeWindowGeometry, MeshStandardMaterial>;
   readonly glass?: Mesh<PlaneGeometry, MeshPhysicalMaterial>;
   readonly cellsX: number;
   readonly cellsY: number;
-  readonly fittedGrid: GeorgianGrid;
+  readonly fittedGrid: GregorianLatticeGrid;
 
   constructor({
     mullionColor = "#5c4033",
@@ -44,10 +44,10 @@ export class GeorgianWindow extends Group {
     glassEmissive,
     glassEmissiveIntensity = 0,
     ...geometryOptions
-  }: GeorgianWindowOptions = {}) {
+  }: GregorianLatticeWindowOptions = {}) {
     super();
 
-    const geometry = new GeorgianWindowGeometry(geometryOptions);
+    const geometry = new GregorianLatticeWindowGeometry(geometryOptions);
     this.cellsX = geometry.cellsX;
     this.cellsY = geometry.cellsY;
     this.fittedGrid = geometry.fittedGrid;

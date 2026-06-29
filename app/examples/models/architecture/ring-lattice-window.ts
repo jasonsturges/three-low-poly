@@ -7,11 +7,11 @@ import {
   PlaneGeometry,
 } from "three";
 import GUI from "lil-gui";
-import { CathedralWindow } from "three-low-poly";
+import { RingLatticeWindow } from "three-low-poly";
 import { clearDefaultLights } from "../../../framework/clearDefaultLights";
 import { createScene } from "../../../framework/createScene";
 
-export const meta = { title: "Cathedral Window" };
+export const meta = { title: "Ring Lattice Window" };
 
 const WALL_T = 0.4;
 
@@ -20,7 +20,7 @@ function disposeMaterial(material: Material | Material[]): void {
   else material.dispose();
 }
 
-function disposeWindow(window: CathedralWindow): void {
+function disposeWindow(window: RingLatticeWindow): void {
   window.lattice.geometry.dispose();
   disposeMaterial(window.lattice.material);
   window.frame.geometry.dispose();
@@ -90,7 +90,7 @@ export default function (container: HTMLElement) {
   };
 
   const makeWindow = () => {
-    const window = new CathedralWindow({
+    const window = new RingLatticeWindow({
       width: params.width,
       height: params.height,
       ringThickness: params.ringThickness,
@@ -119,7 +119,7 @@ export default function (container: HTMLElement) {
   };
 
   const gui = new GUI();
-  gui.title("Cathedral Window");
+  gui.title("Ring Lattice Window");
 
   const openingFolder = gui.addFolder("Opening");
   openingFolder.add(params, "width", 2, 8).name("Width").step(0.1).onChange(rebuild);

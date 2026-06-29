@@ -1,14 +1,14 @@
 import { DirectionalLight, HemisphereLight, Mesh, MeshStandardMaterial, PlaneGeometry } from "three";
 import GUI from "lil-gui";
-import { GeorgianWindow } from "three-low-poly";
+import { GregorianLatticeWindow } from "three-low-poly";
 import { clearDefaultLights } from "../../../framework/clearDefaultLights";
 import { createScene } from "../../../framework/createScene";
 
-export const meta = { title: "Georgian Window" };
+export const meta = { title: "Gregorian Lattice Window" };
 
 const WALL_T = 0.4;
 
-function disposeWindow(window: GeorgianWindow): void {
+function disposeWindow(window: GregorianLatticeWindow): void {
   window.mullions.geometry.dispose();
   window.mullions.material.dispose();
   window.glass?.geometry.dispose();
@@ -67,7 +67,7 @@ export default function (container: HTMLElement) {
   };
 
   const makeWindow = () => {
-    const window = new GeorgianWindow({
+    const window = new GregorianLatticeWindow({
       width: params.width,
       height: params.height,
       cellsX: params.cellsX,
@@ -95,7 +95,7 @@ export default function (container: HTMLElement) {
   };
 
   const gui = new GUI();
-  gui.title("Georgian Window");
+  gui.title("Gregorian Lattice Window");
 
   const openingFolder = gui.addFolder("Opening");
   openingFolder.add(params, "width", 2, 8).name("Width").step(0.1).onChange(rebuild);
