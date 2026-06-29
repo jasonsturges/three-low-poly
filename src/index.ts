@@ -12,13 +12,31 @@
 //  Animators
 //------------------------------
 
-export { cameraDollyAnimation } from "./animators/cameraDollyAnimation";
-export { cameraFlythroughAnimation } from "./animators/cameraFlythroughAnimation";
-export { cameraOrbitAnimation } from "./animators/cameraOrbitAnimation";
-export { cameraPendulumAnimation } from "./animators/cameraPendulumAnimation";
-export { cameraSpiralAscensionAnimation } from "./animators/cameraSpiralAscentionAnimation";
-export { cameraWobbleAnimation } from "./animators/cameraWobbleAnimation";
-export { cameraZoomInAnimation } from "./animators/cameraZoomInAnimation";
+export { CameraPlayback } from "./animators/CameraPlayback";
+export {
+  applySnapshot,
+  captureSnapshot,
+  type CameraClip,
+  type CameraSnapshot,
+  type ClipPhase,
+  type ClipRuntime,
+} from "./animators/cameraClip";
+export {
+  createDollyClip,
+  createFlythroughClip,
+  createOrbitClip,
+  createPendulumClip,
+  createSpiralClip,
+  createWobbleClip,
+  createZoomClip,
+  type DollyClipOptions,
+  type FlythroughClipOptions,
+  type OrbitClipOptions,
+  type PendulumClipOptions,
+  type SpiralClipOptions,
+  type WobbleClipOptions,
+  type ZoomClipOptions,
+} from "./animators/cameraClips";
 
 //------------------------------
 //  Brushes

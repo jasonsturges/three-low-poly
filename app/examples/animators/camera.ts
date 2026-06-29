@@ -12,20 +12,76 @@ import {
 } from "three";
 import GUI from "lil-gui";
 import {
-  cameraDollyAnimation,
-  cameraFlythroughAnimation,
-  cameraOrbitAnimation,
-  cameraPendulumAnimation,
-  cameraSpiralAscensionAnimation,
-  cameraWobbleAnimation,
-  cameraZoomInAnimation,
+  CameraPlayback,
+  createDollyClip,
+  createFlythroughClip,
+  createOrbitClip,
+  createPendulumClip,
+  createSpiralClip,
+  createWobbleClip,
+  createZoomClip,
+  type CameraClip,
 } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
-export const meta = { title: "Camera Animations" };
+export const meta = {
+  title: "Camera Animations",
+  description:
+    "Unity-style showcase playback — one director, dt-based clips, OrbitControls paused while playing. " +
+    "Orbit, pendulum drift, waypoint tour, dolly, spiral, zoom, and impact wobble.",
+};
+
+const FOCUS = new Vector3(0, 0.5, 0);
+
+const CLIP_NAMES = ["Orbit", "Pendulum", "Flythrough", "Dolly", "Spiral", "Zoom", "Wobble"] as const;
+type ClipName = (typeof CLIP_NAMES)[number];
+
+function buildClip(name: ClipName): CameraClip {
+  switch (name) {
+    case "Orbit":
+      return createOrbitClip({ target: FOCUS, radius: 9, duration: 10, revolutions: 1 });
+    case "Pendulum":
+      return createPendulumClip({
+        target: FOCUS,
+        distance: 7,
+        duration: 24,
+        oscillations: 2,
+        azimuthAmplitude: 0.12,
+      });
+    case "Flythrough":
+      return createFlythroughClip({
+        waypoints: [
+          new Vector3(0, 2.5, 7),
+          new Vector3(4, 3, 0),
+          new Vector3(-5, 2.5, -4),
+          new Vector3(0, 2, 5),
+        ],
+        duration: 12,
+      });
+    case "Dolly":
+      return createDollyClip({ distance: -4, duration: 4 });
+    case "Spiral":
+      return createSpiralClip({
+        target: new Vector3(0, 0, 0),
+        radius: 7,
+        endRadius: 11,
+        height: 10,
+        revolutions: 1,
+        duration: 12,
+      });
+    case "Zoom":
+      return createZoomClip({ target: FOCUS, endFov: 35, duration: 3 });
+    case "Wobble":
+      return createWobbleClip({ intensity: 0.35, duration: 0.8 });
+  }
+}
 
 export default function (container: HTMLElement) {
-  const { scene, camera, dispose } = createScene(container, { cameraPosition: [0, 2, 5] });
+  const { scene, camera, controls, onFrame, dispose } = createScene(container, {
+    cameraPosition: [0, 2.5, 7],
+  });
+  controls.target.copy(FOCUS);
+  controls.update();
 
   const blueMaterial = new MeshStandardMaterial({ color: 0x0077ff });
   const blueCube = new Mesh(new BoxGeometry(1, 1, 1), blueMaterial);
@@ -65,94 +121,41 @@ export default function (container: HTMLElement) {
   plane.receiveShadow = true;
   scene.add(plane);
 
+  const playback = new CameraPlayback(camera, controls);
+  playback.setRest();
+
+  const params = { clip: "Orbit" as ClipName };
+
+  onFrame((dt) => {
+    playback.update(dt);
+    controls.update();
+  });
+
   const gui = new GUI();
-  gui.add(
-    {
-      Dolly: () => {
-        cameraDollyAnimation(camera, 5, 3000, () => {
-          console.log("Dolly animation complete");
-        });
+  gui.title("Camera Playback");
+  gui.add(params, "clip", CLIP_NAMES).name("Clip");
+  gui
+    .add(
+      {
+        Play: () => playback.play(buildClip(params.clip)),
       },
-    },
-    "Dolly",
-  );
-  gui.add(
-    {
-      Flythrough: () => {
-        cameraFlythroughAnimation(
-          camera,
-          [new Vector3(0, 5, 5), new Vector3(0, 5, -25.5), new Vector3(-20.5, 5, 0)],
-          6000,
-          () => {
-            console.log("Flythrough animation complete");
-          },
-        );
-      },
-    },
-    "Flythrough",
-  );
-  gui.add(
-    {
-      Orbit: () => {
-        cameraOrbitAnimation(camera, new Vector3(0, 0, 0), 10, 5000, () => {
-          console.log("Orbit animation complete");
-        });
-      },
-    },
-    "Orbit",
-  );
-  gui.add(
-    {
-      Pendulum: () => {
-        cameraPendulumAnimation(camera, new Vector3(0, 5, 5), 0.5, 9000, 3, () => {
-          console.log("Pendulum animation complete");
-        });
-      },
-    },
-    "Pendulum",
-  );
-  gui.add(
-    {
-      Spiral: () => {
-        cameraSpiralAscensionAnimation(camera, new Vector3(0, 0, 0), 10, 300, 5, 5000, () => {
-          console.log("Spiral ascension animation complete");
-        });
-      },
-    },
-    "Spiral",
-  );
-  gui.add(
-    {
-      Wobble: () => {
-        cameraWobbleAnimation(camera, 0.5, 1000, () => {
-          console.log("Wobble animation complete");
-        });
-      },
-    },
-    "Wobble",
-  );
-  gui.add(
-    {
-      ZoomIn: () => {
-        cameraZoomInAnimation(camera, new Vector3(0, 0, 0), 120, 75, 2000, () => {
-          console.log("Zoom in animation complete");
-        });
-      },
-    },
-    "ZoomIn",
-  );
-  gui.add(
-    {
+      "Play",
+    )
+    .name("▶ Play");
+  gui.add({ Stop: () => playback.stop() }, "Stop").name("■ Stop");
+  gui
+    .add({
       Reset: () => {
-        camera.position.set(0, 2, 5);
-        camera.lookAt(0, 0, 0);
+        playback.reset();
+        controls.target.copy(FOCUS);
+        controls.update();
       },
-    },
-    "Reset",
-  );
+    }, "Reset")
+    .name("↺ Reset");
 
   return () => {
     gui.destroy();
+    playback.dispose();
     blueCube.geometry.dispose();
     orangeCone.geometry.dispose();
     yellowSphere.geometry.dispose();

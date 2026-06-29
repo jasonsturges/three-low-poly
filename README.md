@@ -57,7 +57,7 @@ _Example Library scene_
 | **Environment** | Continuous scene- or region-scale atmosphere | `StarFieldEffect`, `RainEffect`, `LightningEffect`, `GroundFogEffect` |
 | **Ambience** | Continuous layers, often volume- or prop-bound | `PetalDriftEffect`, `EffervescenceEffect`, `WispEffect`, `EmissivePulseEffect`, `FlameFlickerEffect`, `GlowHalo` |
 | **FX** *(planned)* | Short-lived, event-triggered bursts | Dust on landing, spell flash, wind streak *(not in SDK yet)* |
-| **Animators** | Camera choreography and paths | `cameraOrbitAnimation`, `cameraFlythroughAnimation` |
+| **Animators** | Camera showcase playback (Unity demo-scene style) | `CameraPlayback`, `createOrbitClip`, `createFlythroughClip` |
 | **Utilities** | Math, easing, centering, RNG | `Easing`, `randomFloat`, `centerObject` |
 
 **Model examples** showcase geometry. **Effect examples** showcase layers. **Scene examples** compose both (e.g. Mad Science: jar + effervescence).
