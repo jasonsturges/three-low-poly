@@ -10,11 +10,12 @@ import {
   WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { configureOrbitControls } from "../../framework/configureOrbitControls";
 
 export const meta = {
   title: "Orbit",
   description:
-    "Standard perspective scene with OrbitControls and a three-light rig. " +
+    "Standard perspective scene with damped OrbitControls and a three-light rig. " +
     "Most library examples use createScene() which wraps this boilerplate.",
 };
 
@@ -48,7 +49,7 @@ export default function (container: HTMLElement) {
   scene.add(hemisphere);
 
   const controls = new OrbitControls(camera, canvas);
-  controls.update();
+  configureOrbitControls(controls);
 
   const resize = () => {
     const w = container.clientWidth;

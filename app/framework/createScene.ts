@@ -10,6 +10,7 @@ import {
   WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { configureOrbitControls } from "./configureOrbitControls";
 
 export interface SceneOptions {
   /** Scene background color. Left transparent/black if omitted. */
@@ -75,6 +76,7 @@ export function createScene(container: HTMLElement, options: SceneOptions = {}):
   scene.add(hemisphere);
 
   const controls = new OrbitControls(camera, canvas);
+  configureOrbitControls(controls);
 
   const handlers = new Set<(delta: number) => void>();
 

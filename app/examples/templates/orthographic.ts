@@ -11,6 +11,7 @@ import {
   WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { configureOrbitControls } from "../../framework/configureOrbitControls";
 
 export const meta = {
   title: "Orthographic",
@@ -51,7 +52,7 @@ export default function (container: HTMLElement) {
   scene.add(cube);
 
   const controls = new OrbitControls(camera, canvas);
-  controls.update();
+  configureOrbitControls(controls);
 
   const resize = () => {
     const w = container.clientWidth;

@@ -10,6 +10,7 @@ import {
   WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { configureOrbitControls } from "./configureOrbitControls";
 
 export interface OrthographicSceneOptions {
   /** Scene background color. Defaults to `0xeeeeee`. */
@@ -69,7 +70,7 @@ export function createOrthographicScene(
   scene.add(new AmbientLight(0x404040, 2));
 
   const controls = new OrbitControls(camera, canvas);
-  controls.update();
+  configureOrbitControls(controls);
 
   const handlers = new Set<(delta: number) => void>();
 
