@@ -58,6 +58,7 @@ export {
 export { LightningEffect, type LightningEffectOptions } from "./effects/LightningEffect";
 export { PetalDriftEffect, type PetalDriftEffectOptions } from "./effects/PetalDriftEffect";
 export { RainEffect, type RainEffectOptions } from "./effects/RainEffect";
+export { WispEffect, type WispEffectOptions } from "./effects/WispEffect";
 export {
   StarFieldEffect,
   type StarBurstShapeOptions,

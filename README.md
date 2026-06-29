@@ -55,7 +55,7 @@ _Example Library scene_
 | **Models (“prefabs”)** | Geometry + materials as ready-to-place objects | `Jar`, `Tree`, `TestTube`, `Mausoleum` |
 | **Factories** | Composite assemblies and **fills** along extent | `rowOfBooksByCount`, `createHexagonalTilesByRadius` |
 | **Environment** | Continuous scene- or region-scale atmosphere | `StarFieldEffect`, `RainEffect`, `LightningEffect` |
-| **Ambience** | Continuous layers, often volume- or prop-bound | `PetalDriftEffect`, `EffervescenceEffect`, `EmissivePulseEffect`, `FlameFlickerEffect`, `GlowHalo` |
+| **Ambience** | Continuous layers, often volume- or prop-bound | `PetalDriftEffect`, `EffervescenceEffect`, `WispEffect`, `EmissivePulseEffect`, `FlameFlickerEffect`, `GlowHalo` |
 | **FX** *(planned)* | Short-lived, event-triggered bursts | Dust on landing, spell flash, wind streak *(not in SDK yet)* |
 | **Animators** | Camera choreography and paths | `cameraOrbitAnimation`, `cameraFlythroughAnimation` |
 | **Utilities** | Math, easing, centering, RNG | `Easing`, `randomFloat`, `centerObject` |
@@ -80,6 +80,7 @@ Use this frame when adding anything that moves, flickers, or spawns. **Preserve 
 | `RainEffect` | Environment | Regional rainfall volume |
 | `LightningEffect` | Environment | Drives `DirectionalLight`; expose `level` for fog/sky sync |
 | `PetalDriftEffect` | Ambience | Scene volume or localized patch |
+| `WispEffect` | Ambience | Drifting will-o'-the-wisps in a bounded volume |
 | `EffervescenceEffect` | Ambience | Scale/position inside vessels; `spread` for round vessels |
 | `EmissivePulseEffect` | Ambience | Drives `emissiveIntensity` on existing materials (fake LED); no geometry |
 | `GlowHalo` | Ambience | Additive billboard glow; fake light without `PointLight` |
@@ -192,7 +193,7 @@ What exists today and how mature each area is.
 | **Models & geometry** | Broad catalog; vertex-first, grouped materials |
 | **Factories** | Book row, hex tiles, brick wall — ad hoc `...ByCount` / `...ByRadius` APIs |
 | **Environment effects** | Star field, rain, lightning |
-| **Ambience effects** | Petal drift, effervescence, emissive pulse, glow halo, flame flicker |
+| **Ambience effects** | Petal drift, effervescence, wisp, emissive pulse, glow halo, flame flicker |
 | **FX (burst / triggered)** | **Not implemented** |
 | **Animators** | Camera paths, light flicker, emissive pulse |
 | **Host gallery** | `app/examples/` — models, effects, scenes, reference |

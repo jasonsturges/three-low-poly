@@ -16,6 +16,7 @@ import {
   EllipticLeafGeometry,
   Lantern,
   PetalDriftEffect,
+  WispEffect,
   Mausoleum,
   Moon,
   ObeliskHeadstone,
@@ -153,6 +154,9 @@ export default function (container: HTMLElement) {
   });
   scene.add(petalDrift);
 
+  const wisps = new WispEffect({ count: 3 });
+  scene.add(wisps);
+
   const spotlight = new SpotLight(0x23adf5, 100, 10, Math.PI / 8);
   spotlight.position.set(0, 9, -15);
   spotlight.target = mausoleum;
@@ -179,10 +183,14 @@ export default function (container: HTMLElement) {
   hemisphereLight.position.set(0, 10, 0);
   scene.add(hemisphereLight);
 
-  onFrame((delta) => petalDrift.update(delta));
+  onFrame((delta) => {
+    petalDrift.update(delta);
+    wisps.update(delta);
+  });
 
   return () => {
     petalDrift.dispose();
+    wisps.dispose();
     leafGeometry.dispose();
     leafMaterial.dispose();
     terrainMesh.geometry.dispose();
