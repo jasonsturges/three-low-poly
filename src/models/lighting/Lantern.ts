@@ -1,44 +1,76 @@
-import { ConeGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, PointLight, TorusGeometry } from "three";
+import { Color, ColorRepresentation, DoubleSide, Mesh, MeshStandardMaterial } from "three";
+import { LanternGeometry, type LanternGeometryOptions } from "../../geometry/lighting/LanternGeometry";
 
-// Class for Lantern Geometry
-class Lantern extends Group {
-  constructor(height = 1.3, baseWidth = 0.5) {
-    super();
-
-    // Lantern Base (cylinder)
-    const baseGeometry = new CylinderGeometry(baseWidth, baseWidth, 0.2, 16);
-    const baseMaterial = new MeshStandardMaterial({ color: 0x8b4513, flatShading: true });
-    const baseMesh = new Mesh(baseGeometry, baseMaterial);
-    baseMesh.position.set(0, 0, 0);
-    this.add(baseMesh);
-
-    // Lantern Body (a rectangular frame)
-    const bodyGeometry = new CylinderGeometry(baseWidth * 0.9, baseWidth * 0.9, height);
-    const bodyMaterial = new MeshStandardMaterial({ color: 0xffd700, flatShading: true, transparent: true, opacity: 0.6 });
-    const bodyMesh = new Mesh(bodyGeometry, bodyMaterial);
-    bodyMesh.position.set(0, height / 2 + 0.1, 0); // Adjust position based on height
-    this.add(bodyMesh);
-
-    // Lantern Roof (a cone)
-    const roofGeometry = new ConeGeometry(baseWidth * 1.1, 0.5, 8);
-    const roofMaterial = new MeshStandardMaterial({ color: 0x8b4513, flatShading: true });
-    const roofMesh = new Mesh(roofGeometry, roofMaterial);
-    roofMesh.position.set(0, height + 0.35, 0); // Adjusted position based on height
-    this.add(roofMesh);
-
-    // Lantern Handle (a torus)
-    const handleGeometry = new TorusGeometry(baseWidth * 0.8, 0.05, 8, 16);
-    const handleMaterial = new MeshStandardMaterial({ color: 0x8b4513, flatShading: true });
-    const handleMesh = new Mesh(handleGeometry, handleMaterial);
-    handleMesh.position.set(0, height + 0.85, 0); // Adjusted to sit above the roof
-    this.add(handleMesh);
-
-    // Lantern Light (point light inside)
-    const light = new PointLight(0xffaa00, 1.5, 15);
-    light.position.set(0, height / 2 + 0.1, 0); // Adjust position based on height
-    light.castShadow = true;
-    this.add(light);
-  }
+export interface LanternOptions extends LanternGeometryOptions {
+  /** Frame tint (base, roof, handle). Defaults to `#8b4513`. */
+  color?: ColorRepresentation;
+  /** Glass lamp tint. Defaults to `#ffd700`. */
+  lampColor?: ColorRepresentation;
+  /** Glass emissive strength. Defaults to `1.2`. */
+  lampEmissiveIntensity?: number;
+  /** Glass opacity. Defaults to `0.75`. */
+  lampOpacity?: number;
 }
 
-export { Lantern };
+/**
+ * Tabletop lantern — frame around an emissive glass body. Geometry only; add
+ * {@link GlowHalo} and {@link FlameFlickerEffect} at `lampCenterY` in the
+ * scene.
+ *
+ * Local frame: sits on the Y=0 plane.
+ */
+export class Lantern extends Mesh<LanternGeometry, MeshStandardMaterial[]> {
+  readonly lampCenterY: number;
+
+  constructor(
+    heightOrOptions: number | LanternOptions = {},
+    baseWidth?: number,
+  ) {
+    const options: LanternOptions =
+      typeof heightOrOptions === "number"
+        ? { bodyHeight: heightOrOptions, baseWidth: baseWidth ?? 0.5 }
+        : heightOrOptions;
+
+    const {
+      color = "#8b4513",
+      lampColor = "#ffd700",
+      lampEmissiveIntensity = 1.2,
+      lampOpacity = 0.75,
+      inner = true,
+      ...geometryOptions
+    } = options;
+
+    const geometry = new LanternGeometry({ inner, ...geometryOptions });
+    const lamp = new Color(lampColor);
+
+    const materials: MeshStandardMaterial[] = [
+      new MeshStandardMaterial({
+        color: new Color(color),
+        roughness: 0.85,
+        metalness: 0.04,
+        flatShading: true,
+      }),
+    ];
+
+    if (inner) {
+      materials.push(
+        new MeshStandardMaterial({
+          color: lamp,
+          emissive: lamp,
+          emissiveIntensity: lampEmissiveIntensity,
+          transparent: lampOpacity < 1,
+          opacity: lampOpacity,
+          roughness: 0.35,
+          metalness: 0,
+          flatShading: true,
+          side: DoubleSide,
+          toneMapped: false,
+        }),
+      );
+    }
+
+    super(geometry, materials);
+
+    this.lampCenterY = geometry.lampCenterY;
+  }
+}

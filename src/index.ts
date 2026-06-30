@@ -166,6 +166,7 @@ export { LeafGeometry, type LeafGeometryOptions } from "./geometry/leafs/LeafGeo
 // Lighting
 export { FlameGeometry } from "./geometry/lighting/FlameGeometry";
 export { CandleGeometry } from "./geometry/lighting/CandleGeometry";
+export { LanternGeometry, type LanternGeometryOptions } from "./geometry/lighting/LanternGeometry";
 export {
   HangingLanternGeometry,
   type HangingLanternGeometryOptions,
@@ -256,7 +257,7 @@ export { Candle } from "./models/lighting/Candle";
 export { Flame } from "./models/lighting/Flame";
 export { HangingLantern, type HangingLanternOptions } from "./models/lighting/HangingLantern";
 export { WallSconce, type WallSconceOptions } from "./models/lighting/WallSconce";
-export { Lantern } from "./models/lighting/Lantern";
+export { Lantern, type LanternOptions } from "./models/lighting/Lantern";
 
 // Rocks
 export { MossyRocks } from "./models/rocks/MossyRocks";
