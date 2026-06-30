@@ -97,7 +97,6 @@ export * from "./factory/HexagonalTileFactory";
 //------------------------------
 
 // Architecture
-export { BifurcatedStaircaseGeometry } from "./geometry/architecture/BifurcatedStaircaseGeometry";
 export { BrickGeometry } from "./geometry/architecture/BrickGeometry";
 export { DiamondLatticeWindowGeometry } from "./geometry/architecture/DiamondLatticeWindowGeometry";
 export { GregorianLatticeWindowGeometry } from "./geometry/architecture/GregorianLatticeWindowGeometry";
