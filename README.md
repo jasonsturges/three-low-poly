@@ -51,7 +51,7 @@ _Example Library scene_
 
 | Layer | Role | Examples |
 |-------|------|----------|
-| **Geometry** | Building blocks; prefer when mirroring Three.js patterns | `JarGeometry`, `TestTubeGeometry`, `BrickGeometry` |
+| **Geometry** | Building blocks; prefer when mirroring Three.js patterns | `JarGeometry`, `TestTubeGeometry` |
 | **Models (“prefabs”)** | Geometry + materials as ready-to-place objects | `Jar`, `Tree`, `TestTube`, `Mausoleum` |
 | **Factories** | Composite assemblies and **fills** along extent | `rowOfBooksByCount`, `createHexagonalTilesByRadius` |
 | **Environment** | Continuous scene- or region-scale atmosphere | `StarFieldEffect`, `RainEffect`, `LightningEffect`, `GroundFogEffect` |
@@ -192,7 +192,7 @@ What exists today and how mature each area is.
 | Area | Status |
 |------|--------|
 | **Models & geometry** | Broad catalog; vertex-first, grouped materials |
-| **Factories** | Book row, hex tiles, brick wall — ad hoc `...ByCount` / `...ByRadius` APIs |
+| **Factories** | Book row, hex tiles — ad hoc `...ByCount` / `...ByRadius` APIs |
 | **Environment effects** | Star field, rain, lightning, ground fog |
 | **Ambience effects** | Petal drift, effervescence, wisp, emissive pulse, glow halo, flame flicker |
 | **FX (burst / triggered)** | **Not implemented** |

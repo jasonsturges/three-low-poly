@@ -89,7 +89,6 @@ export {
 //------------------------------
 
 export * from "./factory/BookFactory";
-export * from "./factory/BrickWallFactory";
 export * from "./factory/HexagonalTileFactory";
 
 //------------------------------
@@ -97,7 +96,6 @@ export * from "./factory/HexagonalTileFactory";
 //------------------------------
 
 // Architecture
-export { BrickGeometry } from "./geometry/architecture/BrickGeometry";
 export { DiamondLatticeWindowGeometry } from "./geometry/architecture/DiamondLatticeWindowGeometry";
 export { GregorianLatticeWindowGeometry } from "./geometry/architecture/GregorianLatticeWindowGeometry";
 export {
