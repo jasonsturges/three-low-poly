@@ -1,55 +1,126 @@
-import { BufferGeometry, Float32BufferAttribute } from "three";
+import { BufferAttribute, BufferGeometry } from "three";
 
-class StaircaseGeometry extends BufferGeometry {
-  constructor(width = 2, stepHeight = 0.3, stepDepth = 0.5, numSteps = 10) {
+export interface StaircaseGeometryOptions {
+  /** Stair width (tread left–right extent). Defaults to `2`. */
+  width?: number;
+  /** Vertical rise per step (riser). Defaults to `0.3`. */
+  riserHeight?: number;
+  /** Horizontal run per step (tread depth). Defaults to `0.5`. */
+  treadDepth?: number;
+  /** Number of steps. Defaults to `10`. */
+  stepCount?: number;
+}
+
+type Vec3 = [number, number, number];
+type Vec2 = [number, number];
+
+/** Append one quad (two triangles) with per-vertex normals and UVs. */
+function pushQuad(
+  positions: number[],
+  normals: number[],
+  uvs: number[],
+  indices: number[],
+  corners: [Vec3, Vec3, Vec3, Vec3],
+  normal: Vec3,
+  cornerUvs: [Vec2, Vec2, Vec2, Vec2],
+): void {
+  const base = positions.length / 3;
+  for (const [x, y, z] of corners) {
+    positions.push(x, y, z);
+    normals.push(...normal);
+  }
+  for (const [u, v] of cornerUvs) uvs.push(u, v);
+  indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+}
+
+/**
+ * Straight run staircase — open risers and treads (no side stringers yet).
+ *
+ * Local frame: centered on width, rises along +Y, runs along +Z. Each step
+ * emits a front riser (+Z) and a top tread (+Y). UVs are normalized per face
+ * (0–1) so materials can tile per step.
+ */
+export class StaircaseGeometry extends BufferGeometry {
+  readonly width: number;
+  readonly riserHeight: number;
+  readonly treadDepth: number;
+  readonly stepCount: number;
+  readonly totalHeight: number;
+  readonly totalDepth: number;
+
+  constructor({
+    width = 2,
+    riserHeight = 0.3,
+    treadDepth = 0.5,
+    stepCount = 10,
+  }: StaircaseGeometryOptions = {}) {
     super();
 
-    const vertices = [];
-    const indices = [];
+    this.width = width;
+    this.riserHeight = riserHeight;
+    this.treadDepth = treadDepth;
+    this.stepCount = Math.max(1, Math.round(stepCount));
+    this.totalHeight = this.stepCount * this.riserHeight;
+    this.totalDepth = this.stepCount * this.treadDepth;
 
-    // Generate vertices and indices for each step
-    for (let i = 0; i < numSteps; i++) {
-      const stepBottomY = i * stepHeight;
-      const stepTopY = stepBottomY + stepHeight;
-      const stepFrontZ = i * stepDepth;
-      const stepBackZ = stepFrontZ + stepDepth;
+    const hw = width / 2;
+    const positions: number[] = [];
+    const normals: number[] = [];
+    const uvs: number[] = [];
+    const indices: number[] = [];
 
-      // Vertices for each step (8 vertices per step to cover tread and riser)
-      vertices.push(
-        // Bottom face of riser (front face)
-        -width / 2, stepBottomY, stepFrontZ, // 0: Bottom-left-front
-        width / 2, stepBottomY, stepFrontZ,  // 1: Bottom-right-front
-        width / 2, stepTopY, stepFrontZ,     // 2: Top-right-front
-        -width / 2, stepTopY, stepFrontZ,    // 3: Top-left-front
+    for (let i = 0; i < this.stepCount; i++) {
+      const yBottom = i * this.riserHeight;
+      const yTop = yBottom + this.riserHeight;
+      const zFront = i * this.treadDepth;
+      const zBack = zFront + this.treadDepth;
 
-        // Top face of tread (horizontal step)
-        -width / 2, stepTopY, stepFrontZ,    // 4: Top-left-front (repeated)
-        width / 2, stepTopY, stepFrontZ,     // 5: Top-right-front (repeated)
-        width / 2, stepTopY, stepBackZ,      // 6: Top-right-back
-        -width / 2, stepTopY, stepBackZ      // 7: Top-left-back
+      // Corners CCW when viewed along the face normal (+Z for risers, +Y for treads).
+      pushQuad(
+        positions,
+        normals,
+        uvs,
+        indices,
+        [
+          [-hw, yBottom, zFront],
+          [-hw, yTop, zFront],
+          [hw, yTop, zFront],
+          [hw, yBottom, zFront],
+        ],
+        [0, 0, 1],
+        [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+        ],
       );
 
-      // Indices for each step
-      const baseIndex = i * 8;
-
-      // Riser face (front face of each step)
-      indices.push(
-        baseIndex, baseIndex + 1, baseIndex + 2,  // First triangle for riser
-        baseIndex, baseIndex + 2, baseIndex + 3   // Second triangle for riser
-      );
-
-      // Tread face (top horizontal surface of each step)
-      indices.push(
-        baseIndex + 4, baseIndex + 6, baseIndex + 5,  // First triangle for tread
-        baseIndex + 4, baseIndex + 7, baseIndex + 6   // Second triangle for tread
+      pushQuad(
+        positions,
+        normals,
+        uvs,
+        indices,
+        [
+          [-hw, yTop, zFront],
+          [-hw, yTop, zBack],
+          [hw, yTop, zBack],
+          [hw, yTop, zFront],
+        ],
+        [0, 1, 0],
+        [
+          [0, 0],
+          [0, 1],
+          [1, 1],
+          [1, 0],
+        ],
       );
     }
 
-    // Create BufferAttribute for vertices and indices
     this.setIndex(indices);
-    this.setAttribute('position', new Float32BufferAttribute(vertices, 3));
-    this.computeVertexNormals(); // Compute normals for proper lighting
+    this.setAttribute("position", new BufferAttribute(new Float32Array(positions), 3));
+    this.setAttribute("normal", new BufferAttribute(new Float32Array(normals), 3));
+    this.setAttribute("uv", new BufferAttribute(new Float32Array(uvs), 2));
+    this.computeBoundingSphere();
   }
 }
-
-export { StaircaseGeometry };
