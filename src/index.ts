@@ -215,9 +215,6 @@ export { DiamondLatticeWindow } from "./models/architecture/DiamondLatticeWindow
 export { GregorianLatticeWindow } from "./models/architecture/GregorianLatticeWindow";
 export { RingLatticeWindow } from "./models/architecture/RingLatticeWindow";
 
-// Astronomy
-export { Moon } from "./models/astronomy/Moon";
-
 // Books
 export { Book } from "./models/books/Book";
 
@@ -298,7 +295,6 @@ export { crossfadeShader } from "./shaders/crossfadeShader";
 export { daySkyShader, type DaySkyUniforms } from "./shaders/daySkyShader";
 export { fadeShader } from "./shaders/fadeShader";
 export { fadeTransitionSceneShader } from "./shaders/fadeTransitionSceneShader";
-export { moonShader } from "./shaders/moonShader";
 export { nightSkyShader, type NightSkyUniforms } from "./shaders/nightSkyShader";
 
 //------------------------------

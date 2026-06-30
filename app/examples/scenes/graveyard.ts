@@ -26,7 +26,6 @@ import {
   RainEffect,
   WispEffect,
   Mausoleum,
-  Moon,
   ObeliskHeadstone,
   Rocks,
   RoundedHeadstone,
@@ -155,10 +154,6 @@ export default function (container: HTMLElement) {
     scene.add(bone);
   }
 
-  const moon = new Moon();
-  moon.position.set(9, 15, -45);
-  scene.add(moon);
-
   const groundFog = new GroundFogEffect({
     count: 16,
     area: 16,
@@ -250,7 +245,7 @@ export default function (container: HTMLElement) {
   const baseBg = BG_COLOR.clone();
   const baseFog = FOG_COLOR.clone();
 
-  // Portfolio graveyard blooms tone-mapped-off streaks and moon — rain barely reads without it.
+  // Portfolio graveyard blooms tone-mapped-off streaks — rain barely reads without it.
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   const bloomPass = new UnrealBloomPass(
