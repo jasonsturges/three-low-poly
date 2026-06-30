@@ -166,6 +166,14 @@ export { LeafGeometry, type LeafGeometryOptions } from "./geometry/leafs/LeafGeo
 // Lighting
 export { FlameGeometry } from "./geometry/lighting/FlameGeometry";
 export { CandleGeometry } from "./geometry/lighting/CandleGeometry";
+export {
+  HangingLanternGeometry,
+  type HangingLanternGeometryOptions,
+} from "./geometry/lighting/HangingLanternGeometry";
+export {
+  WallSconceGeometry,
+  type WallSconceGeometryOptions,
+} from "./geometry/lighting/WallSconceGeometry";
 
 // Primitives
 export { ParallelogramBoxGeometry } from "./geometry/primitives/ParallelogramBoxGeometry";
@@ -246,6 +254,8 @@ export { Leaf, type LeafOptions } from "./models/leafs/Leaf";
 // Lighting
 export { Candle } from "./models/lighting/Candle";
 export { Flame } from "./models/lighting/Flame";
+export { HangingLantern, type HangingLanternOptions } from "./models/lighting/HangingLantern";
+export { WallSconce, type WallSconceOptions } from "./models/lighting/WallSconce";
 export { Lantern } from "./models/lighting/Lantern";
 
 // Rocks
