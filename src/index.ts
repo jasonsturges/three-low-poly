@@ -125,7 +125,10 @@ export {
   fitDiamondLatticeCell,
   type DiamondLatticeGrid,
 } from "./geometry/architecture/diamondLattice";
-export { LShapedStaircaseGeometry } from "./geometry/architecture/LShapedStaircaseGeometry";
+export {
+  LShapedStaircaseGeometry,
+  type LShapedStaircaseGeometryOptions,
+} from "./geometry/architecture/LShapedStaircaseGeometry";
 export { SpiralStaircaseGeometry } from "./geometry/architecture/SpiralStaircaseGeometry";
 export {
   StaircaseGeometry,
@@ -205,6 +208,7 @@ export { TreeGeometry } from "./geometry/trees/TreeGeometry";
 //------------------------------
 
 // Architecture
+export { LShapedStaircase, type LShapedStaircaseOptions } from "./models/architecture/LShapedStaircase";
 export { Staircase, type StaircaseOptions } from "./models/architecture/Staircase";
 export { DiamondLatticeWindow } from "./models/architecture/DiamondLatticeWindow";
 export { GregorianLatticeWindow } from "./models/architecture/GregorianLatticeWindow";

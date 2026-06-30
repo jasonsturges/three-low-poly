@@ -1,4 +1,5 @@
 import { BufferAttribute, BufferGeometry } from "three";
+import { pushRiserZ, pushTreadZ } from "./staircaseQuad";
 
 export interface StaircaseGeometryOptions {
   /** Stair width (tread left–right extent). Defaults to `2`. */
@@ -9,28 +10,6 @@ export interface StaircaseGeometryOptions {
   treadDepth?: number;
   /** Number of steps. Defaults to `10`. */
   stepCount?: number;
-}
-
-type Vec3 = [number, number, number];
-type Vec2 = [number, number];
-
-/** Append one quad (two triangles) with per-vertex normals and UVs. */
-function pushQuad(
-  positions: number[],
-  normals: number[],
-  uvs: number[],
-  indices: number[],
-  corners: [Vec3, Vec3, Vec3, Vec3],
-  normal: Vec3,
-  cornerUvs: [Vec2, Vec2, Vec2, Vec2],
-): void {
-  const base = positions.length / 3;
-  for (const [x, y, z] of corners) {
-    positions.push(x, y, z);
-    normals.push(...normal);
-  }
-  for (const [u, v] of cornerUvs) uvs.push(u, v);
-  indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
 }
 
 /**
@@ -68,6 +47,7 @@ export class StaircaseGeometry extends BufferGeometry {
     const normals: number[] = [];
     const uvs: number[] = [];
     const indices: number[] = [];
+    const buffers = { positions, normals, uvs, indices };
 
     for (let i = 0; i < this.stepCount; i++) {
       const yBottom = i * this.riserHeight;
@@ -75,46 +55,8 @@ export class StaircaseGeometry extends BufferGeometry {
       const zFront = i * this.treadDepth;
       const zBack = zFront + this.treadDepth;
 
-      // Corners CCW when viewed along the face normal (+Z for risers, +Y for treads).
-      pushQuad(
-        positions,
-        normals,
-        uvs,
-        indices,
-        [
-          [-hw, yBottom, zFront],
-          [-hw, yTop, zFront],
-          [hw, yTop, zFront],
-          [hw, yBottom, zFront],
-        ],
-        [0, 0, 1],
-        [
-          [0, 0],
-          [1, 0],
-          [1, 1],
-          [0, 1],
-        ],
-      );
-
-      pushQuad(
-        positions,
-        normals,
-        uvs,
-        indices,
-        [
-          [-hw, yTop, zFront],
-          [-hw, yTop, zBack],
-          [hw, yTop, zBack],
-          [hw, yTop, zFront],
-        ],
-        [0, 1, 0],
-        [
-          [0, 0],
-          [0, 1],
-          [1, 1],
-          [1, 0],
-        ],
-      );
+      pushRiserZ(buffers, hw, yBottom, yTop, zFront);
+      pushTreadZ(buffers, hw, yTop, zFront, zBack);
     }
 
     this.setIndex(indices);

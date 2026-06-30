@@ -1,107 +1,96 @@
-import { BufferGeometry, Float32BufferAttribute } from "three";
+import { BufferAttribute, BufferGeometry } from "three";
+import {
+  pushLanding,
+  pushRiserX,
+  pushRiserZ,
+  pushTreadX,
+  pushTreadZ,
+} from "./staircaseQuad";
 
-class LShapedStaircaseGeometry extends BufferGeometry {
-  constructor(stepWidth = 2, stepHeight = 0.3, stepDepth = 0.5, numStepsPerFlight = 5, landingDepth = 2) {
-    super();
-
-    const vertices = [];
-    const indices = [];
-
-    // Generate first flight of steps
-    for (let i = 0; i < numStepsPerFlight; i++) {
-      const yBottom = i * stepHeight;
-      const yTop = yBottom + stepHeight;
-      const zFront = i * stepDepth;
-      const zBack = zFront + stepDepth;
-
-      // First flight of steps (4 vertices per step, 8 vertices per flight)
-      vertices.push(
-        // Vertical riser
-        -stepWidth / 2, yBottom, zFront,  // Bottom-left
-        stepWidth / 2, yBottom, zFront,  // Bottom-right
-        stepWidth / 2, yTop, zFront,     // Top-right
-        -stepWidth / 2, yTop, zFront,     // Top-left
-
-        // Horizontal tread
-        -stepWidth / 2, yTop, zFront,     // Top-left
-        stepWidth / 2, yTop, zFront,     // Top-right
-        stepWidth / 2, yTop, zBack,      // Back-right
-        -stepWidth / 2, yTop, zBack       // Back-left
-      );
-
-      const baseIndex = i * 8;
-      // Indices for riser
-      indices.push(
-        baseIndex, baseIndex + 1, baseIndex + 2,
-        baseIndex, baseIndex + 2, baseIndex + 3
-      );
-
-      // Indices for tread
-      indices.push(
-        baseIndex + 4, baseIndex + 5, baseIndex + 6,
-        baseIndex + 4, baseIndex + 6, baseIndex + 7
-      );
-    }
-
-    // Add landing platform
-    const landingY = numStepsPerFlight * stepHeight;
-    const landingZ = numStepsPerFlight * stepDepth;
-
-    vertices.push(
-      // Landing platform (4 vertices)
-      -stepWidth / 2, landingY, landingZ,                      // Bottom-left
-      stepWidth / 2, landingY, landingZ,                      // Bottom-right
-      stepWidth / 2, landingY, landingZ + landingDepth,       // Top-right
-      -stepWidth / 2, landingY, landingZ + landingDepth        // Top-left
-    );
-
-    const landingBaseIndex = numStepsPerFlight * 8;
-    indices.push(
-      landingBaseIndex, landingBaseIndex + 1, landingBaseIndex + 2,  // First triangle for landing
-      landingBaseIndex, landingBaseIndex + 2, landingBaseIndex + 3   // Second triangle for landing
-    );
-
-    // Generate second flight of steps (turn 90 degrees)
-    for (let i = 0; i < numStepsPerFlight; i++) {
-      const yBottom = landingY + i * stepHeight;
-      const yTop = yBottom + stepHeight;
-      const xFront = -stepWidth / 2 - i * stepDepth;
-      const xBack = xFront - stepDepth;
-
-      // Second flight of steps (4 vertices per step, 8 vertices per flight)
-      vertices.push(
-        // Vertical riser
-        xFront, yBottom, landingZ + landingDepth,  // Bottom-left
-        xFront, yBottom, landingZ + landingDepth - stepWidth,  // Bottom-right
-        xFront, yTop, landingZ + landingDepth - stepWidth,     // Top-right
-        xFront, yTop, landingZ + landingDepth,                 // Top-left
-
-        // Horizontal tread
-        xFront, yTop, landingZ + landingDepth,                 // Top-left
-        xFront, yTop, landingZ + landingDepth - stepWidth,     // Top-right
-        xBack, yTop, landingZ + landingDepth - stepWidth,      // Back-right
-        xBack, yTop, landingZ + landingDepth                   // Back-left
-      );
-
-      const baseIndex = landingBaseIndex + 4 + i * 8;
-      // Indices for riser
-      indices.push(
-        baseIndex, baseIndex + 1, baseIndex + 2,
-        baseIndex, baseIndex + 2, baseIndex + 3
-      );
-
-      // Indices for tread
-      indices.push(
-        baseIndex + 4, baseIndex + 5, baseIndex + 6,
-        baseIndex + 4, baseIndex + 6, baseIndex + 7
-      );
-    }
-
-    // Create BufferAttribute for vertices and indices
-    this.setIndex(indices);
-    this.setAttribute('position', new Float32BufferAttribute(vertices, 3));
-    this.computeVertexNormals(); // Compute normals for proper lighting
-  }
+export interface LShapedStaircaseGeometryOptions {
+  /** Stair width (tread left–right extent). Defaults to `2`. */
+  width?: number;
+  /** Vertical rise per step (riser). Defaults to `0.3`. */
+  riserHeight?: number;
+  /** Horizontal run per step (tread depth). Defaults to `0.5`. */
+  treadDepth?: number;
+  /** Steps in each flight (before and after the landing). Defaults to `5`. */
+  stepsPerFlight?: number;
 }
 
-export { LShapedStaircaseGeometry };
+/**
+ * L-shaped staircase with a square landing (width × width) at the 90° turn.
+ *
+ * Local frame:
+ * - First flight climbs +Z, centered on X = 0.
+ * - Landing is a width² platform starting at the last tread (no cantilever over
+ *   the lower flight) and extending forward at the turn.
+ * - Second flight climbs −X from the left edge of the landing.
+ */
+export class LShapedStaircaseGeometry extends BufferGeometry {
+  readonly width: number;
+  readonly riserHeight: number;
+  readonly treadDepth: number;
+  readonly stepsPerFlight: number;
+  readonly landingSize: number;
+  readonly flightRun: number;
+  readonly totalHeight: number;
+
+  constructor({
+    width = 2,
+    riserHeight = 0.3,
+    treadDepth = 0.5,
+    stepsPerFlight = 5,
+  }: LShapedStaircaseGeometryOptions = {}) {
+    super();
+
+    this.width = width;
+    this.riserHeight = riserHeight;
+    this.treadDepth = treadDepth;
+    this.stepsPerFlight = Math.max(1, Math.round(stepsPerFlight));
+    this.landingSize = width;
+    this.flightRun = this.stepsPerFlight * this.treadDepth;
+    this.totalHeight = this.stepsPerFlight * 2 * this.riserHeight;
+
+    const hw = width / 2;
+    const positions: number[] = [];
+    const normals: number[] = [];
+    const uvs: number[] = [];
+    const indices: number[] = [];
+    const buffers = { positions, normals, uvs, indices };
+
+    for (let i = 0; i < this.stepsPerFlight; i++) {
+      const yBottom = i * this.riserHeight;
+      const yTop = yBottom + this.riserHeight;
+      const zFront = i * this.treadDepth;
+      const zBack = zFront + this.treadDepth;
+
+      pushRiserZ(buffers, hw, yBottom, yTop, zFront);
+      pushTreadZ(buffers, hw, yTop, zFront, zBack);
+    }
+
+    const landingY = this.stepsPerFlight * this.riserHeight;
+    // Begin at the front of the last tread — avoids a shelf over the lower flight.
+    const landingZNear = (this.stepsPerFlight - 1) * this.treadDepth;
+    const landingZFar = landingZNear + this.landingSize;
+
+    pushLanding(buffers, hw, landingY, landingZNear, landingZFar);
+
+    const leftEdgeX = -hw;
+    for (let i = 0; i < this.stepsPerFlight; i++) {
+      const yBottom = landingY + i * this.riserHeight;
+      const yTop = yBottom + this.riserHeight;
+      const xFront = leftEdgeX - i * this.treadDepth;
+      const xBack = xFront - this.treadDepth;
+
+      pushRiserX(buffers, yBottom, yTop, xFront, landingZNear, landingZFar);
+      pushTreadX(buffers, yTop, xFront, xBack, landingZNear, landingZFar);
+    }
+
+    this.setIndex(indices);
+    this.setAttribute("position", new BufferAttribute(new Float32Array(positions), 3));
+    this.setAttribute("normal", new BufferAttribute(new Float32Array(normals), 3));
+    this.setAttribute("uv", new BufferAttribute(new Float32Array(uvs), 2));
+    this.computeBoundingSphere();
+  }
+}
