@@ -99,7 +99,6 @@ export * from "./factory/HexagonalTileFactory";
 // Architecture
 export { BifurcatedStaircaseGeometry } from "./geometry/architecture/BifurcatedStaircaseGeometry";
 export { BrickGeometry } from "./geometry/architecture/BrickGeometry";
-export { DioramaGeometry } from "./geometry/architecture/DioramaGeometry";
 export { DiamondLatticeWindowGeometry } from "./geometry/architecture/DiamondLatticeWindowGeometry";
 export { GregorianLatticeWindowGeometry } from "./geometry/architecture/GregorianLatticeWindowGeometry";
 export {
@@ -203,7 +202,6 @@ export { TreeGeometry } from "./geometry/trees/TreeGeometry";
 //------------------------------
 
 // Architecture
-export { Diorama } from "./models/architecture/Diorama";
 export { DiamondLatticeWindow } from "./models/architecture/DiamondLatticeWindow";
 export { GregorianLatticeWindow } from "./models/architecture/GregorianLatticeWindow";
 export { RingLatticeWindow } from "./models/architecture/RingLatticeWindow";

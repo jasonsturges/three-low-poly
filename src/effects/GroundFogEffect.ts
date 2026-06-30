@@ -36,7 +36,7 @@ export interface GroundFogEffectOptions {
    * horizons opposite the camera. Defaults to `0` (interior only).
    */
   perimeterCount?: number;
-  /** Half-extent of the inner bounded plot (fence, wall, diorama edge, etc.). Defaults to `12`. */
+  /** Half-extent of the inner bounded plot (fence, wall, scene edge, etc.). Defaults to `12`. */
   plotHalf?: number;
   /** Terrain half-extent; perimeter cards spill outward toward this edge. Defaults to `16`. */
   terrainHalf?: number;

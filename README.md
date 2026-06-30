@@ -317,7 +317,7 @@ See [Seeded randomness](#2-seeded-randomness--unique-runtime-reproducible-on-dem
 
 ### Geometry & scenes (exploratory)
 
-- Diorama / room shells with windows (geometry exists; not yet library-ready)
+- Architectural tile pieces (wall, window wall, corners) on a unit grid
 - Leaded lattice windows, terrain, water
 - NURBS / advanced profiles where they earn their complexity
 
