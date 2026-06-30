@@ -137,6 +137,91 @@ export function pushTreadX(
   );
 }
 
+/** Point on the XZ circle at `angle` (radians, +Y up, 0 = +X, CCW = +Z). */
+export function polarXZ(radius: number, angle: number): [number, number] {
+  return [radius * Math.cos(angle), radius * Math.sin(angle)];
+}
+
+/** Tangent on the XZ circle at `angle`, CCW when viewed from +Y. */
+export function tangentXZ(angle: number): [number, number, number] {
+  return [-Math.sin(angle), 0, Math.cos(angle)];
+}
+
+/**
+ * Spiral riser — vertical quad along one radial line at `angle`.
+ * Normal faces the CCW climb direction (turret stair ascending counter-clockwise).
+ */
+export function pushSpiralRiser(
+  buffers: { positions: number[]; normals: number[]; uvs: number[]; indices: number[] },
+  innerRadius: number,
+  outerRadius: number,
+  yBottom: number,
+  yTop: number,
+  angle: number,
+): void {
+  const [xi, zi] = polarXZ(innerRadius, angle);
+  const [xo, zo] = polarXZ(outerRadius, angle);
+  const normal = tangentXZ(angle);
+
+  pushQuad(
+    buffers.positions,
+    buffers.normals,
+    buffers.uvs,
+    buffers.indices,
+    [
+      [xi, yBottom, zi],
+      [xi, yTop, zi],
+      [xo, yTop, zo],
+      [xo, yBottom, zo],
+    ],
+    normal,
+    [
+      [0, 0],
+      [0, 1],
+      [1, 1],
+      [1, 0],
+    ],
+  );
+}
+
+/**
+ * Spiral tread — horizontal trapezoid between inner/outer radii from `angleStart`
+ * to `angleEnd` (exclusive overlap with the next step when angles are contiguous).
+ */
+export function pushSpiralTread(
+  buffers: { positions: number[]; normals: number[]; uvs: number[]; indices: number[] },
+  innerRadius: number,
+  outerRadius: number,
+  yTop: number,
+  angleStart: number,
+  angleEnd: number,
+): void {
+  const [xIf, zIf] = polarXZ(innerRadius, angleStart);
+  const [xIb, zIb] = polarXZ(innerRadius, angleEnd);
+  const [xOb, zOb] = polarXZ(outerRadius, angleEnd);
+  const [xOf, zOf] = polarXZ(outerRadius, angleStart);
+
+  pushQuad(
+    buffers.positions,
+    buffers.normals,
+    buffers.uvs,
+    buffers.indices,
+    [
+      [xIf, yTop, zIf],
+      [xIb, yTop, zIb],
+      [xOb, yTop, zOb],
+      [xOf, yTop, zOf],
+    ],
+    [0, 1, 0],
+    [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ],
+  );
+}
+
 /** Landing platform facing +Y. */
 export function pushLanding(
   buffers: { positions: number[]; normals: number[]; uvs: number[]; indices: number[] },

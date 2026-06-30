@@ -1,61 +1,87 @@
-import { BufferGeometry, Float32BufferAttribute } from "three";
+import { BufferAttribute, BufferGeometry } from "three";
+import { pushSpiralRiser, pushSpiralTread } from "./staircaseQuad";
 
-class SpiralStaircaseGeometry extends BufferGeometry {
-  constructor(stepWidth = 1, stepDepth = 0.4, stepHeight = 0.2, numSteps = 20, radius = 2, angleIncrement = Math.PI / 8) {
-    super();
-
-    const vertices = [];
-    const indices = [];
-    let currentAngle = 0;
-
-    // Generate vertices and indices for each step
-    for (let i = 0; i < numSteps; i++) {
-      // Calculate the center position of the step based on the angle and radius
-      const xCenter = radius * Math.cos(currentAngle);
-      const zCenter = radius * Math.sin(currentAngle);
-      const yBottom = i * stepHeight;
-      const yTop = yBottom + stepHeight;
-
-      // Define the four corners of the vertical riser part of the current step
-      vertices.push(
-        // Front face (vertical riser)
-        xCenter - (stepWidth / 2) * Math.cos(currentAngle), yBottom, zCenter - (stepWidth / 2) * Math.sin(currentAngle),  // Bottom-left
-        xCenter + (stepWidth / 2) * Math.cos(currentAngle), yBottom, zCenter + (stepWidth / 2) * Math.sin(currentAngle),  // Bottom-right
-        xCenter + (stepWidth / 2) * Math.cos(currentAngle), yTop, zCenter + (stepWidth / 2) * Math.sin(currentAngle),     // Top-right
-        xCenter - (stepWidth / 2) * Math.cos(currentAngle), yTop, zCenter - (stepWidth / 2) * Math.sin(currentAngle)      // Top-left
-      );
-
-      // Define the four corners of the horizontal tread part of the current step
-      vertices.push(
-        // Top face (horizontal tread)
-        xCenter - (stepWidth / 2) * Math.cos(currentAngle), yTop, zCenter - (stepWidth / 2) * Math.sin(currentAngle),    // Top-left-front
-        xCenter + (stepWidth / 2) * Math.cos(currentAngle), yTop, zCenter + (stepWidth / 2) * Math.sin(currentAngle),    // Top-right-front
-        xCenter + (stepWidth / 2) * Math.cos(currentAngle) - stepDepth * Math.sin(currentAngle), yTop, zCenter + (stepWidth / 2) * Math.sin(currentAngle) + stepDepth * Math.cos(currentAngle),  // Back-right
-        xCenter - (stepWidth / 2) * Math.cos(currentAngle) - stepDepth * Math.sin(currentAngle), yTop, zCenter - (stepWidth / 2) * Math.sin(currentAngle) + stepDepth * Math.cos(currentAngle)   // Back-left
-      );
-
-      // Indices for the riser (vertical face of each step)
-      const baseIndex = i * 8; // 8 vertices per step (4 for riser, 4 for tread)
-      indices.push(
-        baseIndex, baseIndex + 1, baseIndex + 2,  // First triangle for riser
-        baseIndex, baseIndex + 2, baseIndex + 3   // Second triangle for riser
-      );
-
-      // Indices for the tread (horizontal face of each step)
-      indices.push(
-        baseIndex + 4, baseIndex + 5, baseIndex + 6,  // First triangle for tread
-        baseIndex + 4, baseIndex + 6, baseIndex + 7   // Second triangle for tread
-      );
-
-      // Increment the angle for the next step
-      currentAngle += angleIncrement;
-    }
-
-    // Create BufferAttribute for vertices and indices
-    this.setIndex(indices);
-    this.setAttribute('position', new Float32BufferAttribute(vertices, 3));
-    this.computeVertexNormals(); // Compute normals for proper lighting
-  }
+export interface SpiralStaircaseGeometryOptions {
+  /** Newel / center-hole radius (inner edge of every tread). Defaults to `0.45`. */
+  innerRadius?: number;
+  /** Radial tread width (outer − inner radius). Defaults to `1.95`. */
+  width?: number;
+  /** Arc run per step at the walking line (mid-radius). Defaults to `0.45`. */
+  treadDepth?: number;
+  /** Vertical rise per step (riser). Defaults to `0.2`. */
+  riserHeight?: number;
+  /** Number of steps. Defaults to `20`. */
+  stepCount?: number;
+  /** Spiral start angle in radians (+X = 0, CCW). Defaults to `0`. */
+  startAngle?: number;
+  /** Override step angle (radians). When omitted, derived from `treadDepth`. */
+  stepAngle?: number;
 }
 
-export { SpiralStaircaseGeometry };
+/**
+ * Turret-style spiral staircase — trapezoidal treads between an inner newel radius
+ * and an outer wall radius, ascending counter-clockwise when viewed from above.
+ *
+ * Each step is a four-sided tread (no pinched center point). Step angle is
+ * derived from tread depth at the mid-radius so treads meet without overlapping.
+ */
+export class SpiralStaircaseGeometry extends BufferGeometry {
+  readonly innerRadius: number;
+  readonly width: number;
+  readonly outerRadius: number;
+  readonly treadDepth: number;
+  readonly riserHeight: number;
+  readonly stepCount: number;
+  readonly startAngle: number;
+  readonly stepAngle: number;
+  readonly totalHeight: number;
+  readonly totalTurn: number;
+
+  constructor({
+    innerRadius = 0.45,
+    width = 1.95,
+    treadDepth = 0.45,
+    riserHeight = 0.2,
+    stepCount = 20,
+    startAngle = 0,
+    stepAngle: stepAngleOption,
+  }: SpiralStaircaseGeometryOptions = {}) {
+    super();
+
+    this.innerRadius = Math.max(0.01, innerRadius);
+    this.width = Math.max(0.05, width);
+    this.outerRadius = this.innerRadius + this.width;
+    this.treadDepth = treadDepth;
+    this.riserHeight = riserHeight;
+    this.stepCount = Math.max(1, Math.round(stepCount));
+    this.startAngle = startAngle;
+
+    const walkRadius = (this.innerRadius + this.outerRadius) * 0.5;
+    this.stepAngle =
+      stepAngleOption ?? Math.max(treadDepth / walkRadius, Math.PI / 180);
+    this.totalHeight = this.stepCount * this.riserHeight;
+    this.totalTurn = this.stepCount * this.stepAngle;
+
+    const positions: number[] = [];
+    const normals: number[] = [];
+    const uvs: number[] = [];
+    const indices: number[] = [];
+    const buffers = { positions, normals, uvs, indices };
+
+    for (let i = 0; i < this.stepCount; i++) {
+      const angleStart = this.startAngle + i * this.stepAngle;
+      const angleEnd = angleStart + this.stepAngle;
+      const yBottom = i * this.riserHeight;
+      const yTop = yBottom + this.riserHeight;
+
+      pushSpiralRiser(buffers, this.innerRadius, this.outerRadius, yBottom, yTop, angleStart);
+      pushSpiralTread(buffers, this.innerRadius, this.outerRadius, yTop, angleStart, angleEnd);
+    }
+
+    this.setIndex(indices);
+    this.setAttribute("position", new BufferAttribute(new Float32Array(positions), 3));
+    this.setAttribute("normal", new BufferAttribute(new Float32Array(normals), 3));
+    this.setAttribute("uv", new BufferAttribute(new Float32Array(uvs), 2));
+    this.computeBoundingSphere();
+  }
+}
