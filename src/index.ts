@@ -161,6 +161,7 @@ export { DeskGeometry } from "./geometry/furniture/DeskGeometry";
 
 // Leafs
 export { EllipticLeafGeometry } from "./geometry/leafs/EllipticLeafGeometry";
+export { LeafGeometry, type LeafGeometryOptions } from "./geometry/leafs/LeafGeometry";
 
 // Lighting
 export { FlameGeometry } from "./geometry/lighting/FlameGeometry";
@@ -238,6 +239,9 @@ export { WroughtIronFence } from "./models/fence/WroughtIronFence";
 // Furniture
 export { Bookshelf } from "./models/furniture/Bookshelf";
 export { Desk } from "./models/furniture/Desk";
+
+// Leafs
+export { Leaf, type LeafOptions } from "./models/leafs/Leaf";
 
 // Lighting
 export { Candle } from "./models/lighting/Candle";
