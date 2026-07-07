@@ -2,6 +2,8 @@
 
 Create or enhance stylized low-poly scenes entirely through code using procedurally generated geometries, prefabricated models, factory utilities, and atmospheric layers for [Three.js](https://threejs.org).
 
+See the [example gallery](https://jasonsturges.com/three-low-poly/) for the full catalog of models, effects, and composed scenes. Local dev: `npm run host`.
+
 ![screen-capture](https://github.com/user-attachments/assets/3285ed9a-da3c-4287-ad2f-0c7e82cd70fd)
 _Example Library scene_
 
@@ -115,20 +117,6 @@ function animate(dt) {
   renderer.render(scene, camera);
 }
 ```
-
-See the [example gallery](https://jasonsturges.com/three-low-poly/) for the full catalog of models, effects, and composed scenes. Local dev: `npm run host`.
-
-![screen-capture](https://github.com/user-attachments/assets/d97345cc-bdaa-46d5-a267-531559919ee5)
-_Example Graveyard scene_
-
-## Roadmap
-
-Direction, not a committed schedule:
-
-- **Seeded randomness**: thread an optional seed through stochastic factories and effects so a scene can be reproduced exactly, while staying unique by default when no seed is given.
-- **Unified fill API**: collapse the growing set of `...ByCount` / `...ByRadius` factory variants into a single discriminated option (fit by count, by item size, or by greedy/random packing), so the same vocabulary applies across books, tiles, fences, and whatever comes next.
-- **WebGPU + TSL**: shaders authored once via Three Shading Language, portable across WebGL and WebGPU.
-- **FX module**: short-lived, triggered bursts (impact dust, spell flashes) as a category distinct from the always-on environment and ambience layers that exist today.
 
 ## Author
 
