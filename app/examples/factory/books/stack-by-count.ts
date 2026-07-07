@@ -1,15 +1,17 @@
 import { InstancedMesh, MeshStandardMaterial } from "three";
 import GUI from "lil-gui";
-import { centerObject, rowOfBooksByCount } from "three-low-poly";
-import { createScene } from "../../framework/createScene";
+import { centerObject, stackOfBooks } from "three-low-poly";
+import { createScene } from "../../../framework/createScene";
 
 export const meta = {
-  title: "Row of Books (by Count)",
-  description: "Fit a shelf row by book count — seeded layout stays stable while tuning scale ranges.",
+  title: "Stack of Books",
+  description: "Floor stack by count — flat covers with in-plane spin jitter and optional seed.",
 };
 
+const DEG2RAD = Math.PI / 180;
+
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container, { cameraPosition: [0, 3, 5] });
+  const { scene, dispose } = createScene(container, { cameraPosition: [2.5, 4, 5] });
 
   const coverMaterial = new MeshStandardMaterial({
     color: 0x8b0000,
@@ -22,13 +24,15 @@ export default function (container: HTMLElement) {
   const params = {
     useSeed: true,
     seed: 1337,
-    count: 24,
-    scaleXMin: 0.4,
-    scaleXMax: 0.7,
+    count: 8,
+    scaleXMin: 0.8,
+    scaleXMax: 0.95,
     scaleYMin: 0.3,
     scaleYMax: 0.95,
     scaleZMin: 0.1,
     scaleZMax: 0.5,
+    yawMaxDeg: 32,
+    offsetMax: 0.06,
   };
 
   let mesh: InstancedMesh | undefined;
@@ -38,7 +42,7 @@ export default function (container: HTMLElement) {
       scene.remove(mesh);
       mesh.geometry.dispose();
     }
-    mesh = rowOfBooksByCount({
+    mesh = stackOfBooks({
       coverMaterial,
       pagesMaterial,
       count: params.count,
@@ -48,15 +52,16 @@ export default function (container: HTMLElement) {
       scaleYMax: params.scaleYMax,
       scaleZMin: params.scaleZMin,
       scaleZMax: params.scaleZMax,
+      yawMax: params.yawMaxDeg * DEG2RAD,
+      offsetMax: params.offsetMax,
       seed: params.useSeed ? params.seed : undefined,
     });
-    mesh.rotation.y = Math.PI / 2;
     centerObject(mesh);
     scene.add(mesh);
   };
 
   const gui = new GUI();
-  gui.title("Row of Books (by Count)");
+  gui.title("Stack of Books");
 
   const seedFolder = gui.addFolder("Seed");
   seedFolder.add(params, "useSeed").name("Use Seed").onChange(rebuild);
@@ -64,8 +69,13 @@ export default function (container: HTMLElement) {
   seedFolder.open();
 
   const fitFolder = gui.addFolder("Fit");
-  fitFolder.add(params, "count", 1, 250, 1).name("Count").onChange(rebuild);
+  fitFolder.add(params, "count", 1, 24, 1).name("Count").onChange(rebuild);
   fitFolder.open();
+
+  const rotationFolder = gui.addFolder("Placement");
+  rotationFolder.add(params, "yawMaxDeg", 0, 90, 1).name("Spin Max (°)").onChange(rebuild);
+  rotationFolder.add(params, "offsetMax", 0, 0.3, 0.01).name("Drift").onChange(rebuild);
+  rotationFolder.open();
 
   const scaleFolder = gui.addFolder("Scale Ranges");
   scaleFolder.add(params, "scaleYMin", 0.01, 1, 0.01).name("Y Min").onChange(rebuild);

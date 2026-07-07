@@ -3,7 +3,10 @@ import GUI from "lil-gui";
 import { centerObject, rowOfBooksByLength } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
-export const meta = { title: "Row of Books (by Length)" };
+export const meta = {
+  title: "Row of Books (by Length)",
+  description: "Greedy-pack books to a shelf length — seeded layout via createRandom().",
+};
 
 export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container, { cameraPosition: [0, 3, 5] });
@@ -17,6 +20,8 @@ export default function (container: HTMLElement) {
   const pagesMaterial = new MeshStandardMaterial({ color: 0xffffff, flatShading: true });
 
   const params = {
+    useSeed: true,
+    seed: 1337,
     length: 10,
     scaleXMin: 0.4,
     scaleXMax: 0.7,
@@ -28,7 +33,7 @@ export default function (container: HTMLElement) {
 
   let mesh: InstancedMesh | undefined;
 
-  const updateGeometry = () => {
+  const rebuild = () => {
     if (mesh) {
       scene.remove(mesh);
       mesh.geometry.dispose();
@@ -36,7 +41,14 @@ export default function (container: HTMLElement) {
     mesh = rowOfBooksByLength({
       coverMaterial,
       pagesMaterial,
-      ...params,
+      length: params.length,
+      scaleXMin: params.scaleXMin,
+      scaleXMax: params.scaleXMax,
+      scaleYMin: params.scaleYMin,
+      scaleYMax: params.scaleYMax,
+      scaleZMin: params.scaleZMin,
+      scaleZMax: params.scaleZMax,
+      seed: params.useSeed ? params.seed : undefined,
     });
     mesh.rotation.y = Math.PI / 2;
     centerObject(mesh);
@@ -44,15 +56,27 @@ export default function (container: HTMLElement) {
   };
 
   const gui = new GUI();
-  gui.add(params, "length", 0.1, 250).step(0.1).name("Length").onChange(updateGeometry);
-  gui.add(params, "scaleYMin", 0.01, 1).step(0.01).name("Scale Y Min").onChange(updateGeometry);
-  gui.add(params, "scaleYMax", 0.01, 1).step(0.01).name("Scale Y Max").onChange(updateGeometry);
-  gui.add(params, "scaleXMin", 0.01, 1).step(0.01).name("Scale X Min").onChange(updateGeometry);
-  gui.add(params, "scaleXMax", 0.01, 1).step(0.01).name("Scale X Max").onChange(updateGeometry);
-  gui.add(params, "scaleZMin", 0.01, 1).step(0.01).name("Scale Z Min").onChange(updateGeometry);
-  gui.add(params, "scaleZMax", 0.01, 1).step(0.01).name("Scale Z Max").onChange(updateGeometry);
+  gui.title("Row of Books (by Length)");
 
-  updateGeometry();
+  const seedFolder = gui.addFolder("Seed");
+  seedFolder.add(params, "useSeed").name("Use Seed").onChange(rebuild);
+  seedFolder.add(params, "seed", 0, 99999, 1).name("Seed").onChange(rebuild);
+  seedFolder.open();
+
+  const fitFolder = gui.addFolder("Fit");
+  fitFolder.add(params, "length", 1, 20, 0.5).name("Length").onChange(rebuild);
+  fitFolder.open();
+
+  const scaleFolder = gui.addFolder("Scale Ranges");
+  scaleFolder.add(params, "scaleYMin", 0.01, 1, 0.01).name("Y Min").onChange(rebuild);
+  scaleFolder.add(params, "scaleYMax", 0.01, 1, 0.01).name("Y Max").onChange(rebuild);
+  scaleFolder.add(params, "scaleXMin", 0.01, 1, 0.01).name("X Min").onChange(rebuild);
+  scaleFolder.add(params, "scaleXMax", 0.01, 1, 0.01).name("X Max").onChange(rebuild);
+  scaleFolder.add(params, "scaleZMin", 0.01, 1, 0.01).name("Z Min").onChange(rebuild);
+  scaleFolder.add(params, "scaleZMax", 0.01, 1, 0.01).name("Z Max").onChange(rebuild);
+  scaleFolder.open();
+
+  rebuild();
 
   return () => {
     gui.destroy();

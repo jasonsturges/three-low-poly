@@ -45,7 +45,7 @@ export function createHexagonalTilesByCount(options: HexagonalTileCountOptions):
   const hexTileCount = count * countZ;
 
   // Create a hexagonal prism geometry
-  const geometry = new HexagonGeometry(radius, height);
+  const geometry = new HexagonGeometry({ radius, depth: height });
 
   // Rotate geometry so tiles lay flat
   geometry.rotateX(-Math.PI / 2);
@@ -119,7 +119,7 @@ export function createHexagonalTilesByRadius(options: HexagonalTileRadiusOptions
   const hexTileCount = hexTileCountX * hexTileCountZ;
 
   // Create a hexagonal prism geometry
-  const geometry = new HexagonGeometry(radius, height);
+  const geometry = new HexagonGeometry({ radius, depth: height });
 
   // Rotate geometry so tiles lay flat
   geometry.rotateX(-Math.PI / 2);
