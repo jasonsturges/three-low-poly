@@ -90,12 +90,14 @@ export {
 
 export * from "./factory/BookFactory";
 export * from "./factory/HexagonalTileFactory";
+export * from "./factory/RockFactory";
 
 //------------------------------
 //  Geometries
 //------------------------------
 
 // Architecture
+export { ArchedDiamondLatticeWindowGeometry } from "./geometry/architecture/ArchedDiamondLatticeWindowGeometry";
 export { DiamondLatticeWindowGeometry } from "./geometry/architecture/DiamondLatticeWindowGeometry";
 export { GregorianLatticeWindowGeometry } from "./geometry/architecture/GregorianLatticeWindowGeometry";
 export {
@@ -113,13 +115,23 @@ export {
   type RingLatticeGrid,
 } from "./geometry/architecture/ringLattice";
 export {
+  archedOpeningMetrics,
+  buildArchedDiamondLatticeCameParts,
+  buildArchedDiamondLatticeFrameGeometry,
+  buildArchedDiamondLatticeParts,
+  buildDiamondLatticeCameParts,
+  diamondLatticeSpringPhaseShift,
+  insetArchedOpeningMetrics,
+  traceArchedOpeningOutline,
   buildDiamondLatticeParts,
   clipSegmentToAabb,
+  clipSegmentToArchedOpening,
   diamondLatticeCellFromCount,
   diamondLatticeCornerSpan,
   diamondLatticeGridFromCells,
-  diamondLatticeSpacingFromGrid,
   fitDiamondLatticeCell,
+  type ArchedOpeningBounds,
+  type ArchedOpeningMetrics,
   type DiamondLatticeGrid,
 } from "./geometry/architecture/diamondLattice";
 export {
@@ -136,27 +148,42 @@ export {
 } from "./geometry/architecture/StaircaseGeometry";
 
 // Books
-export { BookGeometry } from "./geometry/books/BookGeometry";
+export { BookGeometry, type BookGeometryOptions } from "./geometry/books/BookGeometry";
 
 // Bottles
 export { JarGeometry } from "./geometry/bottles/JarGeometry";
 export { PotionBottleGeometry } from "./geometry/bottles/PotionBottleGeometry";
-export { WineBottleGeometry } from "./geometry/bottles/WineBottleGeometry";
+export { WineBottleGeometry, type WineBottleGeometryOptions } from "./geometry/bottles/WineBottleGeometry";
 
 // Cemetery
-export { CrossHeadstoneGeometry } from "./geometry/cemetery/CrossHeadstoneGeometry";
+export {
+  CrossHeadstoneGeometry,
+  type CrossHeadstoneGeometryOptions,
+} from "./geometry/cemetery/CrossHeadstoneGeometry";
 export { MausoleumGeometry } from "./geometry/cemetery/MausoleumGeometry";
-export { ObeliskHeadstoneGeometry } from "./geometry/cemetery/ObeliskHeadstoneGeometry";
+export {
+  ObeliskHeadstoneGeometry,
+  type ObeliskHeadstoneGeometryOptions,
+} from "./geometry/cemetery/ObeliskHeadstoneGeometry";
 export { RoundedHeadstoneGeometry } from "./geometry/cemetery/RoundedHeadstoneGeometry";
 export { SquareHeadstoneGeometry } from "./geometry/cemetery/SquareHeadstoneGeometry";
 
 // Fence
-export { StoneFencePostGeometry } from "./geometry/fence/StoneFencePostGeometry";
-export { WroughtIronBarGeometry } from "./geometry/fence/WroughtIronBarGeometry";
-export { WroughtIronFenceGeometry } from "./geometry/fence/WroughtIronFenceGeometry";
+export {
+  StoneFencePostGeometry,
+  type StoneFencePostGeometryOptions,
+} from "./geometry/fence/StoneFencePostGeometry";
+export {
+  WroughtIronBarGeometry,
+  type WroughtIronBarGeometryOptions,
+} from "./geometry/fence/WroughtIronBarGeometry";
+export {
+  WroughtIronFenceGeometry,
+  type WroughtIronFenceGeometryOptions,
+} from "./geometry/fence/WroughtIronFenceGeometry";
 
 // Furniture
-export { BookshelfGeometry } from "./geometry/furniture/BookshelfGeometry";
+export { BookshelfGeometry, type BookshelfGeometryOptions } from "./geometry/furniture/BookshelfGeometry";
 export { DeskGeometry } from "./geometry/furniture/DeskGeometry";
 
 // Leafs
@@ -164,8 +191,8 @@ export { EllipticLeafGeometry } from "./geometry/leafs/EllipticLeafGeometry";
 export { LeafGeometry, type LeafGeometryOptions } from "./geometry/leafs/LeafGeometry";
 
 // Lighting
-export { FlameGeometry } from "./geometry/lighting/FlameGeometry";
-export { CandleGeometry } from "./geometry/lighting/CandleGeometry";
+export { FlameGeometry, type FlameGeometryOptions } from "./geometry/lighting/FlameGeometry";
+export { CandleGeometry, type CandleGeometryOptions } from "./geometry/lighting/CandleGeometry";
 export { LanternGeometry, type LanternGeometryOptions } from "./geometry/lighting/LanternGeometry";
 export {
   HangingLanternGeometry,
@@ -180,34 +207,36 @@ export {
 export { ParallelogramBoxGeometry } from "./geometry/primitives/ParallelogramBoxGeometry";
 
 // Rocks
-export { MossyRocksGeometry } from "./geometry/rocks/MossyRocksGeometry";
-export { RockGeometry } from "./geometry/rocks/RockGeometry";
-export { RocksGeometry } from "./geometry/rocks/RocksGeometry";
+export { MossyRockGeometry, type MossyRockGeometryOptions } from "./geometry/rocks/MossyRockGeometry";
+export { RockGeometry, type RockGeometryOptions } from "./geometry/rocks/RockGeometry";
 
 // Shapes
-export { BurstGeometry } from "./geometry/shapes/BurstGeometry";
-export { GearGeometry } from "./geometry/shapes/GearGeometry";
-export { HeartGeometry } from "./geometry/shapes/HeartGeometry";
-export { HexagonGeometry } from "./geometry/shapes/HexagonGeometry";
-export { StarGeometry } from "./geometry/shapes/StarGeometry";
+export { BurstGeometry, type BurstGeometryOptions } from "./geometry/shapes/BurstGeometry";
+export { GearGeometry, type GearGeometryOptions } from "./geometry/shapes/GearGeometry";
+export { HeartGeometry, type HeartGeometryOptions } from "./geometry/shapes/HeartGeometry";
+export { HexagonGeometry, type HexagonGeometryOptions } from "./geometry/shapes/HexagonGeometry";
+export { StarGeometry, type StarGeometryOptions } from "./geometry/shapes/StarGeometry";
 
 // Skeleton
 export { BoneGeometry } from "./geometry/skeleton/BoneGeometry";
 
 // Science
-export { ErlenmeyerFlaskGeometry } from "./geometry/science/ErlenmeyerFlaskGeometry";
+export {
+  ErlenmeyerFlaskGeometry,
+  type ErlenmeyerFlaskGeometryOptions,
+} from "./geometry/science/ErlenmeyerFlaskGeometry";
 export { FlorenceFlaskGeometry } from "./geometry/science/FlorenceFlaskGeometry";
 export { MortarGeometry } from "./geometry/science/MortarGeometry";
-export { StandGeometry } from "./geometry/science/StandGeometry";
+export { StandGeometry, type StandGeometryOptions } from "./geometry/science/StandGeometry";
 export { TeslaCoilGeometry } from "./geometry/science/TeslaCoilGeometry";
 export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
 
 // Terrain
-export { HillGeometry } from "./geometry/terrain/HillGeometry";
-export { MoundGeometry } from "./geometry/terrain/MoundGeometry";
+export { HillGeometry, type HillGeometryOptions } from "./geometry/terrain/HillGeometry";
+export { MoundGeometry, type MoundGeometryOptions } from "./geometry/terrain/MoundGeometry";
 
 // Trees
-export { TreeGeometry } from "./geometry/trees/TreeGeometry";
+export { TreeGeometry, type TreeGeometryOptions } from "./geometry/trees/TreeGeometry";
 
 //------------------------------
 //  Materials
@@ -221,53 +250,53 @@ export { TreeGeometry } from "./geometry/trees/TreeGeometry";
 export { LShapedStaircase, type LShapedStaircaseOptions } from "./models/architecture/LShapedStaircase";
 export { SpiralStaircase, type SpiralStaircaseOptions } from "./models/architecture/SpiralStaircase";
 export { Staircase, type StaircaseOptions } from "./models/architecture/Staircase";
+export { ArchedDiamondLatticeWindow } from "./models/architecture/ArchedDiamondLatticeWindow";
 export { DiamondLatticeWindow } from "./models/architecture/DiamondLatticeWindow";
 export { GregorianLatticeWindow } from "./models/architecture/GregorianLatticeWindow";
 export { RingLatticeWindow } from "./models/architecture/RingLatticeWindow";
 
 // Books
-export { Book } from "./models/books/Book";
+export { Book, type BookOptions } from "./models/books/Book";
 
 // Bottles
 export { Jar } from "./models/bottles/Jar";
 export { PotionBottle } from "./models/bottles/PotionBottle";
-export { WineBottle } from "./models/bottles/WineBottle";
+export { WineBottle, type WineBottleOptions } from "./models/bottles/WineBottle";
 
 // Cemetery
-export { CrossHeadstone } from "./models/cemetery/CrossHeadstone";
+export { CrossHeadstone, type CrossHeadstoneOptions } from "./models/cemetery/CrossHeadstone";
 export { Mausoleum } from "./models/cemetery/Mausoleum";
-export { ObeliskHeadstone } from "./models/cemetery/ObeliskHeadstone";
+export { ObeliskHeadstone, type ObeliskHeadstoneOptions } from "./models/cemetery/ObeliskHeadstone";
 export { RoundedHeadstone } from "./models/cemetery/RoundedHeadstone";
 export { SquareHeadstone } from "./models/cemetery/SquareHeadstone";
 
 // Fence
-export { StoneFencePost } from "./models/fence/StoneFencePost";
-export { WroughtIronBar } from "./models/fence/WroughtIronBar";
-export { WroughtIronFence } from "./models/fence/WroughtIronFence";
+export { StoneFencePost, type StoneFencePostOptions } from "./models/fence/StoneFencePost";
+export { WroughtIronBar, type WroughtIronBarOptions } from "./models/fence/WroughtIronBar";
+export { WroughtIronFence, type WroughtIronFenceOptions } from "./models/fence/WroughtIronFence";
 
 // Furniture
-export { Bookshelf } from "./models/furniture/Bookshelf";
+export { Bookshelf, type BookshelfOptions } from "./models/furniture/Bookshelf";
 export { Desk } from "./models/furniture/Desk";
 
 // Leafs
 export { Leaf, type LeafOptions } from "./models/leafs/Leaf";
 
 // Lighting
-export { Candle } from "./models/lighting/Candle";
-export { Flame } from "./models/lighting/Flame";
+export { Candle, type CandleOptions } from "./models/lighting/Candle";
+export { Flame, type FlameOptions } from "./models/lighting/Flame";
 export { HangingLantern, type HangingLanternOptions } from "./models/lighting/HangingLantern";
 export { WallSconce, type WallSconceOptions } from "./models/lighting/WallSconce";
 export { Lantern, type LanternOptions } from "./models/lighting/Lantern";
 
 // Rocks
-export { MossyRocks } from "./models/rocks/MossyRocks";
-export { Rock } from "./models/rocks/Rock";
-export { Rocks } from "./models/rocks/Rocks";
+export { MossyRock, type MossyRockOptions } from "./models/rocks/MossyRock";
+export { Rock, type RockOptions } from "./models/rocks/Rock";
 
 // Science
 export { BunsenBurner } from "./models/science/BunsenBurner";
 export { ElectricPanel } from "./models/science/ElectricPanel";
-export { ErlenmeyerFlask } from "./models/science/ErlenmeyerFlask";
+export { ErlenmeyerFlask, type ErlenmeyerFlaskOptions } from "./models/science/ErlenmeyerFlask";
 export { FlorenceFlask } from "./models/science/FlorenceFlask";
 export { LeverPanel } from "./models/science/LeverPanel";
 export { Microscope } from "./models/science/Microscope";
@@ -275,27 +304,27 @@ export { MortarAndPestle } from "./models/science/MortarAndPestle";
 export { Panel, type PanelOptions } from "./models/science/Panel";
 export { PanelLight, type PanelLightOptions } from "./models/science/PanelLight";
 export { SpiralTube } from "./models/science/SpiralTube";
-export { Stand } from "./models/science/Stand";
+export { Stand, type StandOptions } from "./models/science/Stand";
 export { TeslaCoil } from "./models/science/TeslaCoil";
 export { TestTube } from "./models/science/TestTube";
 export { TestTubeRack, type TestTubeRackOptions } from "./models/science/TestTubeRack";
 
 // Shapes
-export { Burst } from "./models/shapes/Burst";
-export { Gear } from "./models/shapes/Gear";
-export { Heart } from "./models/shapes/Heart";
-export { Hexagon } from "./models/shapes/Hexagon";
-export { Star } from "./models/shapes/Star";
+export { Burst, type BurstOptions } from "./models/shapes/Burst";
+export { Gear, type GearOptions } from "./models/shapes/Gear";
+export { Heart, type HeartOptions } from "./models/shapes/Heart";
+export { Hexagon, type HexagonOptions } from "./models/shapes/Hexagon";
+export { Star, type StarOptions } from "./models/shapes/Star";
 
 // Skeleton
 export { Bone } from "./models/skeleton/Bone";
 
 // Trees
-export { Tree } from "./models/trees/Tree";
+export { Tree, type TreeOptions } from "./models/trees/Tree";
 
 // Terrain
-export { Hill } from "./models/terrain/Hill";
-export { Mound } from "./models/terrain/Mound";
+export { Hill, type HillOptions } from "./models/terrain/Hill";
+export { Mound, type MoundOptions } from "./models/terrain/Mound";
 
 //------------------------------
 //  Shaders
