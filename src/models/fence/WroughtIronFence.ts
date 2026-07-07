@@ -1,35 +1,32 @@
-import { Mesh, MeshStandardMaterial } from "three";
-import { WroughtIronFenceGeometry } from "../../geometry/fence/WroughtIronFenceGeometry";
+import { Color, ColorRepresentation, Mesh, MeshStandardMaterial } from "three";
+import {
+  WroughtIronFenceGeometry,
+  type WroughtIronFenceGeometryOptions,
+} from "../../geometry/fence/WroughtIronFenceGeometry";
 
+export interface WroughtIronFenceOptions extends WroughtIronFenceGeometryOptions {
+  /** Iron tint. Defaults to `#333333`. */
+  color?: ColorRepresentation;
+}
+
+/**
+ * Wrought-iron fence run prefab.
+ */
 export class WroughtIronFence extends Mesh<WroughtIronFenceGeometry, MeshStandardMaterial> {
-  constructor({
-    count = 20, //
-    spacing = 0.4,
-    barHeight = 2.0,
-    barRadius = 0.05,
-    spikeHeight = 0.3,
-    spikeRadius = 0.075,
-    spikeScaleZ = 1.0,
-    railHeight = 0.1,
-    railDepth = 0.05,
-    railOffset = 0.0,
-    radialSegments = 8,
-  } = {}) {
+  readonly count: number;
+
+  constructor({ color = "#333333", ...geometryOptions }: WroughtIronFenceOptions = {}) {
+    const geometry = new WroughtIronFenceGeometry(geometryOptions);
+
     super(
-      new WroughtIronFenceGeometry({
-        count,
-        spacing,
-        barHeight,
-        barRadius,
-        spikeHeight,
-        spikeRadius,
-        spikeScaleZ,
-        railHeight,
-        railDepth,
-        railOffset,
-        radialSegments,
+      geometry,
+      new MeshStandardMaterial({
+        color: new Color(color),
+        metalness: 0.8,
+        roughness: 0.4,
       }),
-      new MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.4 }),
     );
+
+    this.count = geometry.count;
   }
 }

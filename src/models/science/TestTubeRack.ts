@@ -1,4 +1,4 @@
-import { BoxGeometry, ColorRepresentation, DoubleSide, Group, Mesh, MeshStandardMaterial } from "three";
+import { BoxGeometry, Color, ColorRepresentation, DoubleSide, Group, Mesh, MeshStandardMaterial } from "three";
 import { TestTubeGeometry } from "../../geometry/science/TestTubeGeometry";
 
 export interface TestTubeRackOptions {
@@ -9,15 +9,22 @@ export interface TestTubeRackOptions {
 }
 
 /**
- * Wooden rack with instanced test tubes and emissive liquid fills.
+ * Wooden rack with test tubes and emissive liquid fills.
  *
  * Glass shells use `DoubleSide` and `depthWrite: false`; liquid draws first
  * (`renderOrder` 1), glass second (`renderOrder` 2) so fills stay visible at
  * most camera angles.
  */
-class TestTubeRack extends Group {
-  constructor(count = 3, colors: ColorRepresentation[] = [0x00ffaa, 0xff00aa, 0xaa00ff]) {
+export class TestTubeRack extends Group {
+  readonly count: number;
+
+  constructor({
+    count = 3,
+    colors = ["#00ffaa", "#ff00aa", "#aa00ff"],
+  }: TestTubeRackOptions = {}) {
     super();
+
+    this.count = count;
 
     const rackGeometry = new BoxGeometry(3, 0.2, 1);
     const rackMaterial = new MeshStandardMaterial({
@@ -48,10 +55,10 @@ class TestTubeRack extends Group {
       testTube.renderOrder = 2;
 
       const liquidGeometry = new TestTubeGeometry(0.099, 0.099, 0.5, 16, false);
-      const liquidColor = colors[i % colors.length];
+      const liquidColor = colors[i % colors.length]!;
       const liquidMaterial = new MeshStandardMaterial({
-        color: liquidColor,
-        emissive: liquidColor,
+        color: new Color(liquidColor),
+        emissive: new Color(liquidColor),
         emissiveIntensity: 0.5,
         transparent: true,
         opacity: 0.6,
@@ -70,5 +77,3 @@ class TestTubeRack extends Group {
     this.add(rack);
   }
 }
-
-export { TestTubeRack };

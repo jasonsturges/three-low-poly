@@ -18,7 +18,7 @@ export interface DiamondLatticeWindowOptions extends DiamondLatticeWindowGeometr
   /** Lead + outer frame tint. Defaults to `#0c0f14`. */
   leadColor?: ColorRepresentation;
   /**
-   * Optional glass pane coplanar with the lattice (same Z center).
+   * Optional glass pane centered in the lead depth (`z = 0`), visible from both sides.
    * Mad-science uses an emissive sky mesh in the scene instead.
    */
   glass?: boolean;
@@ -31,8 +31,9 @@ export interface DiamondLatticeWindowOptions extends DiamondLatticeWindowGeometr
 /**
  * Diamond lattice window — diagonal lead cames with axis-aligned quarrels (`<>`).
  *
- * Local frame: centered on the opening, XY plane facing +Z. Lead and optional
- * glass share `z = 0`. Pair with a scene-owned backing plane behind the wall.
+ * Local frame: centered on the opening, XY plane facing +Z. Lead is centered on
+ * `z = 0`; optional glass sits in the same plane (both faces). Pair with
+ * a scene-owned backing plane behind the wall.
  */
 export class DiamondLatticeWindow extends Group {
   readonly lattice: Mesh<DiamondLatticeWindowGeometry, MeshStandardMaterial>;
@@ -47,11 +48,17 @@ export class DiamondLatticeWindow extends Group {
     glassColor = "#6a7d8c",
     glassEmissive,
     glassEmissiveIntensity = 0,
+    centerY = 0,
+    leadDepth = 0.11,
     ...geometryOptions
   }: DiamondLatticeWindowOptions = {}) {
     super();
 
-    const geometry = new DiamondLatticeWindowGeometry(geometryOptions);
+    const geometry = new DiamondLatticeWindowGeometry({
+      centerY,
+      leadDepth,
+      ...geometryOptions,
+    });
     this.cellsX = geometry.cellsX;
     this.cellsY = geometry.cellsY;
     this.fittedGrid = geometry.fittedGrid;
@@ -60,6 +67,9 @@ export class DiamondLatticeWindow extends Group {
       color: new Color(leadColor),
       roughness: 0.7,
       metalness: 0.35,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
     });
 
     this.lattice = new Mesh(geometry, leadMaterial);
@@ -79,10 +89,11 @@ export class DiamondLatticeWindow extends Group {
         roughness: 0.08,
         metalness: 0,
         transmission: glassEmissive ? 0.5 : 0.88,
-        thickness: 0.02,
+        thickness: leadDepth * 0.5,
         side: DoubleSide,
       });
       this.glass = new Mesh(new PlaneGeometry(w, h), glassMaterial);
+      this.glass.position.y = centerY;
       this.glass.renderOrder = 0;
       this.glass.castShadow = false;
       this.glass.receiveShadow = false;

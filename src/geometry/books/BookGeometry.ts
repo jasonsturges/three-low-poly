@@ -1,16 +1,45 @@
 import { BoxGeometry, BufferAttribute, BufferGeometry } from "three";
 import { mergeBufferGeometries } from "three-stdlib";
 
+export interface BookGeometryOptions {
+  /** Cover width (spine to fore-edge). Defaults to `1`. */
+  width?: number;
+  /** Cover height. Defaults to `1.5`. */
+  height?: number;
+  /** Spine depth (cover to cover). Defaults to `0.5`. */
+  depth?: number;
+  /** Cover board thickness. Defaults to `0.05`. */
+  coverThickness?: number;
+  /** Inset of the page block from the cover edges. Defaults to `0.05`. */
+  pageIndent?: number;
+}
+
 /**
- * Book
+ * Closed book — cover shell (group 0) and page block (group 1).
  *
- * Group indices:
- * 0. cover
- * 1. page
+ * Local frame: spine at X=0, fore-edge at +X, sits on the Y=0 plane.
  */
 export class BookGeometry extends BufferGeometry {
-  constructor(width = 1, height = 1.5, depth = 0.5, coverThickness = 0.05, pageIndent = 0.05) {
+  readonly width: number;
+  readonly height: number;
+  readonly depth: number;
+  readonly coverThickness: number;
+  readonly pageIndent: number;
+
+  constructor({
+    width = 1,
+    height = 1.5,
+    depth = 0.5,
+    coverThickness = 0.05,
+    pageIndent = 0.05,
+  }: BookGeometryOptions = {}) {
     super();
+
+    this.width = width;
+    this.height = height;
+    this.depth = depth;
+    this.coverThickness = coverThickness;
+    this.pageIndent = pageIndent;
 
     const w = width;
     const h = height;

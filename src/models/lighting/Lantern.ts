@@ -22,23 +22,14 @@ export interface LanternOptions extends LanternGeometryOptions {
 export class Lantern extends Mesh<LanternGeometry, MeshStandardMaterial[]> {
   readonly lampCenterY: number;
 
-  constructor(
-    heightOrOptions: number | LanternOptions = {},
-    baseWidth?: number,
-  ) {
-    const options: LanternOptions =
-      typeof heightOrOptions === "number"
-        ? { bodyHeight: heightOrOptions, baseWidth: baseWidth ?? 0.5 }
-        : heightOrOptions;
-
-    const {
-      color = "#8b4513",
-      lampColor = "#ffd700",
-      lampEmissiveIntensity = 1.2,
-      lampOpacity = 0.75,
-      inner = true,
-      ...geometryOptions
-    } = options;
+  constructor({
+    color = "#8b4513",
+    lampColor = "#ffd700",
+    lampEmissiveIntensity = 1.2,
+    lampOpacity = 0.75,
+    inner = true,
+    ...geometryOptions
+  }: LanternOptions = {}) {
 
     const geometry = new LanternGeometry({ inner, ...geometryOptions });
     const lamp = new Color(lampColor);

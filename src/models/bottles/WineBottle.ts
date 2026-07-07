@@ -1,12 +1,20 @@
-import { Mesh, MeshPhysicalMaterial } from "three";
-import { WineBottleGeometry } from "../../geometry/bottles/WineBottleGeometry";
+import { Color, ColorRepresentation, Mesh, MeshPhysicalMaterial } from "three";
+import { WineBottleGeometry, type WineBottleGeometryOptions } from "../../geometry/bottles/WineBottleGeometry";
 
+export interface WineBottleOptions extends WineBottleGeometryOptions {
+  /** Glass tint. Defaults to `#556b2f`. */
+  color?: ColorRepresentation;
+}
+
+/**
+ * Wine bottle prefab — translucent green glass.
+ */
 export class WineBottle extends Mesh<WineBottleGeometry, MeshPhysicalMaterial> {
-  constructor() {
+  constructor({ color = "#556b2f", ...geometryOptions }: WineBottleOptions = {}) {
     super(
-      new WineBottleGeometry(),
+      new WineBottleGeometry(geometryOptions),
       new MeshPhysicalMaterial({
-        color: 0x556b2f,
+        color: new Color(color),
         roughness: 0.1,
         transmission: 0.9,
         thickness: 0.2,

@@ -1,16 +1,24 @@
 import { ExtrudeGeometry } from "three";
 import { HexagonShape } from "../../shapes/HexagonShape";
 
+export interface HexagonGeometryOptions {
+  /** Hex circumradius. Defaults to `1`. */
+  radius?: number;
+  /** Extrusion depth. Defaults to `0.01`. */
+  depth?: number;
+}
+
 /**
- * Extrude geometry of Hexagon Shape.
+ * Extruded regular hexagon prism.
  */
 export class HexagonGeometry extends ExtrudeGeometry {
-  constructor(radius = 1, depth = 0.01) {
-    const shape = new HexagonShape(radius);
+  readonly radius: number;
+  readonly depth: number;
 
-    super(shape, {
-      depth: depth,
-      bevelEnabled: false,
-    });
+  constructor({ radius = 1, depth = 0.01 }: HexagonGeometryOptions = {}) {
+    super(new HexagonShape(radius), { depth, bevelEnabled: false });
+
+    this.radius = radius;
+    this.depth = depth;
   }
 }

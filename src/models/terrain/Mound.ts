@@ -1,43 +1,30 @@
-import { Mesh, MeshStandardMaterial } from "three";
-import { MoundGeometry } from "../../geometry/terrain/MoundGeometry";
+import { Color, ColorRepresentation, Mesh, MeshStandardMaterial } from "three";
+import { MoundGeometry, type MoundGeometryOptions } from "../../geometry/terrain/MoundGeometry";
 import { radiusFromCapWidth } from "../../utils/SphericalGeometryUtils";
 
+export interface MoundOptions extends MoundGeometryOptions {
+  /** Surface tint. Defaults to `#00ff00`. */
+  color?: ColorRepresentation;
+}
+
 /**
- * Mound-like mesh with a flat top.
- *
- * To create a radius based on a desired width:
- * ```
- * const mound = new Mound({
- *   radius: radiusFromCapWidth(5, Math.PI / 10),
- * }
- * ```
- *
- * To create a radius based on a desired height:
- * ```
- * const mound = new Mound({
- *  radius: radiusFromCapHeight(5, Math.PI / 10),
- * }
- * ```
+ * Mound prefab — flat-topped terrain cap.
  */
 export class Mound extends Mesh<MoundGeometry, MeshStandardMaterial> {
+  readonly radius: number;
+
   constructor({
-    radius = radiusFromCapWidth(5, Math.PI / 10), //
-    widthSegments = 64,
-    heightSegments = 32,
-    phiStart = 0,
-    phiLength = Math.PI * 2,
-    thetaLength = Math.PI / 10,
-  } = {}) {
+    color = "#00ff00",
+    radius = radiusFromCapWidth(5, Math.PI / 10),
+    ...geometryOptions
+  }: MoundOptions = {}) {
+    const geometry = new MoundGeometry({ radius, ...geometryOptions });
+
     super(
-      new MoundGeometry({
-        radius,
-        widthSegments,
-        heightSegments,
-        phiStart,
-        phiLength,
-        thetaLength,
-      }),
-      new MeshStandardMaterial({ color: 0x00ff00, flatShading: true }),
+      geometry,
+      new MeshStandardMaterial({ color: new Color(color), flatShading: true }),
     );
+
+    this.radius = geometry.radius;
   }
 }

@@ -1,11 +1,28 @@
-import { Mesh, MeshStandardMaterial } from "three";
-import { StoneFencePostGeometry } from "../../geometry/fence/StoneFencePostGeometry";
+import { Color, ColorRepresentation, Mesh, MeshStandardMaterial } from "three";
+import {
+  StoneFencePostGeometry,
+  type StoneFencePostGeometryOptions,
+} from "../../geometry/fence/StoneFencePostGeometry";
 
+export interface StoneFencePostOptions extends StoneFencePostGeometryOptions {
+  /** Stone tint. Defaults to `#8b7d7b`. */
+  color?: ColorRepresentation;
+}
+
+/**
+ * Stone fence post prefab.
+ */
 export class StoneFencePost extends Mesh<StoneFencePostGeometry, MeshStandardMaterial> {
-  constructor({ height = 2.25 } = {}) {
+  readonly height: number;
+
+  constructor({ color = "#8b7d7b", ...geometryOptions }: StoneFencePostOptions = {}) {
+    const geometry = new StoneFencePostGeometry(geometryOptions);
+
     super(
-      new StoneFencePostGeometry({ height }),
-      new MeshStandardMaterial({ color: 0x8b7d7b, flatShading: true })
+      geometry,
+      new MeshStandardMaterial({ color: new Color(color), flatShading: true }),
     );
+
+    this.height = geometry.height;
   }
 }

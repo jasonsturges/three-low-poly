@@ -1,24 +1,47 @@
 import { BufferGeometry, LatheGeometry, Vector2 } from "three";
-import {mergeBufferGeometries} from "three-stdlib";
+import { mergeBufferGeometries } from "three-stdlib";
 
+export interface ErlenmeyerFlaskGeometryOptions {
+  /** Flask body radius. Defaults to `1`. */
+  flaskRadius?: number;
+  /** Neck radius. Defaults to `0.3`. */
+  neckRadius?: number;
+  /** Body height before the neck. Defaults to `2.5`. */
+  height?: number;
+  /** Neck height. Defaults to `1`. */
+  neckHeight?: number;
+  /** Lathe segments. Defaults to `16`. */
+  radialSegments?: number;
+}
+
+/**
+ * Erlenmeyer flask profile — conical body with straight neck and lip.
+ *
+ * Local frame: base at Y=0.
+ */
 export class ErlenmeyerFlaskGeometry extends BufferGeometry {
+  readonly flaskRadius: number;
+  readonly height: number;
+
   constructor({
-    flaskRadius = 1, //
+    flaskRadius = 1,
     neckRadius = 0.3,
     height = 2.5,
     neckHeight = 1,
     radialSegments = 16,
-  } = {}) {
+  }: ErlenmeyerFlaskGeometryOptions = {}) {
     super();
 
-    // Recalculating other radii to keep proportions consistent
+    this.flaskRadius = flaskRadius;
+    this.height = height;
+
     const points = [
-      new Vector2(0, 0), // Bottom of the flask
-      new Vector2(flaskRadius * 0.875, 0), // Flat base with minimum width
-      new Vector2(flaskRadius, 0.1), // End of the rounded base
-      new Vector2(neckRadius, height), // Start of the straight neck
-      new Vector2(neckRadius, height + neckHeight), // End of the straight neck
-      new Vector2(neckRadius * 1.1, height + neckHeight + 0.3), // Slight outward lip at the top
+      new Vector2(0, 0),
+      new Vector2(flaskRadius * 0.875, 0),
+      new Vector2(flaskRadius, 0.1),
+      new Vector2(neckRadius, height),
+      new Vector2(neckRadius, height + neckHeight),
+      new Vector2(neckRadius * 1.1, height + neckHeight + 0.3),
     ];
 
     const flaskGeometry = new LatheGeometry(points, radialSegments);

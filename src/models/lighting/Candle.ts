@@ -1,33 +1,43 @@
-import { Mesh, MeshStandardMaterial } from "three";
-import { CandleGeometry } from "../../geometry/lighting/CandleGeometry";
+import { Color, ColorRepresentation, Mesh, MeshStandardMaterial } from "three";
+import { CandleGeometry, type CandleGeometryOptions } from "../../geometry/lighting/CandleGeometry";
+
+export interface CandleOptions extends CandleGeometryOptions {
+  /** Wax stick tint. Defaults to `#ffffff`. */
+  stickColor?: ColorRepresentation;
+  /** Flame surface tint. Defaults to `#ffd700`. */
+  flameColor?: ColorRepresentation;
+  /** Flame emissive tint. Defaults to `#ffa500`. */
+  flameEmissive?: ColorRepresentation;
+  /** Flame emissive strength. Defaults to `0.35`. */
+  flameEmissiveIntensity?: number;
+}
 
 /**
- * Material indices
- * 0: Stick
- * 1: Flame
+ * Candle prefab — wax stick and emissive flame (separate material groups).
  */
 export class Candle extends Mesh<CandleGeometry, MeshStandardMaterial[]> {
+  readonly height: number;
+
   constructor({
-    radiusTop = 0.2, //
-    radiusBottom = 0.2,
-    height = 1,
-    flameHeight = 0.25,
-    flameRadius = 0.05,
-    segments = 16,
-  } = {}) {
-    super(
-      new CandleGeometry({
-        radiusTop,
-        radiusBottom,
-        height,
-        flameHeight,
-        flameRadius,
-        segments,
+    stickColor = "#ffffff",
+    flameColor = "#ffd700",
+    flameEmissive = "#ffa500",
+    flameEmissiveIntensity = 0.35,
+    ...geometryOptions
+  }: CandleOptions = {}) {
+    const geometry = new CandleGeometry(geometryOptions);
+
+    super(geometry, [
+      new MeshStandardMaterial({ color: new Color(stickColor), flatShading: true }),
+      new MeshStandardMaterial({
+        color: new Color(flameColor),
+        emissive: new Color(flameEmissive),
+        emissiveIntensity: flameEmissiveIntensity,
+        flatShading: true,
+        toneMapped: false,
       }),
-      [
-        new MeshStandardMaterial({ color: 0xffffff }),
-        new MeshStandardMaterial({ color: 0xffd700, emissive: 0xffa500, emissiveIntensity: 0.35 }),
-      ],
-    );
+    ]);
+
+    this.height = geometry.height;
   }
 }

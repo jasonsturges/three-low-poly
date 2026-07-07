@@ -1,20 +1,31 @@
-import { ErlenmeyerFlaskGeometry } from "../../geometry/science/ErlenmeyerFlaskGeometry";
-import { DoubleSide, Mesh, MeshPhysicalMaterial } from "three";
+import { Color, ColorRepresentation, DoubleSide, Mesh, MeshPhysicalMaterial } from "three";
+import {
+  ErlenmeyerFlaskGeometry,
+  type ErlenmeyerFlaskGeometryOptions,
+} from "../../geometry/science/ErlenmeyerFlaskGeometry";
 
+export interface ErlenmeyerFlaskOptions extends ErlenmeyerFlaskGeometryOptions {
+  /** Glass tint. Defaults to `#88ccff`. */
+  color?: ColorRepresentation;
+  /** Glass opacity. Defaults to `0.4`. */
+  opacity?: number;
+}
+
+/**
+ * Erlenmeyer flask prefab — translucent glass vessel.
+ */
 export class ErlenmeyerFlask extends Mesh<ErlenmeyerFlaskGeometry, MeshPhysicalMaterial> {
   constructor({
-    flaskRadius = 1, //
-    neckRadius = 0.3,
-    height = 2.5,
-    neckHeight = 1,
-    radialSegments = 16,
-  } = {}) {
+    color = "#88ccff",
+    opacity = 0.4,
+    ...geometryOptions
+  }: ErlenmeyerFlaskOptions = {}) {
     super(
-      new ErlenmeyerFlaskGeometry({ flaskRadius, neckRadius, height, neckHeight, radialSegments }),
+      new ErlenmeyerFlaskGeometry(geometryOptions),
       new MeshPhysicalMaterial({
-        color: 0x88ccff,
+        color: new Color(color),
         transparent: true,
-        opacity: 0.4,
+        opacity,
         roughness: 0.1,
         metalness: 0.1,
         reflectivity: 0.8,

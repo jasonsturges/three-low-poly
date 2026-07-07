@@ -1,12 +1,20 @@
-import { Mesh, MeshStandardMaterial } from "three";
-import { GearGeometry } from "../../geometry/shapes/GearGeometry";
+import { Color, ColorRepresentation, Mesh, MeshStandardMaterial } from "three";
+import { GearGeometry, type GearGeometryOptions } from "../../geometry/shapes/GearGeometry";
 
-export class Gear extends Mesh {
-  constructor({ sides = 5, innerRadius = 0.5, outerRadius = 1, holeSides = 5, holeRadius = 0.25, depth = 0.25 } = {}) {
+export interface GearOptions extends GearGeometryOptions {
+  /** Metal tint. Defaults to `#aaaaaa`. */
+  color?: ColorRepresentation;
+}
+
+/**
+ * Gear shape prefab.
+ */
+export class Gear extends Mesh<GearGeometry, MeshStandardMaterial> {
+  constructor({ color = "#aaaaaa", ...geometryOptions }: GearOptions = {}) {
     super(
-      new GearGeometry(sides, innerRadius, outerRadius, holeSides, holeRadius, depth),
+      new GearGeometry(geometryOptions),
       new MeshStandardMaterial({
-        color: 0xaaaaaa,
+        color: new Color(color),
         metalness: 0.8,
         roughness: 0.2,
       }),

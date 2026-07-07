@@ -1,22 +1,30 @@
 import { BoxGeometry, BufferGeometry } from "three";
 import { mergeBufferGeometries } from "three-stdlib";
 
+export interface StoneFencePostGeometryOptions {
+  /** Main column height (excluding base and cap). Defaults to `2.25`. */
+  height?: number;
+}
+
 /**
- * Fence Column Geometry, a stone slab fence column shape
+ * Stone fence post — wide base, column, and cap.
+ *
+ * Local frame: base on Y=0.
  */
 export class StoneFencePostGeometry extends BufferGeometry {
-  constructor({ height = 2.25 } = {}) {
+  readonly height: number;
+
+  constructor({ height = 2.25 }: StoneFencePostGeometryOptions = {}) {
     super();
 
-    // Column Base (a wider base for stability)
+    this.height = height;
+
     const baseGeometry = new BoxGeometry(1.2, 0.5, 1.2);
     baseGeometry.translate(0, 0.25, 0);
 
-    // Main Column (a tall rectangular shape, adjustable height)
     const columnGeometry = new BoxGeometry(1, height, 1);
     columnGeometry.translate(0, 0.5 + height / 2, 0);
 
-    // Column Cap (a slightly wider cap on top)
     const capGeometry = new BoxGeometry(1.4, 0.3, 1.4);
     capGeometry.translate(0, 0.5 + height + 0.15, 0);
 

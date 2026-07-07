@@ -1,18 +1,20 @@
-import { Mesh, MeshStandardMaterial } from "three";
-import { StandGeometry } from "../../geometry/science/StandGeometry";
+import { Color, ColorRepresentation, Mesh, MeshStandardMaterial } from "three";
+import { StandGeometry, type StandGeometryOptions } from "../../geometry/science/StandGeometry";
 
+export interface StandOptions extends StandGeometryOptions {
+  /** Metal tint. Defaults to `#888888`. */
+  color?: ColorRepresentation;
+}
+
+/**
+ * Laboratory stand prefab — ring and legs.
+ */
 export class Stand extends Mesh<StandGeometry, MeshStandardMaterial> {
-  constructor({
-    radius = 0.3, //
-    height = 0.4,
-    count = 3,
-    thickness = 0.03,
-    radialSegments = 16,
-  } = {}) {
+  constructor({ color = "#888888", ...geometryOptions }: StandOptions = {}) {
     super(
-      new StandGeometry({ radius, height, count, thickness, radialSegments }),
+      new StandGeometry(geometryOptions),
       new MeshStandardMaterial({
-        color: 0x888888,
+        color: new Color(color),
         roughness: 0.7,
         metalness: 0.3,
       }),

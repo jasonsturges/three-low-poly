@@ -1,18 +1,24 @@
-import { Mesh, MeshStandardMaterial } from "three";
-import { BookshelfGeometry } from "../../geometry/furniture/BookshelfGeometry";
+import { Color, ColorRepresentation, Mesh, MeshStandardMaterial } from "three";
+import { BookshelfGeometry, type BookshelfGeometryOptions } from "../../geometry/furniture/BookshelfGeometry";
 
+export interface BookshelfOptions extends BookshelfGeometryOptions {
+  /** Frame tint. Defaults to `#8b4513`. */
+  color?: ColorRepresentation;
+}
+
+/**
+ * Bookshelf prefab — framed shelving unit.
+ */
 export class Bookshelf extends Mesh<BookshelfGeometry, MeshStandardMaterial> {
-  constructor({
-    width = 5, //
-    height = 8,
-    depth = 1,
-    shelves = 4,
-    frameThickness = 0.1,
-    open = false,
-  } = {}) {
-    super(
-      new BookshelfGeometry({ width, height, depth, shelves, frameThickness, open }),
-      new MeshStandardMaterial({ color: 0x8b4513 }),
-    );
+  readonly width: number;
+  readonly height: number;
+
+  constructor({ color = "#8b4513", ...geometryOptions }: BookshelfOptions = {}) {
+    const geometry = new BookshelfGeometry(geometryOptions);
+
+    super(geometry, new MeshStandardMaterial({ color: new Color(color) }));
+
+    this.width = geometry.width;
+    this.height = geometry.height;
   }
 }

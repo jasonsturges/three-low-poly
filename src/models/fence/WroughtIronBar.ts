@@ -1,25 +1,32 @@
-import { Mesh, MeshStandardMaterial } from "three";
-import { WroughtIronBarGeometry } from "../../geometry/fence/WroughtIronBarGeometry";
+import { Color, ColorRepresentation, Mesh, MeshStandardMaterial } from "three";
+import {
+  WroughtIronBarGeometry,
+  type WroughtIronBarGeometryOptions,
+} from "../../geometry/fence/WroughtIronBarGeometry";
 
+export interface WroughtIronBarOptions extends WroughtIronBarGeometryOptions {
+  /** Iron tint. Defaults to `#333333`. */
+  color?: ColorRepresentation;
+}
+
+/**
+ * Wrought-iron fence post prefab.
+ */
 export class WroughtIronBar extends Mesh<WroughtIronBarGeometry, MeshStandardMaterial> {
-  constructor({
-    barHeight = 2.0, //
-    barRadius = 0.05,
-    spikeHeight = 0.3,
-    spikeRadius = 0.075,
-    spikeScaleZ = 1.0,
-    radialSegments = 8,
-  } = {}) {
+  readonly barHeight: number;
+
+  constructor({ color = "#333333", ...geometryOptions }: WroughtIronBarOptions = {}) {
+    const geometry = new WroughtIronBarGeometry(geometryOptions);
+
     super(
-      new WroughtIronBarGeometry({
-        barHeight,
-        barRadius,
-        spikeHeight,
-        spikeRadius,
-        spikeScaleZ,
-        radialSegments,
+      geometry,
+      new MeshStandardMaterial({
+        color: new Color(color),
+        metalness: 0.8,
+        roughness: 0.4,
       }),
-      new MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.4 }),
     );
+
+    this.barHeight = geometry.barHeight;
   }
 }

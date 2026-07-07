@@ -1,25 +1,27 @@
-import { Mesh, MeshStandardMaterial } from "three";
-import { HillGeometry } from "../../geometry/terrain/HillGeometry";
+import { Color, ColorRepresentation, Mesh, MeshStandardMaterial } from "three";
+import { HillGeometry, type HillGeometryOptions } from "../../geometry/terrain/HillGeometry";
 
+export interface HillOptions extends HillGeometryOptions {
+  /** Surface tint. Defaults to `#00ff00`. */
+  color?: ColorRepresentation;
+}
+
+/**
+ * Hill prefab — hemispherical terrain mound.
+ */
 export class Hill extends Mesh<HillGeometry, MeshStandardMaterial> {
-  constructor({
-    radius = 3, //
-    height = 0.6,
-    widthSegments = 64,
-    heightSegments = 16,
-    phiStart = 0,
-    phiLength = Math.PI * 2,
-  } = {}) {
+  readonly radius: number;
+  readonly height: number;
+
+  constructor({ color = "#00ff00", ...geometryOptions }: HillOptions = {}) {
+    const geometry = new HillGeometry(geometryOptions);
+
     super(
-      new HillGeometry({
-        radius,
-        height,
-        widthSegments,
-        heightSegments,
-        phiStart,
-        phiLength,
-      }),
-      new MeshStandardMaterial({ color: 0x00ff00, flatShading: true }),
+      geometry,
+      new MeshStandardMaterial({ color: new Color(color), flatShading: true }),
     );
+
+    this.radius = geometry.radius;
+    this.height = geometry.height;
   }
 }

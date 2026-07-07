@@ -1,16 +1,27 @@
-import { Mesh, MeshStandardMaterial } from "three";
-import { ObeliskHeadstoneGeometry } from "../../geometry/cemetery/ObeliskHeadstoneGeometry";
+import { Color, ColorRepresentation, Mesh, MeshStandardMaterial } from "three";
+import {
+  ObeliskHeadstoneGeometry,
+  type ObeliskHeadstoneGeometryOptions,
+} from "../../geometry/cemetery/ObeliskHeadstoneGeometry";
 
-interface ObeliskHeadstoneOptions {
-  baseWidth?: number;
-  totalHeight?: number;
+export interface ObeliskHeadstoneOptions extends ObeliskHeadstoneGeometryOptions {
+  /** Stone tint. Defaults to `#777777`. */
+  color?: ColorRepresentation;
+  /** Surface roughness. Defaults to `0.8`. */
+  roughness?: number;
 }
 
+/**
+ * Obelisk headstone prefab.
+ */
 export class ObeliskHeadstone extends Mesh<ObeliskHeadstoneGeometry, MeshStandardMaterial> {
-  constructor({ totalHeight = 1.75, baseWidth = 0.75 }: ObeliskHeadstoneOptions = {}) {
-    super(
-      new ObeliskHeadstoneGeometry(totalHeight, baseWidth),
-      new MeshStandardMaterial({ color: 0x777777, roughness: 0.8 })
-    );
+  readonly totalHeight: number;
+
+  constructor({ color = "#777777", roughness = 0.8, ...geometryOptions }: ObeliskHeadstoneOptions = {}) {
+    const geometry = new ObeliskHeadstoneGeometry(geometryOptions);
+
+    super(geometry, new MeshStandardMaterial({ color: new Color(color), roughness }));
+
+    this.totalHeight = geometry.totalHeight;
   }
 }
