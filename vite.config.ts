@@ -4,7 +4,7 @@ import { defineConfig, UserConfig } from "vite";
 
 export default defineConfig({
   base: "./",
-  plugins: [dts({ rollupTypes: true, insertTypesEntry: true })],
+  plugins: [dts({ bundleTypes: true, insertTypesEntry: true })],
   build: {
     emptyOutDir: true,
     sourcemap: true,
