@@ -377,6 +377,14 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.035);
   backdrop-filter: blur(18px) saturate(130%);
   -webkit-backdrop-filter: blur(18px) saturate(130%);
+}
+
+/* Folders are nested .lil-gui elements that redeclare lil-gui's default
+   variables, so apply the palette to them as well as the root. */
+.lil-gui.lil-root.lil-auto-place,
+.lil-gui.lil-root.lil-auto-place .lil-gui,
+.lil-gui.lil-root.autoPlace,
+.lil-gui.lil-root.autoPlace .lil-gui {
   --background-color: rgba(22, 25, 33, 0.76);
   --title-background-color: rgba(12, 14, 19, 0.64);
   --widget-color: rgba(69, 75, 91, 0.96);
