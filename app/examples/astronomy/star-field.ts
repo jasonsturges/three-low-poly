@@ -1,6 +1,5 @@
-import { DoubleSide, GridHelper, Mesh, MeshStandardMaterial, PlaneGeometry } from "three";
 import GUI from "lil-gui";
-import { NightSkybox, StarFieldEffect, Tree } from "three-low-poly";
+import { NightSkybox, StarFieldEffect, TerrainMound } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = {
@@ -22,22 +21,10 @@ export default function (container: HTMLElement) {
   const sky = new NightSkybox(990);
   scene.add(sky);
 
-  const groundSize = 24;
-
-  const ground = new Mesh(
-    new PlaneGeometry(groundSize, groundSize),
-    new MeshStandardMaterial({ color: 0x1a2a1a, roughness: 1, metalness: 0, side: DoubleSide }),
-  );
-  ground.rotation.x = -Math.PI / 2;
-  ground.receiveShadow = true;
+  // A rounded terrain mound as the ground gives the eye a foreground surface to
+  // relate the star shell to — dolly in and the sky reads as an enclosing dome.
+  const ground = new TerrainMound({ radius: 14, height: 1.6, noiseHeight: 0.7, color: "#243426", seed: 7 });
   scene.add(ground);
-
-  const grid = new GridHelper(groundSize, groundSize, 0x334455, 0x223344);
-  scene.add(grid);
-
-  const tree = new Tree({ trunkHeight: 2, leafCount: 4 });
-  tree.position.set(-4, 0, 2);
-  scene.add(tree);
 
   const params = {
     style: "burst" as "points" | "burst",
@@ -111,11 +98,9 @@ export default function (container: HTMLElement) {
     });
   gui
     .add(params, "showReference")
-    .name("Ground / Props")
+    .name("Ground")
     .onChange((visible: boolean) => {
       ground.visible = visible;
-      grid.visible = visible;
-      tree.visible = visible;
     });
 
   return () => {
@@ -125,14 +110,7 @@ export default function (container: HTMLElement) {
     sky.geometry.dispose();
     sky.material.dispose();
     ground.geometry.dispose();
-    (ground.material as MeshStandardMaterial).dispose();
-    tree.traverse((child) => {
-      if (child instanceof Mesh) {
-        child.geometry.dispose();
-        const materials = Array.isArray(child.material) ? child.material : [child.material];
-        materials.forEach((material) => material.dispose());
-      }
-    });
+    ground.material.dispose();
     dispose();
   };
 }

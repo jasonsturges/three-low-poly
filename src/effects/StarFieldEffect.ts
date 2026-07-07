@@ -5,6 +5,7 @@ import {
   Color,
   ColorRepresentation,
   DoubleSide,
+  DynamicDrawUsage,
   InstancedMesh,
   Material,
   Matrix4,
@@ -162,6 +163,8 @@ export class StarFieldEffect extends Object3D {
   private readonly baseSize: number;
   private readonly baseScales?: Float32Array;
   private readonly twinklePhases?: Float32Array;
+  /** Untwinkled per-point RGB (points style), multiplied by each star's pulse each frame. */
+  private baseColors?: Float32Array;
   private spriteTexture?: CanvasTexture;
   private readonly dummy = new Object3D();
 
@@ -197,10 +200,13 @@ export class StarFieldEffect extends Object3D {
       depth: burst.depth ?? 0.05,
     };
 
+    if (twinkle) {
+      this.twinklePhases = new Float32Array(count);
+    }
+
     if (this.style === "burst") {
       if (twinkle) {
         this.baseScales = new Float32Array(count);
-        this.twinklePhases = new Float32Array(count);
       }
       const burstGeometry =
         geometry ??
@@ -259,15 +265,35 @@ export class StarFieldEffect extends Object3D {
   /**
    * Animate twinkling. No-op when `twinkle` is `false`.
    *
-   * Points style modulates sprite size; burst style pulses each instance scale with
-   * a per-star phase offset. Pass elapsed time in seconds (defaults to `performance.now()`).
+   * Both styles pulse with a per-star phase offset so stars twinkle out of sync:
+   * points modulate per-point brightness (via the color attribute), burst pulses
+   * each instance scale. Pass elapsed time in seconds (defaults to `performance.now()`).
    */
   update(elapsed = performance.now() * 0.001): void {
     if (!this.twinkle) return;
 
     if (this.field instanceof Points) {
-      (this.field.material as PointsMaterial).size =
-        this.baseSize * (0.8 + 0.2 * Math.sin(elapsed * 2.5));
+      if (this.twinklePhases && this.baseColors) {
+        // Twinkle brightness per point, each with its own phase, by modulating the
+        // color attribute. PointsMaterial.size is a single field-wide uniform, so
+        // pulsing it would make every star flash in unison — the desync has to live
+        // in per-point data, and color is the per-point channel Points already has.
+        const colorAttribute = this.field.geometry.getAttribute("color") as BufferAttribute;
+        const array = colorAttribute.array as Float32Array;
+        const base = this.baseColors;
+        for (let i = 0; i < this.twinklePhases.length; i++) {
+          const pulse = 0.65 + 0.35 * Math.sin(elapsed * 2.5 + this.twinklePhases[i]);
+          array[i * 3] = base[i * 3] * pulse;
+          array[i * 3 + 1] = base[i * 3 + 1] * pulse;
+          array[i * 3 + 2] = base[i * 3 + 2] * pulse;
+        }
+        colorAttribute.needsUpdate = true;
+      } else {
+        // No per-point color buffer (e.g. a custom material with no color attribute)
+        // — fall back to pulsing the shared sprite size.
+        (this.field.material as PointsMaterial).size =
+          this.baseSize * (0.8 + 0.2 * Math.sin(elapsed * 2.5));
+      }
       return;
     }
 
@@ -321,7 +347,10 @@ export class StarFieldEffect extends Object3D {
     const pointSize = meanRadius * meanAngular;
 
     const positions = new Float32Array(count * 3);
-    const colors = palette.length > 1 ? new Float32Array(count * 3) : null;
+    // A per-point color buffer is needed for palettes and for twinkle (which pulses
+    // each star's brightness independently — see update()).
+    const perPointColor = palette.length > 1 || this.twinkle;
+    const colors = perPointColor ? new Float32Array(count * 3) : null;
 
     for (let i = 0; i < count; i++) {
       const distance = minRadius + Math.random() * shellSpan;
@@ -336,11 +365,21 @@ export class StarFieldEffect extends Object3D {
         colors[i * 3 + 1] = starColor.g;
         colors[i * 3 + 2] = starColor.b;
       }
+      if (this.twinklePhases) this.twinklePhases[i] = Math.random() * Math.PI * 2;
     }
 
     const geometry = new BufferGeometry();
     geometry.setAttribute("position", new BufferAttribute(positions, 3));
-    if (colors) geometry.setAttribute("color", new BufferAttribute(colors, 3));
+    if (colors) {
+      const colorAttribute = new BufferAttribute(colors, 3);
+      if (this.twinkle) {
+        // Retain the untwinkled colors to multiply against each frame; the live
+        // attribute is rewritten every update, so mark it dynamic.
+        this.baseColors = colors.slice();
+        colorAttribute.setUsage(DynamicDrawUsage);
+      }
+      geometry.setAttribute("color", colorAttribute);
+    }
 
     this.spriteTexture = createStarSpriteTexture(
       burstShape.sides!,
@@ -352,7 +391,9 @@ export class StarFieldEffect extends Object3D {
       material ??
       new PointsMaterial({
         map: this.spriteTexture,
-        color: palette.length === 1 ? palette[0].getHex() : 0xffffff,
+        // When a color buffer exists (palette or twinkle), the tint rides in the
+        // vertex colors — keep the base white so it isn't applied twice.
+        color: colors ? 0xffffff : palette[0].getHex(),
         size: pointSize,
         sizeAttenuation: true,
         transparent: true,
