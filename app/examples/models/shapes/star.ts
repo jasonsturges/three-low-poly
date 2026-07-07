@@ -19,7 +19,7 @@ export default function (container: HTMLElement) {
 
   const rebuild = () => {
     star.geometry.dispose();
-    star.geometry = new StarGeometry(params.points, params.innerRadius, params.outerRadius, params.depth);
+    star.geometry = new StarGeometry(params);
     centerObject(star);
   };
 

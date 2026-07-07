@@ -11,7 +11,7 @@ export default function (container: HTMLElement) {
     count: 3,
   };
 
-  let rack = new TestTubeRack(parameters.count);
+  let rack = new TestTubeRack(parameters);
   scene.add(rack);
 
   const rebuild = () => {
@@ -25,7 +25,7 @@ export default function (container: HTMLElement) {
         materials.forEach((m: { dispose: () => void }) => m.dispose());
       }
     });
-    rack = new TestTubeRack(parameters.count);
+    rack = new TestTubeRack(parameters);
     scene.add(rack);
   };
 

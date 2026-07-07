@@ -22,14 +22,14 @@ export default function (container: HTMLElement) {
 
   const rebuild = () => {
     gear.geometry.dispose();
-    gear.geometry = new GearGeometry(
-      params.sides,
-      params.innerRadius,
-      params.outerRadius,
-      params.holeSides,
-      params.holeRadius,
-      params.depth,
-    );
+    gear.geometry = new GearGeometry({
+      sides: params.sides,
+      innerRadius: params.innerRadius,
+      outerRadius: params.outerRadius,
+      holeSides: params.holeSides,
+      holeRadius: params.holeRadius,
+      depth: params.depth,
+    });
     centerObject(gear);
   };
 

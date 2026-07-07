@@ -21,7 +21,7 @@ export default function (container: HTMLElement) {
 
   const rebuild = () => {
     heart.geometry.dispose();
-    heart.geometry = new HeartGeometry(params.size, params.width, params.height, params.tipDepth, params.depth);
+    heart.geometry = new HeartGeometry(params);
     centerObject(heart);
   };
 

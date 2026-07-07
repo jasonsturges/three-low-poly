@@ -19,7 +19,12 @@ export default function (container: HTMLElement) {
 
   const rebuild = () => {
     burst.geometry.dispose();
-    burst.geometry = new BurstGeometry(params.steps, params.innerRadius, params.outerRadius, params.depth);
+    burst.geometry = new BurstGeometry({
+      sides: params.steps,
+      innerRadius: params.innerRadius,
+      outerRadius: params.outerRadius,
+      depth: params.depth,
+    });
     centerObject(burst);
   };
 

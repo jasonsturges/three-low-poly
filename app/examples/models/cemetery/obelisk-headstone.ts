@@ -1,5 +1,5 @@
 import GUI from "lil-gui";
-import { ObeliskHeadstone, ObeliskHeadstoneGeometry, centerObject } from "three-low-poly";
+import { ObeliskHeadstone, centerObject } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Obelisk Headstone" };
@@ -12,13 +12,19 @@ export default function (container: HTMLElement) {
     baseWidth: 0.75,
   };
 
-  const obeliskHeadstone = new ObeliskHeadstone();
+  const makeHeadstone = () => new ObeliskHeadstone(params);
+
+  let obeliskHeadstone = makeHeadstone();
   scene.add(obeliskHeadstone);
   centerObject(obeliskHeadstone);
 
   const rebuild = () => {
+    scene.remove(obeliskHeadstone);
     obeliskHeadstone.geometry.dispose();
-    obeliskHeadstone.geometry = new ObeliskHeadstoneGeometry(params.totalHeight, params.baseWidth);
+    obeliskHeadstone.material.dispose();
+    obeliskHeadstone = makeHeadstone();
+    scene.add(obeliskHeadstone);
+    centerObject(obeliskHeadstone);
   };
 
   const gui = new GUI();

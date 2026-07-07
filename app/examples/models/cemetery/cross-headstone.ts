@@ -1,5 +1,5 @@
 import GUI from "lil-gui";
-import { CrossHeadstone, CrossHeadstoneGeometry, centerObject } from "three-low-poly";
+import { CrossHeadstone, centerObject } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Cross Headstone" };
@@ -13,13 +13,19 @@ export default function (container: HTMLElement) {
     depth: 0.2,
   };
 
-  const crossHeadstone = new CrossHeadstone();
+  const makeHeadstone = () => new CrossHeadstone(params);
+
+  let crossHeadstone = makeHeadstone();
   scene.add(crossHeadstone);
   centerObject(crossHeadstone);
 
   const rebuild = () => {
+    scene.remove(crossHeadstone);
     crossHeadstone.geometry.dispose();
-    crossHeadstone.geometry = new CrossHeadstoneGeometry(params.width, params.height, params.depth);
+    crossHeadstone.material.dispose();
+    crossHeadstone = makeHeadstone();
+    scene.add(crossHeadstone);
+    centerObject(crossHeadstone);
   };
 
   const gui = new GUI();

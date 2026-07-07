@@ -17,7 +17,7 @@ export default function (container: HTMLElement) {
 
   const rebuild = () => {
     hexagon.geometry.dispose();
-    hexagon.geometry = new HexagonGeometry(params.radius, params.depth);
+    hexagon.geometry = new HexagonGeometry(params);
     centerObject(hexagon);
   };
 
