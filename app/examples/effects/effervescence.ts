@@ -23,13 +23,23 @@ export default function (container: HTMLElement) {
     cameraPosition: [0, 2.8, 5.5],
   });
 
-  controls.target.set(0, 1.6, 0);
+  controls.target.set(0, 1.0, 0);
   controls.update();
 
   const groundSize = 16;
   const ground = new Mesh(
     new PlaneGeometry(groundSize, groundSize),
-    new MeshStandardMaterial({ color: 0x1c2428, roughness: 1, metalness: 0, side: DoubleSide }),
+    new MeshStandardMaterial({
+      color: 0x1c2428,
+      roughness: 1,
+      metalness: 0,
+      side: DoubleSide,
+      // Push the filled plane back in the depth buffer so the coplanar GridHelper
+      // lines (which polygon offset doesn't touch) win cleanly — no z-fighting.
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
+    }),
   );
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
@@ -42,7 +52,7 @@ export default function (container: HTMLElement) {
     new BoxGeometry(4, 0.12, 1.6),
     new MeshStandardMaterial({ color: 0x2a3238, roughness: 0.85, metalness: 0.05 }),
   );
-  bench.position.set(0, 0.9, 0);
+  bench.position.set(0, 0.06, 0);
   bench.castShadow = true;
   bench.receiveShadow = true;
   scene.add(bench);
@@ -57,7 +67,7 @@ export default function (container: HTMLElement) {
     side: DoubleSide,
   });
   const vessel = new Mesh(new CylinderGeometry(0.72, 0.82, 2.1, 24, 1, true), vesselMaterial);
-  vessel.position.set(0, 1.95, 0);
+  vessel.position.set(0, 1.11, 0);
   vessel.renderOrder = 2;
   scene.add(vessel);
 
@@ -73,7 +83,7 @@ export default function (container: HTMLElement) {
     side: DoubleSide,
   });
   const liquid = new Mesh(new CylinderGeometry(0.66, 0.76, 1.55, 20), liquidMaterial);
-  liquid.position.set(0, 1.62, 0);
+  liquid.position.set(0, 0.78, 0);
   liquid.renderOrder = 1;
   scene.add(liquid);
 
@@ -104,7 +114,7 @@ export default function (container: HTMLElement) {
     });
 
   let fizz = createFizz();
-  fizz.position.set(0, 0.95, 0);
+  fizz.position.set(0, 0.11, 0);
   fizz.renderOrder = 0;
   scene.add(fizz);
 
@@ -112,7 +122,7 @@ export default function (container: HTMLElement) {
     scene.remove(fizz);
     fizz.dispose();
     fizz = createFizz();
-    fizz.position.set(0, 0.95, 0);
+    fizz.position.set(0, 0.11, 0);
     fizz.renderOrder = 0;
     scene.add(fizz);
   };
