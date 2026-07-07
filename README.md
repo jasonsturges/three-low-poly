@@ -62,16 +62,49 @@ A few patterns hold consistently across the library, and are worth following whe
 npm i three-low-poly
 ```
 
-```js
-import { MossyRocks } from "three-low-poly";
+Everything follows the same shape you already know from Three.js: construct with an options object, add it to the scene, and — if it animates — call `update(dt)` from your render loop.
 
-const rocks = new MossyRocks();
+### Geometry
+
+The primary intent of the library: parametric `BufferGeometry` subclasses you pair with your own material and mesh, exactly like Three.js's built-in primitives.
+
+```ts
+import { Mesh, MeshStandardMaterial } from "three";
+import { StarGeometry } from "three-low-poly";
+
+const geometry = new StarGeometry({ points: 5, innerRadius: 0.5, outerRadius: 1 });
+const material = new MeshStandardMaterial({ color: "#ffcc33", flatShading: true });
+const star = new Mesh(geometry, material);
+scene.add(star);
+```
+
+### Prefab
+
+The same shape as a ready-made model — geometry and materials already wired. Drop it straight into the scene.
+
+```ts
+import { Star } from "three-low-poly";
+
+const star = new Star({ points: 5, color: "#ffcc33" });
+scene.add(star);
+```
+
+### Factory
+
+Assemble or scatter many parts from a single call.
+
+```ts
+import { scatterMossyRocks } from "three-low-poly";
+
+const rocks = scatterMossyRocks({ count: 12, width: 8, depth: 8, seed: 1337 });
 scene.add(rocks);
 ```
 
-A drop-in model is the simplest case. Factories and continuous effects follow the same shape - construct with options, add to the scene, call `update(dt)` from your render loop if the thing animates:
+### Effect
 
-```js
+Atmospheric layers animate off elapsed seconds — add them to the scene and call `update(dt)` each frame.
+
+```ts
 import { RainEffect } from "three-low-poly";
 
 const rain = new RainEffect({ area: 12, height: 16, intensity: 0.45 });
