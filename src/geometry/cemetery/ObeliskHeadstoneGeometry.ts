@@ -1,5 +1,5 @@
 import { BoxGeometry, BufferGeometry, ConeGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 export interface ObeliskHeadstoneGeometryOptions {
   /** Total monument height. Defaults to `1.75`. */
@@ -50,7 +50,7 @@ export class ObeliskHeadstoneGeometry extends BufferGeometry {
     pyramidGeometry.translate(0, currentHeight + 0.1 / 2, 0);
 
     this.copy(
-      mergeBufferGeometries(
+      mergeGeometries(
         [baseGeometry, lowerSegmentGeometry, middleSegmentGeometry, topSegmentGeometry, pyramidGeometry],
         false,
       ) as BufferGeometry,

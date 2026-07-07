@@ -1,5 +1,5 @@
 import { BoxGeometry, BufferGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 export interface BookshelfGeometryOptions {
   /** Overall width. Defaults to `5`. */
@@ -69,7 +69,7 @@ export class BookshelfGeometry extends BufferGeometry {
     }
 
     this.copy(
-      mergeBufferGeometries(
+      mergeGeometries(
         [leftPanel, rightPanel, topPanel, bottomPanel, ...(open ? [] : [backPanel]), ...shelfPanels],
         false,
       ) as BufferGeometry,

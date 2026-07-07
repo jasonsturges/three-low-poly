@@ -1,5 +1,5 @@
 import { BufferGeometry, CylinderGeometry, SphereGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 /**
  * Bone Geometry, a simple bone shape
@@ -34,7 +34,7 @@ class BoneGeometry extends BufferGeometry {
     bottomSphere2.translate(0, -height / 2 - radiusBottom * 0.6, radiusBottom * 0.6);
 
     // Merge the parts
-    this.copy(mergeBufferGeometries([cylinderGeometry, topSphere1, topSphere2, bottomSphere1, bottomSphere2], false) as BufferGeometry);
+    this.copy(mergeGeometries([cylinderGeometry, topSphere1, topSphere2, bottomSphere1, bottomSphere2], false) as BufferGeometry);
   }
 }
 

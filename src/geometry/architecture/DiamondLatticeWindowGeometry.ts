@@ -1,5 +1,5 @@
 import { BufferGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import {
   buildDiamondLatticeParts,
   diamondLatticeGridFromCells,
@@ -60,7 +60,7 @@ export class DiamondLatticeWindowGeometry extends BufferGeometry {
       leadDepth,
     });
 
-    const merged = mergeBufferGeometries(parts);
+    const merged = mergeGeometries(parts);
     if (!merged) throw new Error("DiamondLatticeWindowGeometry: merge failed");
 
     this.copy(merged);

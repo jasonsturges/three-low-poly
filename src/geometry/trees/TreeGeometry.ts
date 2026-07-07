@@ -1,5 +1,5 @@
 import { BufferGeometry, CylinderGeometry, DodecahedronGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 export interface TreeGeometryOptions {
   /** Trunk top radius. Defaults to `0.25`. */
@@ -71,8 +71,8 @@ export class TreeGeometry extends BufferGeometry {
     }
 
     this.copy(
-      mergeBufferGeometries(
-        [trunk.toNonIndexed(), mergeBufferGeometries(leafs, false) as BufferGeometry],
+      mergeGeometries(
+        [trunk.toNonIndexed(), mergeGeometries(leafs, false) as BufferGeometry],
         true,
       ) as BufferGeometry,
     );

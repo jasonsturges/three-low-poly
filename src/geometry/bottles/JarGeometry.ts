@@ -1,5 +1,5 @@
 import { BufferGeometry, CylinderGeometry, LatheGeometry, Vector2 } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 /**
  * Group indices
@@ -26,6 +26,6 @@ export class JarGeometry extends BufferGeometry {
     const corkGeometry = new CylinderGeometry(0.6, 0.5, 0.3, 10);
     corkGeometry.translate(0, 3.5, 0);
 
-    this.copy(mergeBufferGeometries([bodyGeometry, corkGeometry], true) as BufferGeometry);
+    this.copy(mergeGeometries([bodyGeometry, corkGeometry], true) as BufferGeometry);
   }
 }

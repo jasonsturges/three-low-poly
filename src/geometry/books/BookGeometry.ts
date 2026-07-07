@@ -1,5 +1,5 @@
 import { BoxGeometry, BufferAttribute, BufferGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 export interface BookGeometryOptions {
   /** Cover width (spine to fore-edge). Defaults to `1`. */
@@ -202,6 +202,6 @@ export class BookGeometry extends BufferGeometry {
 
     const pagesGeometry = new BoxGeometry(width - t - i, h - i * 2, d - t * 2);
     pagesGeometry.translate((width - t - i) / 2 + t, h / 2, -d / 2 );
-    this.copy(mergeBufferGeometries([coverGeometry, pagesGeometry], true) as BufferGeometry);
+    this.copy(mergeGeometries([coverGeometry, pagesGeometry], true) as BufferGeometry);
   }
 }

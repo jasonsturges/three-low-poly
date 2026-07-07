@@ -1,5 +1,5 @@
 import { BufferGeometry, CylinderGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { FlameGeometry } from "./FlameGeometry";
 
 export interface CandleGeometryOptions {
@@ -58,6 +58,6 @@ export class CandleGeometry extends BufferGeometry {
     });
     flameGeometry.translate(0, height, 0);
 
-    this.copy(mergeBufferGeometries([stickGeometry, flameGeometry], true) as BufferGeometry);
+    this.copy(mergeGeometries([stickGeometry, flameGeometry], true) as BufferGeometry);
   }
 }

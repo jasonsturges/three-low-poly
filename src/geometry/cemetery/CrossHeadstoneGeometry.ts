@@ -1,5 +1,5 @@
 import { BoxGeometry, BufferGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 export interface CrossHeadstoneGeometryOptions {
   /** Overall cross width (arm span). Defaults to `0.4`. */
@@ -35,7 +35,7 @@ export class CrossHeadstoneGeometry extends BufferGeometry {
     const horizontalGeometry = new BoxGeometry(horizontalWidth, width / 4, depth);
     horizontalGeometry.translate(0, verticalHeight * 0.75, 0);
 
-    this.copy(mergeBufferGeometries([verticalGeometry, horizontalGeometry], false) as BufferGeometry);
+    this.copy(mergeGeometries([verticalGeometry, horizontalGeometry], false) as BufferGeometry);
     this.computeVertexNormals();
   }
 }

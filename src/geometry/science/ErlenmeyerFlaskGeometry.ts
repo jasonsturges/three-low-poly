@@ -1,5 +1,5 @@
 import { BufferGeometry, LatheGeometry, Vector2 } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 export interface ErlenmeyerFlaskGeometryOptions {
   /** Flask body radius. Defaults to `1`. */
@@ -46,6 +46,6 @@ export class ErlenmeyerFlaskGeometry extends BufferGeometry {
 
     const flaskGeometry = new LatheGeometry(points, radialSegments);
 
-    this.copy(mergeBufferGeometries([flaskGeometry], false) as BufferGeometry);
+    this.copy(mergeGeometries([flaskGeometry], false) as BufferGeometry);
   }
 }

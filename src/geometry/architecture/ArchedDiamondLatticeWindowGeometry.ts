@@ -1,5 +1,5 @@
 import { BufferGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import {
   archedOpeningMetrics,
   buildArchedDiamondLatticeCameParts,
@@ -74,7 +74,7 @@ export class ArchedDiamondLatticeWindowGeometry extends BufferGeometry {
       clipInset: leadThickness * 0.5,
     });
 
-    const merged = mergeBufferGeometries(parts);
+    const merged = mergeGeometries(parts);
     if (!merged) throw new Error("ArchedDiamondLatticeWindowGeometry: merge failed");
 
     this.copy(merged);

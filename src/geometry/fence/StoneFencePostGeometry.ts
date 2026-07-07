@@ -1,5 +1,5 @@
 import { BoxGeometry, BufferGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 export interface StoneFencePostGeometryOptions {
   /** Main column height (excluding base and cap). Defaults to `2.25`. */
@@ -28,6 +28,6 @@ export class StoneFencePostGeometry extends BufferGeometry {
     const capGeometry = new BoxGeometry(1.4, 0.3, 1.4);
     capGeometry.translate(0, 0.5 + height + 0.15, 0);
 
-    this.copy(mergeBufferGeometries([baseGeometry, columnGeometry, capGeometry], false) as BufferGeometry);
+    this.copy(mergeGeometries([baseGeometry, columnGeometry, capGeometry], false) as BufferGeometry);
   }
 }

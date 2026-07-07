@@ -1,5 +1,5 @@
 import { BufferGeometry, CylinderGeometry, TorusGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 export interface StandGeometryOptions {
   /** Ring radius. Defaults to `0.3`. */
@@ -51,6 +51,6 @@ export class StandGeometry extends BufferGeometry {
       legs.push(leg);
     }
 
-    this.copy(mergeBufferGeometries([ringGeometry, ...legs], false) as BufferGeometry);
+    this.copy(mergeGeometries([ringGeometry, ...legs], false) as BufferGeometry);
   }
 }

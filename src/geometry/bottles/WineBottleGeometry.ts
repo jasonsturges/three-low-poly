@@ -1,5 +1,5 @@
 import { BufferGeometry, CylinderGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 export interface WineBottleGeometryOptions {
   /** Body radius. Defaults to `0.5`. */
@@ -46,6 +46,6 @@ export class WineBottleGeometry extends BufferGeometry {
     const neckGeometry = new CylinderGeometry(neckRadius, neckRadius, neckHeight, segments);
     neckGeometry.translate(0, bodyHeight + shoulderHeight + neckHeight / 2, 0);
 
-    this.copy(mergeBufferGeometries([bodyGeometry, shoulderGeometry, neckGeometry], false) as BufferGeometry);
+    this.copy(mergeGeometries([bodyGeometry, shoulderGeometry, neckGeometry], false) as BufferGeometry);
   }
 }

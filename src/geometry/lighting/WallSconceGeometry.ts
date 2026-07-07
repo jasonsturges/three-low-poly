@@ -1,5 +1,5 @@
 import { BoxGeometry, BufferGeometry, CylinderGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 export interface WallSconceGeometryOptions {
   /** Wall-plate thickness (X). Defaults to `0.05`. */
@@ -127,11 +127,11 @@ export class WallSconceGeometry extends BufferGeometry {
     bowl.translate(bodyOffsetX, bowlCenterY, 0);
     frame.push(bowl);
 
-    const mountMerged = mergeBufferGeometries(
+    const mountMerged = mergeGeometries(
       mount.map((part) => part.toNonIndexed()),
       false,
     ) as BufferGeometry;
-    const frameMerged = mergeBufferGeometries(
+    const frameMerged = mergeGeometries(
       frame.map((part) => part.toNonIndexed()),
       false,
     ) as BufferGeometry;
@@ -149,7 +149,7 @@ export class WallSconceGeometry extends BufferGeometry {
       parts.push(glass.toNonIndexed());
     }
 
-    this.copy(mergeBufferGeometries(parts, true) as BufferGeometry);
+    this.copy(mergeGeometries(parts, true) as BufferGeometry);
     this.computeBoundingSphere();
   }
 }

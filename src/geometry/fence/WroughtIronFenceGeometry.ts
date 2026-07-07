@@ -1,5 +1,5 @@
 import { BoxGeometry, BufferGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { WroughtIronBarGeometry } from "./WroughtIronBarGeometry";
 
 export interface WroughtIronFenceGeometryOptions {
@@ -79,6 +79,6 @@ export class WroughtIronFenceGeometry extends BufferGeometry {
     bottomRail.translate((spacing * (count - 1)) / 2, railHeight / 2, 0);
     geometries.push(bottomRail);
 
-    this.copy(mergeBufferGeometries(geometries) as BufferGeometry);
+    this.copy(mergeGeometries(geometries) as BufferGeometry);
   }
 }

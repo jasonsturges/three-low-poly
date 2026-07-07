@@ -1,5 +1,5 @@
 import { BoxGeometry, BufferGeometry, CylinderGeometry } from "three";
-import {mergeBufferGeometries} from "three-stdlib";
+import {mergeGeometries} from "three/addons/utils/BufferGeometryUtils.js";
 
 class RoundedHeadstoneGeometry extends BufferGeometry {
   constructor(width = 0.6, height = 1.0, depth = 0.2, radius = 0.6) {
@@ -17,7 +17,7 @@ class RoundedHeadstoneGeometry extends BufferGeometry {
     topGeometry.translate(0, baseHeight, 0);
 
     // Merge base and top into a single geometry
-    this.copy(mergeBufferGeometries([baseGeometry, topGeometry], false) as BufferGeometry);
+    this.copy(mergeGeometries([baseGeometry, topGeometry], false) as BufferGeometry);
     this.computeVertexNormals();
   }
 }

@@ -1,4 +1,4 @@
-import { ParametricGeometry } from "three-stdlib";
+import { ParametricGeometry } from "three/addons/geometries/ParametricGeometry.js";
 import { Vector3 } from "three";
 
 export interface FlameGeometryOptions {

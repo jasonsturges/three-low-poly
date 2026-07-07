@@ -1,5 +1,5 @@
 import { BufferGeometry, DodecahedronGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 export interface MossyRockGeometryOptions {
   /** Rock dodecahedron radius. Defaults to `1`. */
@@ -43,7 +43,7 @@ export class MossyRockGeometry extends BufferGeometry {
     moss.scale(mossScaleXZ, mossScaleY, mossScaleXZ);
     moss.translate(0, mossOffsetY, 0);
 
-    this.copy(mergeBufferGeometries([rock, moss], true) as BufferGeometry);
+    this.copy(mergeGeometries([rock, moss], true) as BufferGeometry);
     this.computeVertexNormals();
   }
 }

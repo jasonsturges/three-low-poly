@@ -1,5 +1,5 @@
 import { BufferGeometry, ConeGeometry, CylinderGeometry, TorusGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 export interface LanternGeometryOptions {
   /** Base / foot radius. Defaults to `0.5`. */
@@ -83,7 +83,7 @@ export class LanternGeometry extends BufferGeometry {
     handle.translate(0, roofTopY + handleLift, 0);
     frame.push(handle);
 
-    const frameMerged = mergeBufferGeometries(
+    const frameMerged = mergeGeometries(
       frame.map((part) => part.toNonIndexed()),
       false,
     ) as BufferGeometry;
@@ -101,7 +101,7 @@ export class LanternGeometry extends BufferGeometry {
       parts.push(glass.toNonIndexed());
     }
 
-    this.copy(mergeBufferGeometries(parts, true) as BufferGeometry);
+    this.copy(mergeGeometries(parts, true) as BufferGeometry);
     this.computeBoundingSphere();
   }
 }

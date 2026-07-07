@@ -1,5 +1,5 @@
 import { BoxGeometry, BufferGeometry, OctahedronGeometry, Vector3 } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { barBetween } from "./barBetween";
 
 export interface HangingLanternGeometryOptions {
@@ -123,11 +123,11 @@ export class HangingLanternGeometry extends BufferGeometry {
 
     const cage = cageEdges.map(([from, to]) => barBetween(from, to, cageBarWidth));
 
-    const mountMerged = mergeBufferGeometries(
+    const mountMerged = mergeGeometries(
       mount.map((part) => part.toNonIndexed()),
       false,
     ) as BufferGeometry;
-    const cageMerged = mergeBufferGeometries(
+    const cageMerged = mergeGeometries(
       cage.map((part) => part.toNonIndexed()),
       false,
     ) as BufferGeometry;
@@ -141,7 +141,7 @@ export class HangingLanternGeometry extends BufferGeometry {
       parts.push(lamp.toNonIndexed());
     }
 
-    this.copy(mergeBufferGeometries(parts, true) as BufferGeometry);
+    this.copy(mergeGeometries(parts, true) as BufferGeometry);
     this.computeBoundingSphere();
   }
 }

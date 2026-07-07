@@ -1,5 +1,5 @@
 import { BoxGeometry, BufferGeometry, LatheGeometry, Vector2 } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 /**
  * Group indices:
@@ -32,7 +32,7 @@ export class DeskGeometry extends BufferGeometry {
       [-2.1, 0, -1.1],
     ];
 
-    const legGeometry = mergeBufferGeometries(
+    const legGeometry = mergeGeometries(
       legPositions.map((position) => {
         const leg = legLatheGeometry.clone();
         leg.translate(position[0], position[1], position[2]);
@@ -40,6 +40,6 @@ export class DeskGeometry extends BufferGeometry {
       }),
     ) as BufferGeometry;
 
-    this.copy(mergeBufferGeometries([surfaceGeometry, legGeometry], true) as BufferGeometry);
+    this.copy(mergeGeometries([surfaceGeometry, legGeometry], true) as BufferGeometry);
   }
 }

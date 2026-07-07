@@ -1,5 +1,5 @@
 import { BufferGeometry, CylinderGeometry, SphereGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 /**
  * Group indices
@@ -21,8 +21,8 @@ export class TeslaCoilGeometry extends BufferGeometry {
     coilTopGeometry.translate(0, 2.4, 0);
 
     this.copy(
-      mergeBufferGeometries(
-        [baseGeometry, mergeBufferGeometries([coilGeometry, coilTopGeometry]) as BufferGeometry],
+      mergeGeometries(
+        [baseGeometry, mergeGeometries([coilGeometry, coilTopGeometry]) as BufferGeometry],
         true,
       ) as BufferGeometry,
     );

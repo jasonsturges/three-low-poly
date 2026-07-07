@@ -1,5 +1,5 @@
 import { BufferGeometry, CircleGeometry, LatheGeometry, Vector2 } from "three";
-import {mergeBufferGeometries} from "three-stdlib";
+import {mergeGeometries} from "three/addons/utils/BufferGeometryUtils.js";
 
 class MortarGeometry extends BufferGeometry {
   constructor() {
@@ -19,7 +19,7 @@ class MortarGeometry extends BufferGeometry {
     baseDisk.rotateX(-Math.PI / 2); // Rotate to align with the bottom
     baseDisk.translate(0, 0, 0); // Position at the base of the mortar
 
-    this.copy(mergeBufferGeometries([mortarGeometry, baseDisk], false) as BufferGeometry);
+    this.copy(mergeGeometries([mortarGeometry, baseDisk], false) as BufferGeometry);
   }
 }
 

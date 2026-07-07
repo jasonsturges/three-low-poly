@@ -1,5 +1,5 @@
 import { BufferGeometry, CylinderGeometry, SphereGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 class TestTubeGeometry extends BufferGeometry {
   constructor(radiusTop = 0.2, radiusBottom = 0.2, height = 3, segments = 32, openEnded = true) {
@@ -13,7 +13,7 @@ class TestTubeGeometry extends BufferGeometry {
     bottomGeometry.translate(0, -(height / 2), 0); // Position it at the bottom of the cylinder
 
     // Merge parts
-    this.copy(mergeBufferGeometries([tubeGeometry, bottomGeometry], false) as BufferGeometry);
+    this.copy(mergeGeometries([tubeGeometry, bottomGeometry], false) as BufferGeometry);
   }
 }
 

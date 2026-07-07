@@ -1,5 +1,5 @@
 import { BufferGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import {
   buildGregorianLatticeParts,
   gregorianLatticeGridFromCells,
@@ -57,7 +57,7 @@ export class GregorianLatticeWindowGeometry extends BufferGeometry {
       mullionDepth,
     });
 
-    const merged = mergeBufferGeometries(parts);
+    const merged = mergeGeometries(parts);
     if (!merged) throw new Error("GregorianLatticeWindowGeometry: merge failed");
 
     this.copy(merged);

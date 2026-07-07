@@ -1,6 +1,6 @@
 import { Axis } from "../constants/Axis";
 import { BufferGeometry, Vector3 } from "three";
-import { mergeVertices } from "three-stdlib";
+import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 
 export function randomTransformVertices<T extends BufferGeometry>(geometry:T, axis = Axis.XYZ, minScale = 0.5, maxScale = 2.0) {
   // Delete unnecessary attributes

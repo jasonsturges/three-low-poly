@@ -1,5 +1,5 @@
 import { BufferGeometry, ConeGeometry, CylinderGeometry } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 export interface WroughtIronBarGeometryOptions {
   /** Vertical bar height. Defaults to `2`. */
@@ -43,6 +43,6 @@ export class WroughtIronBarGeometry extends BufferGeometry {
     spikeGeometry.translate(0, barHeight + spikeHeight / 2, 0);
     spikeGeometry.scale(1, 1, spikeScaleZ);
 
-    this.copy(mergeBufferGeometries([barGeometry, spikeGeometry], false) as BufferGeometry);
+    this.copy(mergeGeometries([barGeometry, spikeGeometry], false) as BufferGeometry);
   }
 }

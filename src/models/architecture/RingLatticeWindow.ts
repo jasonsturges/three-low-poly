@@ -16,7 +16,7 @@ import {
   PlaneGeometry,
   ReplaceStencilOp,
 } from "three";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import {
   buildRingLatticeFrameParts,
   createOpeningClippingPlanes,
@@ -179,7 +179,7 @@ export class RingLatticeWindow extends Group {
       frameThickness,
       frameDepth,
     });
-    const frameGeo = mergeBufferGeometries(frameParts);
+    const frameGeo = mergeGeometries(frameParts);
     if (!frameGeo) throw new Error("RingLatticeWindow: frame merge failed");
     for (const part of frameParts) part.dispose();
 

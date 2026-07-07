@@ -1,6 +1,6 @@
 import { BufferGeometry, CylinderGeometry, LatheGeometry, Vector2 } from "three";
 import { calculateXFromSlopeIntercept } from "../../utils/LineEquations";
-import { mergeBufferGeometries } from "three-stdlib";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 /**
  * Potion bottle geometry
@@ -42,6 +42,6 @@ export class PotionBottleGeometry extends BufferGeometry {
     liquidGeometry.translate(0, 0.1, 0);
     liquidGeometry.scale(0.9, 0.9, 0.9);
 
-    this.copy(mergeBufferGeometries([bottleGeometry, corkGeometry, liquidGeometry], true) as BufferGeometry);
+    this.copy(mergeGeometries([bottleGeometry, corkGeometry, liquidGeometry], true) as BufferGeometry);
   }
 }
