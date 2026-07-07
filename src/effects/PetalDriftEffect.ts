@@ -179,7 +179,7 @@ export class PetalDriftEffect extends InstancedMesh {
     this.px[index] = randomFloat(-this.width * 0.5, this.width * 0.5);
     this.pz[index] = randomFloat(-this.depth * 0.5, this.depth * 0.5);
     this.py[index] = randomHeight
-      ? this.floorY + randomFloat(this.height * 0.35, this.height)
+      ? this.floorY + randomFloat(0, this.height * 1.25)
       : this.floorY + this.height + randomFloat(0, this.height * 0.25);
     this.rotX[index] = randomFloat(-0.6, 0.6);
     this.rotY[index] = randomFloat(-Math.PI, Math.PI);
