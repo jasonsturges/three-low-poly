@@ -73,7 +73,10 @@ for (const example of examples) {
   node.examples.push(example);
 }
 
-function createLink(example: ExampleEntry, indent: number): HTMLAnchorElement {
+function createLink(example: ExampleEntry, indent: number): HTMLElement {
+  const item = document.createElement("div");
+  item.className = "nav-item";
+
   const link = document.createElement("a");
   link.className = "nav-link";
   link.href = `#/${example.id}`;
@@ -82,7 +85,8 @@ function createLink(example: ExampleEntry, indent: number): HTMLAnchorElement {
   link.dataset.search = `${example.id.replace(/\//g, " ")} ${example.title}`.toLowerCase();
   link.style.setProperty("--indent", String(indent));
   linkById.set(example.id, link);
-  return link;
+  item.appendChild(link);
+  return item;
 }
 
 // A section wraps its heading, its leaf links, and any nested sections, so the
@@ -121,13 +125,13 @@ search.addEventListener("input", () => {
   let visibleCount = 0;
   for (const link of linkById.values()) {
     const match = !term || (link.dataset.search ?? "").includes(term);
-    link.classList.toggle("hidden", !match);
+    link.parentElement?.classList.toggle("hidden", !match);
     if (match) visibleCount++;
   }
   // Hide any section (at any depth) whose descendant links are all hidden.
   nav.querySelectorAll<HTMLElement>(".nav-section").forEach((section) => {
-    const links = section.querySelectorAll<HTMLElement>(".nav-link");
-    const anyVisible = Array.from(links).some((link) => !link.classList.contains("hidden"));
+    const items = section.querySelectorAll<HTMLElement>(".nav-item");
+    const anyVisible = Array.from(items).some((item) => !item.classList.contains("hidden"));
     section.classList.toggle("hidden", !anyVisible);
   });
   noResults.hidden = visibleCount > 0;
@@ -141,6 +145,53 @@ let cleanup: ExampleCleanup | null = null;
 let activeLink: HTMLAnchorElement | null = null;
 // Guards against an async load resolving after the user has already navigated on.
 let loadToken = 0;
+
+const infoButton = document.createElement("button");
+infoButton.className = "example-info-button";
+infoButton.type = "button";
+infoButton.textContent = "i";
+infoButton.title = "About this example";
+infoButton.setAttribute("aria-label", "About this example");
+infoButton.setAttribute("aria-controls", "example-info-card");
+infoButton.setAttribute("aria-expanded", "false");
+
+const infoCard = document.createElement("aside");
+infoCard.id = "example-info-card";
+infoCard.className = "example-info-card";
+infoCard.setAttribute("role", "note");
+infoCard.hidden = true;
+layout.appendChild(infoCard);
+
+function closeInfo(): void {
+  infoCard.hidden = true;
+  infoButton.setAttribute("aria-expanded", "false");
+}
+
+function openInfo(): void {
+  const sidebar = document.getElementById("sidebar")!;
+  const buttonRect = infoButton.getBoundingClientRect();
+  const sidebarRect = sidebar.getBoundingClientRect();
+
+  infoCard.hidden = false;
+  infoCard.style.left = `${sidebarRect.right + 10}px`;
+  infoCard.style.top = `${Math.min(buttonRect.top, window.innerHeight - infoCard.offsetHeight - 12)}px`;
+  infoButton.setAttribute("aria-expanded", "true");
+}
+
+infoButton.addEventListener("click", () => {
+  if (infoCard.hidden) openInfo();
+  else closeInfo();
+});
+
+document.addEventListener("pointerdown", (event) => {
+  if (!infoCard.hidden && !infoCard.contains(event.target as Node) && event.target !== infoButton) closeInfo();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeInfo();
+});
+
+nav.addEventListener("scroll", closeInfo, { passive: true });
 
 function showEmpty(message: string): void {
   const empty = document.createElement("div");
@@ -158,8 +209,11 @@ async function route(): Promise<void> {
     cleanup = null;
   }
   viewer.replaceChildren();
+  closeInfo();
+  infoButton.remove();
 
   activeLink?.classList.remove("active");
+  activeLink?.classList.remove("has-description");
   activeLink?.removeAttribute("aria-current");
   activeLink = id ? linkById.get(id) ?? null : null;
   activeLink?.classList.add("active");
@@ -184,11 +238,16 @@ async function route(): Promise<void> {
     host.className = "viewer-host";
     viewer.appendChild(host);
 
-    if (module.meta?.description) {
+    if (module.meta?.description && activeLink) {
+      activeLink.classList.add("has-description");
+      activeLink.parentElement?.appendChild(infoButton);
+      infoCard.replaceChildren();
+
+      const title = document.createElement("strong");
+      title.textContent = entry.title;
       const description = document.createElement("p");
-      description.className = "viewer-description";
       description.textContent = module.meta.description;
-      viewer.insertBefore(description, host);
+      infoCard.append(title, description);
     }
 
     const result = module.default(host);
@@ -214,6 +273,7 @@ void route();
 
 const toggle = document.getElementById("toggle")!;
 toggle.addEventListener("click", () => {
+  closeInfo();
   layout.classList.toggle("collapsed");
   toggle.setAttribute("aria-expanded", String(!layout.classList.contains("collapsed")));
 });

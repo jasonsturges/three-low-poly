@@ -223,6 +223,14 @@ body {
   background: var(--border);
 }
 
+.nav-item {
+  position: relative;
+}
+
+.nav-item.hidden {
+  display: none;
+}
+
 .nav-link {
   position: relative;
   display: block;
@@ -233,6 +241,10 @@ body {
   color: #cdd1d9;
   text-decoration: none;
   transition: color 0.13s ease, background 0.13s ease, transform 0.13s ease;
+}
+
+.nav-link.has-description {
+  padding-right: 32px;
 }
 
 .nav-link:hover {
@@ -265,9 +277,69 @@ body {
   transform: translateY(-50%);
 }
 
-.nav-link.hidden,
 .nav-section.hidden {
   display: none;
+}
+
+.example-info-button {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  right: 9px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid rgba(138, 164, 255, 0.34);
+  border-radius: 50%;
+  background: rgba(138, 164, 255, 0.1);
+  color: #b7c5ff;
+  font: 700 10px/1 Inter, ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.example-info-button:hover,
+.example-info-button[aria-expanded="true"] {
+  border-color: var(--interaction);
+  background: rgba(138, 164, 255, 0.2);
+  color: #fff;
+}
+
+.example-info-button:focus-visible {
+  outline: 2px solid var(--interaction);
+  outline-offset: 2px;
+}
+
+.example-info-card {
+  position: fixed;
+  z-index: 12;
+  width: min(360px, calc(100vw - 326px));
+  padding: 13px 15px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: rgba(22, 25, 33, 0.94);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.36);
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+}
+
+.example-info-card[hidden] {
+  display: none;
+}
+
+.example-info-card strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.example-info-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .nav-empty {
@@ -290,16 +362,6 @@ body {
   display: flex;
   flex-direction: column;
   background: #000;
-}
-
-.viewer-description {
-  flex: none;
-  margin: 0;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 13px;
 }
 
 .viewer-host {
