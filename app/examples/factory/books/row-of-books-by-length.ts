@@ -1,7 +1,7 @@
 import { InstancedMesh, MeshStandardMaterial } from "three";
 import GUI from "lil-gui";
 import { centerObject, rowOfBooksByLength } from "three-low-poly";
-import { createScene } from "../../framework/createScene";
+import { createScene } from "../../../framework/createScene";
 
 export const meta = {
   title: "Row of Books (by Length)",

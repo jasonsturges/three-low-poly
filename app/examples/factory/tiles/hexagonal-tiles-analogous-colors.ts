@@ -1,7 +1,7 @@
 import { InstancedBufferAttribute, InstancedMesh, MeshStandardMaterial } from "three";
 import GUI from "lil-gui";
 import { addInstanceColor, createHexagonalTilesByCount, getAnalogousColors } from "three-low-poly";
-import { createScene } from "../../framework/createScene";
+import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Hexagonal Tiles (Analogous Colors)" };
 
