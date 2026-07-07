@@ -39,7 +39,7 @@ export default function (container: HTMLElement) {
     area: 12,
     height: 16,
     intensity: 0.45,
-    opacity: 0.16,
+    opacity: 0.3,
     width: 0.009,
     windDirection: 0.8,
     windStrength: 0,
