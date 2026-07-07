@@ -72,6 +72,18 @@ export function createScene(container: HTMLElement, options: SceneOptions = {}):
   const directional = new DirectionalLight(0xffffff, 0.5);
   directional.position.set(-5, 10, 5);
   directional.castShadow = true;
+  // Configure the shadow camera — the Three.js default is a ±5 frustum with no
+  // depth bias, which clips shadows on anything larger than a few units and leaves
+  // self-shadow acne (a hard square of moiré) on big receivers like ground planes.
+  directional.shadow.mapSize.set(2048, 2048);
+  directional.shadow.camera.near = 0.5;
+  directional.shadow.camera.far = 50;
+  directional.shadow.camera.left = -15;
+  directional.shadow.camera.right = 15;
+  directional.shadow.camera.top = 15;
+  directional.shadow.camera.bottom = -15;
+  directional.shadow.normalBias = 0.03;
+  directional.shadow.bias = -0.0004;
   scene.add(directional);
   const hemisphere = new HemisphereLight(0xaaaaaa, 0x000000, 0.5);
   hemisphere.position.set(0, 10, 0);
