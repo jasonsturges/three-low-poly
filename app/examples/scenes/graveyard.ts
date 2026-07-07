@@ -29,7 +29,7 @@ import {
   WispEffect,
   Mausoleum,
   ObeliskHeadstone,
-  Rocks,
+  scatterRocks,
   RoundedHeadstone,
   SquareHeadstone,
   StoneFencePost,
@@ -79,7 +79,7 @@ export default function (container: HTMLElement) {
   mausoleum.castShadow = true;
   scene.add(mausoleum);
 
-  const lantern = new Lantern(1.3, 0.5);
+  const lantern = new Lantern({ bodyHeight: 1.3, baseWidth: 0.5 });
   lantern.scale.set(0.28, 0.28, 0.28);
   // Base slab top is y=1; front ledge between the left pillar and the doorway.
   lantern.position.set(-1.2, 1, 2.2);
@@ -158,15 +158,17 @@ export default function (container: HTMLElement) {
   enclosedFenceGroup.position.set(-9, 0, -9);
   scene.add(enclosedFenceGroup);
 
-  for (let i = 0; i < 10; i++) {
-    const rock = new Rocks();
-    rock.scale.set(0.5, 0.5, 0.5);
-    rock.castShadow = true;
-    const angle = Math.random() * 2 * Math.PI;
-    const distance = 6 + Math.random() * 12;
-    rock.position.set(Math.cos(angle) * distance, -0.1, Math.sin(angle) * distance);
-    scene.add(rock);
-  }
+  const rocks = scatterRocks({
+    count: 36,
+    width: 28,
+    depth: 28,
+    heightJitter: 0.05,
+    scaleMin: 0.35,
+    scaleMax: 0.65,
+  });
+  rocks.position.y = -0.1;
+  rocks.castShadow = true;
+  scene.add(rocks);
 
   for (let i = 0; i < 25; i++) {
     const radius = Math.random() * 0.07 + 0.03;
@@ -331,6 +333,8 @@ export default function (container: HTMLElement) {
     lantern.material.forEach((material) => material.dispose());
     terrainMesh.geometry.dispose();
     terrainMesh.material.dispose();
+    rocks.geometry.dispose();
+    (Array.isArray(rocks.material) ? rocks.material : [rocks.material]).forEach((m) => m.dispose());
     dispose();
   };
 }
