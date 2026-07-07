@@ -65,30 +65,32 @@ export { ParametricCurve } from "./constants/ParametricCurve";
 //  Effects
 //------------------------------
 
+export { DustMotesEffect, type DustMotesEffectOptions } from "./effects/DustMotesEffect";
 export { EffervescenceEffect, type EffervescenceEffectOptions } from "./effects/EffervescenceEffect";
-export { FlameFlickerEffect, type FlameFlickerEffectOptions } from "./effects/FlameFlickerEffect";
-export { GroundFogEffect, type GroundFogEffectOptions } from "./effects/GroundFogEffect";
-export { GlowHalo, type GlowHaloOptions } from "./effects/GlowHalo";
 export {
   EmissivePulseEffect,
   type EmissivePulseEffectOptions,
   type EmissivePulseMaterial,
 } from "./effects/EmissivePulseEffect";
+export { FlameFlickerEffect, type FlameFlickerEffectOptions } from "./effects/FlameFlickerEffect";
+export { GlowHalo, type GlowHaloOptions } from "./effects/GlowHalo";
+export { GroundFogEffect, type GroundFogEffectOptions } from "./effects/GroundFogEffect";
 export { LightningEffect, type LightningEffectOptions } from "./effects/LightningEffect";
 export { PetalDriftEffect, type PetalDriftEffectOptions } from "./effects/PetalDriftEffect";
 export { RainEffect, type RainEffectOptions } from "./effects/RainEffect";
-export { WispEffect, type WispEffectOptions } from "./effects/WispEffect";
 export {
   StarFieldEffect,
   type StarBurstShapeOptions,
   type StarFieldEffectOptions,
 } from "./effects/StarFieldEffect";
+export { WispEffect, type WispEffectOptions } from "./effects/WispEffect";
 
 //------------------------------
 //  Factory
 //------------------------------
 
 export * from "./factory/BookFactory";
+export * from "./factory/BoulderFactory";
 export * from "./factory/HexagonalTileFactory";
 export * from "./factory/RockFactory";
 
@@ -207,6 +209,7 @@ export {
 export { ParallelogramBoxGeometry } from "./geometry/primitives/ParallelogramBoxGeometry";
 
 // Rocks
+export { BoulderGeometry, type BoulderGeometryOptions } from "./geometry/rocks/BoulderGeometry";
 export { MossyRockGeometry, type MossyRockGeometryOptions } from "./geometry/rocks/MossyRockGeometry";
 export { RockGeometry, type RockGeometryOptions } from "./geometry/rocks/RockGeometry";
 
@@ -232,8 +235,8 @@ export { TeslaCoilGeometry } from "./geometry/science/TeslaCoilGeometry";
 export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
 
 // Terrain
-export { HillGeometry, type HillGeometryOptions } from "./geometry/terrain/HillGeometry";
-export { MoundGeometry, type MoundGeometryOptions } from "./geometry/terrain/MoundGeometry";
+export { TerrainMoundGeometry, type TerrainMoundGeometryOptions } from "./geometry/terrain/TerrainMoundGeometry";
+export { TerrainPlaneGeometry, type TerrainPlaneGeometryOptions } from "./geometry/terrain/TerrainPlaneGeometry";
 
 // Trees
 export { TreeGeometry, type TreeGeometryOptions } from "./geometry/trees/TreeGeometry";
@@ -290,6 +293,7 @@ export { WallSconce, type WallSconceOptions } from "./models/lighting/WallSconce
 export { Lantern, type LanternOptions } from "./models/lighting/Lantern";
 
 // Rocks
+export { Boulder, type BoulderOptions } from "./models/rocks/Boulder";
 export { MossyRock, type MossyRockOptions } from "./models/rocks/MossyRock";
 export { Rock, type RockOptions } from "./models/rocks/Rock";
 
@@ -323,8 +327,8 @@ export { Bone } from "./models/skeleton/Bone";
 export { Tree, type TreeOptions } from "./models/trees/Tree";
 
 // Terrain
-export { Hill, type HillOptions } from "./models/terrain/Hill";
-export { Mound, type MoundOptions } from "./models/terrain/Mound";
+export { TerrainMound, type TerrainMoundOptions } from "./models/terrain/TerrainMound";
+export { TerrainPlane, type TerrainPlaneOptions } from "./models/terrain/TerrainPlane";
 
 //------------------------------
 //  Shaders
