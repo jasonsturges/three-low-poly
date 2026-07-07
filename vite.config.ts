@@ -22,6 +22,7 @@ export default defineConfig({
           three: "THREE",
           "three/addons/objects/Sky.js": "Sky",
           "three/addons/utils/BufferGeometryUtils.js": "BufferGeometryUtils",
+          "three/addons/geometries/ParametricGeometry.js": "ParametricGeometry",
           "three/addons/postprocessing/EffectComposer.js": "EffectComposer",
           "three/addons/postprocessing/RenderPass.js": "RenderPass",
           "three/addons/postprocessing/ShaderPass.js": "ShaderPass",

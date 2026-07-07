@@ -1,12 +1,11 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "..",
     "rootDir": "..",
     "noEmit": true,
     "types": ["vite/client", "node"],
     "paths": {
-      "three-low-poly": ["src/index.ts"]
+      "three-low-poly": ["../src/index.ts"]
     }
   },
   "include": [".", "../src"],
