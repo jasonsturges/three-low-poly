@@ -202,12 +202,14 @@ export class StarFieldEffect extends Object3D {
         this.baseScales = new Float32Array(count);
         this.twinklePhases = new Float32Array(count);
       }
-      const burstGeometry = geometry ?? new BurstGeometry(
-        burstShape.sides,
-        burstShape.innerRadius,
-        burstShape.outerRadius,
-        burstShape.depth,
-      );
+      const burstGeometry =
+        geometry ??
+        new BurstGeometry({
+          sides: burstShape.sides,
+          innerRadius: burstShape.innerRadius,
+          outerRadius: burstShape.outerRadius,
+          depth: burstShape.depth,
+        });
       this.field = this.createBurstField({
         count,
         minRadius,
