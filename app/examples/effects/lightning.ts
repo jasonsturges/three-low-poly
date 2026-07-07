@@ -1,16 +1,24 @@
 import {
-  BoxGeometry,
   Color,
   DirectionalLight,
   DoubleSide,
+  ExtrudeGeometry,
   Fog,
   Group,
   Mesh,
   MeshStandardMaterial,
-  PlaneGeometry,
+  Path,
+  Shape,
+  ShapeGeometry,
 } from "three";
 import GUI from "lil-gui";
-import { LightningEffect } from "three-low-poly";
+import {
+  ArchedDiamondLatticeWindow,
+  LightningEffect,
+  archedOpeningMetrics,
+  traceArchedOpeningOutline,
+  type ArchedOpeningMetrics,
+} from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 import { GroundGrid } from "../../framework/GroundGrid";
 
@@ -18,95 +26,85 @@ export const meta = {
   title: "Lightning",
   description:
     "Thunderstorm flashes via decaying light spikes — no timers. " +
-    "A hallway wall with windows; fog and sky panes brighten on each strike.",
+    "A hallway wall with arched diamond-lattice windows; fog and sky panes brighten on each strike.",
 };
 
 const SKY_COLOR = new Color(0x050508);
 const FLASH_COLOR = new Color(0x9ab0d8);
 
-interface WindowOpening {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+const WALL_WIDTH = 18;
+const WALL_HEIGHT = 8;
+const WALL_THICKNESS = 0.5;
+/** Room-facing (camera-side, +Z) face of the wall. */
+const WALL_FACE_Z = -6.9;
+
+// Shared arched opening — the wall hole, the window prefab, and the sky pane all
+// derive their silhouette from these three numbers so nothing drifts out of line.
+const OPENING = { width: 2.4, rectHeight: 3.4, archHeight: 1.2 };
+const SILL_Y = 1.4;
+const OPENING_CENTER_Y = SILL_Y + (OPENING.rectHeight + OPENING.archHeight) / 2;
+const WINDOW_X = [-5.5, 0, 5.5];
+
+const LEAD_THICKNESS = 0.05;
+const LEAD_DEPTH = 0.11;
+
+/**
+ * Trace the arched opening outline into a hole `Path`, offset to `cx` along the
+ * wall. `traceArchedOpeningOutline` centers x on 0, so a thin adapter shifts each
+ * emitted coordinate — the arc center included — to place the opening.
+ */
+function archHolePath(cx: number, metrics: ArchedOpeningMetrics): Path {
+  const path = new Path();
+  traceArchedOpeningOutline(
+    {
+      moveTo: (x, y) => path.moveTo(x + cx, y),
+      lineTo: (x, y) => path.lineTo(x + cx, y),
+      absarc: (x, y, r, a0, a1, cw) => path.absarc(x + cx, y, r, a0, a1, cw),
+      closePath: () => path.closePath(),
+    },
+    metrics,
+    { hole: true },
+  );
+  return path;
 }
 
-/** Thick back wall with cutouts and emissive sky panes behind each opening. */
-function createHallwayWall({
-  width,
-  height,
-  thickness,
-  z,
-  windows,
-  skyMaterial,
-}: {
-  width: number;
-  height: number;
-  thickness: number;
-  z: number;
-  windows: WindowOpening[];
-  skyMaterial: MeshStandardMaterial;
-}) {
-  const wall = new Group();
+/** One solid slab, extruded +Z, with an arched opening punched per window. */
+function buildWall() {
   const wallMaterial = new MeshStandardMaterial({
     color: 0x2a3038,
     roughness: 0.92,
     metalness: 0.04,
   });
-  const frameMaterial = new MeshStandardMaterial({
-    color: 0x141820,
-    roughness: 0.75,
-    metalness: 0.2,
-  });
 
-  const sorted = [...windows].sort((a, b) => a.x - b.x);
-  const halfW = width / 2;
+  const halfW = WALL_WIDTH / 2;
+  const shape = new Shape();
+  shape.moveTo(-halfW, 0);
+  shape.lineTo(halfW, 0);
+  shape.lineTo(halfW, WALL_HEIGHT);
+  shape.lineTo(-halfW, WALL_HEIGHT);
+  shape.closePath();
 
-  const addPanel = (panelW: number, panelH: number, x: number, y: number) => {
-    if (panelW <= 0.01 || panelH <= 0.01) return;
-    const panel = new Mesh(new BoxGeometry(panelW, panelH, thickness), wallMaterial);
-    panel.position.set(x, y + panelH / 2, z);
-    panel.castShadow = true;
-    panel.receiveShadow = true;
-    wall.add(panel);
-  };
+  // Punch the hole on the true opening outline — same silhouette as the window's
+  // frame ring, so the aperture lines up with the frame's outer edge and the whole
+  // ring stays visible, with the slab thickness reading as a reveal behind it.
+  const metrics = archedOpeningMetrics({ ...OPENING, centerY: OPENING_CENTER_Y });
+  for (const x of WINDOW_X) shape.holes.push(archHolePath(x, metrics));
 
-  const lowestBottom = Math.min(...sorted.map((win) => win.y - win.h / 2));
-  const highestTop = Math.max(...sorted.map((win) => win.y + win.h / 2));
+  const geo = new ExtrudeGeometry(shape, { depth: WALL_THICKNESS, bevelEnabled: false });
+  const wall = new Mesh(geo, wallMaterial);
+  // Extrusion runs local z 0 → thickness; land the thickness face on the room side.
+  wall.position.z = WALL_FACE_Z - WALL_THICKNESS;
+  wall.castShadow = true;
+  wall.receiveShadow = true;
 
-  addPanel(width, height - highestTop, 0, highestTop);
-  addPanel(width, lowestBottom, 0, 0);
+  return { wall, wallMaterial, metrics };
+}
 
-  let cursor = -halfW;
-  for (const win of sorted) {
-    const left = win.x - win.w / 2;
-    addPanel(left - cursor, win.h, (cursor + left) / 2, win.y - win.h / 2);
-    cursor = win.x + win.w / 2;
-  }
-  addPanel(halfW - cursor, sorted[sorted.length - 1].h, (cursor + halfW) / 2, sorted[sorted.length - 1].y - sorted[sorted.length - 1].h / 2);
-
-  // Sky pane closes the back of each opening (just inside the exterior face)
-  // so the wall cavity does not read as a floating gap when orbiting.
-  const exteriorZ = z - thickness / 2;
-  const frameDepth = thickness * 0.35;
-
-  for (const win of windows) {
-    const sky = new Mesh(new PlaneGeometry(win.w, win.h), skyMaterial);
-    sky.position.set(win.x, win.y, exteriorZ + 0.002);
-    wall.add(sky);
-
-    const sill = new Mesh(new BoxGeometry(win.w + 0.18, 0.08, frameDepth), frameMaterial);
-    sill.position.set(win.x, win.y - win.h / 2 - 0.04, z + thickness / 2 - frameDepth / 2);
-    sill.castShadow = true;
-    wall.add(sill);
-
-    const lintel = new Mesh(new BoxGeometry(win.w + 0.18, 0.08, frameDepth), frameMaterial);
-    lintel.position.set(win.x, win.y + win.h / 2 + 0.04, z + thickness / 2 - frameDepth / 2);
-    lintel.castShadow = true;
-    wall.add(lintel);
-  }
-
-  return { wall, wallMaterial, frameMaterial };
+function disposeWindow(window: ArchedDiamondLatticeWindow): void {
+  window.lattice.geometry.dispose();
+  window.lattice.material.dispose();
+  window.frame.geometry.dispose();
+  (window.frame.material as MeshStandardMaterial).dispose();
 }
 
 export default function (container: HTMLElement) {
@@ -124,6 +122,9 @@ export default function (container: HTMLElement) {
   const floor = new GroundGrid({ size: 24 });
   scene.add(floor);
 
+  // Cheap emissive glass: a flat arched pane behind each opening, backlighting the
+  // lattice. No transmission / physical material, so it costs nothing on the GPU
+  // while still pumping brightness on every strike.
   const skyMaterial = new MeshStandardMaterial({
     color: 0x0b101a,
     emissive: 0x1a2848,
@@ -133,24 +134,38 @@ export default function (container: HTMLElement) {
     side: DoubleSide,
   });
 
-  const hallwayWindows: WindowOpening[] = [
-    { x: -5.5, y: 3.8, w: 1.65, h: 4.2 },
-    { x: 0, y: 3.8, w: 1.65, h: 4.2 },
-    { x: 5.5, y: 3.8, w: 1.65, h: 4.2 },
-  ];
+  const architecture = new Group();
+  const { wall, wallMaterial, metrics } = buildWall();
+  architecture.add(wall);
 
-  const wallZ = -7;
-  const wallThickness = 0.4;
+  // One arched pane geometry (centered x, opening height baked in via centerY),
+  // reused across every opening by positioning each mesh at its own x.
+  const paneShape = new Shape();
+  traceArchedOpeningOutline(paneShape, metrics);
+  const paneGeo = new ShapeGeometry(paneShape, 48);
+  const exteriorZ = WALL_FACE_Z - WALL_THICKNESS;
+  const windowZ = WALL_FACE_Z - WALL_THICKNESS / 2;
 
-  const { wall, wallMaterial, frameMaterial } = createHallwayWall({
-    width: 18,
-    height: 8,
-    thickness: wallThickness,
-    z: wallZ,
-    windows: hallwayWindows,
-    skyMaterial,
-  });
-  scene.add(wall);
+  const windows: ArchedDiamondLatticeWindow[] = [];
+  for (const x of WINDOW_X) {
+    const pane = new Mesh(paneGeo, skyMaterial);
+    pane.position.set(x, 0, exteriorZ + 0.01);
+    architecture.add(pane);
+
+    const window = new ArchedDiamondLatticeWindow({
+      ...OPENING,
+      cellsX: 6,
+      cellsY: 10,
+      leadThickness: LEAD_THICKNESS,
+      leadDepth: LEAD_DEPTH,
+      glass: false,
+    });
+    window.position.set(x, OPENING_CENTER_Y, windowZ);
+    architecture.add(window);
+    windows.push(window);
+  }
+
+  scene.add(architecture);
 
   const configureBoltShadow = (bolt: DirectionalLight) => {
     bolt.castShadow = true;
@@ -234,19 +249,16 @@ export default function (container: HTMLElement) {
     .name("Ground / Wall")
     .onChange((visible: boolean) => {
       floor.visible = visible;
-      wall.visible = visible;
+      architecture.visible = visible;
     });
 
   return () => {
     gui.destroy();
     floor.dispose();
-    wall.traverse((child) => {
-      if (child instanceof Mesh) {
-        child.geometry.dispose();
-      }
-    });
+    for (const window of windows) disposeWindow(window);
+    wall.geometry.dispose();
     wallMaterial.dispose();
-    frameMaterial.dispose();
+    paneGeo.dispose();
     skyMaterial.dispose();
     dispose();
   };
