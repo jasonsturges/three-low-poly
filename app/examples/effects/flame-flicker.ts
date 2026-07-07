@@ -1,7 +1,8 @@
-import { Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, PointLight, SphereGeometry } from "three";
+import { Mesh, MeshBasicMaterial, PointLight, SphereGeometry } from "three";
 import GUI from "lil-gui";
 import { FlameFlickerEffect, GlowHalo } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
+import { GroundGrid } from "../../framework/GroundGrid";
 
 export const meta = {
   title: "Flame Flicker",
@@ -16,13 +17,13 @@ export default function (container: HTMLElement) {
     cameraPosition: [0, 2.2, 5],
   });
 
-  const ground = new Mesh(
-    new PlaneGeometry(12, 12),
-    new MeshStandardMaterial({ color: 0x1a1410, roughness: 1 }),
-  );
-  ground.rotation.x = -Math.PI / 2;
-  ground.receiveShadow = true;
-  scene.add(ground);
+  const floor = new GroundGrid({
+    size: 12,
+    planeColor: 0x1a1410,
+    centerColor: 0x3a2c1e,
+    gridColor: 0x2a2016,
+  });
+  scene.add(floor);
 
   const params = {
     color: 0xffaa44,
@@ -103,8 +104,7 @@ export default function (container: HTMLElement) {
     flame.geometry.dispose();
     flameMaterial.dispose();
     halo.dispose();
-    ground.geometry.dispose();
-    (ground.material as MeshStandardMaterial).dispose();
+    floor.dispose();
     dispose();
   };
 }
