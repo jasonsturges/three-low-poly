@@ -1,27 +1,31 @@
 import GUI from "lil-gui";
-import { centerObject, scatterRocks } from "three-low-poly";
+import { scatterMossyRocks } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { GroundGrid } from "../../../framework/GroundGrid";
 
 export const meta = {
-  title: "Rock Scatter",
-  description: "Instanced rock scatter inside a bounds region — seeded via createRandom().",
+  title: "Mossy Rock Scatter",
+  description: "Instanced mossy rocks — two material groups, seeded scatter in a bounds region.",
 };
 
 export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container, { cameraPosition: [0, 4, 10] });
 
+  const floor = new GroundGrid({ size: 12 });
+  scene.add(floor);
+
   const params = {
     useSeed: true,
-    seed: 1337,
-    count: 24,
+    seed: 4242,
+    count: 20,
     width: 8,
     depth: 8,
     heightJitter: 0,
-    scaleMin: 0.5,
-    scaleMax: 1.1,
+    scaleMin: 0.6,
+    scaleMax: 1.2,
   };
 
-  let rocks = scatterRocks({
+  let rocks = scatterMossyRocks({
     count: params.count,
     width: params.width,
     depth: params.depth,
@@ -31,14 +35,17 @@ export default function (container: HTMLElement) {
     seed: params.useSeed ? params.seed : undefined,
   });
   scene.add(rocks);
-  centerObject(rocks);
+
+  const disposeMesh = (mesh: typeof rocks) => {
+    mesh.geometry.dispose();
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    materials.forEach((m) => m.dispose());
+  };
 
   const rebuild = () => {
     scene.remove(rocks);
-    rocks.geometry.dispose();
-    const material = Array.isArray(rocks.material) ? rocks.material[0] : rocks.material;
-    material.dispose();
-    rocks = scatterRocks({
+    disposeMesh(rocks);
+    rocks = scatterMossyRocks({
       count: params.count,
       width: params.width,
       depth: params.depth,
@@ -48,11 +55,10 @@ export default function (container: HTMLElement) {
       seed: params.useSeed ? params.seed : undefined,
     });
     scene.add(rocks);
-    centerObject(rocks);
   };
 
   const gui = new GUI();
-  gui.title("Rock Scatter");
+  gui.title("Mossy Rock Scatter");
   gui.add(params, "useSeed").name("Use Seed").onChange(rebuild);
   gui.add(params, "seed", 0, 99999, 1).name("Seed").onChange(rebuild);
   gui.add(params, "count", 1, 80, 1).name("Count").onChange(rebuild);
@@ -65,9 +71,8 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     scene.remove(rocks);
-    rocks.geometry.dispose();
-    const material = Array.isArray(rocks.material) ? rocks.material[0] : rocks.material;
-    material.dispose();
+    disposeMesh(rocks);
+    floor.dispose();
     dispose();
   };
 }
