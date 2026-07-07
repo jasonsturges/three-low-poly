@@ -1,7 +1,8 @@
-import { DoubleSide, Fog, GridHelper, Mesh, MeshStandardMaterial, PlaneGeometry } from "three";
+import { Fog } from "three";
 import GUI from "lil-gui";
 import { PetalDriftEffect } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
+import { GroundGrid } from "../../framework/GroundGrid";
 
 export const meta = {
   title: "Petal Drift",
@@ -24,17 +25,13 @@ export default function (container: HTMLElement) {
   controls.target.set(0, 2, 0);
   controls.update();
 
-  const groundSize = 24;
-  const ground = new Mesh(
-    new PlaneGeometry(groundSize, groundSize),
-    new MeshStandardMaterial({ color: GROUND_COLOR, roughness: 1, metalness: 0, side: DoubleSide }),
-  );
-  ground.rotation.x = -Math.PI / 2;
-  ground.receiveShadow = true;
-  scene.add(ground);
-
-  const grid = new GridHelper(groundSize, groundSize, 0x3d3048, 0x2e2438);
-  scene.add(grid);
+  const floor = new GroundGrid({
+    size: 24,
+    planeColor: GROUND_COLOR,
+    centerColor: 0x3d3048,
+    gridColor: 0x2e2438,
+  });
+  scene.add(floor);
 
   const params = {
     count: 100,
@@ -90,16 +87,14 @@ export default function (container: HTMLElement) {
     .add(params, "showReference")
     .name("Ground / Grid")
     .onChange((visible: boolean) => {
-      ground.visible = visible;
-      grid.visible = visible;
+      floor.visible = visible;
     });
 
   return () => {
     gui.destroy();
     scene.remove(petals);
     petals.dispose();
-    ground.geometry.dispose();
-    (ground.material as MeshStandardMaterial).dispose();
+    floor.dispose();
     dispose();
   };
 }

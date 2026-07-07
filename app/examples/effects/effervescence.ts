@@ -1,15 +1,8 @@
-import {
-  BoxGeometry,
-  CylinderGeometry,
-  DoubleSide,
-  GridHelper,
-  Mesh,
-  MeshStandardMaterial,
-  PlaneGeometry,
-} from "three";
+import { BoxGeometry, CylinderGeometry, DoubleSide, Mesh, MeshStandardMaterial } from "three";
 import GUI from "lil-gui";
 import { EffervescenceEffect } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
+import { GroundGrid } from "../../framework/GroundGrid";
 
 export const meta = {
   title: "Effervescence",
@@ -26,32 +19,11 @@ export default function (container: HTMLElement) {
   controls.target.set(0, 1.0, 0);
   controls.update();
 
-  const groundSize = 16;
-  const ground = new Mesh(
-    new PlaneGeometry(groundSize, groundSize),
-    new MeshStandardMaterial({
-      color: 0x1c2428,
-      roughness: 1,
-      metalness: 0,
-      side: DoubleSide,
-      // Push the filled plane back in the depth buffer so the coplanar GridHelper
-      // lines (which polygon offset doesn't touch) win cleanly — no z-fighting.
-      polygonOffset: true,
-      polygonOffsetFactor: 1,
-      polygonOffsetUnits: 1,
-    }),
-  );
-  ground.rotation.x = -Math.PI / 2;
-  ground.receiveShadow = true;
-  scene.add(ground);
+  const floor = new GroundGrid({ size: 16, planeColor: 0x1c2428 });
+  scene.add(floor);
 
-  const grid = new GridHelper(groundSize, groundSize, 0x334455, 0x223344);
-  scene.add(grid);
-
-  const bench = new Mesh(
-    new BoxGeometry(4, 0.12, 1.6),
-    new MeshStandardMaterial({ color: 0x2a3238, roughness: 0.85, metalness: 0.05 }),
-  );
+  const benchMaterial = new MeshStandardMaterial({ color: 0x2a3238, roughness: 0.85, metalness: 0.05 });
+  const bench = new Mesh(new BoxGeometry(3, 0.12, 2.4), benchMaterial);
   bench.position.set(0, 0.06, 0);
   bench.castShadow = true;
   bench.receiveShadow = true;
@@ -143,8 +115,7 @@ export default function (container: HTMLElement) {
     .add(params, "showReference")
     .name("Bench / Vessel")
     .onChange((visible: boolean) => {
-      ground.visible = visible;
-      grid.visible = visible;
+      floor.visible = visible;
       bench.visible = visible;
       vessel.visible = visible;
       liquid.visible = visible;
@@ -154,10 +125,9 @@ export default function (container: HTMLElement) {
     gui.destroy();
     scene.remove(fizz);
     fizz.dispose();
-    ground.geometry.dispose();
-    (ground.material as MeshStandardMaterial).dispose();
+    floor.dispose();
     bench.geometry.dispose();
-    (bench.material as MeshStandardMaterial).dispose();
+    benchMaterial.dispose();
     vessel.geometry.dispose();
     vesselMaterial.dispose();
     liquid.geometry.dispose();

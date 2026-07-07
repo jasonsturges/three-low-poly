@@ -4,7 +4,6 @@ import {
   DirectionalLight,
   DoubleSide,
   Fog,
-  GridHelper,
   Group,
   Mesh,
   MeshStandardMaterial,
@@ -13,6 +12,7 @@ import {
 import GUI from "lil-gui";
 import { LightningEffect } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
+import { GroundGrid } from "../../framework/GroundGrid";
 
 export const meta = {
   title: "Lightning",
@@ -121,18 +121,8 @@ export default function (container: HTMLElement) {
   controls.target.set(0, 3.2, -6);
   controls.update();
 
-  const groundSize = 24;
-
-  const ground = new Mesh(
-    new PlaneGeometry(groundSize, groundSize),
-    new MeshStandardMaterial({ color: 0x1a2430, roughness: 1, metalness: 0, side: DoubleSide }),
-  );
-  ground.rotation.x = -Math.PI / 2;
-  ground.receiveShadow = true;
-  scene.add(ground);
-
-  const grid = new GridHelper(groundSize, groundSize, 0x334455, 0x223344);
-  scene.add(grid);
+  const floor = new GroundGrid({ size: 24 });
+  scene.add(floor);
 
   const skyMaterial = new MeshStandardMaterial({
     color: 0x0b101a,
@@ -243,15 +233,13 @@ export default function (container: HTMLElement) {
     .add(params, "showReference")
     .name("Ground / Wall")
     .onChange((visible: boolean) => {
-      ground.visible = visible;
-      grid.visible = visible;
+      floor.visible = visible;
       wall.visible = visible;
     });
 
   return () => {
     gui.destroy();
-    ground.geometry.dispose();
-    (ground.material as MeshStandardMaterial).dispose();
+    floor.dispose();
     wall.traverse((child) => {
       if (child instanceof Mesh) {
         child.geometry.dispose();
