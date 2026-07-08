@@ -7,29 +7,23 @@ import {
   HemisphereLight,
   PerspectiveCamera,
   Scene,
-  WebGLRenderer,
 } from "three";
+import { WebGPURenderer } from "three/webgpu";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { configureOrbitControls } from "./configureOrbitControls";
-import { createWebGLRenderer } from "./createWebGLRenderer";
+import { createWebGPURenderer } from "./createWebGPURenderer";
 
 export interface SceneOptions {
   /** Scene background color. Left transparent/black if omitted. */
   background?: ColorRepresentation;
   /** Initial camera position. Defaults to `[0, 0, 5]`. */
   cameraPosition?: [number, number, number];
-  /**
-   * Native MSAA. This is a WebGL context-creation attribute and is immutable
-   * after the renderer exists, so toggling it means disposing this scene and
-   * building a fresh one (see the antialiasing example). Defaults to `true`.
-   */
-  antialias?: boolean;
 }
 
 export interface SceneHandle {
   scene: Scene;
   camera: PerspectiveCamera;
-  renderer: WebGLRenderer;
+  renderer: WebGPURenderer;
   controls: OrbitControls;
   /** Register a per-frame callback; returns an unsubscribe function. */
   onFrame(handler: (delta: number) => void): () => void;
@@ -45,8 +39,9 @@ export interface SceneHandle {
  * into the gallery's viewer panel. Examples keep ownership of their own
  * objects, GUI, and disposal.
  *
- * Renderer-agnostic on purpose: when the WebGPU pass lands, this is the single
- * seam to swap `WebGLRenderer` for `WebGPURenderer`.
+ * WebGPU-backed (`WebGPURenderer`, WebGL2 fallback). The device initializes
+ * asynchronously, so the render loop starts once `renderer.init()` resolves; the
+ * mount stays synchronous, so examples are unaffected.
  */
 export function createScene(container: HTMLElement, options: SceneOptions = {}): SceneHandle {
   const scene = new Scene();
@@ -56,11 +51,10 @@ export function createScene(container: HTMLElement, options: SceneOptions = {}):
   const [cx, cy, cz] = options.cameraPosition ?? [0, 0, 5];
   camera.position.set(cx, cy, cz);
 
-  const renderer = createWebGLRenderer({ antialias: options.antialias ?? true });
+  const renderer = createWebGPURenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setClearColor(0x000000);
   renderer.shadowMap.enabled = true;
-  renderer.localClippingEnabled = true;
   const canvas = renderer.domElement;
   canvas.style.display = "block";
   canvas.style.width = "100%";
@@ -106,12 +100,18 @@ export function createScene(container: HTMLElement, options: SceneOptions = {}):
   observer.observe(container);
   resize();
 
+  let disposed = false;
   const clock = new Clock();
-  renderer.setAnimationLoop(() => {
+  const renderFrame = () => {
     const delta = clock.getDelta();
     controls.update();
     handlers.forEach((handler) => handler(delta));
     renderer.render(scene, camera);
+  };
+  // WebGPU needs async device init before the first render; start the loop once
+  // it resolves (and skip it if the scene was disposed while initializing).
+  renderer.init().then(() => {
+    if (!disposed) renderer.setAnimationLoop(renderFrame);
   });
 
   return {
@@ -124,6 +124,7 @@ export function createScene(container: HTMLElement, options: SceneOptions = {}):
       return () => handlers.delete(handler);
     },
     dispose() {
+      disposed = true;
       renderer.setAnimationLoop(null);
       observer.disconnect();
       controls.dispose();

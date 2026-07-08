@@ -108,15 +108,6 @@ export {
   type GregorianLatticeGrid,
 } from "./geometry/architecture/gregorianLattice";
 export {
-  buildRingLatticeFrameParts,
-  createOpeningClippingPlanes,
-  createRingLatticeGeometry,
-  resolveRingLatticeCell,
-  ringLatticeSpots,
-  RING_LATTICE_SPACING_FACTOR,
-  type RingLatticeGrid,
-} from "./geometry/architecture/ringLattice";
-export {
   archedOpeningMetrics,
   buildArchedDiamondLatticeCameParts,
   buildArchedDiamondLatticeFrameGeometry,
@@ -256,7 +247,6 @@ export { Staircase, type StaircaseOptions } from "./models/architecture/Staircas
 export { ArchedDiamondLatticeWindow } from "./models/architecture/ArchedDiamondLatticeWindow";
 export { DiamondLatticeWindow } from "./models/architecture/DiamondLatticeWindow";
 export { GregorianLatticeWindow } from "./models/architecture/GregorianLatticeWindow";
-export { RingLatticeWindow } from "./models/architecture/RingLatticeWindow";
 
 // Books
 export { Book, type BookOptions } from "./models/books/Book";
@@ -331,21 +321,6 @@ export { TerrainMound, type TerrainMoundOptions } from "./models/terrain/Terrain
 export { TerrainPlane, type TerrainPlaneOptions } from "./models/terrain/TerrainPlane";
 
 //------------------------------
-//  Shaders
-//------------------------------
-
-export { addInstanceColor } from "./shaders/addInstanceColor";
-export { addWaterDisplacement, updateWaterDisplacementTime } from "./shaders/addWaterDisplacement";
-export { addNoiseDisplacement, updateNoiseDisplacementTime } from "./shaders/addNoiseDisplacement";
-export { atmosphericShader, type AtmosphericShaderUniforms } from "./shaders/atmosphericShader";
-export { blurTransitionShader } from "./shaders/blurTransitionShader";
-export { crossfadeShader } from "./shaders/crossfadeShader";
-export { daySkyShader, type DaySkyUniforms } from "./shaders/daySkyShader";
-export { fadeShader } from "./shaders/fadeShader";
-export { fadeTransitionSceneShader } from "./shaders/fadeTransitionSceneShader";
-export { nightSkyShader, type NightSkyUniforms } from "./shaders/nightSkyShader";
-
-//------------------------------
 //  Shapes
 //------------------------------
 
@@ -356,26 +331,10 @@ export { HexagonShape } from "./shapes/HexagonShape";
 export { StarShape } from "./shapes/StarShape";
 
 //------------------------------
-//  Skybox
-//------------------------------
-
-export { AtmosphericSkybox } from "./skybox/AtmosphericSkybox";
-export { DaySkybox } from "./skybox/DaySkybox";
-export { NightSkybox } from "./skybox/NightSkybox";
-
-//------------------------------
 //  Textures
 //------------------------------
 
 export { checkerboardTexture } from "./textures/checkerboard";
-
-//------------------------------
-//  Transitions
-//------------------------------
-
-export { CameraTransition, type CameraTransitionOptions } from "./transitions/CameraTransition";
-export { SceneTransition, type SceneTransitionOptions } from "./transitions/SceneTransition";
-export { SceneTransitionFX, type SceneTransitionFXOptions } from "./transitions/SceneTransitionFX";
 
 //------------------------------
 //  Utils

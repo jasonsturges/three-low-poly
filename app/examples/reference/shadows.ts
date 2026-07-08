@@ -130,7 +130,6 @@ export default function (container: HTMLElement) {
     .name("Shadow Map Type")
     .onChange(() => {
       renderer.shadowMap.type = shadowMapTypes[shadowSettings.shadowMapType];
-      renderer.shadowMap.needsUpdate = true;
     });
   shadowFolder
     .add(shadowSettings, "shadowMapSize", [256, 512, 1024, 2048, 4096])
@@ -140,7 +139,6 @@ export default function (container: HTMLElement) {
       directionalLight.shadow.mapSize.height = shadowSettings.shadowMapSize;
       directionalLight.shadow.map?.dispose();
       directionalLight.shadow.map = null;
-      renderer.shadowMap.needsUpdate = true;
     });
   shadowFolder
     .add(shadowSettings, "shadowBias", -0.01, 0.01, 0.0001)

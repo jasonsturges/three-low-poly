@@ -1,6 +1,5 @@
 import {
   AmbientLight,
-  Clock,
   Color,
   DirectionalLight,
   FogExp2,
@@ -12,11 +11,7 @@ import {
   PointLight,
   SpotLight,
   SRGBColorSpace,
-  Vector2,
 } from "three";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import {
   BoneGeometry,
   CrossHeadstone,
@@ -47,7 +42,7 @@ const RAINFALL = 0.28;
 const LAMP_COLOR = 0xffd700;
 
 export default function (container: HTMLElement) {
-  const { scene, camera, controls, renderer, dispose } = createScene(container, {
+  const { scene, camera, controls, renderer, onFrame, dispose } = createScene(container, {
     background: BG_COLOR.clone(),
     // Match portfolio orbital start: radius ~36, elevation ~0.58 rad, azimuth π/4.
     cameraPosition: [21, 22, 21],
@@ -274,32 +269,10 @@ export default function (container: HTMLElement) {
   const baseBg = BG_COLOR.clone();
   const baseFog = FOG_COLOR.clone();
 
-  // Portfolio graveyard blooms tone-mapped-off streaks — rain barely reads without it.
-  const composer = new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene, camera));
-  const bloomPass = new UnrealBloomPass(
-    new Vector2(container.clientWidth, container.clientHeight),
-    0.9,
-    0.6,
-    0.6,
-  );
-  composer.addPass(bloomPass);
-
-  const syncComposer = () => {
-    const w = container.clientWidth;
-    const h = container.clientHeight;
-    if (!w || !h) return;
-    composer.setSize(w, h);
-  };
-  const composerObserver = new ResizeObserver(syncComposer);
-  composerObserver.observe(container);
-  syncComposer();
-
-  const frameClock = new Clock();
-  renderer.setAnimationLoop(() => {
-    const delta = frameClock.getDelta();
-    controls.update();
-
+  // Bloom postprocessing was WebGL EffectComposer + UnrealBloomPass; dropped in the
+  // WebGPU migration. TODO: reintroduce with three/webgpu PostProcessing + TSL bloom
+  // (three/addons/tsl/display/BloomNode.js).
+  onFrame((delta) => {
     wisps.update(delta);
     groundFog.update(delta);
 
@@ -316,15 +289,9 @@ export default function (container: HTMLElement) {
     lanternFlicker.update(delta);
     lanternFlicker.faceCamera(camera.position);
     lanternGlass.emissiveIntensity = glassEmissiveBase * (0.85 + 0.3 * lanternFlicker.level);
-
-    composer.render();
   });
 
   return () => {
-    renderer.setAnimationLoop(null);
-    composerObserver.disconnect();
-    composer.dispose();
-    bloomPass.dispose();
     rain.dispose();
     wisps.dispose();
     groundFog.dispose();

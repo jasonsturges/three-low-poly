@@ -10,7 +10,7 @@ import {
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { configureOrbitControls } from "../../framework/configureOrbitControls";
-import { createWebGLRenderer } from "../../framework/createWebGLRenderer";
+import { createWebGPURenderer } from "../../framework/createWebGPURenderer";
 
 export const meta = {
   title: "Orbit",
@@ -26,7 +26,7 @@ export default function (container: HTMLElement) {
   const camera = new PerspectiveCamera(75, container.clientWidth / container.clientHeight || 1, 0.1, 1000);
   camera.position.z = 5;
 
-  const renderer = createWebGLRenderer();
+  const renderer = createWebGPURenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setClearColor(0x000000);
   renderer.shadowMap.enabled = true;
@@ -63,12 +63,18 @@ export default function (container: HTMLElement) {
   observer.observe(container);
   resize();
 
-  renderer.setAnimationLoop(() => {
-    controls.update();
-    renderer.render(scene, camera);
+  // WebGPU needs async device init before the first render.
+  let disposed = false;
+  renderer.init().then(() => {
+    if (disposed) return;
+    renderer.setAnimationLoop(() => {
+      controls.update();
+      renderer.render(scene, camera);
+    });
   });
 
   return () => {
+    disposed = true;
     renderer.setAnimationLoop(null);
     observer.disconnect();
     controls.dispose();

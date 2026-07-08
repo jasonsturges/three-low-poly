@@ -7,11 +7,11 @@ import {
   HemisphereLight,
   OrthographicCamera,
   Scene,
-  WebGLRenderer,
 } from "three";
+import { WebGPURenderer } from "three/webgpu";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { configureOrbitControls } from "./configureOrbitControls";
-import { createWebGLRenderer } from "./createWebGLRenderer";
+import { createWebGPURenderer } from "./createWebGPURenderer";
 
 export interface OrthographicSceneOptions {
   /** Scene background color. Defaults to `0xeeeeee`. */
@@ -27,7 +27,7 @@ export interface OrthographicSceneOptions {
 export interface OrthographicSceneHandle {
   scene: Scene;
   camera: OrthographicCamera;
-  renderer: WebGLRenderer;
+  renderer: WebGPURenderer;
   controls: OrbitControls;
   onFrame(handler: (delta: number) => void): () => void;
   dispose(): void;
@@ -45,10 +45,9 @@ export function createOrthographicScene(
   const scene = new Scene();
   scene.background = new Color(options.background ?? 0xeeeeee);
 
-  const renderer = createWebGLRenderer();
+  const renderer = createWebGPURenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
-  renderer.localClippingEnabled = true;
   const canvas = renderer.domElement;
   canvas.style.display = "block";
   canvas.style.width = "100%";
@@ -92,12 +91,18 @@ export function createOrthographicScene(
   observer.observe(container);
   resize();
 
+  let disposed = false;
   const clock = new Clock();
-  renderer.setAnimationLoop(() => {
+  const renderFrame = () => {
     const delta = clock.getDelta();
     controls.update();
     handlers.forEach((handler) => handler(delta));
     renderer.render(scene, camera);
+  };
+  // WebGPU needs async device init before the first render; start the loop once
+  // it resolves (and skip it if the scene was disposed while initializing).
+  renderer.init().then(() => {
+    if (!disposed) renderer.setAnimationLoop(renderFrame);
   });
 
   return {
@@ -110,6 +115,7 @@ export function createOrthographicScene(
       return () => handlers.delete(handler);
     },
     dispose() {
+      disposed = true;
       renderer.setAnimationLoop(null);
       observer.disconnect();
       controls.dispose();

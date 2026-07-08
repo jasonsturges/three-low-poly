@@ -1,6 +1,6 @@
-import { InstancedBufferAttribute, InstancedMesh, MeshStandardMaterial } from "three";
+import { Color, InstancedMesh, MeshStandardMaterial } from "three";
 import GUI from "lil-gui";
-import { addInstanceColor, createHexagonalTilesByCount } from "three-low-poly";
+import { createHexagonalTilesByCount } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Hexagonal Tiles (Instance Colors)" };
@@ -8,20 +8,22 @@ export const meta = { title: "Hexagonal Tiles (Instance Colors)" };
 export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container, { cameraPosition: [0, 5, 5] });
 
+  // White base so the per-instance color reads directly (standard materials
+  // multiply the base color by instanceColor via native USE_INSTANCING_COLOR).
   const material = new MeshStandardMaterial({
     color: 0xffffff,
-    emissive: 0xffffff,
-    emissiveIntensity: 0.25,
     metalness: 0.5,
     roughness: 0.5,
     flatShading: true,
   });
-  addInstanceColor(material);
 
   const params = {
     count: 127,
     interval: 24,
   };
+
+  const highlight = new Color(0x000f89);
+  const base = new Color(0.8, 0.8, 0.8);
 
   let tiles: InstancedMesh | undefined;
 
@@ -41,13 +43,11 @@ export default function (container: HTMLElement) {
     });
     scene.add(tiles);
 
-    const colors = new Float32Array(tiles.count * 3);
+    // Native per-instance color — setColorAt lazily allocates instanceColor.
     for (let i = 0; i < tiles.count; i++) {
-      const color = i % params.interval === 0 ? [0x00 / 0xff, 0x0f / 0xff, 0x89 / 0xff] : [0.8, 0.8, 0.8];
-      colors.set(color, i * 3);
+      tiles.setColorAt(i, i % params.interval === 0 ? highlight : base);
     }
-
-    tiles.geometry.setAttribute("instanceColor", new InstancedBufferAttribute(colors, 3));
+    if (tiles.instanceColor) tiles.instanceColor.needsUpdate = true;
   };
 
   const gui = new GUI();

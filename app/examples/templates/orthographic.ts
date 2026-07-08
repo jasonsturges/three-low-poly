@@ -11,7 +11,7 @@ import {
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { configureOrbitControls } from "../../framework/configureOrbitControls";
-import { createWebGLRenderer } from "../../framework/createWebGLRenderer";
+import { createWebGPURenderer } from "../../framework/createWebGPURenderer";
 
 export const meta = {
   title: "Orthographic",
@@ -26,7 +26,7 @@ export default function (container: HTMLElement) {
   const scene = new Scene();
   scene.background = new Color(0xeeeeee);
 
-  const renderer = createWebGLRenderer();
+  const renderer = createWebGPURenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
   const canvas = renderer.domElement;
@@ -70,12 +70,18 @@ export default function (container: HTMLElement) {
   observer.observe(container);
   resize();
 
-  renderer.setAnimationLoop(() => {
-    controls.update();
-    renderer.render(scene, camera);
+  // WebGPU needs async device init before the first render.
+  let disposed = false;
+  renderer.init().then(() => {
+    if (disposed) return;
+    renderer.setAnimationLoop(() => {
+      controls.update();
+      renderer.render(scene, camera);
+    });
   });
 
   return () => {
+    disposed = true;
     renderer.setAnimationLoop(null);
     observer.disconnect();
     controls.dispose();

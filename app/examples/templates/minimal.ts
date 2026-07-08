@@ -1,5 +1,5 @@
 import { Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry } from "three";
-import { createWebGLRenderer } from "../../framework/createWebGLRenderer";
+import { createWebGPURenderer } from "../../framework/createWebGPURenderer";
 
 export const meta = {
   title: "Minimal",
@@ -17,7 +17,7 @@ export default function (container: HTMLElement) {
   const camera = new PerspectiveCamera(75, container.clientWidth / container.clientHeight || 1, 0.1, 1000);
   camera.position.z = 5;
 
-  const renderer = createWebGLRenderer();
+  const renderer = createWebGPURenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
   const canvas = renderer.domElement;
   canvas.style.display = "block";
@@ -42,9 +42,14 @@ export default function (container: HTMLElement) {
   observer.observe(container);
   resize();
 
-  renderer.setAnimationLoop(() => renderer.render(scene, camera));
+  // WebGPU needs async device init before the first render.
+  let disposed = false;
+  renderer.init().then(() => {
+    if (!disposed) renderer.setAnimationLoop(() => renderer.render(scene, camera));
+  });
 
   return () => {
+    disposed = true;
     renderer.setAnimationLoop(null);
     observer.disconnect();
     geometry.dispose();

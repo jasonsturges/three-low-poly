@@ -1,5 +1,5 @@
 import GUI from "lil-gui";
-import { NightSkybox, StarFieldEffect, TerrainMound } from "three-low-poly";
+import { StarFieldEffect, TerrainMound } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = {
@@ -18,9 +18,6 @@ export default function (container: HTMLElement) {
   controls.target.set(0, 1.5, 0);
   controls.update();
 
-  const sky = new NightSkybox(990);
-  scene.add(sky);
-
   // A rounded terrain mound as the ground gives the eye a foreground surface to
   // relate the star shell to — dolly in and the sky reads as an enclosing dome.
   const ground = new TerrainMound({ radius: 14, height: 1.6, noiseHeight: 0.7, color: "#243426", seed: 7 });
@@ -37,7 +34,6 @@ export default function (container: HTMLElement) {
     burstInner: 0.6,
     burstOuter: 1.9,
     burstDepth: 0.05,
-    showSky: true,
     showReference: true,
   };
 
@@ -91,12 +87,6 @@ export default function (container: HTMLElement) {
   burstFolder.open();
 
   gui
-    .add(params, "showSky")
-    .name("Night Sky")
-    .onChange((visible: boolean) => {
-      sky.visible = visible;
-    });
-  gui
     .add(params, "showReference")
     .name("Ground")
     .onChange((visible: boolean) => {
@@ -107,8 +97,6 @@ export default function (container: HTMLElement) {
     gui.destroy();
     scene.remove(stars);
     stars.dispose();
-    sky.geometry.dispose();
-    sky.material.dispose();
     ground.geometry.dispose();
     ground.material.dispose();
     dispose();
