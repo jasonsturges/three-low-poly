@@ -29,6 +29,8 @@ export default function (container: HTMLElement) {
     radius: 480,
     sizeMin: 0.008,
     sizeMax: 0.025,
+    rotation: 0,
+    rotationJitter: Math.PI * 2,
     twinkle: true,
     burstSides: 4,
     burstInner: 0.6,
@@ -44,6 +46,8 @@ export default function (container: HTMLElement) {
       radius: params.radius,
       sizeMin: params.sizeMin,
       sizeMax: params.sizeMax,
+      rotation: params.rotation,
+      rotationJitter: params.rotationJitter,
       twinkle: params.twinkle,
       burst: {
         sides: params.burstSides,
@@ -77,6 +81,8 @@ export default function (container: HTMLElement) {
   gui.add(params, "radius", 100, 900, 10).name("Radius").onChange(rebuild);
   gui.add(params, "sizeMin", 0.002, 0.08, 0.001).name("Angular Min").onChange(rebuild);
   gui.add(params, "sizeMax", 0.002, 0.08, 0.001).name("Angular Max").onChange(rebuild);
+  gui.add(params, "rotation", 0, Math.PI * 2, 0.01).name("Burst Rotation").onChange(rebuild);
+  gui.add(params, "rotationJitter", 0, Math.PI * 2, 0.01).name("Burst Rotation Jitter").onChange(rebuild);
   gui.add(params, "twinkle").name("Twinkle");
 
   const burstFolder = gui.addFolder("Burst Shape");

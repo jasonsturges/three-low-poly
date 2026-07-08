@@ -1,7 +1,6 @@
 import {
   BufferAttribute,
   BufferGeometry,
-  CanvasTexture,
   Color,
   ColorRepresentation,
   DoubleSide,
@@ -31,12 +30,12 @@ export interface StarFieldEffectOptions {
   /**
    * Rendering style.
    *
-   * - `points` (default) — billboard sprites with a procedural starburst texture
-   *   (not the default square `Points` marker).
-   * - `burst` — instanced {@link BurstGeometry} meshes oriented toward the shell center.
+   * - `points` (default) — lightweight `Points` dots (uniform pixel size).
+   * - `burst` — instanced {@link BurstGeometry} star meshes oriented toward the shell
+   *   center, with per-star size and rotation.
    */
   style?: "points" | "burst";
-  /** Shape parameters for both styles; `burst` uses them for geometry, `points` for the sprite. */
+  /** Burst star shape (`style: "burst"` only). */
   burst?: StarBurstShapeOptions;
   /** Override the burst mesh geometry (`style: "burst"` only). */
   geometry?: BufferGeometry;
@@ -61,42 +60,17 @@ export interface StarFieldEffectOptions {
   color?: ColorRepresentation | ColorRepresentation[];
   /** Enable pulsing brightness; call {@link StarFieldEffect.update} each frame when `true`. */
   twinkle?: boolean;
+  /** Base Z rotation of each burst, in radians (`style: "burst"` only). Defaults to `0`. */
+  rotation?: number;
+  /**
+   * Random Z-rotation spread added per burst, in radians (`style: "burst"` only).
+   * `0` aligns every burst — a coherent diffraction-spike field; `2π` is fully random.
+   * Defaults to `Math.PI * 2`.
+   */
+  rotationJitter?: number;
 }
 
 const SHELL_CENTER = new Vector3(0, 0, 0);
-
-/** Canvas sprite matching the burst profile (inner/outer star polygon). */
-function createStarSpriteTexture(
-  sides: number,
-  innerRadius: number,
-  outerRadius: number,
-  size = 128,
-): CanvasTexture {
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
-  const outer = size * 0.46;
-  const inner = outer * (innerRadius / outerRadius);
-
-  ctx.translate(size / 2, size / 2);
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  for (let i = 0; i < sides * 2; i++) {
-    const radius = i % 2 === 0 ? outer : inner;
-    const angle = (i / (sides * 2)) * Math.PI * 2 - Math.PI / 2;
-    const x = Math.cos(angle) * radius;
-    const y = Math.sin(angle) * radius;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-  ctx.fill();
-
-  const texture = new CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  return texture;
-}
 
 function randomUnitVector(target: Vector3): Vector3 {
   const u = Math.random();
@@ -165,7 +139,6 @@ export class StarFieldEffect extends Object3D {
   private readonly twinklePhases?: Float32Array;
   /** Untwinkled per-point RGB (points style), multiplied by each star's pulse each frame. */
   private baseColors?: Float32Array;
-  private spriteTexture?: CanvasTexture;
   private readonly dummy = new Object3D();
 
   constructor(options: StarFieldEffectOptions = {}) {
@@ -181,6 +154,8 @@ export class StarFieldEffect extends Object3D {
       sizeMax = 0.025,
       color = [0xffffff, 0xcad7ff, 0xfff4e0],
       twinkle = false,
+      rotation = 0,
+      rotationJitter = Math.PI * 2,
       material,
       burst = {},
       geometry,
@@ -225,6 +200,8 @@ export class StarFieldEffect extends Object3D {
         color,
         material,
         geometry: burstGeometry,
+        rotation,
+        rotationJitter,
       });
     } else {
       this.field = this.createPointsField({
@@ -235,7 +212,6 @@ export class StarFieldEffect extends Object3D {
         sizeMax,
         color,
         material,
-        burstShape,
       });
     }
 
@@ -254,12 +230,11 @@ export class StarFieldEffect extends Object3D {
     return this.field.material;
   }
 
-  /** Release GPU resources held by the field (and sprite texture, if any). */
+  /** Release GPU resources held by the field. */
   dispose(): void {
     this.geometry.dispose();
     const materials = Array.isArray(this.material) ? this.material : [this.material];
     for (const entry of materials) entry.dispose();
-    this.spriteTexture?.dispose();
   }
 
   /**
@@ -328,7 +303,6 @@ export class StarFieldEffect extends Object3D {
     sizeMax,
     color,
     material,
-    burstShape,
   }: {
     count: number;
     minRadius: number;
@@ -337,7 +311,6 @@ export class StarFieldEffect extends Object3D {
     sizeMax: number;
     color: ColorRepresentation | ColorRepresentation[];
     material?: Material;
-    burstShape: Required<StarBurstShapeOptions>;
   }): Points {
     const palette = resolvePalette(color);
     const direction = new Vector3();
@@ -381,23 +354,22 @@ export class StarFieldEffect extends Object3D {
       geometry.setAttribute("color", colorAttribute);
     }
 
-    this.spriteTexture = createStarSpriteTexture(
-      burstShape.sides!,
-      burstShape.innerRadius!,
-      burstShape.outerRadius!,
-    );
-
     const starMaterial =
       material ??
       new PointsMaterial({
-        map: this.spriteTexture,
-        // When a color buffer exists (palette or twinkle), the tint rides in the
-        // vertex colors — keep the base white so it isn't applied twice.
+        // No sprite map / alphaTest: under WebGPU the CanvasTexture sprite's alpha
+        // isn't sampled as expected, so `alphaTest` discarded every fragment (no
+        // stars). Plain dots render reliably — Three sizes WebGPU points as quads,
+        // so `size`/`sizeAttenuation` still apply. When a color buffer exists
+        // (palette or twinkle), the tint rides in the vertex colors — keep the base
+        // white so it isn't applied twice.
         color: colors ? 0xffffff : palette[0].getHex(),
+        // Pixel size (no attenuation): stars sit on a far shell, so distance-scaling
+        // just made them vanish and fought the size control. Fixed pixels are
+        // predictable and dodge WebGPU's attenuation-scale differences.
         size: pointSize,
-        sizeAttenuation: true,
+        sizeAttenuation: false,
         transparent: true,
-        alphaTest: 0.05,
         vertexColors: colors !== null,
         depthWrite: false,
         toneMapped: false,
@@ -418,6 +390,8 @@ export class StarFieldEffect extends Object3D {
     color,
     material,
     geometry,
+    rotation,
+    rotationJitter,
   }: {
     count: number;
     minRadius: number;
@@ -427,6 +401,8 @@ export class StarFieldEffect extends Object3D {
     color: ColorRepresentation | ColorRepresentation[];
     material?: Material;
     geometry: BufferGeometry;
+    rotation: number;
+    rotationJitter: number;
   }): InstancedMesh {
     const palette = resolvePalette(color);
     const direction = new Vector3();
@@ -461,7 +437,7 @@ export class StarFieldEffect extends Object3D {
 
       this.dummy.position.copy(direction);
       this.dummy.lookAt(SHELL_CENTER);
-      this.dummy.rotateZ(Math.random() * Math.PI * 2);
+      this.dummy.rotateZ(rotation + Math.random() * rotationJitter);
       this.dummy.scale.setScalar(scale);
       this.dummy.updateMatrix();
       mesh.setMatrixAt(i, this.dummy.matrix);
