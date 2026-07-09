@@ -9,6 +9,7 @@
     "url": "git+https://github.com/jasonsturges/three-low-poly.git"
   },
   "license": "ISC",
+  "sideEffects": false,
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/",
