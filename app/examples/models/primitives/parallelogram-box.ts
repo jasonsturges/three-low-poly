@@ -16,7 +16,7 @@ export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container);
 
   const textureLoader = new TextureLoader();
-  const texture = textureLoader.load("https://threejs.org/examples/textures/uv_grid_opengl.jpg");
+  const texture = textureLoader.load(`${import.meta.env.BASE_URL}uv-grid.jpg`);
   const material = new MeshStandardMaterial({ map: texture, side: FrontSide });
 
   const params = {

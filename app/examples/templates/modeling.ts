@@ -41,7 +41,7 @@ export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container);
 
   const geometry = new ModelingGeometry();
-  const texture = new TextureLoader().load("https://threejs.org/examples/textures/uv_grid_opengl.jpg");
+  const texture = new TextureLoader().load(`${import.meta.env.BASE_URL}uv-grid.jpg`);
   const material = new MeshStandardMaterial({ map: texture, side: FrontSide });
   const mesh = new Mesh(geometry, material);
   scene.add(mesh);
