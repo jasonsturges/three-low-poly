@@ -1,45 +1,54 @@
 import {
-  BufferAttribute,
   BufferGeometry,
   Color,
   ColorRepresentation,
   DoubleSide,
   DynamicDrawUsage,
+  InstancedBufferAttribute,
   InstancedMesh,
   Material,
   Matrix4,
   MeshBasicMaterial,
   Object3D,
-  Points,
-  PointsMaterial,
   Quaternion,
   Vector3,
 } from "three";
+import { instancedBufferAttribute, instancedDynamicBufferAttribute } from "three/tsl";
+import { SpriteNodeMaterial } from "three/webgpu";
 import { BurstGeometry } from "../geometry/shapes/BurstGeometry";
 
+/** How each star is turned to face the viewer. */
+export type StarFieldOrientation = "billboard" | "radial";
+
 export interface StarBurstShapeOptions {
-  /** Burst ray count. Defaults to `4`. */
+  /** Burst ray count. Defaults to `4` point diffraction spike. */
   sides?: number;
   innerRadius?: number;
   outerRadius?: number;
-  /** Extrusion depth; keep small for flat starbursts. Defaults to `0.05`. */
+  /** Extrusion depth (`orientation: "radial"` only — billboards are flat). Defaults to `0.05`. */
   depth?: number;
 }
 
 export interface StarFieldEffectOptions {
   /**
-   * Rendering style.
+   * How each star faces the viewer.
    *
-   * - `points` (default) — lightweight `Points` dots (uniform pixel size).
-   * - `burst` — instanced {@link BurstGeometry} star meshes oriented toward the shell
-   *   center, with per-star size and rotation.
+   * - `billboard` (default) — every star is screen-aligned, so the field holds its
+   *   orientation as the camera orbits. Only the geometry's **XY profile** is drawn;
+   *   any Z extent is ignored.
+   * - `radial` — full 3D geometry rotated to face the shell center. Depth is real here,
+   *   and stars shear as the camera moves, the way any world-space mesh does.
    */
-  style?: "points" | "burst";
-  /** Burst star shape (`style: "burst"` only). */
+  orientation?: StarFieldOrientation;
+  /** Star shape used to build the default {@link BurstGeometry}. */
   burst?: StarBurstShapeOptions;
-  /** Override the burst mesh geometry (`style: "burst"` only). */
+  /** Replace the star geometry entirely. Billboards use its XY profile; radial uses all of it. */
   geometry?: BufferGeometry;
-  /** Override the default field material. */
+  /**
+   * Override the default field material. In `billboard` mode this must be a
+   * `SpriteNodeMaterial` — per-star position, scale, and rotation are assigned onto it
+   * as node inputs.
+   */
   material?: Material;
   /** Number of stars. Defaults to `1500`. */
   count?: number;
@@ -60,12 +69,19 @@ export interface StarFieldEffectOptions {
   color?: ColorRepresentation | ColorRepresentation[];
   /** Enable pulsing brightness; call {@link StarFieldEffect.update} each frame when `true`. */
   twinkle?: boolean;
-  /** Base Z rotation of each burst, in radians (`style: "burst"` only). Defaults to `0`. */
+  /**
+   * Base star rotation, in radians. Defaults to `0`.
+   *
+   * Measured in screen space for `billboard` and world space for `radial` — the same knob
+   * means different things, because a billboard re-aligns every frame and a radial star
+   * does not.
+   */
   rotation?: number;
   /**
-   * Random Z-rotation spread added per burst, in radians (`style: "burst"` only).
-   * `0` aligns every burst — a coherent diffraction-spike field; `2π` is fully random.
-   * Defaults to `Math.PI * 2`.
+   * Random rotation spread added per star, in radians. Defaults to `Math.PI * 2`.
+   *
+   * `0` aligns every star — with `billboard` that yields a coherent diffraction-spike field
+   * that stays locked as the camera orbits. `2π` is fully random.
    */
   rotationJitter?: number;
 }
@@ -86,6 +102,22 @@ function resolvePalette(color: ColorRepresentation | ColorRepresentation[]): Col
 }
 
 /**
+ * Largest radius in the XY plane. A billboard only ever draws the XY profile, so measuring
+ * the full bounding sphere would let an extruded geometry's depth shrink the visible star.
+ */
+function profileRadiusXY(geometry: BufferGeometry): number {
+  const position = geometry.getAttribute("position");
+  let maxSquared = 0;
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i);
+    const y = position.getY(i);
+    const squared = x * x + y * y;
+    if (squared > maxSquared) maxSquared = squared;
+  }
+  return Math.sqrt(maxSquared) || 1;
+}
+
+/**
  * Procedural star field distributed on a spherical shell — intended as an infinite sky dome.
  *
  * Stars are placed in world space around the origin. To keep the shell centered on the
@@ -93,27 +125,27 @@ function resolvePalette(color: ColorRepresentation | ColorRepresentation[]): Col
  * every frame. Parenting to the camera is not supported: Three.js does not render
  * objects attached to the active camera.
  *
- * **Styles**
+ * **Orientation** — the only axis that distinguishes how stars are drawn:
  *
- * - `points` — lightweight `Points` sprites using a canvas starburst texture.
- * - `burst` — instanced 3D starbursts ({@link BurstGeometry}) that face the shell center.
- *   Uses `DoubleSide` so stars remain visible when the camera sits inside the shell.
+ * - `billboard` — screen-aligned via `SpriteNodeMaterial`, with per-star position, scale,
+ *   and rotation supplied as instanced attributes. The field stays visually fixed as the
+ *   camera orbits. Flat by construction: only the geometry's XY profile is used.
+ * - `radial` — instanced 3D meshes rotated to face the shell center, drawn `DoubleSide` so
+ *   stars stay visible from inside the shell.
+ *
+ * Both orientations render as a single instanced draw call, so the geometry you pass is a
+ * matter of looks rather than cost.
  *
  * **Sizing** — `sizeMin` / `sizeMax` are angular extents (radians at unit distance),
  * multiplied by each star's distance from the origin so stars look similar regardless
  * of shell depth (`minRadius`–`maxRadius`).
  *
- * **Rendering** — `frustumCulled` is disabled and materials use `depthWrite: false` so
- * the field draws reliably as a background layer. For per-star color variation in burst
- * mode, colors are written via `InstancedMesh.setColorAt`, not `vertexColors` on the
- * base material.
- *
  * @example
  * ```typescript
  * const stars = new StarFieldEffect({
- *   style: "burst",
  *   count: 2500,
  *   radius: 480,
+ *   rotationJitter: 0, // every burst locked vertical on screen
  *   twinkle: true,
  * });
  *
@@ -126,26 +158,24 @@ function resolvePalette(color: ColorRepresentation | ColorRepresentation[]): Col
  * }
  * ```
  *
- * Call {@link dispose} when removing the effect to free geometry, materials, and the
- * points sprite texture.
+ * Call {@link dispose} when removing the effect to free geometry and materials.
  */
 export class StarFieldEffect extends Object3D {
-  readonly style: "points" | "burst";
+  readonly orientation: StarFieldOrientation;
 
-  private readonly field: Points | InstancedMesh;
+  private readonly field: InstancedMesh;
   private readonly twinkle: boolean;
-  private readonly baseSize: number;
   private readonly baseScales?: Float32Array;
   private readonly twinklePhases?: Float32Array;
-  /** Untwinkled per-point RGB (points style), multiplied by each star's pulse each frame. */
-  private baseColors?: Float32Array;
+  /** Billboard scale attribute, rewritten each frame while twinkling. */
+  private scaleAttribute?: InstancedBufferAttribute;
   private readonly dummy = new Object3D();
 
   constructor(options: StarFieldEffectOptions = {}) {
     super();
 
-    this.style = options.style ?? "points";
     const {
+      orientation = "billboard",
       count = 1500,
       radius = 500,
       minRadius = radius,
@@ -161,64 +191,44 @@ export class StarFieldEffect extends Object3D {
       geometry,
     } = options;
 
+    this.orientation = orientation;
     this.frustumCulled = false;
     this.twinkle = twinkle;
-    const shellSpan = Math.max(maxRadius - minRadius, 0);
-    const meanRadius = minRadius + shellSpan * 0.5;
-    const meanAngular = (sizeMin + sizeMax) * 0.5;
-    this.baseSize = meanRadius * meanAngular;
-
-    const burstShape = {
-      sides: burst.sides ?? 4,
-      innerRadius: burst.innerRadius ?? 0.6,
-      outerRadius: burst.outerRadius ?? 1.9,
-      depth: burst.depth ?? 0.05,
-    };
 
     if (twinkle) {
       this.twinklePhases = new Float32Array(count);
+      this.baseScales = new Float32Array(count);
     }
 
-    if (this.style === "burst") {
-      if (twinkle) {
-        this.baseScales = new Float32Array(count);
-      }
-      const burstGeometry =
-        geometry ??
-        new BurstGeometry({
-          sides: burstShape.sides,
-          innerRadius: burstShape.innerRadius,
-          outerRadius: burstShape.outerRadius,
-          depth: burstShape.depth,
-        });
-      this.field = this.createBurstField({
-        count,
-        minRadius,
-        maxRadius,
-        sizeMin,
-        sizeMax,
-        color,
-        material,
-        geometry: burstGeometry,
-        rotation,
-        rotationJitter,
+    const starGeometry =
+      geometry ??
+      new BurstGeometry({
+        sides: burst.sides ?? 4,
+        innerRadius: burst.innerRadius ?? 0.6,
+        outerRadius: burst.outerRadius ?? 1.9,
+        depth: burst.depth ?? 0.05,
       });
-    } else {
-      this.field = this.createPointsField({
-        count,
-        minRadius,
-        maxRadius,
-        sizeMin,
-        sizeMax,
-        color,
-        material,
-      });
-    }
+
+    const shared = {
+      count,
+      minRadius,
+      maxRadius,
+      sizeMin,
+      sizeMax,
+      color,
+      material,
+      geometry: starGeometry,
+      rotation,
+      rotationJitter,
+    };
+
+    this.field =
+      orientation === "billboard" ? this.createBillboardField(shared) : this.createRadialField(shared);
 
     this.add(this.field);
   }
 
-  get drawable(): Points | InstancedMesh {
+  get mesh(): InstancedMesh {
     return this.field;
   }
 
@@ -240,39 +250,24 @@ export class StarFieldEffect extends Object3D {
   /**
    * Animate twinkling. No-op when `twinkle` is `false`.
    *
-   * Both styles pulse with a per-star phase offset so stars twinkle out of sync:
-   * points modulate per-point brightness (via the color attribute), burst pulses
-   * each instance scale. Pass elapsed time in seconds (defaults to `performance.now()`).
+   * Each star pulses on its own phase offset so the field twinkles out of sync. Billboards
+   * rewrite the instanced scale attribute; radial stars rebuild each instance matrix.
+   * Pass elapsed time in seconds (defaults to `performance.now()`).
    */
   update(elapsed = performance.now() * 0.001): void {
-    if (!this.twinkle) return;
+    if (!this.twinkle || !this.baseScales || !this.twinklePhases) return;
 
-    if (this.field instanceof Points) {
-      if (this.twinklePhases && this.baseColors) {
-        // Twinkle brightness per point, each with its own phase, by modulating the
-        // color attribute. PointsMaterial.size is a single field-wide uniform, so
-        // pulsing it would make every star flash in unison — the desync has to live
-        // in per-point data, and color is the per-point channel Points already has.
-        const colorAttribute = this.field.geometry.getAttribute("color") as BufferAttribute;
-        const array = colorAttribute.array as Float32Array;
-        const base = this.baseColors;
-        for (let i = 0; i < this.twinklePhases.length; i++) {
-          const pulse = 0.65 + 0.35 * Math.sin(elapsed * 2.5 + this.twinklePhases[i]);
-          array[i * 3] = base[i * 3] * pulse;
-          array[i * 3 + 1] = base[i * 3 + 1] * pulse;
-          array[i * 3 + 2] = base[i * 3 + 2] * pulse;
-        }
-        colorAttribute.needsUpdate = true;
-      } else {
-        // No per-point color buffer (e.g. a custom material with no color attribute)
-        // — fall back to pulsing the shared sprite size.
-        (this.field.material as PointsMaterial).size =
-          this.baseSize * (0.8 + 0.2 * Math.sin(elapsed * 2.5));
+    if (this.orientation === "billboard") {
+      const attribute = this.scaleAttribute;
+      if (!attribute) return;
+      const array = attribute.array as Float32Array;
+      for (let i = 0; i < this.baseScales.length; i++) {
+        const pulse = 0.75 + 0.25 * Math.sin(elapsed * 2.5 + this.twinklePhases[i]);
+        array[i] = this.baseScales[i] * pulse;
       }
+      attribute.needsUpdate = true;
       return;
     }
-
-    if (!this.baseScales || !this.twinklePhases) return;
 
     const matrix = new Matrix4();
     const position = new Vector3();
@@ -295,7 +290,12 @@ export class StarFieldEffect extends Object3D {
     this.field.instanceMatrix.needsUpdate = true;
   }
 
-  private createPointsField({
+  /**
+   * Screen-aligned stars. `SpriteNodeMaterial` builds its quad from the geometry's XY and
+   * reads the sprite center from `positionNode` — it never consults `instanceMatrix` — so
+   * every per-star value has to arrive as an instanced attribute.
+   */
+  private createBillboardField({
     count,
     minRadius,
     maxRadius,
@@ -303,6 +303,9 @@ export class StarFieldEffect extends Object3D {
     sizeMax,
     color,
     material,
+    geometry,
+    rotation,
+    rotationJitter,
   }: {
     count: number;
     minRadius: number;
@@ -311,26 +314,37 @@ export class StarFieldEffect extends Object3D {
     sizeMax: number;
     color: ColorRepresentation | ColorRepresentation[];
     material?: Material;
-  }): Points {
+    geometry: BufferGeometry;
+    rotation: number;
+    rotationJitter: number;
+  }): InstancedMesh {
     const palette = resolvePalette(color);
     const direction = new Vector3();
     const shellSpan = Math.max(maxRadius - minRadius, 0);
-    const meanRadius = minRadius + shellSpan * 0.5;
-    const meanAngular = (sizeMin + sizeMax) / 2;
-    const pointSize = meanRadius * meanAngular;
 
-    const positions = new Float32Array(count * 3);
-    // A per-point color buffer is needed for palettes and for twinkle (which pulses
-    // each star's brightness independently — see update()).
-    const perPointColor = palette.length > 1 || this.twinkle;
-    const colors = perPointColor ? new Float32Array(count * 3) : null;
+    const centered = geometry.clone();
+    centered.center();
+    const meshRadius = profileRadiusXY(centered);
+
+    const offsets = new Float32Array(count * 3);
+    const scales = new Float32Array(count);
+    const rotations = new Float32Array(count);
+    const perStarColor = palette.length > 1;
+    const colors = perStarColor ? new Float32Array(count * 3) : null;
 
     for (let i = 0; i < count; i++) {
       const distance = minRadius + Math.random() * shellSpan;
       randomUnitVector(direction).multiplyScalar(distance);
-      positions[i * 3] = direction.x;
-      positions[i * 3 + 1] = direction.y;
-      positions[i * 3 + 2] = direction.z;
+      offsets[i * 3] = direction.x;
+      offsets[i * 3 + 1] = direction.y;
+      offsets[i * 3 + 2] = direction.z;
+
+      const angular = sizeMin + Math.random() * (sizeMax - sizeMin);
+      scales[i] = (distance * angular) / meshRadius;
+      rotations[i] = rotation + Math.random() * rotationJitter;
+
+      if (this.baseScales) this.baseScales[i] = scales[i];
+      if (this.twinklePhases) this.twinklePhases[i] = Math.random() * Math.PI * 2;
 
       if (colors) {
         const starColor = palette[Math.floor(Math.random() * palette.length)];
@@ -338,50 +352,49 @@ export class StarFieldEffect extends Object3D {
         colors[i * 3 + 1] = starColor.g;
         colors[i * 3 + 2] = starColor.b;
       }
-      if (this.twinklePhases) this.twinklePhases[i] = Math.random() * Math.PI * 2;
     }
 
-    const geometry = new BufferGeometry();
-    geometry.setAttribute("position", new BufferAttribute(positions, 3));
-    if (colors) {
-      const colorAttribute = new BufferAttribute(colors, 3);
-      if (this.twinkle) {
-        // Retain the untwinkled colors to multiply against each frame; the live
-        // attribute is rewritten every update, so mark it dynamic.
-        this.baseColors = colors.slice();
-        colorAttribute.setUsage(DynamicDrawUsage);
-      }
-      geometry.setAttribute("color", colorAttribute);
-    }
+    const offsetAttribute = new InstancedBufferAttribute(offsets, 3);
+    const scaleAttribute = new InstancedBufferAttribute(scales, 1);
+    const rotationAttribute = new InstancedBufferAttribute(rotations, 1);
+    this.scaleAttribute = scaleAttribute;
 
     const starMaterial =
-      material ??
-      new PointsMaterial({
-        // No sprite map / alphaTest: under WebGPU the CanvasTexture sprite's alpha
-        // isn't sampled as expected, so `alphaTest` discarded every fragment (no
-        // stars). Plain dots render reliably — Three sizes WebGPU points as quads,
-        // so `size`/`sizeAttenuation` still apply. When a color buffer exists
-        // (palette or twinkle), the tint rides in the vertex colors — keep the base
-        // white so it isn't applied twice.
-        color: colors ? 0xffffff : palette[0].getHex(),
-        // Pixel size (no attenuation): stars sit on a far shell, so distance-scaling
-        // just made them vanish and fought the size control. Fixed pixels are
-        // predictable and dodge WebGPU's attenuation-scale differences.
-        size: pointSize,
-        sizeAttenuation: false,
-        transparent: true,
-        vertexColors: colors !== null,
+      (material as SpriteNodeMaterial | undefined) ??
+      new SpriteNodeMaterial({
+        color: perStarColor ? 0xffffff : palette[0].getHex(),
+        side: DoubleSide,
         depthWrite: false,
         toneMapped: false,
       });
 
-    const points = new Points(geometry, starMaterial);
-    points.frustumCulled = false;
-    points.renderOrder = 1;
-    return points;
+    starMaterial.positionNode = instancedBufferAttribute(offsetAttribute, "vec3");
+    starMaterial.rotationNode = instancedBufferAttribute(rotationAttribute, "float");
+    if (this.twinkle) {
+      scaleAttribute.setUsage(DynamicDrawUsage);
+      starMaterial.scaleNode = instancedDynamicBufferAttribute(scaleAttribute, "float");
+    } else {
+      starMaterial.scaleNode = instancedBufferAttribute(scaleAttribute, "float");
+    }
+    if (colors) {
+      starMaterial.colorNode = instancedBufferAttribute(new InstancedBufferAttribute(colors, 3), "vec3");
+    }
+
+    const mesh = new InstancedMesh(centered, starMaterial, count);
+    mesh.frustumCulled = false;
+    mesh.renderOrder = 1;
+
+    // The sprite path ignores instanceMatrix, but InstancedMesh allocates it zeroed —
+    // leave identities behind so bounds and raycasts aren't looking at degenerate matrices.
+    const identity = new Matrix4();
+    for (let i = 0; i < count; i++) mesh.setMatrixAt(i, identity);
+    mesh.instanceMatrix.needsUpdate = true;
+
+    return mesh;
   }
 
-  private createBurstField({
+  /** Full 3D stars rotated to face the shell center. */
+  private createRadialField({
     count,
     minRadius,
     maxRadius,

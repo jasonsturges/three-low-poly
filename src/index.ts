@@ -82,6 +82,7 @@ export {
   StarFieldEffect,
   type StarBurstShapeOptions,
   type StarFieldEffectOptions,
+  type StarFieldOrientation,
 } from "./effects/StarFieldEffect";
 export { WispEffect, type WispEffectOptions } from "./effects/WispEffect";
 
