@@ -1,5 +1,11 @@
 import { InstancedMesh, Material, MeshStandardMaterial, Object3D } from "three";
-import { HexagonGeometry } from "../geometry/shapes/HexagonGeometry";
+import { PolygonGeometry } from "../geometry/shapes/PolygonGeometry";
+
+/**
+ * Flat-top hexagon — a corner at ±X, edges level across the top and bottom.
+ * The staggered-column spacing below assumes this orientation.
+ */
+const FLAT_TOP = Math.PI / 6;
 
 export interface HexagonalTileCountOptions {
   width: number; // Total area width to fill (x-axis)
@@ -45,7 +51,7 @@ export function createHexagonalTilesByCount(options: HexagonalTileCountOptions):
   const hexTileCount = count * countZ;
 
   // Create a hexagonal prism geometry
-  const geometry = new HexagonGeometry({ radius, depth: height });
+  const geometry = new PolygonGeometry({ sides: 6, radius, depth: height, rotation: FLAT_TOP });
 
   // Rotate geometry so tiles lay flat
   geometry.rotateX(-Math.PI / 2);
@@ -119,7 +125,7 @@ export function createHexagonalTilesByRadius(options: HexagonalTileRadiusOptions
   const hexTileCount = hexTileCountX * hexTileCountZ;
 
   // Create a hexagonal prism geometry
-  const geometry = new HexagonGeometry({ radius, depth: height });
+  const geometry = new PolygonGeometry({ sides: 6, radius, depth: height, rotation: FLAT_TOP });
 
   // Rotate geometry so tiles lay flat
   geometry.rotateX(-Math.PI / 2);

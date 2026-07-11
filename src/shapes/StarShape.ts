@@ -7,22 +7,30 @@ export interface StarShapeOptions {
   innerRadius?: number;
   /** Outer vertex radius. Defaults to `1`. */
   outerRadius?: number;
+  /** Rotation in radians from the resting state. Defaults to `0`. */
+  rotation?: number;
 }
 
 /**
  * Star profile — radial points joined by straight edges.
+ *
+ * Rests with a point up.
  */
 export class StarShape extends Shape {
-  constructor({ points = 5, innerRadius = 0.5, outerRadius = 1.0 }: StarShapeOptions = {}) {
+  constructor({ points = 5, innerRadius = 0.5, outerRadius = 1.0, rotation = 0 }: StarShapeOptions = {}) {
     super();
 
     const step = (Math.PI * 2) / points;
     const halfStep = step / 2;
-    this.moveTo(Math.cos(0) * outerRadius, Math.sin(0) * outerRadius);
+    const start = Math.PI / 2 + rotation;
+
+    this.moveTo(Math.cos(start) * outerRadius, Math.sin(start) * outerRadius);
 
     for (let n = 1; n <= points; ++n) {
-      this.lineTo(Math.cos(step * n - halfStep) * innerRadius, Math.sin(step * n - halfStep) * innerRadius);
-      this.lineTo(Math.cos(step * n) * outerRadius, Math.sin(step * n) * outerRadius);
+      const valley = start + step * n - halfStep;
+      const tip = start + step * n;
+      this.lineTo(Math.cos(valley) * innerRadius, Math.sin(valley) * innerRadius);
+      this.lineTo(Math.cos(tip) * outerRadius, Math.sin(tip) * outerRadius);
     }
 
     this.closePath();

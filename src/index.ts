@@ -209,7 +209,7 @@ export { RockGeometry, type RockGeometryOptions } from "./geometry/rocks/RockGeo
 export { BurstGeometry, type BurstGeometryOptions } from "./geometry/shapes/BurstGeometry";
 export { GearGeometry, type GearGeometryOptions } from "./geometry/shapes/GearGeometry";
 export { HeartGeometry, type HeartGeometryOptions } from "./geometry/shapes/HeartGeometry";
-export { HexagonGeometry, type HexagonGeometryOptions } from "./geometry/shapes/HexagonGeometry";
+export { PolygonGeometry, type PolygonGeometryOptions } from "./geometry/shapes/PolygonGeometry";
 export { StarGeometry, type StarGeometryOptions } from "./geometry/shapes/StarGeometry";
 
 // Skeleton
@@ -308,7 +308,7 @@ export { TestTubeRack, type TestTubeRackOptions } from "./models/science/TestTub
 export { Burst, type BurstOptions } from "./models/shapes/Burst";
 export { Gear, type GearOptions } from "./models/shapes/Gear";
 export { Heart, type HeartOptions } from "./models/shapes/Heart";
-export { Hexagon, type HexagonOptions } from "./models/shapes/Hexagon";
+export { Polygon, type PolygonOptions } from "./models/shapes/Polygon";
 export { Star, type StarOptions } from "./models/shapes/Star";
 
 // Skeleton
@@ -328,7 +328,7 @@ export { TerrainPlane, type TerrainPlaneOptions } from "./models/terrain/Terrain
 export { BurstShape, type BurstShapeOptions } from "./shapes/BurstShape";
 export { GearShape, type GearShapeOptions } from "./shapes/GearShape";
 export { HeartShape, type HeartShapeOptions } from "./shapes/HeartShape";
-export { HexagonShape, type HexagonShapeOptions } from "./shapes/HexagonShape";
+export { PolygonShape, type PolygonShapeOptions } from "./shapes/PolygonShape";
 export { StarShape, type StarShapeOptions } from "./shapes/StarShape";
 
 //------------------------------

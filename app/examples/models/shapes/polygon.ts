@@ -1,36 +1,39 @@
 import GUI from "lil-gui";
-import { Hexagon, HexagonGeometry, centerObject } from "three-low-poly";
+import { Polygon, PolygonGeometry } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
-export const meta = { title: "Hexagon" };
+export const meta = { title: "Polygon" };
 
 export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container);
 
   const params = {
+    sides: 6,
     radius: 1,
+    rotation: 0,
     depth: 0.01,
   };
 
-  const hexagon = new Hexagon(params);
-  scene.add(hexagon);
+  const polygon = new Polygon(params);
+  scene.add(polygon);
 
   const rebuild = () => {
-    hexagon.geometry.dispose();
-    hexagon.geometry = new HexagonGeometry(params);
-    centerObject(hexagon);
+    polygon.geometry.dispose();
+    polygon.geometry = new PolygonGeometry(params);
   };
 
   const gui = new GUI();
-  gui.title("Hexagon");
+  gui.title("Polygon");
+  gui.add(params, "sides", 3, 32, 1).name("Sides").onChange(rebuild);
   gui.add(params, "radius", 0.1, 2, 0.01).name("Radius").onChange(rebuild);
+  gui.add(params, "rotation", -Math.PI, Math.PI, 0.01).name("Rotation").onChange(rebuild);
   gui.add(params, "depth", 0, 1, 0.01).name("Depth").onChange(rebuild);
 
   rebuild();
 
   return () => {
     gui.destroy();
-    hexagon.geometry.dispose();
+    polygon.geometry.dispose();
     dispose();
   };
 }

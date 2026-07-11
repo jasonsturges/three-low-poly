@@ -1,7 +1,7 @@
 import { Color, ColorRepresentation, Mesh, MeshStandardMaterial } from "three";
-import { HexagonGeometry, type HexagonGeometryOptions } from "../../geometry/shapes/HexagonGeometry";
+import { PolygonGeometry, type PolygonGeometryOptions } from "../../geometry/shapes/PolygonGeometry";
 
-export interface HexagonOptions extends HexagonGeometryOptions {
+export interface PolygonOptions extends PolygonGeometryOptions {
   /** Surface tint. Defaults to `#ffffff`. */
   color?: ColorRepresentation;
   /** Emissive tint. Defaults to `#ffffff`. */
@@ -11,17 +11,17 @@ export interface HexagonOptions extends HexagonGeometryOptions {
 }
 
 /**
- * Hexagon tile prefab.
+ * Regular n-gon tile prefab.
  */
-export class Hexagon extends Mesh<HexagonGeometry, MeshStandardMaterial> {
+export class Polygon extends Mesh<PolygonGeometry, MeshStandardMaterial> {
   constructor({
     color = "#ffffff",
     emissive = "#ffffff",
     emissiveIntensity = 0.1,
     ...geometryOptions
-  }: HexagonOptions = {}) {
+  }: PolygonOptions = {}) {
     super(
-      new HexagonGeometry(geometryOptions),
+      new PolygonGeometry(geometryOptions),
       new MeshStandardMaterial({
         color: new Color(color),
         emissive: new Color(emissive),
