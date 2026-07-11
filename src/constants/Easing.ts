@@ -15,26 +15,13 @@ export type EasingFunction = (t: number) => number;
  * ```typescript
  * import { Easing } from 'three-low-poly';
  *
- * // Using with transitions (namespace)
- * cameraTransition.transitionTo(camera, {
- *   duration: 1000,
- *   easing: Easing.cubicInOut  // Function reference
- * });
+ * // Ease a value directly
+ * const easedValue = Easing.cubicInOut(0.5);
  *
- * // Or using string reference
- * cameraTransition.transitionTo(camera, {
- *   duration: 1000,
- *   easing: 'cubicInOut'  // String reference
- * });
- *
- * // Using the function directly in custom animation
- * const progress = 0.5;
- * const easedValue = Easing.cubicInOut(progress);
- *
- * // Custom animation loop
+ * // Interpolate between two values over a duration
  * const startValue = 0;
  * const endValue = 100;
- * const t = elapsedTime / duration;
+ * const t = elapsed / duration;
  * const easedT = Easing.sineInOut(t);
  * const currentValue = startValue + (endValue - startValue) * easedT;
  * ```
