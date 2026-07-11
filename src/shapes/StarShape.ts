@@ -1,7 +1,19 @@
 import { Shape } from "three";
 
+export interface StarShapeOptions {
+  /** Number of star points. Defaults to `5`. */
+  points?: number;
+  /** Inner vertex radius. Defaults to `0.5`. */
+  innerRadius?: number;
+  /** Outer vertex radius. Defaults to `1`. */
+  outerRadius?: number;
+}
+
+/**
+ * Star profile — radial points joined by straight edges.
+ */
 export class StarShape extends Shape {
-  constructor(points = 5, innerRadius = 0.5, outerRadius = 1.0) {
+  constructor({ points = 5, innerRadius = 0.5, outerRadius = 1.0 }: StarShapeOptions = {}) {
     super();
 
     const step = (Math.PI * 2) / points;

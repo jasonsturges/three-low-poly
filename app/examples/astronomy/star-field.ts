@@ -32,7 +32,7 @@ export default function (container: HTMLElement) {
     rotation: 0,
     rotationJitter: 0,
     twinkle: true,
-    burstSides: 4,
+    burstPoints: 4,
     burstInner: 0.6,
     burstOuter: 1.9,
     burstDepth: 0.05,
@@ -50,7 +50,7 @@ export default function (container: HTMLElement) {
       rotationJitter: params.rotationJitter,
       twinkle: params.twinkle,
       burst: {
-        sides: params.burstSides,
+        points: params.burstPoints,
         innerRadius: params.burstInner,
         outerRadius: params.burstOuter,
         depth: params.burstDepth,
@@ -92,7 +92,7 @@ export default function (container: HTMLElement) {
   gui.add(params, "twinkle").name("Twinkle");
 
   const burstFolder = gui.addFolder("Burst Shape");
-  burstFolder.add(params, "burstSides", 2, 16, 1).name("Sides").onChange(rebuild);
+  burstFolder.add(params, "burstPoints", 2, 16, 1).name("Points").onChange(rebuild);
   burstFolder.add(params, "burstInner", 0.1, 1.5, 0.05).name("Inner Radius").onChange(rebuild);
   burstFolder.add(params, "burstOuter", 0.5, 3, 0.05).name("Outer Radius").onChange(rebuild);
   const depthControl = burstFolder.add(params, "burstDepth", 0, 0.5, 0.01).name("Depth").onChange(rebuild);

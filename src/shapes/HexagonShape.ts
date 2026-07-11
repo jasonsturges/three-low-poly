@@ -1,7 +1,15 @@
 import { Shape } from "three";
 
+export interface HexagonShapeOptions {
+  /** Circumradius — center to corner. Defaults to `1`. */
+  radius?: number;
+}
+
+/**
+ * Regular hexagon profile, first corner at +X.
+ */
 export class HexagonShape extends Shape {
-  constructor(radius = 1) {
+  constructor({ radius = 1 }: HexagonShapeOptions = {}) {
     super();
 
     for (let i = 0; i < 6; i++) {

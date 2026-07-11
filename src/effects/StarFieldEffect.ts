@@ -15,16 +15,14 @@ import {
 } from "three";
 import { instancedBufferAttribute, instancedDynamicBufferAttribute } from "three/tsl";
 import { SpriteNodeMaterial } from "three/webgpu";
-import { BurstGeometry } from "../geometry/shapes/BurstGeometry";
+import { BurstGeometry, type BurstGeometryOptions } from "../geometry/shapes/BurstGeometry";
 
 /** How each star is turned to face the viewer. */
 export type StarFieldOrientation = "billboard" | "radial";
 
-export interface StarBurstShapeOptions {
-  /** Burst ray count. Defaults to `4` point diffraction spike. */
-  sides?: number;
-  innerRadius?: number;
-  outerRadius?: number;
+export interface StarBurstShapeOptions extends BurstGeometryOptions {
+  /** Number of burst points. Defaults to `4` — a diffraction-spike star. */
+  points?: number;
   /** Extrusion depth (`orientation: "radial"` only — billboards are flat). Defaults to `0.05`. */
   depth?: number;
 }
@@ -203,7 +201,7 @@ export class StarFieldEffect extends Object3D {
     const starGeometry =
       geometry ??
       new BurstGeometry({
-        sides: burst.sides ?? 4,
+        points: burst.points ?? 4,
         innerRadius: burst.innerRadius ?? 0.6,
         outerRadius: burst.outerRadius ?? 1.9,
         depth: burst.depth ?? 0.05,

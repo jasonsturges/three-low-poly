@@ -8,7 +8,7 @@ export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container);
 
   const params = {
-    steps: 5,
+    points: 5,
     innerRadius: 0.5,
     outerRadius: 1.0,
     depth: 0.25,
@@ -19,18 +19,13 @@ export default function (container: HTMLElement) {
 
   const rebuild = () => {
     burst.geometry.dispose();
-    burst.geometry = new BurstGeometry({
-      sides: params.steps,
-      innerRadius: params.innerRadius,
-      outerRadius: params.outerRadius,
-      depth: params.depth,
-    });
+    burst.geometry = new BurstGeometry(params);
     centerObject(burst);
   };
 
   const gui = new GUI();
   gui.title("Burst");
-  gui.add(params, "steps", 2, 32, 1).name("Steps").onChange(rebuild);
+  gui.add(params, "points", 2, 32, 1).name("Points").onChange(rebuild);
   gui.add(params, "innerRadius", 0.1, 5.0, 0.1).name("Inner Radius").onChange(rebuild);
   gui.add(params, "outerRadius", 0.1, 5.0, 0.1).name("Outer Radius").onChange(rebuild);
   gui.add(params, "depth", 0, 5.0, 0.1).name("Depth").onChange(rebuild);

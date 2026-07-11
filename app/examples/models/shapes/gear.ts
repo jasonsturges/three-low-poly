@@ -8,7 +8,7 @@ export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container);
 
   const params = {
-    sides: 5,
+    teeth: 5,
     innerRadius: 0.5,
     outerRadius: 1.0,
     holeSides: 5,
@@ -23,7 +23,7 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     gear.geometry.dispose();
     gear.geometry = new GearGeometry({
-      sides: params.sides,
+      teeth: params.teeth,
       innerRadius: params.innerRadius,
       outerRadius: params.outerRadius,
       holeSides: params.holeSides,
@@ -35,7 +35,7 @@ export default function (container: HTMLElement) {
 
   const gui = new GUI();
   gui.title("Gear");
-  gui.add(params, "sides", 2, 32, 1).name("Sides").onChange(rebuild);
+  gui.add(params, "teeth", 2, 32, 1).name("Teeth").onChange(rebuild);
   gui.add(params, "innerRadius", 0.1, 5.0, 0.1).name("Inner Radius").onChange(rebuild);
   gui.add(params, "outerRadius", 0.1, 5.0, 0.1).name("Outer Radius").onChange(rebuild);
   gui.add(params, "holeSides", 3, 32, 1).name("Hole Sides").onChange(rebuild);

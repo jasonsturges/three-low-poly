@@ -325,11 +325,11 @@ export { TerrainPlane, type TerrainPlaneOptions } from "./models/terrain/Terrain
 //  Shapes
 //------------------------------
 
-export { BurstShape } from "./shapes/BurstShape";
-export { GearShape } from "./shapes/GearShape";
-export { HeartShape } from "./shapes/HeartShape";
-export { HexagonShape } from "./shapes/HexagonShape";
-export { StarShape } from "./shapes/StarShape";
+export { BurstShape, type BurstShapeOptions } from "./shapes/BurstShape";
+export { GearShape, type GearShapeOptions } from "./shapes/GearShape";
+export { HeartShape, type HeartShapeOptions } from "./shapes/HeartShape";
+export { HexagonShape, type HexagonShapeOptions } from "./shapes/HexagonShape";
+export { StarShape, type StarShapeOptions } from "./shapes/StarShape";
 
 //------------------------------
 //  Textures
