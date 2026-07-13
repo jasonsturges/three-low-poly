@@ -92,6 +92,7 @@ export { WispEffect, type WispEffectOptions } from "./effects/WispEffect";
 
 export * from "./factory/BookFactory";
 export * from "./factory/BoulderFactory";
+export * from "./factory/FenceFactory";
 export * from "./factory/HexagonalTileFactory";
 export * from "./factory/StaircaseFactory";
 export * from "./factory/RockFactory";
@@ -165,13 +166,18 @@ export {
   type StoneFencePostGeometryOptions,
 } from "./geometry/fence/StoneFencePostGeometry";
 export {
-  WroughtIronBarGeometry,
-  type WroughtIronBarGeometryOptions,
-} from "./geometry/fence/WroughtIronBarGeometry";
+  WoodPicketGeometry,
+  type WoodPicketGeometryOptions,
+} from "./geometry/fence/WoodPicketGeometry";
+export { WoodPostGeometry, type WoodPostGeometryOptions } from "./geometry/fence/WoodPostGeometry";
 export {
-  WroughtIronFenceGeometry,
-  type WroughtIronFenceGeometryOptions,
-} from "./geometry/fence/WroughtIronFenceGeometry";
+  WroughtIronPicketGeometry,
+  type WroughtIronPicketGeometryOptions,
+} from "./geometry/fence/WroughtIronPicketGeometry";
+export {
+  WroughtIronPostGeometry,
+  type WroughtIronPostGeometryOptions,
+} from "./geometry/fence/WroughtIronPostGeometry";
 
 // Furniture
 export { BookshelfGeometry, type BookshelfGeometryOptions } from "./geometry/furniture/BookshelfGeometry";
@@ -262,8 +268,10 @@ export { SquareHeadstone } from "./models/cemetery/SquareHeadstone";
 
 // Fence
 export { StoneFencePost, type StoneFencePostOptions } from "./models/fence/StoneFencePost";
-export { WroughtIronBar, type WroughtIronBarOptions } from "./models/fence/WroughtIronBar";
-export { WroughtIronFence, type WroughtIronFenceOptions } from "./models/fence/WroughtIronFence";
+export { WoodPicket, type WoodPicketOptions } from "./models/fence/WoodPicket";
+export { WoodPost, type WoodPostOptions } from "./models/fence/WoodPost";
+export { WroughtIronPicket, type WroughtIronPicketOptions } from "./models/fence/WroughtIronPicket";
+export { WroughtIronPost, type WroughtIronPostOptions } from "./models/fence/WroughtIronPost";
 
 // Furniture
 export { Bookshelf, type BookshelfOptions } from "./models/furniture/Bookshelf";
