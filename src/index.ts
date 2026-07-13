@@ -210,6 +210,10 @@ export { MossyRockGeometry, type MossyRockGeometryOptions } from "./geometry/roc
 export { RockGeometry, type RockGeometryOptions } from "./geometry/rocks/RockGeometry";
 
 // Shapes
+export {
+  ArchedSlabGeometry,
+  type ArchedSlabGeometryOptions,
+} from "./geometry/shapes/ArchedSlabGeometry";
 export { BurstGeometry, type BurstGeometryOptions } from "./geometry/shapes/BurstGeometry";
 export { ClubGeometry, type ClubGeometryOptions } from "./geometry/shapes/ClubGeometry";
 export { GearGeometry, type GearGeometryOptions } from "./geometry/shapes/GearGeometry";
@@ -312,6 +316,7 @@ export { TestTube } from "./models/science/TestTube";
 export { TestTubeRack, type TestTubeRackOptions } from "./models/science/TestTubeRack";
 
 // Shapes
+export { ArchedSlab, type ArchedSlabOptions } from "./models/shapes/ArchedSlab";
 export { Burst, type BurstOptions } from "./models/shapes/Burst";
 export { Club, type ClubOptions } from "./models/shapes/Club";
 export { Gear, type GearOptions } from "./models/shapes/Gear";
@@ -346,6 +351,7 @@ export { spiralPath, type SpiralPathOptions } from "./paths/SpiralPath";
 //  Shapes
 //------------------------------
 
+export { ArchedSlabShape, type ArchedSlabShapeOptions } from "./shapes/ArchedSlabShape";
 export { BurstShape, type BurstShapeOptions } from "./shapes/BurstShape";
 export { ClubShape, type ClubShapeOptions } from "./shapes/ClubShape";
 export { GearShape, type GearShapeOptions } from "./shapes/GearShape";
