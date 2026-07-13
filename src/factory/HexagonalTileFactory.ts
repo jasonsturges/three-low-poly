@@ -7,6 +7,17 @@ import { PolygonGeometry } from "../geometry/shapes/PolygonGeometry";
  */
 const FLAT_TOP = Math.PI / 6;
 
+/**
+ * Hexagons already tile perfectly at a given radius, with all six neighbours the same distance
+ * away. So a gap is *not* extra space added to the lattice — inflating the X and Z spacings
+ * separately would stretch the grid unevenly and leave the gap wider on the diagonals than in the
+ * columns. Instead the lattice stays a true hex grid and the tile is shrunk inside its cell.
+ *
+ * Shrinking a hexagon's inradius by `gap / 2` opens a uniform `gap` to every neighbour, and that
+ * costs `gap / √3` of circumradius.
+ */
+const shrinkForGap = (gap: number) => gap / Math.sqrt(3);
+
 export interface HexagonalTileCountOptions {
   width: number; // Total area width to fill (x-axis)
   depth: number; // Total area depth to fill (z-axis)
@@ -17,36 +28,51 @@ export interface HexagonalTileCountOptions {
 }
 
 /**
- * Hexagonal tile pattern factory with density control.
+ * Hexagonal tile floor, sized by tile *count* — you say how many tiles span the width, and the tile
+ * radius is solved to make them fit.
  *
- * Example usage:
+ * Reach for this when the tile count is what you care about ("a 10-across floor"), and let the tiles
+ * come out whatever size they need to be. Use {@link createHexagonalTilesByRadius} when the tile
+ * size is what you care about and the count should fall out instead.
+ *
+ * Tiles are laid in staggered columns and centered on the origin. Rows are filled to whatever depth
+ * fits, so the tile count is `count * (however many rows fit)` — not `count` alone.
+ *
+ * @example
  * ```ts
- * const hexTile = createHexagonalTilesByCount({
+ * // A 10x10 floor, ten tiles across.
+ * const floor = createHexagonalTilesByCount({
  *   width: 10,
  *   depth: 10,
  *   height: 0.01,
- *   count: 10, // 10 tiles along the x-axis
+ *   count: 10,
  *   gap: 0.01,
- *   material: new THREE.MeshStandardMaterial({ color: 0xffffff }),
  * });
+ * scene.add(floor);
  *
- * scene.add(hexTile);
+ * // Tint each tile individually — InstancedMesh carries per-instance color.
+ * floor.setColorAt(0, new Color("#c8b8a0"));
+ * floor.instanceColor.needsUpdate = true;
  * ```
  */
 export function createHexagonalTilesByCount(options: HexagonalTileCountOptions): InstancedMesh {
   const { width, depth, height, count, gap, material } = options;
 
-  const tileMaterial = material || new MeshStandardMaterial({ color: 0xffffff });
+  const tileMaterial = material ?? new MeshStandardMaterial({ color: 0xffffff });
 
-  // Calculate the radius based on the x-axis count and area width
-  const spacingX = width / count; // Horizontal spacing including gap
-  const radius = ((spacingX - gap) * 2) / 3; // Adjusted for hexagonal geometry
+  // `count` tiles across `width` fixes the lattice: columns sit 1.5 lattice-radii apart.
+  const spacingX = width / count;
+  const latticeRadius = (spacingX * 2) / 3;
+  const spacingZ = Math.sqrt(3) * latticeRadius;
 
-  // Effective spacing between hexagon centers
-  const effectiveSpacingZ = Math.sqrt(3) * radius + gap;
+  // The gap is carved out of the tile, not added to the lattice. Pinning both `width` and `count`
+  // leaves the tile as the only thing that can absorb the gap — and a tile cannot shrink past
+  // nothing. When the gap will not fit, the GAP yields: the tiles are the point, the gap is slack.
+  const maxShrink = latticeRadius * 0.95;
+  const radius = latticeRadius - Math.min(shrinkForGap(gap), maxShrink);
 
   // Calculate the number of tiles that fit along the z-axis
-  const countZ = Math.floor(depth / effectiveSpacingZ);
+  const countZ = Math.floor(depth / spacingZ);
 
   const hexTileCount = count * countZ;
 
@@ -66,11 +92,11 @@ export function createHexagonalTilesByCount(options: HexagonalTileCountOptions):
     for (let z = 0; z < countZ; z++) {
       // Calculate the staggered row offset
       const offsetX = x * spacingX;
-      const offsetZ = z * effectiveSpacingZ + (x % 2) * (effectiveSpacingZ / 2); // Stagger odd rows by half a tile
+      const offsetZ = z * spacingZ + (x % 2) * (spacingZ / 2); // Stagger odd columns by half a tile
 
       // Center the grid
       const positionX = offsetX - (count * spacingX) / 2 + spacingX / 2;
-      const positionZ = offsetZ - (countZ * effectiveSpacingZ) / 2 + effectiveSpacingZ / 2;
+      const positionZ = offsetZ - (countZ * spacingZ) / 2 + spacingZ / 2;
 
       dummy.position.set(positionX, 0, positionZ);
       dummy.updateMatrix();
@@ -93,30 +119,40 @@ export interface HexagonalTileRadiusOptions {
 }
 
 /**
- * Hexagonal tile pattern factory.
+ * Hexagonal tile floor, sized by tile *radius* — you say how big a tile is, and as many as fit are
+ * laid down.
  *
- * Example usage:
+ * The counterpart to {@link createHexagonalTilesByCount}: here the tile size is fixed and the count
+ * falls out, which is what you want when the tiles have a real-world size. Tiles are laid in
+ * staggered columns and centered on the origin; whatever does not fit is simply not placed, so the
+ * floor may fall a little short of `width` / `depth`.
+ *
+ * @example
  * ```ts
- *     const hexTile = createHexagonalTilesByRadius({
- *       width: 10,
- *       depth: 10,
- *       height: 0.01,
- *       radius: 0.1,
- *       gap: 0.01,
- *       material: new THREE.MeshStandardMaterial({ color: 0xffffff }),
- *     });
+ * // A 10x10 floor of 0.1-radius tiles — however many that turns out to be.
+ * const floor = createHexagonalTilesByRadius({
+ *   width: 10,
+ *   depth: 10,
+ *   height: 0.01,
+ *   radius: 0.1,
+ *   gap: 0.01,
+ * });
+ * scene.add(floor);
  *
- *     scene.add(hexTile);
+ * floor.count; // an output — you find out how many fit
  * ```
  */
 export function createHexagonalTilesByRadius(options: HexagonalTileRadiusOptions): InstancedMesh {
   const { width, depth, height, radius, gap, material } = options;
 
-  const tileMaterial = material || new MeshStandardMaterial({ color: 0xffffff });
+  const tileMaterial = material ?? new MeshStandardMaterial({ color: 0xffffff });
 
-  // Effective spacing between hexagon centers, including the gap
-  const spacingX = (radius * 3) / 2 + gap; // Horizontal distance between hex centers
-  const spacingZ = Math.sqrt(3) * radius + gap; // Vertical distance between hex centers
+  // The tile is the size you asked for; the lattice grows around it to open the gap. Expanding the
+  // lattice by `gap / √3` of radius opens a uniform `gap` to all six neighbours — inflating the X
+  // and Z spacings separately would stretch the grid and leave the diagonals wider than the columns.
+  const latticeRadius = radius + shrinkForGap(gap);
+  const spacingX = (latticeRadius * 3) / 2;
+  const spacingZ = Math.sqrt(3) * latticeRadius;
 
   // Calculate the number of tiles that fit within the area
   const hexTileCountX = Math.floor(width / spacingX);

@@ -136,7 +136,14 @@ export function scatterRocks({
 /**
  * Scatter instanced mossy rocks inside a horizontal bounds region.
  *
- * Uses two material groups (rock + moss) on a shared {@link InstancedMesh}.
+ * Uses two material groups (rock + moss) on a shared {@link InstancedMesh}, so the moss can be
+ * tinted and made translucent independently of the stone beneath it.
+ *
+ * @example
+ * ```ts
+ * const rocks = scatterMossyRocks({ count: 12, width: 8, depth: 8, seed: 1337 });
+ * scene.add(rocks);
+ * ```
  */
 export function scatterMossyRocks({
   count = 5,
