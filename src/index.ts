@@ -155,6 +155,7 @@ export {
   type CrossHeadstoneGeometryOptions,
 } from "./geometry/cemetery/CrossHeadstoneGeometry";
 export { MausoleumGeometry } from "./geometry/cemetery/MausoleumGeometry";
+export { ObeliskGeometry, type ObeliskGeometryOptions } from "./geometry/cemetery/ObeliskGeometry";
 export {
   ObeliskHeadstoneGeometry,
   type ObeliskHeadstoneGeometryOptions,
@@ -279,6 +280,7 @@ export { WineBottle, type WineBottleOptions } from "./models/bottles/WineBottle"
 // Cemetery
 export { CrossHeadstone, type CrossHeadstoneOptions } from "./models/cemetery/CrossHeadstone";
 export { Mausoleum } from "./models/cemetery/Mausoleum";
+export { Obelisk, type ObeliskOptions } from "./models/cemetery/Obelisk";
 export { ObeliskHeadstone, type ObeliskHeadstoneOptions } from "./models/cemetery/ObeliskHeadstone";
 export { RoundedHeadstone } from "./models/cemetery/RoundedHeadstone";
 export { SquareHeadstone } from "./models/cemetery/SquareHeadstone";
