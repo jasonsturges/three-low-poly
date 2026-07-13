@@ -331,6 +331,18 @@ export { TerrainMound, type TerrainMoundOptions } from "./models/terrain/Terrain
 export { TerrainPlane, type TerrainPlaneOptions } from "./models/terrain/TerrainPlane";
 
 //------------------------------
+//  Paths
+//------------------------------
+
+export { arcPath, type ArcPathOptions } from "./paths/ArcPath";
+export { curvePath } from "./paths/CurvePath";
+export { helixPath, type HelixPathOptions } from "./paths/HelixPath";
+export { linePath } from "./paths/LinePath";
+export { type PathPoint } from "./paths/PathPoint";
+export { joinPaths, reversePath, transformPath } from "./paths/PathUtils";
+export { spiralPath, type SpiralPathOptions } from "./paths/SpiralPath";
+
+//------------------------------
 //  Shapes
 //------------------------------
 
@@ -341,6 +353,13 @@ export { HeartShape, type HeartShapeOptions } from "./shapes/HeartShape";
 export { PolygonShape, type PolygonShapeOptions } from "./shapes/PolygonShape";
 export { SpadeShape, type SpadeShapeOptions } from "./shapes/SpadeShape";
 export { StarShape, type StarShapeOptions } from "./shapes/StarShape";
+
+//------------------------------
+//  Sweep
+//------------------------------
+
+export { circleProfile, rectProfile } from "./sweep/Profiles";
+export { sweep, transportFrames, type Station, type SweepOptions } from "./sweep/Sweep";
 
 //------------------------------
 //  Textures

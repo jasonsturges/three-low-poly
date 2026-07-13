@@ -26,9 +26,22 @@ Most adopters will likely import their own assets (glTF, etc.) and use this libr
 
 ## Modeling
 
-Vertex modeling is preferred over relying on built-in primitives, using geometry groups when a mesh needs multiple materials. Profile-based tools (splines, lathe, extrude, parabolic curves) cover most organic and architectural shapes; NURBS surfaces are exploratory, for cases where profile tools fall short.
+Geometry is authored as its own `BufferGeometry` subclass, mirroring how Three.js structures its own primitives — parametric and reusable, rather than built inline wherever it happens to be used. Geometry groups carry a mesh that needs multiple materials.
 
-Where it makes sense, geometry is authored as its own class mirroring how Three.js structures its own `BufferGeometry` subclasses, rather than building shapes inline wherever they're used. That keeps geometry reusable and consistent with how the rest of the ecosystem expects to work with it.
+A small set of construction strategies covers nearly everything, and choosing the right one is most of the work:
+
+- **Vertex** — positions, normals, UVs, and indices written directly. The floor everything else stands on.
+- **Extrude** — fill a closed 2D outline and give it depth. A prism: doors, windows, plaques, card suits.
+- **Lathe** — revolve a silhouette around an axis. Pottery, glassware, finials.
+- **Sweep** — carry a cross-section along a path. Arches, tubing, scrollwork, branches, trails.
+- **Displace** — move an existing surface with coherent noise or a brush. Terrain, boulders.
+- **Merge** — combine primitives where a shape genuinely is a composite.
+
+The distinction that catches people: an archway _band_ is a **sweep** — it follows the curve. An arched _door_ is an **extrude** — it fills it. Same arc, different operation.
+
+Two rules recur. A **path knows its own tangent** — never estimate it from the chords between points. And **segments are the low-poly knob** — the same geometry at whatever resolution a scene needs.
+
+Convex hulls, lofting, and NURBS surfaces are the frontier.
 
 ## Models, factories, and instancing
 
