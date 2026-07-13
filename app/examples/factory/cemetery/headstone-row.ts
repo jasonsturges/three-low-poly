@@ -1,12 +1,15 @@
 import GUI from "lil-gui";
-import { Group, InstancedMesh } from "three";
-import { centerObject, rowOfHeadstones } from "three-low-poly";
+import { Group, InstancedMesh, Material } from "three";
+import { GroundGrid, rowOfHeadstones } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Headstone Row" };
 
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container, { background: 0x2b3038 });
+  const { scene, dispose } = createScene(container, {
+    background: 0x2b3038,
+    cameraPosition: [0, 3, 9],
+  });
 
   const params = {
     count: 10,
@@ -24,15 +27,23 @@ export default function (container: HTMLElement) {
   let row = new Group();
   scene.add(row);
 
+  let floor = new GroundGrid();
+  scene.add(floor);
+
   const disposeRow = () => {
     for (const mesh of row.children) {
-      (mesh as InstancedMesh).geometry.dispose();
+      const instanced = mesh as InstancedMesh;
+      instanced.geometry.dispose();
     }
+    const shared = (row.children[0] as InstancedMesh | undefined)?.material as Material | undefined;
+    shared?.dispose();
   };
 
   const rebuild = () => {
     disposeRow();
     scene.remove(row);
+    floor.dispose();
+    scene.remove(floor);
 
     row = rowOfHeadstones(params);
     row.traverse((child) => {
@@ -42,8 +53,13 @@ export default function (container: HTMLElement) {
       }
     });
 
+    const length = (params.count - 1) * params.spacing;
+    row.position.x = -length / 2;
     scene.add(row);
-    centerObject(row);
+
+    const size = Math.max(8, Math.ceil(length) + 4);
+    floor = new GroundGrid({ size });
+    scene.add(floor);
   };
 
   rebuild();
@@ -67,6 +83,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     disposeRow();
+    floor.dispose();
     dispose();
   };
 }
