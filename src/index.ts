@@ -347,10 +347,10 @@ export * from "./utils/AlignToSurface";
 export * from "./utils/Center";
 export * from "./utils/ColorUtils";
 export * from "./utils/FindClosestPoint";
+export * from "./utils/GeometryBuffers";
 export * from "./utils/InterpolateCurve";
 export * from "./utils/LineEquations";
 export * from "./utils/ParametricCurveUtils";
-export * from "./utils/QuadUtils";
 export {
   Random,
   createRandom,
