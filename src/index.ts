@@ -95,8 +95,8 @@ export * from "./factory/BoulderFactory";
 export * from "./factory/FenceFactory";
 export * from "./factory/HeadstoneFactory";
 export * from "./factory/HexagonalTileFactory";
-export * from "./factory/StaircaseFactory";
 export * from "./factory/RockFactory";
+export * from "./factory/StaircaseFactory";
 
 //------------------------------
 //  Geometries
@@ -211,9 +211,11 @@ export { RockGeometry, type RockGeometryOptions } from "./geometry/rocks/RockGeo
 
 // Shapes
 export { BurstGeometry, type BurstGeometryOptions } from "./geometry/shapes/BurstGeometry";
+export { ClubGeometry, type ClubGeometryOptions } from "./geometry/shapes/ClubGeometry";
 export { GearGeometry, type GearGeometryOptions } from "./geometry/shapes/GearGeometry";
 export { HeartGeometry, type HeartGeometryOptions } from "./geometry/shapes/HeartGeometry";
 export { PolygonGeometry, type PolygonGeometryOptions } from "./geometry/shapes/PolygonGeometry";
+export { SpadeGeometry, type SpadeGeometryOptions } from "./geometry/shapes/SpadeGeometry";
 export { StarGeometry, type StarGeometryOptions } from "./geometry/shapes/StarGeometry";
 
 // Skeleton
@@ -311,9 +313,11 @@ export { TestTubeRack, type TestTubeRackOptions } from "./models/science/TestTub
 
 // Shapes
 export { Burst, type BurstOptions } from "./models/shapes/Burst";
+export { Club, type ClubOptions } from "./models/shapes/Club";
 export { Gear, type GearOptions } from "./models/shapes/Gear";
 export { Heart, type HeartOptions } from "./models/shapes/Heart";
 export { Polygon, type PolygonOptions } from "./models/shapes/Polygon";
+export { Spade, type SpadeOptions } from "./models/shapes/Spade";
 export { Star, type StarOptions } from "./models/shapes/Star";
 
 // Skeleton
@@ -331,9 +335,11 @@ export { TerrainPlane, type TerrainPlaneOptions } from "./models/terrain/Terrain
 //------------------------------
 
 export { BurstShape, type BurstShapeOptions } from "./shapes/BurstShape";
+export { ClubShape, type ClubShapeOptions } from "./shapes/ClubShape";
 export { GearShape, type GearShapeOptions } from "./shapes/GearShape";
 export { HeartShape, type HeartShapeOptions } from "./shapes/HeartShape";
 export { PolygonShape, type PolygonShapeOptions } from "./shapes/PolygonShape";
+export { SpadeShape, type SpadeShapeOptions } from "./shapes/SpadeShape";
 export { StarShape, type StarShapeOptions } from "./shapes/StarShape";
 
 //------------------------------
