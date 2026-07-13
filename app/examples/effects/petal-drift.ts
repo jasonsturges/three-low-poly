@@ -1,8 +1,7 @@
 import { Fog } from "three";
 import GUI from "lil-gui";
-import { PetalDriftEffect } from "three-low-poly";
+import { GroundGrid, PetalDriftEffect } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
-import { GroundGrid } from "../../framework/GroundGrid";
 
 export const meta = {
   title: "Petal Drift",

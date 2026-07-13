@@ -1,8 +1,7 @@
 import { Mesh, MeshBasicMaterial, PointLight, SphereGeometry } from "three";
 import GUI from "lil-gui";
-import { FlameFlickerEffect, GlowHalo } from "three-low-poly";
+import { FlameFlickerEffect, GlowHalo, GroundGrid } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
-import { GroundGrid } from "../../framework/GroundGrid";
 
 export const meta = {
   title: "Flame Flicker",

@@ -1,8 +1,7 @@
 import { Group, InstancedMesh, Material } from "three";
 import GUI from "lil-gui";
-import { scatterBoulders } from "three-low-poly";
+import { GroundGrid, scatterBoulders } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
-import { GroundGrid } from "../../../framework/GroundGrid";
 
 export const meta = {
   title: "Boulder Scatter",

@@ -1,7 +1,6 @@
 import GUI from "lil-gui";
-import { scatterRocks } from "three-low-poly";
+import { GroundGrid, scatterRocks } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
-import { GroundGrid } from "../../../framework/GroundGrid";
 
 export const meta = {
   title: "Rock Scatter",

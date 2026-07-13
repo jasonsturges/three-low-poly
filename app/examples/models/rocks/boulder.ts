@@ -1,7 +1,6 @@
 import GUI from "lil-gui";
-import { Boulder, BoulderGeometry } from "three-low-poly";
+import { Boulder, BoulderGeometry, GroundGrid } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
-import { GroundGrid } from "../../../framework/GroundGrid";
 
 export const meta = {
   title: "Boulder",

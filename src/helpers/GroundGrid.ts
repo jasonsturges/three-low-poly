@@ -25,13 +25,22 @@ export interface GroundGridOptions {
 }
 
 /**
- * Reference floor for example scenes — a shadow-receiving plane with a coplanar
- * {@link GridHelper}, ready to `scene.add()`.
+ * A reference floor — a shadow-receiving plane with a coplanar {@link GridHelper}, ready to
+ * `scene.add()`. A development aid for placing and scaling objects, not scene content.
  *
- * The plane's material uses `polygonOffset` so its fill is biased back in the
- * depth buffer while the grid lines (which polygon offset does not affect) sit
- * cleanly in front. The two stay perfectly coplanar with no z-fighting and no
- * geometric lift — the correct fix for coplanar opaque overlays.
+ * **The grid and the plane are exactly coplanar and do not z-fight.** Put a `GridHelper` on a plane at
+ * the same Y and the depth buffer cannot separate them: the two surfaces round to the same depth and
+ * the lines tear and shimmer as the camera moves. The usual workaround is to lift the grid by some
+ * epsilon, which trades one bug for a subtler one — the lines float, visibly so at grazing angles, and
+ * the epsilon has to be retuned every time the scene changes scale.
+ *
+ * The real fix is to bias the DEPTH rather than the position. The plane's material sets
+ * `polygonOffset`, which pushes its fill back in the depth buffer *without moving it in space* — and
+ * polygon offset does not apply to lines, so the grid stays exactly where it is and simply wins the
+ * depth test. Perfectly coplanar, no tearing, no geometric lift, at any scale.
+ *
+ * A {@link Group}, because a `Mesh` and a `GridHelper` cannot merge into one object. Shadow receipt is
+ * configured on the plane, where it belongs.
  *
  * @example
  * ```ts

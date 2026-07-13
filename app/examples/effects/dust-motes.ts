@@ -1,8 +1,7 @@
 import { MeshBasicMaterial } from "three";
 import GUI from "lil-gui";
-import { DustMotesEffect } from "three-low-poly";
+import { DustMotesEffect, GroundGrid } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
-import { GroundGrid } from "../../framework/GroundGrid";
 
 export const meta = {
   title: "Dust Motes",

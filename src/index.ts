@@ -262,6 +262,12 @@ export { VaseGeometry, type VaseGeometryOptions } from "./geometry/vessels/VaseG
 export { WineBottleGeometry, type WineBottleGeometryOptions } from "./geometry/vessels/WineBottleGeometry";
 
 //------------------------------
+//  Helpers
+//------------------------------
+
+export { GroundGrid, type GroundGridOptions } from "./helpers/GroundGrid";
+
+//------------------------------
 //  Materials
 //------------------------------
 
