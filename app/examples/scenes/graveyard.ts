@@ -5,6 +5,7 @@ import {
   FogExp2,
   Group,
   HemisphereLight,
+  InstancedMesh,
   Mesh,
   MeshStandardMaterial,
   PlaneGeometry,
@@ -14,7 +15,7 @@ import {
 } from "three";
 import {
   BoneGeometry,
-  CrossHeadstone,
+  createWroughtIronFence,
   FlameFlickerEffect,
   GlowHalo,
   GroundFogEffect,
@@ -23,12 +24,9 @@ import {
   RainEffect,
   WispEffect,
   Mausoleum,
-  ObeliskHeadstone,
+  rowOfHeadstones,
   scatterRocks,
-  RoundedHeadstone,
-  SquareHeadstone,
   StoneFencePost,
-  WroughtIronFence,
 } from "three-low-poly";
 import { clearDefaultLights } from "../../framework/clearDefaultLights";
 import { createScene } from "../../framework/createScene";
@@ -103,34 +101,42 @@ export default function (container: HTMLElement) {
 
   mausoleum.add(lantern);
 
-  function createTombstoneRow(numTombstones = 5) {
-    const tombstoneGroup = new Group();
-    const tombstoneTypes = [RoundedHeadstone, CrossHeadstone, SquareHeadstone, ObeliskHeadstone];
-    for (let i = 0; i < numTombstones; i++) {
-      const TombstoneClass = tombstoneTypes[Math.floor(Math.random() * tombstoneTypes.length)]!;
-      const tombstone = new TombstoneClass();
-      tombstone.position.set(i, 0, (Math.random() - 0.5) * 0.1);
-      tombstone.rotation.y = (Math.random() - 0.5) * 0.5;
-      tombstone.rotation.z = (Math.random() - 0.5) * 0.25;
-      tombstone.castShadow = true;
-      tombstoneGroup.add(tombstone);
-    }
-    return tombstoneGroup;
-  }
-
   for (let i = 0; i < 3; i++) {
     for (let j = 0; j < 2; j++) {
-      const tombstones = createTombstoneRow(7);
+      const tombstones = rowOfHeadstones({ count: 7, spacing: 1, seed: i * 2 + j });
+      tombstones.traverse((child) => {
+        if (child instanceof InstancedMesh) child.castShadow = true;
+      });
       tombstones.position.set(j === 0 ? -7.5 : 1.5, 0, (i + 1) * 2);
       scene.add(tombstones);
     }
   }
 
   const stoneFencePost = new StoneFencePost();
-  const wroughtIronFence = new WroughtIronFence({ count: 15 });
   const enclosedFenceGroup = new Group();
   const sideLength = 4;
   const columnSpacing = 6;
+
+  const picketHeight = 2.0;
+  const railHeight = 0.1;
+  const upperRailY = picketHeight - railHeight / 2;
+
+  // Pickets and rails want opposite things at a post. Pickets must clear its widest step over their
+  // whole height, or they bury themselves in the stonework; the rails must then reach back past that
+  // step to embed in the narrower column, or they float unattached:  []-O--O--O-[]
+  // Ask the post rather than hardcoding its profile — resize the post and the fence re-fits itself.
+  const postProfile = stoneFencePost.geometry;
+  const clearWidth = postProfile.maxWidthBetween(0, picketHeight);
+  const railReach = postProfile.widthAt(upperRailY);
+
+  const wroughtIronFence = createWroughtIronFence({
+    length: columnSpacing - clearWidth,
+    gap: 0.3,
+    height: picketHeight,
+    railHeight,
+    upperRailY,
+    railOverhang: (clearWidth - railReach) / 2 + 0.05,
+  });
 
   for (let side = 0; side < sideLength; side++) {
     for (let i = 0; i < sideLength; i++) {
@@ -146,6 +152,8 @@ export default function (container: HTMLElement) {
         fence.position.set(x, 0, z);
         fence.castShadow = true;
         if (side === 0 || side === 2) fence.rotation.y = -Math.PI / 2;
+        // Push the run off the post's widest face, along its own axis.
+        fence.translateX(clearWidth / 2);
         if (!(side === 1 && i === 1)) enclosedFenceGroup.add(fence);
       }
     }
