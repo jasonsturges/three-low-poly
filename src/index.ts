@@ -93,6 +93,7 @@ export { WispEffect, type WispEffectOptions } from "./effects/WispEffect";
 export * from "./factory/BookFactory";
 export * from "./factory/BoulderFactory";
 export * from "./factory/FenceFactory";
+export * from "./factory/HeadstoneFactory";
 export * from "./factory/HexagonalTileFactory";
 export * from "./factory/StaircaseFactory";
 export * from "./factory/RockFactory";
