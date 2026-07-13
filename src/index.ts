@@ -103,6 +103,7 @@ export * from "./factory/StaircaseFactory";
 //------------------------------
 
 // Architecture
+export { ArchGeometry, type ArchGeometryOptions } from "./geometry/architecture/ArchGeometry";
 export { ArchedDiamondLatticeWindowGeometry } from "./geometry/architecture/ArchedDiamondLatticeWindowGeometry";
 export { DiamondLatticeWindowGeometry } from "./geometry/architecture/DiamondLatticeWindowGeometry";
 export { GregorianLatticeWindowGeometry } from "./geometry/architecture/GregorianLatticeWindowGeometry";
@@ -252,6 +253,7 @@ export { TreeGeometry, type TreeGeometryOptions } from "./geometry/trees/TreeGeo
 //------------------------------
 
 // Architecture
+export { Arch, type ArchOptions } from "./models/architecture/Arch";
 export { SpiralStaircase, type SpiralStaircaseOptions } from "./models/architecture/SpiralStaircase";
 export { Staircase, type StaircaseOptions } from "./models/architecture/Staircase";
 export { ArchedDiamondLatticeWindow } from "./models/architecture/ArchedDiamondLatticeWindow";
