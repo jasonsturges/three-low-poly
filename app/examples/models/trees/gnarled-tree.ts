@@ -1,5 +1,5 @@
 import GUI from "lil-gui";
-import { GnarledTree, GnarledTreeGeometry } from "three-low-poly";
+import { centerObject, GnarledTree, GnarledTreeGeometry } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Gnarled Tree" };
@@ -25,11 +25,18 @@ export default function (container: HTMLElement) {
   const tree = new GnarledTree(params);
   scene.add(tree);
 
+  const refresh = () => {
+    centerObject(tree);
+    stats.triangles = tree.geometry.index ? tree.geometry.index.count / 3 : 0;
+  };
+
   const rebuild = () => {
     tree.geometry.dispose();
     tree.geometry = new GnarledTreeGeometry(params);
-    stats.triangles = tree.geometry.index ? tree.geometry.index.count / 3 : 0;
+    refresh();
   };
+
+  refresh();
 
   const gui = new GUI();
   gui.title("Gnarled Tree");
@@ -55,8 +62,6 @@ export default function (container: HTMLElement) {
   // 1 is a faceted, hard-cornered gnarl; 4+ turns it into a genuine curve.
   mesh.add(params, "smoothing", 1, 8, 1).name("Smoothing").onChange(rebuild);
   mesh.add(stats, "triangles").name("Triangles").listen().disable();
-
-  rebuild();
 
   return () => {
     gui.destroy();

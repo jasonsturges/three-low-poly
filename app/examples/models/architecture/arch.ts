@@ -1,5 +1,5 @@
 import GUI from "lil-gui";
-import { Arch, ArchGeometry, centerObject } from "three-low-poly";
+import { Arch, centerObject } from "three-low-poly";
 import { createOrthographicScene } from "../../../framework/createOrthographicScene";
 
 export const meta = { title: "Arch" };
@@ -20,21 +20,24 @@ export default function (container: HTMLElement) {
     color: "#9a9186",
   };
 
-  let arch = new Arch(params);
-  scene.add(arch);
-  centerObject(arch);
+  const makeArch = () => {
+    const mesh = new Arch(params);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    scene.add(mesh);
+    centerObject(mesh);
+    return mesh;
+  };
+
+  let arch = makeArch();
 
   const rebuild = () => {
     arch.geometry.dispose();
     arch.material.dispose();
     scene.remove(arch);
 
-    arch = new Arch(params);
-    arch.castShadow = true;
-    arch.receiveShadow = true;
-
-    scene.add(arch);
-    centerObject(arch);
+    arch = makeArch();
   };
 
   const gui = new GUI();
@@ -61,8 +64,6 @@ export default function (container: HTMLElement) {
   tube.add(params, "tubeSides", 3, 24, 1).name("Sides").onChange(rebuild);
 
   gui.addColor(params, "color").name("Color").onChange(rebuild);
-
-  rebuild();
 
   return () => {
     gui.destroy();
