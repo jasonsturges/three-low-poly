@@ -180,6 +180,10 @@ export {
   WroughtIronPostGeometry,
   type WroughtIronPostGeometryOptions,
 } from "./geometry/fence/WroughtIronPostGeometry";
+export {
+  WroughtIronScrollGeometry,
+  type WroughtIronScrollGeometryOptions,
+} from "./geometry/fence/WroughtIronScrollGeometry";
 
 // Furniture
 export { BookshelfGeometry, type BookshelfGeometryOptions } from "./geometry/furniture/BookshelfGeometry";
@@ -281,6 +285,7 @@ export { WoodPicket, type WoodPicketOptions } from "./models/fence/WoodPicket";
 export { WoodPost, type WoodPostOptions } from "./models/fence/WoodPost";
 export { WroughtIronPicket, type WroughtIronPicketOptions } from "./models/fence/WroughtIronPicket";
 export { WroughtIronPost, type WroughtIronPostOptions } from "./models/fence/WroughtIronPost";
+export { WroughtIronScroll, type WroughtIronScrollOptions } from "./models/fence/WroughtIronScroll";
 
 // Furniture
 export { Bookshelf, type BookshelfOptions } from "./models/furniture/Bookshelf";
