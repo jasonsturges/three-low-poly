@@ -92,6 +92,7 @@ export { WispEffect, type WispEffectOptions } from "./effects/WispEffect";
 
 export * from "./factory/BookFactory";
 export * from "./factory/BoulderFactory";
+export * from "./factory/DoorFactory";
 export * from "./factory/FenceFactory";
 export * from "./factory/HeadstoneFactory";
 export * from "./factory/HexagonalTileFactory";
@@ -384,6 +385,7 @@ export { HeartShape, type HeartShapeOptions } from "./shapes/HeartShape";
 export { PolygonShape, type PolygonShapeOptions } from "./shapes/PolygonShape";
 export { SpadeShape, type SpadeShapeOptions } from "./shapes/SpadeShape";
 export { StarShape, type StarShapeOptions } from "./shapes/StarShape";
+export { StrapHingeShape, type StrapHingeShapeOptions } from "./shapes/StrapHingeShape";
 
 //------------------------------
 //  Sweep
