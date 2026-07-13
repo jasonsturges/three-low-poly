@@ -246,6 +246,10 @@ export { TerrainMoundGeometry, type TerrainMoundGeometryOptions } from "./geomet
 export { TerrainPlaneGeometry, type TerrainPlaneGeometryOptions } from "./geometry/terrain/TerrainPlaneGeometry";
 
 // Trees
+export {
+  GnarledTreeGeometry,
+  type GnarledTreeGeometryOptions,
+} from "./geometry/trees/GnarledTreeGeometry";
 export { TreeGeometry, type TreeGeometryOptions } from "./geometry/trees/TreeGeometry";
 
 //------------------------------
@@ -336,6 +340,7 @@ export { Star, type StarOptions } from "./models/shapes/Star";
 export { Bone } from "./models/skeleton/Bone";
 
 // Trees
+export { GnarledTree, type GnarledTreeOptions } from "./models/trees/GnarledTree";
 export { Tree, type TreeOptions } from "./models/trees/Tree";
 
 // Terrain
