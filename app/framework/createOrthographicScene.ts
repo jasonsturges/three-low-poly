@@ -66,6 +66,20 @@ export function createOrthographicScene(
   const directional = new DirectionalLight(0xffffff, 3);
   directional.position.set(5, 10, 5);
   directional.castShadow = true;
+  // Configure the shadow camera — the Three.js default is a ±5 frustum with no depth bias, which
+  // clips shadows on anything larger than a few units and leaves self-shadow acne (louvered slits
+  // across flat receivers like a landing). A near/far of 0.5–500 spreads what little depth precision
+  // a 512² map has across a range a thousand times deeper than the scene, which is what turns the
+  // acne into stripes.
+  directional.shadow.mapSize.set(2048, 2048);
+  directional.shadow.camera.near = 0.5;
+  directional.shadow.camera.far = 50;
+  directional.shadow.camera.left = -15;
+  directional.shadow.camera.right = 15;
+  directional.shadow.camera.top = 15;
+  directional.shadow.camera.bottom = -15;
+  directional.shadow.normalBias = 0.03;
+  directional.shadow.bias = -0.0004;
   scene.add(directional);
   scene.add(new HemisphereLight(0xaaaaaa, 0x444444, 2));
   scene.add(new AmbientLight(0x404040, 2));
