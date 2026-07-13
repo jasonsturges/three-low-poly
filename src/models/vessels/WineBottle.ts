@@ -1,5 +1,5 @@
 import { Color, ColorRepresentation, Mesh, MeshPhysicalMaterial } from "three";
-import { WineBottleGeometry, type WineBottleGeometryOptions } from "../../geometry/bottles/WineBottleGeometry";
+import { WineBottleGeometry, type WineBottleGeometryOptions } from "../../geometry/vessels/WineBottleGeometry";
 
 export interface WineBottleOptions extends WineBottleGeometryOptions {
   /** Glass tint. Defaults to `#556b2f`. */

@@ -145,9 +145,10 @@ export {
 export { BookGeometry, type BookGeometryOptions } from "./geometry/books/BookGeometry";
 
 // Bottles
-export { JarGeometry } from "./geometry/bottles/JarGeometry";
-export { PotionBottleGeometry } from "./geometry/bottles/PotionBottleGeometry";
-export { WineBottleGeometry, type WineBottleGeometryOptions } from "./geometry/bottles/WineBottleGeometry";
+export { JarGeometry } from "./geometry/vessels/JarGeometry";
+export { PotionBottleGeometry } from "./geometry/vessels/PotionBottleGeometry";
+export { VaseGeometry, type VaseGeometryOptions } from "./geometry/vessels/VaseGeometry";
+export { WineBottleGeometry, type WineBottleGeometryOptions } from "./geometry/vessels/WineBottleGeometry";
 
 // Cemetery
 export {
@@ -273,9 +274,10 @@ export { GregorianLatticeWindow } from "./models/architecture/GregorianLatticeWi
 export { Book, type BookOptions } from "./models/books/Book";
 
 // Bottles
-export { Jar } from "./models/bottles/Jar";
-export { PotionBottle } from "./models/bottles/PotionBottle";
-export { WineBottle, type WineBottleOptions } from "./models/bottles/WineBottle";
+export { Jar } from "./models/vessels/Jar";
+export { PotionBottle } from "./models/vessels/PotionBottle";
+export { Vase, type VaseOptions } from "./models/vessels/Vase";
+export { WineBottle, type WineBottleOptions } from "./models/vessels/WineBottle";
 
 // Cemetery
 export { CrossHeadstone, type CrossHeadstoneOptions } from "./models/cemetery/CrossHeadstone";

@@ -7,9 +7,9 @@ interface ExampleModule {
 }
 
 interface ExampleEntry {
-  id: string; // full path id, e.g. "models/bottles/wine-bottle"
+  id: string; // full path id, e.g. "models/vessels/wine-bottle"
   title: string; // leaf label, e.g. "Wine Bottle"
-  segments: string[]; // path split, e.g. ["models", "bottles", "wine-bottle"]
+  segments: string[]; // path split, e.g. ["models", "vessels", "wine-bottle"]
   load: () => Promise<ExampleModule>;
 }
 
@@ -58,7 +58,7 @@ const linkById = new Map<string, HTMLAnchorElement>();
 
 // Build a tree mirroring the folders: every path segment but the last is a
 // folder (a heading); the last is the example (a link). Depth is arbitrary, so
-// a flat `fence/x` and a nested `models/bottles/x` coexist naturally.
+// a flat `fence/x` and a nested `models/vessels/x` coexist naturally.
 const tree: TreeGroup = { label: "", groups: new Map(), examples: [] };
 for (const example of examples) {
   let node = tree;

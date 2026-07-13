@@ -1,5 +1,5 @@
 import { DoubleSide, Mesh, MeshStandardMaterial } from "three";
-import { JarGeometry } from "../../geometry/bottles/JarGeometry";
+import { JarGeometry } from "../../geometry/vessels/JarGeometry";
 
 /**
  * Material indices

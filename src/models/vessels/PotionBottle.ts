@@ -1,6 +1,6 @@
 import { Mesh, MeshStandardMaterial } from "three";
 import { ColorPalette } from "../../constants/ColorPalette";
-import { PotionBottleGeometry } from "../../geometry/bottles/PotionBottleGeometry";
+import { PotionBottleGeometry } from "../../geometry/vessels/PotionBottleGeometry";
 
 /**
  * Potion bottle, with optional liquid fill
