@@ -1,4 +1,4 @@
-import { InstancedMesh, MeshStandardMaterial } from "three";
+import { InstancedMesh, MathUtils, MeshStandardMaterial } from "three";
 import GUI from "lil-gui";
 import { centerObject, stackOfBooks } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
@@ -7,8 +7,6 @@ export const meta = {
   title: "Stack of Books",
   description: "Floor stack by count — flat covers with in-plane spin jitter and optional seed.",
 };
-
-const DEG2RAD = Math.PI / 180;
 
 export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container, { cameraPosition: [2.5, 4, 5] });
@@ -52,7 +50,7 @@ export default function (container: HTMLElement) {
       scaleYMax: params.scaleYMax,
       scaleZMin: params.scaleZMin,
       scaleZMax: params.scaleZMax,
-      yawMax: params.yawMaxDeg * DEG2RAD,
+      yawMax: MathUtils.degToRad(params.yawMaxDeg),
       offsetMax: params.offsetMax,
       seed: params.useSeed ? params.seed : undefined,
     });
