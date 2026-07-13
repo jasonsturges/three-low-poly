@@ -320,14 +320,10 @@ export { Rock, type RockOptions } from "./models/rocks/Rock";
 
 // Science
 export { BunsenBurner } from "./models/science/BunsenBurner";
-export { ElectricPanel } from "./models/science/ElectricPanel";
 export { ErlenmeyerFlask, type ErlenmeyerFlaskOptions } from "./models/science/ErlenmeyerFlask";
 export { FlorenceFlask } from "./models/science/FlorenceFlask";
-export { LeverPanel } from "./models/science/LeverPanel";
 export { Microscope } from "./models/science/Microscope";
 export { MortarAndPestle } from "./models/science/MortarAndPestle";
-export { Panel, type PanelOptions } from "./models/science/Panel";
-export { PanelLight, type PanelLightOptions } from "./models/science/PanelLight";
 export { SpiralTube } from "./models/science/SpiralTube";
 export { Stand, type StandOptions } from "./models/science/Stand";
 export { TeslaCoil } from "./models/science/TeslaCoil";

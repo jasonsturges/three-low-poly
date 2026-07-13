@@ -8,6 +8,7 @@ import {
   MeshStandardMaterial,
   PlaneGeometry,
   PointLight,
+  SphereGeometry,
   SpotLight,
 } from "three";
 import {
@@ -21,8 +22,6 @@ import {
   Jar,
   LightningEffect,
   MortarAndPestle,
-  Panel,
-  PanelLight,
   PotionBottle,
   Stand,
   TestTubeRack,
@@ -187,23 +186,39 @@ export default function (container: HTMLElement) {
   box.castShadow = true;
   controlPanel1.add(box);
 
-  const panel = new Panel({ width: 2.75, height: 1, depth: 0.1 });
+  const panel = new Mesh(
+    new BoxGeometry(2.75, 1, 0.1),
+    new MeshStandardMaterial({ color: 0x2e2e2e, roughness: 0.8, metalness: 0.6 }),
+  );
   panel.position.set(0, 5.25, 0);
 
+  // Every LED is the same sphere, so they share ONE geometry. The materials cannot be shared — each
+  // light pulses at its own speed, and EmissivePulseEffect drives a material's emissiveIntensity.
+  const ledGeometry = new SphereGeometry(0.05, 8, 8);
   const panelLightEffects: EmissivePulseEffect[] = [];
+
   for (let i = 0; i < 30; i++) {
-    const panelLight = new PanelLight({ radius: 0.05 });
+    const material = new MeshStandardMaterial({
+      color: 0xffc7c7,
+      emissive: 0xff0000,
+      emissiveIntensity: 0.5,
+    });
+
+    const panelLight = new Mesh(ledGeometry, material);
     panelLight.position.set(-1.25 + (i % 6) * 0.5, 5.55 - Math.floor(i / 6) * 0.15, 0.05);
+
     panelLightEffects.push(
       new EmissivePulseEffect({
-        material: panelLight.material,
+        material,
         speed: randomFloat(0.2, 1.1),
         minIntensity: 0.05,
         maxIntensity: 2,
       }),
     );
+
     controlPanel1.add(panelLight);
   }
+
   controlPanel1.add(panel);
 
   const lightning1 = new DirectionalLight(0xcdd8ff, 0);
@@ -250,6 +265,10 @@ export default function (container: HTMLElement) {
     plane.material.dispose();
     box.geometry.dispose();
     box.material.dispose();
+    panel.geometry.dispose();
+    panel.material.dispose();
+    ledGeometry.dispose(); // one geometry, shared by all 30
+    panelLightEffects.forEach((pulse) => pulse.material.dispose()); // but 30 materials
     dispose();
   };
 }

@@ -24,13 +24,19 @@ export interface EmissivePulseEffectOptions {
  * Smooth emissive pulse for fake LEDs — animates `emissiveIntensity` on an existing
  * mesh material without adding geometry or scene lights.
  *
- * Pair with a prefab such as {@link PanelLight}: place the mesh, pass its material
- * here, call `update(dt)` each frame. For a bank of same-color LEDs, give each
- * instance a different `speed` so they breathe out of sync.
+ * Attach it to any mesh whose material has an `emissive` — place the mesh, pass its
+ * material here, call `update(dt)` each frame. For a bank of same-color LEDs, give
+ * each instance a different `speed` so they breathe out of sync.
+ *
+ * Note the effect drives the MATERIAL, not the mesh. A bank of LEDs can therefore
+ * share one geometry, but each needs its own material, or they all pulse as one.
  *
  * @example
  * ```ts
- * const led = new PanelLight({ emissive: 0xff0000 });
+ * const led = new Mesh(
+ *   new SphereGeometry(0.05, 8, 8),
+ *   new MeshStandardMaterial({ color: 0xffc7c7, emissive: 0xff0000 }),
+ * );
  * scene.add(led);
  *
  * const pulse = new EmissivePulseEffect({
