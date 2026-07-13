@@ -93,6 +93,7 @@ export { WispEffect, type WispEffectOptions } from "./effects/WispEffect";
 export * from "./factory/BookFactory";
 export * from "./factory/BoulderFactory";
 export * from "./factory/HexagonalTileFactory";
+export * from "./factory/StaircaseFactory";
 export * from "./factory/RockFactory";
 
 //------------------------------
@@ -128,10 +129,6 @@ export {
   type ArchedOpeningMetrics,
   type DiamondLatticeGrid,
 } from "./geometry/architecture/diamondLattice";
-export {
-  LShapedStaircaseGeometry,
-  type LShapedStaircaseGeometryOptions,
-} from "./geometry/architecture/LShapedStaircaseGeometry";
 export {
   SpiralStaircaseGeometry,
   type SpiralStaircaseGeometryOptions,
@@ -242,7 +239,6 @@ export { TreeGeometry, type TreeGeometryOptions } from "./geometry/trees/TreeGeo
 //------------------------------
 
 // Architecture
-export { LShapedStaircase, type LShapedStaircaseOptions } from "./models/architecture/LShapedStaircase";
 export { SpiralStaircase, type SpiralStaircaseOptions } from "./models/architecture/SpiralStaircase";
 export { Staircase, type StaircaseOptions } from "./models/architecture/Staircase";
 export { ArchedDiamondLatticeWindow } from "./models/architecture/ArchedDiamondLatticeWindow";
