@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
 import { BufferGeometry, Material, Mesh } from "three";
-import { createArchedDoor } from "three-low-poly";
+import { centerObject, createArchedDoor } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Arched Door" };
@@ -31,12 +31,14 @@ export default function (container: HTMLElement) {
 
   let door = createArchedDoor(params);
   scene.add(door);
+  centerObject(door);
 
   const rebuild = () => {
     scene.remove(door);
     disposeDoor(door);
     door = createArchedDoor(params);
     scene.add(door);
+    centerObject(door);
   };
 
   const gui = new GUI();
