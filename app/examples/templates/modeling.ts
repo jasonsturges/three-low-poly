@@ -1,12 +1,4 @@
-import {
-  AxesHelper,
-  BufferAttribute,
-  BufferGeometry,
-  FrontSide,
-  Mesh,
-  MeshStandardMaterial,
-  TextureLoader,
-} from "three";
+import { AxesHelper, BufferAttribute, BufferGeometry, FrontSide, Mesh, MeshStandardMaterial, TextureLoader } from "three";
 import { VertexNormalsHelper } from "three/addons/helpers/VertexNormalsHelper.js";
 import { createScene } from "../../framework/createScene";
 

@@ -19,20 +19,18 @@ interface RandomScaleOptions {
   source: RandomSource;
 }
 
-// Define a generic interface for book row options using scales
-interface RowOfBooksByScalesOptions<T extends Material = Material> {
+export interface RowOfBooksByScalesOptions<T extends Material = Material> {
   coverMaterial: T;
   pagesMaterial: T;
+  /** One scale per book. `z` is the thickness, and thickness is what fills the shelf. */
   scales: Vector3[];
   /** Shared stream for shelf jitter — must be the same source that built `scales`. */
   source: RandomSource;
 }
 
-export interface RowOfBooksOptions<T extends Material = Material> {
+interface BookScaleOptions<T extends Material = Material> {
   coverMaterial: T;
   pagesMaterial: T;
-  count?: number;
-  length?: number;
   scaleXMin?: number;
   scaleXMax?: number;
   scaleYMin?: number;
@@ -41,6 +39,20 @@ export interface RowOfBooksOptions<T extends Material = Material> {
   scaleZMax?: number;
   /** Optional seed for reproducible layout. Omit for unique runtime. */
   seed?: number;
+}
+
+export interface RowOfBooksByCountOptions<T extends Material = Material> extends BookScaleOptions<T> {
+  /** Number of books. The row is as long as they turn out. Defaults to `10`. */
+  count?: number;
+}
+
+export interface RowOfBooksByLengthOptions<T extends Material = Material> extends BookScaleOptions<T> {
+  /**
+   * Shelf length to pack, in world units along Z. Defaults to `10`.
+   *
+   * Book count is an *output* of packing, never an input — see {@link rowOfBooksByLength}.
+   */
+  length?: number;
 }
 
 export interface StackOfBooksOptions<T extends Material = Material> {
@@ -82,7 +94,25 @@ function randomScale({
 }
 
 /**
- * Creates a row of books from the scales array of Vector3.
+ * Row of books from scales you supply yourself — the escape hatch beneath
+ * {@link rowOfBooksByCount} and {@link rowOfBooksByLength}, for when you want to choose every
+ * book's size rather than have one drawn for you.
+ *
+ * Both of the other row factories are thin wrappers over this: they only differ in how they build
+ * the `scales` array.
+ *
+ * Local frame: the row starts at Z=0 and grows along +Z.
+ *
+ * @example
+ * ```ts
+ * const source = createRandom(1337);
+ * const scales = [
+ *   new Vector3(0.5, 0.9, 0.3),  // z is the thickness
+ *   new Vector3(0.5, 0.7, 0.2),
+ *   new Vector3(0.6, 0.8, 0.4),
+ * ];
+ * const row = rowOfBooksByScales({ coverMaterial, pagesMaterial, scales, source });
+ * ```
  */
 export function rowOfBooksByScales<T extends Material>({
   coverMaterial,
@@ -109,7 +139,29 @@ export function rowOfBooksByScales<T extends Material>({
 }
 
 /**
- * Creates a row of books with a given count.
+ * Row of books by count — the row is however long the books turn out.
+ *
+ * This is the **partially-filled shelf**, and it is the more common one: a real bookshelf is almost
+ * never packed wall to wall. Ask for twelve books, get a run you then position on a shelf with space
+ * beside it. Pinning `count` is safe here precisely *because* nothing else is pinned — the books
+ * keep their natural thicknesses and the length simply falls out.
+ *
+ * Reach for {@link rowOfBooksByLength} instead when the shelf is the fixed thing and you want it
+ * full.
+ *
+ * Local frame: the row starts at Z=0 and grows along +Z. Read the row's bounding box to place it —
+ * its length is not knowable in advance.
+ *
+ * @example
+ * ```ts
+ * // Twelve books; the row is as long as they happen to be.
+ * const row = rowOfBooksByCount({ coverMaterial, pagesMaterial, count: 12, seed: 1337 });
+ * scene.add(row);
+ *
+ * // Same count, different seed -> a different length. That is the point.
+ * //   seed 1337 -> 12 books spanning 2.00
+ * //   seed 7    -> 12 books spanning 1.87
+ * ```
  */
 export function rowOfBooksByCount<T extends Material>({
   coverMaterial,
@@ -122,7 +174,7 @@ export function rowOfBooksByCount<T extends Material>({
   scaleZMin = 0.1,
   scaleZMax = 0.5,
   seed,
-}: RowOfBooksOptions<T>): InstancedMesh {
+}: RowOfBooksByCountOptions<T>): InstancedMesh {
   const source = createRandom(seed);
   const scales = Array.from({ length: count }, () =>
     randomScale({ scaleXMin, scaleXMax, scaleYMin, scaleYMax, scaleZMin, scaleZMax, source }),
@@ -132,7 +184,31 @@ export function rowOfBooksByCount<T extends Material>({
 }
 
 /**
- * Creates a row of books with a total length.
+ * Pack a shelf of a given length with plausibly-sized books.
+ *
+ * **Book count is an output, not an input.** Books touch — there is no gap to absorb slack — so
+ * the only variable left to solve is thickness, and thickness has a physical floor (`scaleZMin`).
+ * Pinning both `length` and `count` would drive the solver straight through that floor and produce
+ * paper-thin books, so `count` is deliberately not accepted here. Ask for a shelf; get however many
+ * books fit.
+ *
+ * Packing stops once the space left is thinner than the thinnest legal book, leaving a small gap at
+ * the end — the way a real shelf does. A final book is trimmed to close the gap only when trimming
+ * still leaves it above `scaleZMin`.
+ *
+ * This is the **shelf packed full**, wall to wall. For a partially-filled shelf — the more common
+ * look — use {@link rowOfBooksByCount} and position the row within the shelf.
+ *
+ * Local frame: the row starts at Z=0 and grows along +Z.
+ *
+ * @example
+ * ```ts
+ * // Fill a 6-unit shelf. You do not say how many books; you find out.
+ * const shelf = rowOfBooksByLength({ coverMaterial, pagesMaterial, length: 6, seed: 1337 });
+ * scene.add(shelf);
+ *
+ * shelf.count; // 34 — an output. A different seed gives a different number.
+ * ```
  */
 export function rowOfBooksByLength<T extends Material>({
   coverMaterial,
@@ -145,15 +221,25 @@ export function rowOfBooksByLength<T extends Material>({
   scaleZMin = 0.1,
   scaleZMax = 0.5,
   seed,
-}: RowOfBooksOptions<T>): InstancedMesh {
+}: RowOfBooksByLengthOptions<T>): InstancedMesh {
   const source = createRandom(seed);
   const scales: Vector3[] = [];
-  let remainingZ = length;
-  while (remainingZ > 0) {
+
+  /** Shelf space the thinnest legal book occupies. A book is `BOOK_UNIT_DEPTH * scale.z` deep. */
+  const minDepth = BOOK_UNIT_DEPTH * scaleZMin;
+  let remaining = length;
+
+  while (remaining >= minDepth) {
     const scale = randomScale({ scaleXMin, scaleXMax, scaleYMin, scaleYMax, scaleZMin, scaleZMax, source });
-    scale.z = Math.min(scale.z, remainingZ);
+
+    if (BOOK_UNIT_DEPTH * scale.z > remaining) {
+      // Trim the last book to close the gap. The loop guard means `remaining >= minDepth`,
+      // so the trimmed book still clears `scaleZMin`.
+      scale.z = remaining / BOOK_UNIT_DEPTH;
+    }
+
     scales.push(scale);
-    remainingZ -= scale.z;
+    remaining -= BOOK_UNIT_DEPTH * scale.z;
   }
 
   return rowOfBooksByScales({ coverMaterial, pagesMaterial, scales, source });

@@ -1,47 +1,23 @@
-export type StairVec3 = [number, number, number];
-export type StairVec2 = [number, number];
+import { pushQuad, UNIT_QUAD_UV, type GeometryBuffers } from "../../utils/GeometryBuffers";
 
 /**
- * Append one quad (two triangles). Corners must be CCW when viewed along `normal`.
+ * Stair vocabulary over the {@link pushQuad} primitive — a riser, a tread, a landing.
+ *
+ * Everything here works in the flight's own frame: centered on X, rising +Y, running +Z. There are
+ * deliberately no X-axis variants. A turned flight is the *same* flight rotated, not a second one
+ * hand-derived in a rotated frame.
  */
-export function pushQuad(
-  positions: number[],
-  normals: number[],
-  uvs: number[],
-  indices: number[],
-  corners: [StairVec3, StairVec3, StairVec3, StairVec3],
-  normal: StairVec3,
-  cornerUvs: [StairVec2, StairVec2, StairVec2, StairVec2],
-): void {
-  const base = positions.length / 3;
-  for (const [x, y, z] of corners) {
-    positions.push(x, y, z);
-    normals.push(...normal);
-  }
-  for (const [u, v] of cornerUvs) uvs.push(u, v);
-  indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
-}
 
-export const UNIT_QUAD_UV: [StairVec2, StairVec2, StairVec2, StairVec2] = [
-  [0, 0],
-  [0, 1],
-  [1, 1],
-  [1, 0],
-];
-
-/** Riser facing +Z at `zFront`. */
-export function pushRiserZ(
-  buffers: { positions: number[]; normals: number[]; uvs: number[]; indices: number[] },
+/** Riser — the vertical face of a step, facing +Z at `zFront`. */
+export function pushRiser(
+  buffers: GeometryBuffers,
   hw: number,
   yBottom: number,
   yTop: number,
   zFront: number,
 ): void {
   pushQuad(
-    buffers.positions,
-    buffers.normals,
-    buffers.uvs,
-    buffers.indices,
+    buffers,
     [
       [-hw, yBottom, zFront],
       [-hw, yTop, zFront],
@@ -49,88 +25,25 @@ export function pushRiserZ(
       [hw, yBottom, zFront],
     ],
     [0, 0, 1],
-    [
-      [0, 0],
-      [0, 1],
-      [1, 1],
-      [1, 0],
-    ],
+    UNIT_QUAD_UV,
   );
 }
 
-/** Tread facing +Y between `zFront` and `zBack`. */
-export function pushTreadZ(
-  buffers: { positions: number[]; normals: number[]; uvs: number[]; indices: number[] },
+/** Tread — the horizontal face you stand on, facing +Y between `zFront` and `zBack`. */
+export function pushTread(
+  buffers: GeometryBuffers,
   hw: number,
   yTop: number,
   zFront: number,
   zBack: number,
 ): void {
   pushQuad(
-    buffers.positions,
-    buffers.normals,
-    buffers.uvs,
-    buffers.indices,
+    buffers,
     [
       [-hw, yTop, zFront],
       [-hw, yTop, zBack],
       [hw, yTop, zBack],
       [hw, yTop, zFront],
-    ],
-    [0, 1, 0],
-    UNIT_QUAD_UV,
-  );
-}
-
-/** Riser facing +X at `xFront` (second flight climbing −X). */
-export function pushRiserX(
-  buffers: { positions: number[]; normals: number[]; uvs: number[]; indices: number[] },
-  yBottom: number,
-  yTop: number,
-  xFront: number,
-  zNear: number,
-  zFar: number,
-): void {
-  pushQuad(
-    buffers.positions,
-    buffers.normals,
-    buffers.uvs,
-    buffers.indices,
-    [
-      [xFront, yBottom, zFar],
-      [xFront, yBottom, zNear],
-      [xFront, yTop, zNear],
-      [xFront, yTop, zFar],
-    ],
-    [1, 0, 0],
-    [
-      [0, 0],
-      [0, 1],
-      [1, 1],
-      [1, 0],
-    ],
-  );
-}
-
-/** Tread facing +Y between `xFront` and `xBack` (second flight climbing −X). */
-export function pushTreadX(
-  buffers: { positions: number[]; normals: number[]; uvs: number[]; indices: number[] },
-  yTop: number,
-  xFront: number,
-  xBack: number,
-  zNear: number,
-  zFar: number,
-): void {
-  pushQuad(
-    buffers.positions,
-    buffers.normals,
-    buffers.uvs,
-    buffers.indices,
-    [
-      [xFront, yTop, zNear],
-      [xFront, yTop, zFar],
-      [xBack, yTop, zFar],
-      [xBack, yTop, zNear],
     ],
     [0, 1, 0],
     UNIT_QUAD_UV,
@@ -152,7 +65,7 @@ export function tangentXZ(angle: number): [number, number, number] {
  * Normal faces the CCW climb direction (turret stair ascending counter-clockwise).
  */
 export function pushSpiralRiser(
-  buffers: { positions: number[]; normals: number[]; uvs: number[]; indices: number[] },
+  buffers: GeometryBuffers,
   innerRadius: number,
   outerRadius: number,
   yBottom: number,
@@ -161,26 +74,17 @@ export function pushSpiralRiser(
 ): void {
   const [xi, zi] = polarXZ(innerRadius, angle);
   const [xo, zo] = polarXZ(outerRadius, angle);
-  const normal = tangentXZ(angle);
 
   pushQuad(
-    buffers.positions,
-    buffers.normals,
-    buffers.uvs,
-    buffers.indices,
+    buffers,
     [
       [xi, yBottom, zi],
       [xi, yTop, zi],
       [xo, yTop, zo],
       [xo, yBottom, zo],
     ],
-    normal,
-    [
-      [0, 0],
-      [0, 1],
-      [1, 1],
-      [1, 0],
-    ],
+    tangentXZ(angle),
+    UNIT_QUAD_UV,
   );
 }
 
@@ -189,7 +93,7 @@ export function pushSpiralRiser(
  * to `angleEnd` (exclusive overlap with the next step when angles are contiguous).
  */
 export function pushSpiralTread(
-  buffers: { positions: number[]; normals: number[]; uvs: number[]; indices: number[] },
+  buffers: GeometryBuffers,
   innerRadius: number,
   outerRadius: number,
   yTop: number,
@@ -202,10 +106,7 @@ export function pushSpiralTread(
   const [xOf, zOf] = polarXZ(outerRadius, angleStart);
 
   pushQuad(
-    buffers.positions,
-    buffers.normals,
-    buffers.uvs,
-    buffers.indices,
+    buffers,
     [
       [xIf, yTop, zIf],
       [xIb, yTop, zIb],
@@ -219,29 +120,5 @@ export function pushSpiralTread(
       [1, 1],
       [0, 1],
     ],
-  );
-}
-
-/** Landing platform facing +Y. */
-export function pushLanding(
-  buffers: { positions: number[]; normals: number[]; uvs: number[]; indices: number[] },
-  hw: number,
-  y: number,
-  zNear: number,
-  zFar: number,
-): void {
-  pushQuad(
-    buffers.positions,
-    buffers.normals,
-    buffers.uvs,
-    buffers.indices,
-    [
-      [-hw, y, zNear],
-      [-hw, y, zFar],
-      [hw, y, zFar],
-      [hw, y, zNear],
-    ],
-    [0, 1, 0],
-    UNIT_QUAD_UV,
   );
 }

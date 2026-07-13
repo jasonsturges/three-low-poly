@@ -1,12 +1,13 @@
 import GUI from "lil-gui";
-import { EmissivePulseEffect, PanelLight, centerObject } from "three-low-poly";
+import { Mesh, MeshStandardMaterial, SphereGeometry } from "three";
+import { EmissivePulseEffect, centerObject } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = {
   title: "Emissive Pulse",
   description:
     "Primitive LED pulse — attach to any emissive material, tune color and speed. " +
-    "No geometry of its own; pair with PanelLight or your own mesh.",
+    "No geometry of its own; pair it with any mesh you like.",
 };
 
 export default function (container: HTMLElement) {
@@ -22,15 +23,16 @@ export default function (container: HTMLElement) {
     minIntensity: 0.2,
   };
 
-  const panelLight = new PanelLight({
-    color: params.color,
-    emissive: params.emissive,
-  });
-  scene.add(panelLight);
-  centerObject(panelLight);
+  // The effect has no geometry of its own, so the mesh is just a mesh — an LED is a small sphere.
+  const led = new Mesh(
+    new SphereGeometry(0.15, 8, 8),
+    new MeshStandardMaterial({ color: params.color, emissive: params.emissive }),
+  );
+  scene.add(led);
+  centerObject(led);
 
   const pulse = new EmissivePulseEffect({
-    material: panelLight.material,
+    material: led.material,
     speed: params.speed,
     maxIntensity: params.maxIntensity,
     minIntensity: params.minIntensity,
@@ -39,8 +41,8 @@ export default function (container: HTMLElement) {
   onFrame((dt) => pulse.update(dt));
 
   const sync = () => {
-    panelLight.material.color.set(params.color);
-    panelLight.material.emissive.set(params.emissive);
+    led.material.color.set(params.color);
+    led.material.emissive.set(params.emissive);
     pulse.speed = params.speed;
     pulse.maxIntensity = params.maxIntensity;
     pulse.minIntensity = params.minIntensity;
@@ -56,8 +58,8 @@ export default function (container: HTMLElement) {
 
   return () => {
     gui.destroy();
-    panelLight.geometry.dispose();
-    panelLight.material.dispose();
+    led.geometry.dispose();
+    led.material.dispose();
     dispose();
   };
 }

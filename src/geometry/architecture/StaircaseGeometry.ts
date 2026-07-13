@@ -1,5 +1,6 @@
-import { BufferAttribute, BufferGeometry } from "three";
-import { pushRiserZ, pushTreadZ } from "./staircaseQuad";
+import { BufferGeometry } from "three";
+import { createGeometryBuffers, toBufferGeometry } from "../../utils/GeometryBuffers";
+import { pushRiser, pushTread } from "./staircaseQuad";
 
 export interface StaircaseGeometryOptions {
   /** Stair width (tread left–right extent). Defaults to `2`. */
@@ -8,8 +9,19 @@ export interface StaircaseGeometryOptions {
   riserHeight?: number;
   /** Horizontal run per step (tread depth). Defaults to `0.5`. */
   treadDepth?: number;
-  /** Number of steps. Defaults to `10`. */
+  /** Number of steps — counted as risers, the way a stair is actually measured. Defaults to `10`. */
   stepCount?: number;
+  /**
+   * Emit the tread at the very top. Defaults to `true`.
+   *
+   * Set `false` when the flight climbs to a landing or a floor, because that surface *is* the top
+   * tread — the last riser lifts you onto it. Emitting one anyway leaves a tread lying coplanar with
+   * the landing: you would climb the last riser, arrive on a step, and then walk *forward* rather
+   * than up. It also silently deepens the landing by one tread.
+   *
+   * So a flight of 5 steps into a landing is 5 risers and 4 treads; the landing is the fifth.
+   */
+  topTread?: boolean;
 }
 
 /**
@@ -24,7 +36,9 @@ export class StaircaseGeometry extends BufferGeometry {
   readonly riserHeight: number;
   readonly treadDepth: number;
   readonly stepCount: number;
+  readonly topTread: boolean;
   readonly totalHeight: number;
+  /** Run from the foot to the last surface — one tread shorter when a landing tops the flight. */
   readonly totalDepth: number;
 
   constructor({
@@ -32,6 +46,7 @@ export class StaircaseGeometry extends BufferGeometry {
     riserHeight = 0.3,
     treadDepth = 0.5,
     stepCount = 10,
+    topTread = true,
   }: StaircaseGeometryOptions = {}) {
     super();
 
@@ -39,15 +54,13 @@ export class StaircaseGeometry extends BufferGeometry {
     this.riserHeight = riserHeight;
     this.treadDepth = treadDepth;
     this.stepCount = Math.max(1, Math.round(stepCount));
+    this.topTread = topTread;
     this.totalHeight = this.stepCount * this.riserHeight;
-    this.totalDepth = this.stepCount * this.treadDepth;
+    // Without a top tread the run stops at the last riser — the landing takes it from there.
+    this.totalDepth = (this.stepCount - (topTread ? 0 : 1)) * this.treadDepth;
 
     const hw = width / 2;
-    const positions: number[] = [];
-    const normals: number[] = [];
-    const uvs: number[] = [];
-    const indices: number[] = [];
-    const buffers = { positions, normals, uvs, indices };
+    const buffers = createGeometryBuffers();
 
     for (let i = 0; i < this.stepCount; i++) {
       const yBottom = i * this.riserHeight;
@@ -55,14 +68,14 @@ export class StaircaseGeometry extends BufferGeometry {
       const zFront = i * this.treadDepth;
       const zBack = zFront + this.treadDepth;
 
-      pushRiserZ(buffers, hw, yBottom, yTop, zFront);
-      pushTreadZ(buffers, hw, yTop, zFront, zBack);
+      pushRiser(buffers, hw, yBottom, yTop, zFront);
+
+      // Every riser gets a tread to land on — except the last one, when a landing provides it.
+      if (topTread || i < this.stepCount - 1) {
+        pushTread(buffers, hw, yTop, zFront, zBack);
+      }
     }
 
-    this.setIndex(indices);
-    this.setAttribute("position", new BufferAttribute(new Float32Array(positions), 3));
-    this.setAttribute("normal", new BufferAttribute(new Float32Array(normals), 3));
-    this.setAttribute("uv", new BufferAttribute(new Float32Array(uvs), 2));
-    this.computeBoundingSphere();
+    this.copy(toBufferGeometry(buffers));
   }
 }

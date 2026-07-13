@@ -1,8 +1,7 @@
 import { BoxGeometry, CylinderGeometry, DoubleSide, Mesh, MeshStandardMaterial } from "three";
 import GUI from "lil-gui";
-import { EffervescenceEffect } from "three-low-poly";
+import { EffervescenceEffect, GroundGrid } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
-import { GroundGrid } from "../../framework/GroundGrid";
 
 export const meta = {
   title: "Effervescence",

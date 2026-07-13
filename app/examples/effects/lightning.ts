@@ -14,13 +14,13 @@ import {
 import GUI from "lil-gui";
 import {
   ArchedDiamondLatticeWindow,
-  LightningEffect,
   archedOpeningMetrics,
+  GroundGrid,
+  LightningEffect,
   traceArchedOpeningOutline,
   type ArchedOpeningMetrics,
 } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
-import { GroundGrid } from "../../framework/GroundGrid";
 
 export const meta = {
   title: "Lightning",
