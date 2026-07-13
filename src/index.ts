@@ -141,14 +141,14 @@ export {
   type StaircaseGeometryOptions,
 } from "./geometry/architecture/StaircaseGeometry";
 
+// Atmosphere
+export {
+  SmokeCurlGeometry,
+  type SmokeCurlGeometryOptions,
+} from "./geometry/atmosphere/SmokeCurlGeometry";
+
 // Books
 export { BookGeometry, type BookGeometryOptions } from "./geometry/books/BookGeometry";
-
-// Bottles
-export { JarGeometry } from "./geometry/vessels/JarGeometry";
-export { PotionBottleGeometry } from "./geometry/vessels/PotionBottleGeometry";
-export { VaseGeometry, type VaseGeometryOptions } from "./geometry/vessels/VaseGeometry";
-export { WineBottleGeometry, type WineBottleGeometryOptions } from "./geometry/vessels/WineBottleGeometry";
 
 // Cemetery
 export {
@@ -254,6 +254,12 @@ export {
 } from "./geometry/trees/GnarledTreeGeometry";
 export { TreeGeometry, type TreeGeometryOptions } from "./geometry/trees/TreeGeometry";
 
+// Vessels
+export { JarGeometry } from "./geometry/vessels/JarGeometry";
+export { PotionBottleGeometry } from "./geometry/vessels/PotionBottleGeometry";
+export { VaseGeometry, type VaseGeometryOptions } from "./geometry/vessels/VaseGeometry";
+export { WineBottleGeometry, type WineBottleGeometryOptions } from "./geometry/vessels/WineBottleGeometry";
+
 //------------------------------
 //  Materials
 //------------------------------
@@ -270,14 +276,11 @@ export { ArchedDiamondLatticeWindow } from "./models/architecture/ArchedDiamondL
 export { DiamondLatticeWindow } from "./models/architecture/DiamondLatticeWindow";
 export { GregorianLatticeWindow } from "./models/architecture/GregorianLatticeWindow";
 
+// Atmosphere
+export { SmokeCurl, type SmokeCurlOptions } from "./models/atmosphere/SmokeCurl";
+
 // Books
 export { Book, type BookOptions } from "./models/books/Book";
-
-// Bottles
-export { Jar } from "./models/vessels/Jar";
-export { PotionBottle } from "./models/vessels/PotionBottle";
-export { Vase, type VaseOptions } from "./models/vessels/Vase";
-export { WineBottle, type WineBottleOptions } from "./models/vessels/WineBottle";
 
 // Cemetery
 export { CrossHeadstone, type CrossHeadstoneOptions } from "./models/cemetery/CrossHeadstone";
@@ -350,6 +353,12 @@ export { Tree, type TreeOptions } from "./models/trees/Tree";
 // Terrain
 export { TerrainMound, type TerrainMoundOptions } from "./models/terrain/TerrainMound";
 export { TerrainPlane, type TerrainPlaneOptions } from "./models/terrain/TerrainPlane";
+
+// Vessels
+export { Jar } from "./models/vessels/Jar";
+export { PotionBottle } from "./models/vessels/PotionBottle";
+export { Vase, type VaseOptions } from "./models/vessels/Vase";
+export { WineBottle, type WineBottleOptions } from "./models/vessels/WineBottle";
 
 //------------------------------
 //  Paths
