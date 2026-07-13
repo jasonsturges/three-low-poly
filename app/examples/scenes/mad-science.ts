@@ -24,7 +24,6 @@ import {
   MortarAndPestle,
   PotionBottle,
   Stand,
-  TestTubeRack,
   logarithmicRandomMax,
   randomFloat,
 } from "three-low-poly";
@@ -123,12 +122,6 @@ export default function (container: HTMLElement) {
   mortarAndPestle.position.set(1, 3.3, -1);
   mortarAndPestle.castShadow = true;
   scene.add(mortarAndPestle);
-
-  const testTubeRack = new TestTubeRack();
-  testTubeRack.scale.set(0.3, 0.3, 0.3);
-  testTubeRack.position.set(2, 3.2, -1);
-  testTubeRack.castShadow = true;
-  scene.add(testTubeRack);
 
   const makeShelf = () => {
     const shelf = new Group();

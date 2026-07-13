@@ -328,7 +328,6 @@ export { SpiralTube } from "./models/science/SpiralTube";
 export { Stand, type StandOptions } from "./models/science/Stand";
 export { TeslaCoil } from "./models/science/TeslaCoil";
 export { TestTube } from "./models/science/TestTube";
-export { TestTubeRack, type TestTubeRackOptions } from "./models/science/TestTubeRack";
 
 // Shapes
 export { ArchedSlab, type ArchedSlabOptions } from "./models/shapes/ArchedSlab";
