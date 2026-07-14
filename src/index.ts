@@ -162,7 +162,10 @@ export {
   ObeliskHeadstoneGeometry,
   type ObeliskHeadstoneGeometryOptions,
 } from "./geometry/cemetery/ObeliskHeadstoneGeometry";
-export { RoundedHeadstoneGeometry } from "./geometry/cemetery/RoundedHeadstoneGeometry";
+export {
+  RoundedHeadstoneGeometry,
+  type RoundedHeadstoneGeometryOptions,
+} from "./geometry/cemetery/RoundedHeadstoneGeometry";
 export { SquareHeadstoneGeometry } from "./geometry/cemetery/SquareHeadstoneGeometry";
 
 // Fence
@@ -387,7 +390,19 @@ export { PolygonShape, type PolygonShapeOptions } from "./shapes/PolygonShape";
 export { SpadeShape, type SpadeShapeOptions } from "./shapes/SpadeShape";
 export { StarShape, type StarShapeOptions } from "./shapes/StarShape";
 export { StrapHingeShape, type StrapHingeShapeOptions } from "./shapes/StrapHingeShape";
-export { WallShape, type WallDoorwayOptions, type WallShapeOptions } from "./shapes/WallShape";
+export {
+  WallShape,
+  wallOpeningTop,
+  type WallOpeningOptions,
+  type WallShapeOptions,
+} from "./shapes/WallShape";
+export {
+  archRise,
+  traceArch,
+  type ArchEnd,
+  type ArchProfileOptions,
+  type ArchStyle,
+} from "./shapes/ArchProfile";
 
 //------------------------------
 //  Sweep

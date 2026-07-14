@@ -1,4 +1,5 @@
 import { Shape } from "three";
+import { ArchStyle, archRise, traceArch } from "./ArchProfile";
 
 /** One side of a slab, split down the middle — see {@link ArchedSlabShapeOptions.half}. */
 export type ArchedSlabHalf = "left" | "right";
@@ -53,6 +54,15 @@ export interface ArchedSlabShapeOptions {
    * meeting stile, where the two leaves come together.
    */
   half?: ArchedSlabHalf;
+  /**
+   * Which arch sits on top. Defaults to `elliptical`, which springs vertically out of the slab's sides
+   * at any rise.
+   *
+   * `semicircle` is the one most callers want and forces `archHeight` to half the span. `pointed` and
+   * `ogee` come to a point at the crown — and a half slab still splits cleanly there, so one leaf of an
+   * ogee-arched double door works exactly like one leaf of a round-arched one. See {@link ArchStyle}.
+   */
+  arch?: ArchStyle;
 }
 
 /**
@@ -91,12 +101,17 @@ export class ArchedSlabShape extends Shape {
     archWidth = width,
     archHeight = 0.6,
     half,
+    arch = "elliptical",
   }: ArchedSlabShapeOptions = {}) {
     super();
 
     const hw = width / 2;
     const ha = Math.min(archWidth, width) / 2;
-    const crown = height + archHeight;
+
+    // The arch decides its own rise — a semicircle forces one, a square head has none — so ask, rather
+    // than assuming `archHeight` is what you get.
+    const profile = { style: arch, x: 0, y: height, halfSpan: ha, rise: archHeight };
+    const crown = height + archRise(profile);
 
     if (half === "left") {
       // Counter-clockwise: along the floor to the centerline, up the meeting stile to the crown...
@@ -104,8 +119,9 @@ export class ArchedSlabShape extends Shape {
       this.lineTo(0, 0);
       this.lineTo(0, crown);
 
-      // ...down the left half of the SAME arch — a quarter of the ellipse, crown to springing...
-      this.absellipse(0, height, ha, archHeight, Math.PI / 2, Math.PI, false);
+      // ...down the left half of the SAME arch. Half an arch, not a half-size arch — the two leaves of a
+      // double door are cut from one curve, or they crown separately and you get an `M`.
+      traceArch(this, { ...profile, from: "crown", to: "left" });
 
       // ...out along the left shoulder if there is one, and close down the left side.
       if (ha < hw) this.lineTo(-hw, height);
@@ -121,7 +137,7 @@ export class ArchedSlabShape extends Shape {
       if (ha < hw) this.lineTo(ha, height);
 
       // ...up the right half of the same arch to the crown, then closePath drops down the meeting stile.
-      this.absellipse(0, height, ha, archHeight, 0, Math.PI / 2, false);
+      traceArch(this, { ...profile, from: "right", to: "crown" });
       this.closePath();
       return;
     }
@@ -136,7 +152,7 @@ export class ArchedSlabShape extends Shape {
     if (ha < hw) this.lineTo(ha, height);
 
     // ...over the top...
-    this.absellipse(0, height, ha, archHeight, 0, Math.PI, false);
+    traceArch(this, { ...profile, from: "right", to: "left" });
 
     // ...back out along the left shoulder, and close down the left side.
     if (ha < hw) this.lineTo(-hw, height);

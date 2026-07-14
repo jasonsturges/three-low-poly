@@ -1,11 +1,18 @@
 import { Mesh, MeshStandardMaterial } from "three";
-import { RoundedHeadstoneGeometry } from "../../geometry/cemetery/RoundedHeadstoneGeometry";
+import {
+  RoundedHeadstoneGeometry,
+  type RoundedHeadstoneGeometryOptions,
+} from "../../geometry/cemetery/RoundedHeadstoneGeometry";
 
+/**
+ * A round-topped headstone. See {@link RoundedHeadstoneGeometry} — it is an arched slab, so it takes the
+ * whole arch vocabulary, shoulders included.
+ */
 export class RoundedHeadstone extends Mesh<RoundedHeadstoneGeometry, MeshStandardMaterial> {
-  constructor(width = 0.6, height = 1.0, depth = 0.2, radius = 0.6) {
+  constructor(options: RoundedHeadstoneGeometryOptions = {}) {
     super(
-      new RoundedHeadstoneGeometry(width, height, depth, radius),
-      new MeshStandardMaterial({ color: 0x777777, roughness: 0.8 })
+      new RoundedHeadstoneGeometry(options),
+      new MeshStandardMaterial({ color: 0x777777, roughness: 0.8, flatShading: true }),
     );
   }
 }

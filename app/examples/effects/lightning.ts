@@ -7,18 +7,15 @@ import {
   Group,
   Mesh,
   MeshStandardMaterial,
-  Path,
-  Shape,
   ShapeGeometry,
 } from "three";
 import GUI from "lil-gui";
 import {
   ArchedDiamondLatticeWindow,
-  archedOpeningMetrics,
+  ArchedSlabShape,
   GroundGrid,
   LightningEffect,
-  traceArchedOpeningOutline,
-  type ArchedOpeningMetrics,
+  WallShape,
 } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
@@ -48,26 +45,6 @@ const WINDOW_X = [-5.5, 0, 5.5];
 const LEAD_THICKNESS = 0.05;
 const LEAD_DEPTH = 0.11;
 
-/**
- * Trace the arched opening outline into a hole `Path`, offset to `cx` along the
- * wall. `traceArchedOpeningOutline` centers x on 0, so a thin adapter shifts each
- * emitted coordinate — the arc center included — to place the opening.
- */
-function archHolePath(cx: number, metrics: ArchedOpeningMetrics): Path {
-  const path = new Path();
-  traceArchedOpeningOutline(
-    {
-      moveTo: (x, y) => path.moveTo(x + cx, y),
-      lineTo: (x, y) => path.lineTo(x + cx, y),
-      absarc: (x, y, r, a0, a1, cw) => path.absarc(x + cx, y, r, a0, a1, cw),
-      closePath: () => path.closePath(),
-    },
-    metrics,
-    { hole: true },
-  );
-  return path;
-}
-
 /** One solid slab, extruded +Z, with an arched opening punched per window. */
 function buildWall() {
   const wallMaterial = new MeshStandardMaterial({
@@ -76,19 +53,23 @@ function buildWall() {
     metalness: 0.04,
   });
 
-  const halfW = WALL_WIDTH / 2;
-  const shape = new Shape();
-  shape.moveTo(-halfW, 0);
-  shape.lineTo(halfW, 0);
-  shape.lineTo(halfW, WALL_HEIGHT);
-  shape.lineTo(-halfW, WALL_HEIGHT);
-  shape.closePath();
-
-  // Punch the hole on the true opening outline — same silhouette as the window's
-  // frame ring, so the aperture lines up with the frame's outer edge and the whole
-  // ring stays visible, with the slab thickness reading as a reveal behind it.
-  const metrics = archedOpeningMetrics({ ...OPENING, centerY: OPENING_CENTER_Y });
-  for (const x of WINDOW_X) shape.holes.push(archHolePath(x, metrics));
+  // The windows float clear of every edge, so they are genuine HOLES and `WallShape` punches them as
+  // such. (A doorway would have to be a notch in the outline instead — see WallShape.) `archHeight`
+  // here is exactly half the width, which makes the arch a semicircle: the same circle the lattice
+  // frame is built from, so the aperture lands on the frame's outer edge and the ring stays visible,
+  // with the slab thickness reading as a reveal behind it.
+  const shape = new WallShape({
+    width: WALL_WIDTH,
+    height: WALL_HEIGHT,
+    windows: WINDOW_X.map((x) => ({
+      width: OPENING.width,
+      height: OPENING.rectHeight,
+      archHeight: OPENING.archHeight,
+      arch: "semicircle",
+      x,
+      y: SILL_Y,
+    })),
+  });
 
   const geo = new ExtrudeGeometry(shape, { depth: WALL_THICKNESS, bevelEnabled: false });
   const wall = new Mesh(geo, wallMaterial);
@@ -97,7 +78,7 @@ function buildWall() {
   wall.castShadow = true;
   wall.receiveShadow = true;
 
-  return { wall, wallMaterial, metrics };
+  return { wall, wallMaterial };
 }
 
 function disposeWindow(window: ArchedDiamondLatticeWindow): void {
@@ -135,21 +116,29 @@ export default function (container: HTMLElement) {
   });
 
   const architecture = new Group();
-  const { wall, wallMaterial, metrics } = buildWall();
+  const { wall, wallMaterial } = buildWall();
   architecture.add(wall);
 
-  // One arched pane geometry (centered x, opening height baked in via centerY),
-  // reused across every opening by positioning each mesh at its own x.
-  const paneShape = new Shape();
-  traceArchedOpeningOutline(paneShape, metrics);
-  const paneGeo = new ShapeGeometry(paneShape, 48);
+  // One arched pane, reused across every opening by positioning each mesh at its own x and sill. The
+  // pane FILLS the same outline the wall punches — so it is an arched slab, drawn from the same arc as
+  // the hole and the lattice frame. Three things, one curve, and nothing to drift out of line.
+  const paneGeo = new ShapeGeometry(
+    new ArchedSlabShape({
+      width: OPENING.width,
+      height: OPENING.rectHeight,
+      archHeight: OPENING.archHeight,
+      arch: "semicircle",
+    }),
+    48,
+  );
   const exteriorZ = WALL_FACE_Z - WALL_THICKNESS;
   const windowZ = WALL_FACE_Z - WALL_THICKNESS / 2;
 
   const windows: ArchedDiamondLatticeWindow[] = [];
   for (const x of WINDOW_X) {
+    // The slab's base is its sill, so the pane is placed by its sill rather than by a baked-in centerY.
     const pane = new Mesh(paneGeo, skyMaterial);
-    pane.position.set(x, 0, exteriorZ + 0.01);
+    pane.position.set(x, SILL_Y, exteriorZ + 0.01);
     architecture.add(pane);
 
     const window = new ArchedDiamondLatticeWindow({

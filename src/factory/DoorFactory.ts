@@ -12,6 +12,7 @@ import {
   SphereGeometry,
 } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { ArchStyle } from "../shapes/ArchProfile";
 import { ArchedSlabHalf, ArchedSlabShape } from "../shapes/ArchedSlabShape";
 import { ClubShape } from "../shapes/ClubShape";
 import { SpadeShape } from "../shapes/SpadeShape";
@@ -53,6 +54,14 @@ export interface ArchedDoorOptions {
    * bigger version of the same door.
    */
   archHeight?: number;
+  /**
+   * Which arch tops the door. Defaults to `elliptical`. See {@link ArchStyle}.
+   *
+   * Give a door the same arch as the opening it hangs in and the two match exactly, because they draw
+   * the same curve. A double door splits at the CROWN, so a pointed or ogee arch still parts cleanly
+   * down the middle — each leaf just carries half the point.
+   */
+  arch?: ArchStyle;
   /** Thickness of the slab. Defaults to `0.12`. */
   thickness?: number;
   /** How finely the arch is tessellated — the low-poly knob. `3` is chiselled; `24` is cast. Defaults to `16`. */
@@ -102,6 +111,7 @@ function buildLeaf(
   const {
     height = 1.9,
     archHeight = 0.65,
+    arch = "elliptical",
     thickness = 0.12,
     curveSegments = 16,
     hinges = 3,
@@ -132,7 +142,7 @@ function buildLeaf(
 
   // The slab: one outline, arch included.
   const slab = new ExtrudeGeometry(
-    new ArchedSlabShape({ width: span, height, archWidth: span, archHeight, half }),
+    new ArchedSlabShape({ width: span, height, archWidth: span, archHeight, half, arch }),
     { ...extrude, depth: thickness },
   );
 
