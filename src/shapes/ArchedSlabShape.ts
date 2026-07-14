@@ -1,5 +1,8 @@
 import { Shape } from "three";
 
+/** One side of a slab, split down the middle — see {@link ArchedSlabShapeOptions.half}. */
+export type ArchedSlabHalf = "left" | "right";
+
 export interface ArchedSlabShapeOptions {
   /** Width of the slab. Defaults to `1.2`. */
   width?: number;
@@ -13,8 +16,43 @@ export interface ArchedSlabShapeOptions {
    * not modelled; they are what is left over.
    */
   archWidth?: number;
-  /** Rise of the arch above the springing. `archWidth / 2` is a Roman semicircle. Defaults to `0.6`. */
+  /**
+   * Rise of the arch above the springing — the ellipse's VERTICAL RADIUS, in world units. Defaults
+   * to `0.6`.
+   *
+   * **`archHeight === archWidth / 2` is a perfect semicircle**, and it is the one you almost always
+   * want. At that value the two radii are equal, so the ellipse *is* a circle — a Roman arch.
+   *
+   * | Span | Semicircle rise |
+   * | --- | --- |
+   * | `1.2` | `0.6` |
+   * | `2.6` | `1.3` |
+   * | `w` | `w / 2` |
+   *
+   * Below `w / 2` the arch flattens into a segmental one — wide and low, a gatehouse. Above it, the
+   * arch stretches taller than it is wide.
+   *
+   * **The rise does NOT follow the span.** They are independent radii, which is what lets this be a
+   * styling knob rather than a proportion — but it also means halving `width` leaves a rise that is
+   * now too tall for it. Keep them in step yourself, or the arch quietly changes character when you
+   * resize the slab.
+   */
   archHeight?: number;
+  /**
+   * Return only the `left` or `right` half of the slab — the leaf of a double door. Omit for the whole
+   * slab.
+   *
+   * **The half is CARVED OUT of the full outline; it is not a slab of half the width.** Halving `width`
+   * instead would build a new, narrower ellipse, and each leaf would crown at its own center — stand
+   * the pair side by side and you get an `M`, not an arch. The arc here is the same arc: the full
+   * span's ellipse, sampled over half its sweep. Which makes the half a QUARTER ellipse, because the
+   * whole arch was already half of one.
+   *
+   * The result is asymmetric, and that is the point: it is short at its outer edge (`height`, where the
+   * arch springs) and tall at its inner edge (`height + archHeight`, the crown). The tall edge is the
+   * meeting stile, where the two leaves come together.
+   */
+  half?: ArchedSlabHalf;
 }
 
 /**
@@ -34,8 +72,17 @@ export interface ArchedSlabShapeOptions {
  * The arch is an ELLIPSE, not a circle, so its rise is independent of its span: a squat Roman arch and
  * a tall pointed one are the same outline with a different `archHeight`.
  *
+ * **Which makes the semicircle a value, not a mode: `archHeight === archWidth / 2`.** Set the vertical
+ * radius equal to the horizontal one and the ellipse is a circle. That is the arch most callers actually
+ * want, and it is the one thing to remember here — see {@link ArchedSlabShapeOptions.archHeight}.
+ *
  * Note this is a FILLED outline, not a swept band. An archway you walk through is a sweep — it follows
  * the curve. A door is an extrude — it fills it. Same arc, different operation.
+ *
+ * Pass {@link ArchedSlabShapeOptions.half} to get one leaf of a double door. Either way the outline is
+ * drawn in the SLAB's frame — the arch stays centered on `x = 0` — so a half sits on its own side of
+ * the centerline rather than being re-centered. Callers that want it elsewhere translate it; that is
+ * how the door factory puts a leaf's origin on its hinge.
  */
 export class ArchedSlabShape extends Shape {
   constructor({
@@ -43,11 +90,41 @@ export class ArchedSlabShape extends Shape {
     height = 1.4,
     archWidth = width,
     archHeight = 0.6,
+    half,
   }: ArchedSlabShapeOptions = {}) {
     super();
 
     const hw = width / 2;
     const ha = Math.min(archWidth, width) / 2;
+    const crown = height + archHeight;
+
+    if (half === "left") {
+      // Counter-clockwise: along the floor to the centerline, up the meeting stile to the crown...
+      this.moveTo(-hw, 0);
+      this.lineTo(0, 0);
+      this.lineTo(0, crown);
+
+      // ...down the left half of the SAME arch — a quarter of the ellipse, crown to springing...
+      this.absellipse(0, height, ha, archHeight, Math.PI / 2, Math.PI, false);
+
+      // ...out along the left shoulder if there is one, and close down the left side.
+      if (ha < hw) this.lineTo(-hw, height);
+      this.closePath();
+      return;
+    }
+
+    if (half === "right") {
+      // Counter-clockwise: along the floor, up the right side, in along the shoulder...
+      this.moveTo(0, 0);
+      this.lineTo(hw, 0);
+      this.lineTo(hw, height);
+      if (ha < hw) this.lineTo(ha, height);
+
+      // ...up the right half of the same arch to the crown, then closePath drops down the meeting stile.
+      this.absellipse(0, height, ha, archHeight, 0, Math.PI / 2, false);
+      this.closePath();
+      return;
+    }
 
     // Counter-clockwise, starting bottom-left: along the floor, up the right side...
     this.moveTo(-hw, 0);
