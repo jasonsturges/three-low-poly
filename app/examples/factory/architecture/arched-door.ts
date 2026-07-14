@@ -1,12 +1,21 @@
 import GUI from "lil-gui";
 import { BufferGeometry, Material, Mesh } from "three";
-import { centerObject, createArchedDoor } from "three-low-poly";
+import { createArchedDoor, GroundGrid } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Arched Door" };
 
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container, { background: 0x9aa7b2, cameraPosition: [0.5, 1.6, 3.2] });
+  const { scene, controls, dispose } = createScene(container, {
+    background: 0x9aa7b2,
+    cameraPosition: [1.8, 1.8, 3.6],
+  });
+
+  controls.target.set(0, 1.1, 0);
+  controls.update();
+
+  const floor = new GroundGrid({ size: 8, planeColor: 0x3f4954, gridColor: 0x4c5866 });
+  scene.add(floor);
 
   const params = {
     width: 1.3,
@@ -14,6 +23,8 @@ export default function (container: HTMLElement) {
     archHeight: 0.65,
     thickness: 0.12,
     curveSegments: 16,
+    hinge: "left" as "left" | "right",
+    open: 0,
     hinges: 3,
     hingeLength: 0.85,
     hingeWidth: 0.22,
@@ -30,19 +41,39 @@ export default function (container: HTMLElement) {
   };
 
   let door = createArchedDoor(params);
+
+  // The door's origin is its hinge, so hanging it means putting that hinge on its jamb — which is all
+  // it takes to stand a closed door squarely in a doorway centered on the origin.
+  const hang = () => {
+    door.position.x = (params.hinge === "left" ? -1 : 1) * (params.width / 2);
+    swing();
+  };
+
+  // Doors open OUTWARD — toward the face their hinges are bolted to, which is the face you are looking
+  // at. A left-hung door does that on a negative turn and a right-hung one on a positive: they mirror.
+  const swing = () => {
+    door.rotation.y = params.open * (params.hinge === "left" ? -1 : 1);
+  };
+
   scene.add(door);
-  centerObject(door);
+  hang();
 
   const rebuild = () => {
     scene.remove(door);
     disposeDoor(door);
     door = createArchedDoor(params);
     scene.add(door);
-    centerObject(door);
+    hang();
   };
 
   const gui = new GUI();
   gui.title("Arched Door");
+
+  // No centering here, and no pivot group: the geometry's own origin sits on the hinge, so opening the
+  // door is one rotation and nothing else. Closed is the MIDDLE of this slider — right swings it out
+  // toward the hinges, left swings it in, through where the wall would be.
+  gui.add(params, "open", -2.2, 2.2, 0.01).name("Open (− in · out +)").onChange(swing);
+  gui.add(params, "hinge", ["left", "right"]).name("Hinge Side").onChange(rebuild);
 
   const slab = gui.addFolder("Slab");
   slab.add(params, "width", 0.6, 2.5, 0.05).name("Width").onChange(rebuild);
@@ -69,6 +100,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     disposeDoor(door);
+    floor.dispose();
     dispose();
   };
 }
