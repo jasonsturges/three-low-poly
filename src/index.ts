@@ -378,7 +378,7 @@ export { spiralPath, type SpiralPathOptions } from "./paths/SpiralPath";
 //  Shapes
 //------------------------------
 
-export { ArchedSlabShape, type ArchedSlabShapeOptions } from "./shapes/ArchedSlabShape";
+export { ArchedSlabShape, type ArchedSlabHalf, type ArchedSlabShapeOptions } from "./shapes/ArchedSlabShape";
 export { BurstShape, type BurstShapeOptions } from "./shapes/BurstShape";
 export { ClubShape, type ClubShapeOptions } from "./shapes/ClubShape";
 export { GearShape, type GearShapeOptions } from "./shapes/GearShape";
@@ -387,6 +387,7 @@ export { PolygonShape, type PolygonShapeOptions } from "./shapes/PolygonShape";
 export { SpadeShape, type SpadeShapeOptions } from "./shapes/SpadeShape";
 export { StarShape, type StarShapeOptions } from "./shapes/StarShape";
 export { StrapHingeShape, type StrapHingeShapeOptions } from "./shapes/StrapHingeShape";
+export { WallShape, type WallDoorwayOptions, type WallShapeOptions } from "./shapes/WallShape";
 
 //------------------------------
 //  Sweep
