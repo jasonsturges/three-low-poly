@@ -1,11 +1,18 @@
 import GUI from "lil-gui";
+import { DirectionalLight } from "three";
 import { Heart, HeartGeometry, centerObject } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Heart" };
 
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container);
+  const { scene, dispose } = createScene(container, { background: 0x35654d });
+
+  // A flat card faces the camera (+Z); the default rig lights it only at a graze. A front fill lights
+  // the face straight on, local to this example.
+  const fill = new DirectionalLight(0xffffff, 0.9);
+  fill.position.set(0, 1, 4);
+  scene.add(fill);
 
   const params = {
     size: 1,
