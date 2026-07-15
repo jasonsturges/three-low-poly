@@ -3,42 +3,41 @@ import { Shape } from "three";
 export interface HeartShapeOptions {
   /** Overall scale factor. Defaults to `1`. */
   size?: number;
-  /** Heart width. Defaults to `2.1`. */
+  /** Heart width across the lobes. Defaults to `1.8`. */
   width?: number;
-  /** Heart height. Defaults to `1.4`. */
+  /** Heart height, lobe tops to tip. Defaults to `1.7`. */
   height?: number;
-  /** Depth of the bottom tip below the origin. Defaults to `1.6`. */
-  tipDepth?: number;
 }
 
 /**
- * Heart profile — two bezier lobes meeting at a bottom tip.
+ * Heart profile — two bulbous circular lobes sweeping down to a sharp tip.
+ *
+ * **The lobes are real circles, not cubics pretending to be round.** A heart is two discs set side by
+ * side, met at a cleft, with the outer edges sweeping in to a point — so that is exactly how it is drawn
+ * here: two half-circle arcs of radius `width / 4`, joined tip-ward by concave curves. Faking the lobes
+ * with beziers is what leaves them flat and lopsided.
+ *
+ * Because the lobe radius is set by `width` alone, **stretching `height` lengthens the point without
+ * deflating the lobes** — a tall heart stays round on top, which a single width/height scale of a bezier
+ * heart never manages.
+ *
+ * Centered on the origin; `width` / `height` are its real extents. The card suit, sibling to
+ * {@link SpadeShape}, {@link ClubShape}, {@link DiamondShape}.
  */
 export class HeartShape extends Shape {
-  constructor({ size = 1, width = 2.1, height = 1.4, tipDepth = 1.6 }: HeartShapeOptions = {}) {
+  constructor({ size = 1, width = 1.8, height = 1.7 }: HeartShapeOptions = {}) {
     super();
 
-    // Start from the top middle of the heart
-    this.moveTo(0, (height * size) / 3);
+    const r = (width / 4) * size; // lobe radius — the widest point is ±2r
+    const cy = (height / 2) * size - r; // lobe centers, placed so the bbox centers on the origin
+    const tip = -(height / 2) * size;
 
-    // Left curve
-    this.bezierCurveTo(
-      -width * 0.375 * size,
-      height * size, // Control point 1 for the left lobe
-      -width * size,
-      (height * size) / 3, // Control point 2 for the left side of the heart
-      0,
-      -tipDepth * size, // Bottom tip of the heart, controlled by `tipDepth`
-    );
-
-    // Right curve
-    this.bezierCurveTo(
-      width * size,
-      (height * size) / 3, // Control point 3 for the right side of the heart
-      width * 0.375 * size,
-      height * size, // Control point 4 for the right lobe
-      0,
-      (height * size) / 3, // Close shape at the top middle
-    );
+    // Cleft, around the left lobe to the widest point, sweep down to the tip, up the right, around the
+    // right lobe back to the cleft.
+    this.moveTo(0, cy);
+    this.absarc(-r, cy, r, 0, Math.PI, false);
+    this.bezierCurveTo(-2 * r, cy - r * 1.2, -r * 0.9, tip * 0.5, 0, tip);
+    this.bezierCurveTo(r * 0.9, tip * 0.5, 2 * r, cy - r * 1.2, 2 * r, cy);
+    this.absarc(r, cy, r, 0, Math.PI, false);
   }
 }
