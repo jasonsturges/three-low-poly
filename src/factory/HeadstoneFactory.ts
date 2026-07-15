@@ -48,6 +48,7 @@ export const DEFAULT_HEADSTONE_STYLES: readonly HeadstoneStyle[] = [
   { kind: "rounded", arch: "semicircle", archWidth: 0.42, weight: 4 }, // shouldered — arch sits ON the slab
   { kind: "rounded", arch: "segmental", archHeight: 0.16, weight: 4 }, // a gentle curve, not a full round
   { kind: "rounded", arch: "pointed", archHeight: 0.5, weight: 2 }, // gothic
+  { kind: "rounded", arch: "ogee", archHeight: 0.26, weight: 1 }, // a low ogee flourish — rare
   { kind: "square", weight: 4 },
   { kind: "cross", weight: 2 },
   { kind: "celticCross", weight: 2 }, // the gothic flourish — flared arms and a nimbus
