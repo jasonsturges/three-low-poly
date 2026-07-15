@@ -124,7 +124,6 @@ export {
   buildArchedDiamondLatticeFrameGeometry,
   buildArchedDiamondLatticeParts,
   buildDiamondLatticeCameParts,
-  diamondLatticeSpringPhaseShift,
   insetArchedOpeningMetrics,
   traceArchedOpeningOutline,
   buildDiamondLatticeParts,

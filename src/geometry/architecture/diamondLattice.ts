@@ -337,18 +337,6 @@ export function buildArchedDiamondLatticeFrameGeometry(
   return geo;
 }
 
-/** Spring-to-apex Y shift that snaps the lattice phase to the rect/arch junction. */
-export function diamondLatticeSpringPhaseShift(
-  ymin: number,
-  rectTopY: number,
-  grid: DiamondLatticeGrid,
-): number {
-  const period = 2 * grid.b;
-  const springFromYmin = rectTopY - ymin;
-  const snapped = Math.round(springFromYmin / period) * period;
-  return snapped - springFromYmin;
-}
-
 function pointInsideArchedOpening(
   x: number,
   y: number,
@@ -533,9 +521,16 @@ export function buildArchedDiamondLatticeCameParts({
     clipInset > 0 ? boundsFromMetrics(insetArchedOpeningMetrics(metrics, clipInset)) : bounds;
   const parts: BoxGeometry[] = [];
 
-  const phaseShiftY = diamondLatticeSpringPhaseShift(metrics.ymin, metrics.rectTopY, grid);
-  addArchedDiagonalFamily(parts, clipBounds, metrics, grid, phaseShiftY, barT, barD, grid.angle);
-  addArchedDiagonalFamily(parts, clipBounds, metrics, grid, phaseShiftY, barT, barD, -grid.angle);
+  // The grid registers SYMMETRICALLY ABOUT THE OPENING CENTER, exactly as the square window does — which
+  // is the whole reason the square fills top-to-bottom at any cell count. `cellsY` diamonds span
+  // `totalHeight`, so a field centered on `centerY` reaches the sill and the apex together.
+  //
+  // An earlier version snapped the grid so a lattice node landed on the SPRING line (the rect/arch
+  // junction). That shoved the whole field vertically — up to a full half-cell — and abandoned the
+  // bottom: at `cellsY: 1` the single diamond floated near the arch with a gaping sill. Registering to the
+  // spring was one constraint too many; the centered field resolves cleanly through the spring on its own.
+  addArchedDiagonalFamily(parts, clipBounds, metrics, grid, barT, barD, grid.angle);
+  addArchedDiagonalFamily(parts, clipBounds, metrics, grid, barT, barD, -grid.angle);
   return parts;
 }
 
@@ -564,7 +559,6 @@ function addArchedDiagonalFamily(
   bounds: ArchedOpeningBounds,
   metrics: ArchedOpeningMetrics,
   grid: DiamondLatticeGrid,
-  phaseShiftY: number,
   barT: number,
   barD: number,
   angle: number,
@@ -575,7 +569,7 @@ function addArchedDiagonalFamily(
   const perpX = -Math.sin(angle);
   const perpY = Math.cos(angle);
   const count = Math.ceil(Math.hypot(bounds.width, totalHeight) / spacing) + 2;
-  const gridCenterY = centerY + phaseShiftY;
+  const gridCenterY = centerY;
 
   for (let i = -count; i <= count; i++) {
     const cx = perpX * i * spacing;
