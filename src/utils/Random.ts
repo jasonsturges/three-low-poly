@@ -66,6 +66,14 @@ export interface RandomSource {
   int(min?: number, max?: number): number;
   /** Uniform element from a non-empty array. */
   pick<T>(arr: readonly T[]): T;
+  /**
+   * Element from a non-empty array, chosen with probability proportional to `weights[i]`.
+   *
+   * The weighted sibling of {@link pick}. A palette of styles that appear at different rates — a
+   * cemetery that is mostly plain stones with the occasional monument — is a weighted draw, not a
+   * uniform one. Negative weights count as zero; if every weight is zero it falls back to uniform.
+   */
+  weighted<T>(arr: readonly T[], weights: readonly number[]): T;
   /** `true` with given probability (default 0.5). */
   boolean(probability?: number): boolean;
   /**
@@ -140,6 +148,22 @@ function buildSource(stream: RandomStream, seeded: boolean): RandomSource {
       if (!arr.length) throw new Error("RandomSource.pick() requires a non-empty array");
       return arr[this.int(0, arr.length - 1)]!;
     },
+    weighted<T>(arr: readonly T[], weights: readonly number[]): T {
+      if (!arr.length) throw new Error("RandomSource.weighted() requires a non-empty array");
+      if (weights.length !== arr.length) {
+        throw new Error("RandomSource.weighted() needs one weight per element");
+      }
+      let total = 0;
+      for (const w of weights) total += Math.max(0, w);
+      if (total <= 0) return arr[this.int(0, arr.length - 1)]!; // all zero — no signal, so uniform
+
+      let r = stream() * total;
+      for (let i = 0; i < arr.length; i++) {
+        r -= Math.max(0, weights[i]!);
+        if (r < 0) return arr[i]!;
+      }
+      return arr[arr.length - 1]!; // rounding slop only
+    },
     boolean(probability = 0.5) {
       return stream() < probability;
     },
@@ -174,6 +198,21 @@ export function randomPick<T>(stream: RandomStream, arr: readonly T[]): T {
   return arr[Math.floor(stream() * arr.length)]!;
 }
 
+/** Weighted pick from a non-empty array using any stream — `weights[i]` is the relative chance of `arr[i]`. */
+export function randomWeighted<T>(stream: RandomStream, arr: readonly T[], weights: readonly number[]): T {
+  if (!arr.length) throw new Error("randomWeighted() requires a non-empty array");
+  if (weights.length !== arr.length) throw new Error("randomWeighted() needs one weight per element");
+  let total = 0;
+  for (const w of weights) total += Math.max(0, w);
+  if (total <= 0) return arr[Math.floor(stream() * arr.length)]!;
+  let r = stream() * total;
+  for (let i = 0; i < arr.length; i++) {
+    r -= Math.max(0, weights[i]!);
+    if (r < 0) return arr[i]!;
+  }
+  return arr[arr.length - 1]!;
+}
+
 /**
  * Grouped exports — same function API, namespace import like {@link Easing}.
  *
@@ -190,4 +229,5 @@ export const Random = {
   deriveSubSeed,
   range: randomRange,
   pick: randomPick,
+  weighted: randomWeighted,
 } as const;
