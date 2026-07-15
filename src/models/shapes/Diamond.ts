@@ -2,7 +2,7 @@ import { Color, ColorRepresentation, Mesh, MeshStandardMaterial } from "three";
 import { DiamondGeometry, type DiamondGeometryOptions } from "../../geometry/shapes/DiamondGeometry";
 
 export interface DiamondOptions extends DiamondGeometryOptions {
-  /** Surface tint. Defaults to `#c0392b` — card red. */
+  /** Surface tint. Defaults to `#e0392b` — bright card red, shared with {@link Heart}. */
   color?: ColorRepresentation;
 }
 
@@ -10,7 +10,7 @@ export interface DiamondOptions extends DiamondGeometryOptions {
  * Diamond shape prefab — the card suit. See {@link DiamondGeometry}.
  */
 export class Diamond extends Mesh<DiamondGeometry, MeshStandardMaterial> {
-  constructor({ color = "#c0392b", ...geometryOptions }: DiamondOptions = {}) {
+  constructor({ color = "#e0392b", ...geometryOptions }: DiamondOptions = {}) {
     super(
       new DiamondGeometry(geometryOptions),
       new MeshStandardMaterial({
