@@ -2,6 +2,11 @@ import { ExtrudeGeometry, Path, Shape } from "three";
 import { openingOutline, type WallOpeningOptions } from "../../shapes/WallShape";
 import { offsetLoop } from "../../utils/OffsetLoop";
 
+/** The frame's outer silhouette follows the arch to a point — a finial on an ogee. */
+const OUTER_MITER = 6;
+/** The inner aperture blunts a sharp point rather than spiking a needle into the glass. */
+const INNER_MITER = 2;
+
 export interface WindowFrameGeometryOptions {
   /** The opening this frame rings. The SAME description the wall was punched with. */
   opening: WallOpeningOptions;
@@ -63,10 +68,16 @@ export class WindowFrameGeometry extends ExtrudeGeometry {
     // At the origin: the frame does not care where its opening sits in the wall, only what shape it is.
     const outline = openingOutline({ ...opening, x: 0, y: 0 }).getPoints(curveSegments);
 
-    const outer = new Shape(offsetLoop(outline, outset));
+    // The two edges of the frame want opposite things at a sharp arch (an ogee or a pointed crown), and
+    // it is the same corner offset in two directions:
+    //   - the OUTER edge is the frame's silhouette, so it should come to a POINT like the arch does — a
+    //     generous mitre limit lets that finial form;
+    //   - the INNER edge is the aperture, where a sharp point would stab a needle down into the glass —
+    //     a tight limit bevels it into a clean blunt.
+    const outer = new Shape(offsetLoop(outline, outset, OUTER_MITER));
 
     // Wound the other way, because a hole runs against its container.
-    const inner = new Path(offsetLoop(outline, -inset).reverse());
+    const inner = new Path(offsetLoop(outline, -inset, INNER_MITER).reverse());
     outer.holes.push(inner);
 
     super(outer, { depth, bevelEnabled: false, curveSegments });

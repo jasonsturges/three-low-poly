@@ -11,12 +11,20 @@ import { Vector2 } from "three";
  * Which is fine, because the curve is already a polyline by the time anyone wants a ring out of it. This
  * takes points and returns points; it owns nothing.
  *
- * Each vertex moves along the BISECTOR of its two edge normals, far enough that both offset edges pass
- * through it — a mitre. At a sharp corner that distance runs away (a 180° turn needs an infinite spike),
- * so it is capped, exactly as a stroke's mitre limit is.
+ * Each vertex offsets with a JOIN, exactly as a stroked path does — the Cairo / SVG model. Most corners
+ * MITRE: the two offset edges are extended until they meet at a point. But at a sharp corner that point
+ * runs away (a true cusp needs an infinite spike), so past a `miterLimit` the join BEVELS instead —
+ * emitting the two offset-edge endpoints and cutting straight across between them.
+ *
+ * **A clamped mitre is not a bevel.** Shortening the spike's length leaves a shorter spike that no longer
+ * reaches either edge; the corner is still a needle, just a stubbier one. The fix is to change the JOIN,
+ * not the distance — which is why a sharp ogee point blunts cleanly here rather than growing a thorn.
  *
  * @param points a CLOSED loop, wound counter-clockwise. Do not repeat the first point.
  * @param distance positive pushes OUT, negative pulls IN.
+ * @param miterLimit how far a mitre may reach, as a multiple of `distance`, before it bevels. The SVG
+ *   default is `4`; lower blunts sharp corners sooner. A right angle reaches `1.41`, so anything above
+ *   that keeps square corners sharp.
  *
  * @example
  * ```ts
@@ -43,22 +51,30 @@ export function offsetLoop(points: Vector2[], distance: number, miterLimit = 4):
     return new Vector2(dy / length, -dx / length);
   });
 
-  const limit = Math.abs(distance) * miterLimit;
+  const offset: Vector2[] = [];
 
-  const offset = loop.map((p, i) => {
+  loop.forEach((p, i) => {
     const into = normals[(i - 1 + count) % count]!; // the edge arriving here
     const outOf = normals[i]!; // the edge leaving
 
     const bisector = new Vector2().addVectors(into, outOf);
-    if (bisector.lengthSq() < 1e-12) return p.clone(); // a full reversal — nowhere sensible to go
+    if (bisector.lengthSq() < 1e-12) {
+      // A full reversal — the mitre is infinite. Bevel across the two offset edges.
+      offset.push(p.clone().addScaledVector(into, distance), p.clone().addScaledVector(outOf, distance));
+      return;
+    }
     bisector.normalize();
 
-    // How far along the bisector both offset edges meet. `cos` is the half-angle between the normals.
+    // `cos` is the half-angle between the two edge normals; `1/cos` is how far the mitre reaches, as a
+    // multiple of `distance`. Past the limit, a mitre would be a spike — so bevel instead, joining the
+    // two offset-edge endpoints with a straight cut across the corner.
     const cos = bisector.dot(outOf);
-    const reach = Math.abs(cos) < 1e-6 ? limit : distance / cos;
-    const capped = Math.max(-limit, Math.min(limit, reach));
+    if (Math.abs(cos) < 1e-6 || 1 / Math.abs(cos) > miterLimit) {
+      offset.push(p.clone().addScaledVector(into, distance), p.clone().addScaledVector(outOf, distance));
+      return;
+    }
 
-    return p.clone().addScaledVector(bisector, capped);
+    offset.push(p.clone().addScaledVector(bisector, distance / cos));
   });
 
   // **An offset FOLDS at a corner sharper than it is wide.** Pull a loop inward past a point — an ogee's
