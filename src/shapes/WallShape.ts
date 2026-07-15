@@ -157,3 +157,41 @@ export function wallOpeningTop(opening: WallOpeningOptions, wallWidth = Infinity
   const { half, springing } = resolve(opening, wallWidth);
   return springing + archRise(archOf(opening, half, springing));
 }
+
+/**
+ * An opening's outline as a filled {@link Shape} — the SAME curve the wall punches out of itself.
+ *
+ * This is the piece everything else in a window hangs off. The hole, the pane of glass that fills it, and
+ * the frame ringing it are not three shapes that happen to line up; they are one shape used three ways.
+ * Cut them from anywhere else and they will drift the moment somebody changes an arch.
+ *
+ * Wound counter-clockwise, and closed — up one jamb, over the arch, down the other, and back along the
+ * SILL. A window has a bottom edge (a doorway does not, which is why a doorway can never be a hole).
+ *
+ * @example
+ * ```ts
+ * const opening = { width: 0.8, height: 1, arch: "ogee" } as const;
+ *
+ * const wall = new WallShape({ width: 6, height: 4, windows: [{ ...opening, x: -2, y: 1.5 }] });
+ * const glass = new ShapeGeometry(openingOutline(opening)); // fits, by construction
+ * ```
+ */
+export function openingOutline(opening: WallOpeningOptions): Shape {
+  const { half, springing, x, sill } = resolve(opening, Infinity);
+  const profile = archOf(opening, half, springing);
+
+  const shape = new Shape();
+
+  // Counter-clockwise: along the sill, up the far jamb...
+  shape.moveTo(x - half, sill);
+  shape.lineTo(x + half, sill);
+  shape.lineTo(x + half, springing);
+
+  // ...over the arch, right to left...
+  traceArch(shape, { ...profile, x, from: "right", to: "left" });
+
+  // ...and closePath drops back down the near jamb to the sill.
+  shape.closePath();
+
+  return shape;
+}

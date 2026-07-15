@@ -98,6 +98,7 @@ export * from "./factory/HeadstoneFactory";
 export * from "./factory/HexagonalTileFactory";
 export * from "./factory/RockFactory";
 export * from "./factory/StaircaseFactory";
+export * from "./factory/WindowFactory";
 
 //------------------------------
 //  Geometries
@@ -105,6 +106,10 @@ export * from "./factory/StaircaseFactory";
 
 // Architecture
 export { ArchGeometry, type ArchGeometryOptions } from "./geometry/architecture/ArchGeometry";
+export {
+  WindowFrameGeometry,
+  type WindowFrameGeometryOptions,
+} from "./geometry/architecture/WindowFrameGeometry";
 export { ArchedDiamondLatticeWindowGeometry } from "./geometry/architecture/ArchedDiamondLatticeWindowGeometry";
 export { DiamondLatticeWindowGeometry } from "./geometry/architecture/DiamondLatticeWindowGeometry";
 export { GregorianLatticeWindowGeometry } from "./geometry/architecture/GregorianLatticeWindowGeometry";
@@ -392,6 +397,7 @@ export { StarShape, type StarShapeOptions } from "./shapes/StarShape";
 export { StrapHingeShape, type StrapHingeShapeOptions } from "./shapes/StrapHingeShape";
 export {
   WallShape,
+  openingOutline,
   wallOpeningTop,
   type WallOpeningOptions,
   type WallShapeOptions,
@@ -428,6 +434,7 @@ export * from "./utils/Center";
 export * from "./utils/ColorUtils";
 export * from "./utils/FindClosestPoint";
 export * from "./utils/GeometryBuffers";
+export * from "./utils/OffsetLoop";
 export * from "./utils/InterpolateCurve";
 export * from "./utils/LineEquations";
 export * from "./utils/ParametricCurveUtils";
