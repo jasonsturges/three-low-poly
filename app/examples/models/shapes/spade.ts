@@ -13,6 +13,7 @@ export default function (container: HTMLElement) {
     height: 1,
     stemWidth: 0.6,
     stemDepth: 0.75,
+    stemConcavity: 0.18,
     depth: 0.25,
   };
 
@@ -32,6 +33,7 @@ export default function (container: HTMLElement) {
   gui.add(params, "height", 0.3, 3, 0.05).name("Height").onChange(rebuild);
   gui.add(params, "stemWidth", 0.1, 1.5, 0.05).name("Stem Width").onChange(rebuild);
   gui.add(params, "stemDepth", 0.1, 2, 0.05).name("Stem Depth").onChange(rebuild);
+  gui.add(params, "stemConcavity", 0, 0.5, 0.01).name("Stem Curve").onChange(rebuild);
   gui.add(params, "depth", 0, 2, 0.05).name("Depth").onChange(rebuild);
 
   rebuild();

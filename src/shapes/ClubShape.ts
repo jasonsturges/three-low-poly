@@ -11,6 +11,13 @@ export interface ClubShapeOptions {
   stemWidth?: number;
   /** Depth of the stem below the origin. Defaults to `0.85`. */
   stemDepth?: number;
+  /**
+   * How far the stem's sides bow INWARD, as a fraction of the way to the centerline. Defaults to `0.18`.
+   *
+   * `0` is a straight trapezoid; higher pinches the waist and flares the foot — the concave sweep of a
+   * printed club. Same idea as {@link DiamondShapeOptions.concavity}, applied to the stem.
+   */
+  stemConcavity?: number;
 }
 
 /**
@@ -27,6 +34,7 @@ export class ClubShape extends Shape {
     height = 1,
     stemWidth = 0.56,
     stemDepth = 0.85,
+    stemConcavity = 0.18,
   }: ClubShapeOptions = {}) {
     super();
 
@@ -38,11 +46,16 @@ export class ClubShape extends Shape {
     const waistX = 0.15 * x;
     const waistY = -0.32 * y;
 
-    // Up the left of the stem, across its foot, and up its right side.
+    // Each stem side bows toward the centerline: its control point is the straight midpoint, pulled in
+    // toward x = 0 by `stemConcavity`. At 0 the control sits on the line and the side stays straight.
+    const k = 1 - stemConcavity;
+    const cyMid = (waistY - sd) / 2;
+
+    // Up the left of the stem (concave), across its foot, and up its right side (concave).
     this.moveTo(-waistX, waistY);
-    this.lineTo(-sw, -sd);
+    this.quadraticCurveTo(((-waistX - sw) / 2) * k, cyMid, -sw, -sd);
     this.lineTo(sw, -sd);
-    this.lineTo(waistX, waistY);
+    this.quadraticCurveTo(((sw + waistX) / 2) * k, cyMid, waistX, waistY);
 
     // The right lobe: out, and up.
     this.bezierCurveTo(0.46 * x, -0.3 * y, 1.0 * x, -0.3 * y, 1.0 * x, 0.05 * y);

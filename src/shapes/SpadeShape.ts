@@ -11,6 +11,13 @@ export interface SpadeShapeOptions {
   stemWidth?: number;
   /** Depth of the stem below the origin. Defaults to `0.75`. */
   stemDepth?: number;
+  /**
+   * How far the stem's sides bow INWARD, as a fraction of the way to the centerline. Defaults to `0.18`.
+   *
+   * `0` is a straight trapezoid; higher pinches the waist and flares the foot — the concave sweep of a
+   * printed spade. Same idea as {@link DiamondShapeOptions.concavity}, applied to the stem.
+   */
+  stemConcavity?: number;
 }
 
 /**
@@ -26,6 +33,7 @@ export class SpadeShape extends Shape {
     height = 1,
     stemWidth = 0.6,
     stemDepth = 0.75,
+    stemConcavity = 0.18,
   }: SpadeShapeOptions = {}) {
     super();
 
@@ -34,17 +42,25 @@ export class SpadeShape extends Shape {
     const sw = (stemWidth / 2) * size;
     const sd = stemDepth * size;
 
+    const waistX = 0.17 * x;
+    const waistY = -0.28 * y;
+
+    // Each stem side bows toward the centerline: its control point is the straight midpoint, pulled in
+    // toward x = 0 by `stemConcavity`.
+    const k = 1 - stemConcavity;
+    const cyMid = (waistY - sd) / 2;
+
     // From the point, down the left lobe, around, into the stem, and back up the right.
     this.moveTo(0, y);
 
     // Left shoulder, then around the left lobe and in to the waist.
     this.bezierCurveTo(-0.16 * x, 0.55 * y, -0.58 * x, 0.5 * y, -0.76 * x, 0.2 * y);
-    this.bezierCurveTo(-1.0 * x, -0.15 * y, -0.58 * x, -0.5 * y, -0.17 * x, -0.28 * y);
+    this.bezierCurveTo(-1.0 * x, -0.15 * y, -0.58 * x, -0.5 * y, -waistX, waistY);
 
-    // The stem.
-    this.lineTo(-sw, -sd);
+    // The stem — sides bowing inward to the flared foot.
+    this.quadraticCurveTo(((-waistX - sw) / 2) * k, cyMid, -sw, -sd);
     this.lineTo(sw, -sd);
-    this.lineTo(0.17 * x, -0.28 * y);
+    this.quadraticCurveTo(((sw + waistX) / 2) * k, cyMid, waistX, waistY);
 
     // Around the right lobe, and back up to the point.
     this.bezierCurveTo(0.58 * x, -0.5 * y, 1.0 * x, -0.15 * y, 0.76 * x, 0.2 * y);
