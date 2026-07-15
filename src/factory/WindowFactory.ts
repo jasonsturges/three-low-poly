@@ -7,6 +7,7 @@ import {
   Material,
   Mesh,
   MeshStandardMaterial,
+  Shape,
   ShapeGeometry,
 } from "three";
 import {
@@ -14,6 +15,10 @@ import {
   type WindowFrameGeometryOptions,
 } from "../geometry/architecture/WindowFrameGeometry";
 import { openingOutline, wallOpeningTop, type WallOpeningOptions } from "../shapes/WallShape";
+import { offsetLoop } from "../utils/OffsetLoop";
+
+/** Match the jamb's inner edge (WindowFrameGeometry's INNER_MITER) so the glass fits it exactly. */
+const JAMB_INNER_MITER = 2;
 
 export interface WindowSillOptions {
   /**
@@ -33,6 +38,14 @@ export interface WindowSillOptions {
   horn?: number;
 }
 
+export interface WindowJambOptions {
+  /**
+   * How far the jamb lining bites into the aperture from the wall's cut edge — the visible board width.
+   * Defaults to `0.05`.
+   */
+  width?: number;
+}
+
 export interface WindowOptions extends Omit<WindowFrameGeometryOptions, "opening"> {
   /** The opening this window fills — the SAME description the wall was punched with. */
   opening: WallOpeningOptions;
@@ -42,6 +55,22 @@ export interface WindowOptions extends Omit<WindowFrameGeometryOptions, "opening
   sill?: boolean | WindowSillOptions;
   /** Omit to leave the aperture empty — a broken window. */
   glass?: boolean;
+  /**
+   * The jamb — the lining of the reveal, running the full depth of the wall. Pass `true` for the
+   * defaults, an object to size it. Omit for a bare opening.
+   *
+   * The decorative {@link WindowOptions.frame} is a shallow ring on the wall's FACE; the jamb is the
+   * same ring turned 90° INTO the wall — deep and flush — so it lines the hole instead of the surface.
+   * With a jamb, the glass drops to the wall's mid-depth and sits inside it, rather than clinging to the
+   * front where it leaves the hole open behind. Needs {@link WindowOptions.wallThickness} to know how
+   * deep to run.
+   */
+  jamb?: boolean | WindowJambOptions;
+  /**
+   * Thickness of the wall the window is set into — the depth the {@link WindowOptions.jamb} spans and the
+   * span the glass centers in. Defaults to `0.3`. Ignored without a jamb.
+   */
+  wallThickness?: number;
 
   /** Frame material. Omit to build a flat-shaded standard material from `frameColor`. */
   frameMaterial?: Material;
@@ -55,12 +84,14 @@ export interface WindowOptions extends Omit<WindowFrameGeometryOptions, "opening
   glassOpacity?: number;
 }
 
-/** A window: glass, the frame ringing it, and the sill under it. */
+/** A window: glass, the frame ringing it, the jamb lining the reveal, and the sill under it. */
 export interface WindowAssembly extends Group {
   /** The pane. Flat, and `DoubleSide`, so it survives being looked at from behind. */
   glass?: Mesh;
-  /** The ring around the pane. */
+  /** The decorative ring on the wall's face. */
   frame?: Mesh;
+  /** The lining of the reveal, running the wall's full depth. */
+  jamb?: Mesh;
   /** The slab under it. */
   sill?: Mesh;
 }
@@ -104,6 +135,8 @@ export function createWindow({
   frame = true,
   sill,
   glass = true,
+  jamb,
+  wallThickness = 0.3,
   inset = 0.03,
   outset = 0.06,
   depth = 0.05,
@@ -133,11 +166,33 @@ export function createWindow({
     window.add(window.frame);
   }
 
+  const jambWidth = jamb ? (jamb === true ? 0.05 : jamb.width ?? 0.05) : 0;
+
+  if (jamb) {
+    // The same ring as the face frame, turned INTO the wall: deep (the wall's full thickness) and flush
+    // (no outset), so its outer edge sits against the cut hole and its inner edge is the reveal you see.
+    // The window mounts on the front face (z = 0), so the jamb runs back through the wall in -z.
+    window.jamb = new Mesh(
+      new WindowFrameGeometry({ opening: centered, inset: jambWidth, outset: 0, depth: wallThickness, curveSegments }),
+      timber,
+    );
+    window.jamb.position.z = -wallThickness;
+    window.jamb.castShadow = true;
+    window.jamb.receiveShadow = true;
+    window.add(window.jamb);
+  }
+
   if (glass) {
+    // With a jamb the glass fits the jamb's inner opening (the outline pulled in by the board width) and
+    // centers in the wall; without one it fills the bare hole and clings to the frame's face.
+    const glassShape = jamb
+      ? new Shape(offsetLoop(openingOutline(centered).getPoints(curveSegments), -jambWidth, JAMB_INNER_MITER))
+      : openingOutline(centered);
+
     // Flat, and DOUBLE-SIDED. A single-sided pane simply vanishes when the camera swings behind the
     // wall — the glass is still there, you are just looking at the back of a face that was never drawn.
     window.glass = new Mesh(
-      new ShapeGeometry(openingOutline(centered), curveSegments),
+      new ShapeGeometry(glassShape, curveSegments),
       glassMaterial ??
         new MeshStandardMaterial({
           color: new Color(glassColor),
@@ -148,8 +203,8 @@ export function createWindow({
           side: DoubleSide,
         }),
     );
-    // Sit it INSIDE the frame's depth, so the frame reads as holding it from both faces.
-    window.glass.position.z = frame ? depth / 2 : 0;
+    // Centered in the wall when there is a jamb to hold it; otherwise inside the frame's depth.
+    window.glass.position.z = jamb ? -wallThickness / 2 : frame ? depth / 2 : 0;
     window.add(window.glass);
   }
 

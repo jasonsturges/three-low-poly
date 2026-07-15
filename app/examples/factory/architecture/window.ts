@@ -57,7 +57,11 @@ export default function (container: HTMLElement) {
 
     sill: true,
     jut: 0.09,
+    sillThickness: 0.04,
     horn: 0.05,
+
+    jamb: true,
+    jambWidth: 0.05,
 
     glass: true,
 
@@ -108,7 +112,10 @@ export default function (container: HTMLElement) {
       inset: params.inset,
       outset: params.outset,
       depth: params.depth,
-      sill: params.sill ? { jut: params.jut, horn: params.horn } : false,
+      sill: params.sill ? { jut: params.jut, thickness: params.sillThickness, horn: params.horn } : false,
+      // The jamb lines the reveal and runs the wall's full depth, so it needs to know that depth.
+      jamb: params.jamb ? { width: params.jambWidth } : false,
+      wallThickness: params.thickness,
     });
     // Anchored at its sill and centered on X, so hanging it is one line: the opening's own x and y, and
     // the face of the wall it sits on.
@@ -121,7 +128,7 @@ export default function (container: HTMLElement) {
     wall.geometry.dispose();
 
     scene.remove(window);
-    for (const part of [window.frame, window.glass, window.sill]) {
+    for (const part of [window.frame, window.jamb, window.glass, window.sill]) {
       if (!part) continue;
       part.geometry.dispose();
       (part.material as MeshStandardMaterial).dispose();
@@ -160,8 +167,16 @@ export default function (container: HTMLElement) {
   sill.add(params, "sill").name("Sill").onChange(rebuild);
   // The overhang is most of why a window reads as BUILT IN rather than cut out.
   sill.add(params, "jut", 0.02, 0.3, 0.01).name("Jut").onChange(rebuild);
+  sill.add(params, "sillThickness", 0.02, 0.25, 0.005).name("Thickness").onChange(rebuild);
   sill.add(params, "horn", 0, 0.2, 0.01).name("Horns").onChange(rebuild);
   sill.open();
+
+  const jamb = gui.addFolder("Jamb (reveal lining)");
+  // The same ring as the frame, turned INTO the wall — deep and flush, lining the hole. Toggle it off and
+  // the glass jumps back to the face, leaving the reveal bare and a gap behind.
+  jamb.add(params, "jamb").name("Jamb").onChange(rebuild);
+  jamb.add(params, "jambWidth", 0.02, 0.15, 0.005).name("Board Width").onChange(rebuild);
+  jamb.open();
 
   const glass = gui.addFolder("Glass");
   // Flat and DoubleSide — orbit behind the wall and it is still there.
