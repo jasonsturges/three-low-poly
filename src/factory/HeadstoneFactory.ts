@@ -11,11 +11,49 @@ import {
   Quaternion,
   Vector3,
 } from "three";
+import { CelticCrossHeadstoneGeometry } from "../geometry/cemetery/CelticCrossHeadstoneGeometry";
 import { CrossHeadstoneGeometry } from "../geometry/cemetery/CrossHeadstoneGeometry";
+import { ObeliskGeometry } from "../geometry/cemetery/ObeliskGeometry";
 import { ObeliskHeadstoneGeometry } from "../geometry/cemetery/ObeliskHeadstoneGeometry";
 import { RoundedHeadstoneGeometry } from "../geometry/cemetery/RoundedHeadstoneGeometry";
 import { SquareHeadstoneGeometry } from "../geometry/cemetery/SquareHeadstoneGeometry";
+import { ArchStyle } from "../shapes/ArchProfile";
 import { createRandom } from "../utils/Random";
+
+/**
+ * One kind of stone in the row's palette.
+ *
+ * The `rounded` family is where the variety lives — it is an arched slab, so it takes the whole
+ * {@link ArchStyle} vocabulary plus a narrower `archWidth` for the shouldered look (an arch sitting *on*
+ * the slab). `cross`, `obelisk` (a tapered monument) and `obeliskHeadstone` (a stepped one) are single
+ * silhouettes. Every style carries a `weight` — its relative frequency in the row.
+ */
+export type HeadstoneStyle =
+  | { kind: "rounded"; arch?: ArchStyle; archWidth?: number; archHeight?: number; weight?: number }
+  | { kind: "square"; weight?: number }
+  | { kind: "cross"; weight?: number }
+  | { kind: "celticCross"; weight?: number }
+  | { kind: "obelisk"; weight?: number }
+  | { kind: "obeliskHeadstone"; weight?: number };
+
+/**
+ * The stock cemetery: mostly plain rounded and square stones, the occasional cross, and obelisks that
+ * stand out because they are fewer. The rounded family dominates and fans into four tops — a full-width
+ * semicircle, a shouldered one, a gently curved segmental, and a gothic point.
+ *
+ * These are relative weights, not counts: a row draws from them, so the mix holds at any `count`.
+ */
+export const DEFAULT_HEADSTONE_STYLES: readonly HeadstoneStyle[] = [
+  { kind: "rounded", arch: "semicircle", weight: 6 },
+  { kind: "rounded", arch: "semicircle", archWidth: 0.42, weight: 4 }, // shouldered — arch sits ON the slab
+  { kind: "rounded", arch: "segmental", archHeight: 0.16, weight: 4 }, // a gentle curve, not a full round
+  { kind: "rounded", arch: "pointed", archHeight: 0.5, weight: 2 }, // gothic
+  { kind: "square", weight: 4 },
+  { kind: "cross", weight: 2 },
+  { kind: "celticCross", weight: 2 }, // the gothic flourish — flared arms and a nimbus
+  { kind: "obeliskHeadstone", weight: 2 }, // the stepped one — the everyday obelisk marker
+  { kind: "obelisk", weight: 1 }, // the tall tapered monument — rarer, so it stands out
+];
 
 export interface HeadstoneRowOptions {
   /** Number of plots. Defaults to `8`. */
@@ -57,29 +95,53 @@ export interface HeadstoneRowOptions {
   weathering?: number;
   /** Stone material. Omit to build a flat-shaded standard material from `color`. */
   material?: Material;
+  /**
+   * The palette the row draws from. Defaults to {@link DEFAULT_HEADSTONE_STYLES}.
+   *
+   * Pass your own to reshape the graveyard — `[{ kind: "cross" }]` for a war plot, all-`rounded` with
+   * one `arch` for a uniform churchyard. Weights are relative; omit `weight` for `1`.
+   */
+  styles?: readonly HeadstoneStyle[];
 }
 
-/** One headstone silhouette, and the footprint a lean has to lift out of the ground. */
+/** The geometry a style builds, and the footprint a lean has to lift out of the ground. */
 interface Variant {
   geometry: BufferGeometry;
+  weight: number;
   halfWidth: number;
   halfDepth: number;
 }
 
-function buildVariants(): Variant[] {
-  const geometries: BufferGeometry[] = [
-    new RoundedHeadstoneGeometry(),
-    new SquareHeadstoneGeometry(),
-    new CrossHeadstoneGeometry(),
-    new ObeliskHeadstoneGeometry(),
-  ];
+function styleGeometry(style: HeadstoneStyle): BufferGeometry {
+  switch (style.kind) {
+    case "rounded":
+      return new RoundedHeadstoneGeometry({
+        arch: style.arch,
+        archWidth: style.archWidth,
+        archHeight: style.archHeight,
+      });
+    case "square":
+      return new SquareHeadstoneGeometry();
+    case "cross":
+      return new CrossHeadstoneGeometry();
+    case "celticCross":
+      return new CelticCrossHeadstoneGeometry();
+    case "obelisk":
+      return new ObeliskGeometry();
+    case "obeliskHeadstone":
+      return new ObeliskHeadstoneGeometry();
+  }
+}
 
-  return geometries.map((geometry) => {
+function buildPalette(styles: readonly HeadstoneStyle[]): Variant[] {
+  return styles.map((style) => {
+    const geometry = styleGeometry(style);
     geometry.computeBoundingBox();
     const box = geometry.boundingBox!;
 
     return {
       geometry,
+      weight: Math.max(0, style.weight ?? 1),
       halfWidth: Math.max(Math.abs(box.min.x), Math.abs(box.max.x)),
       halfDepth: Math.max(Math.abs(box.min.z), Math.abs(box.max.z)),
     };
@@ -125,9 +187,12 @@ export function rowOfHeadstones({
   color = "#777777",
   weathering = 0.09,
   material,
+  styles = DEFAULT_HEADSTONE_STYLES,
 }: HeadstoneRowOptions = {}): Group {
   const source = createRandom(seed);
-  const variants = buildVariants();
+  const variants = buildPalette(styles);
+  const indices = variants.map((_, i) => i);
+  const weights = variants.map((variant) => variant.weight);
 
   const stone =
     material ?? new MeshStandardMaterial({ color: new Color(color), roughness: 0.9, flatShading: true });
@@ -142,7 +207,7 @@ export function rowOfHeadstones({
   const base = new Color(color);
 
   for (let i = 0; i < count; i++) {
-    const variant = source.int(0, variants.length - 1);
+    const variant = source.weighted(indices, weights);
     const { halfWidth, halfDepth } = variants[variant]!;
 
     const uniform = source.float(scaleMin, scaleMax);

@@ -157,6 +157,10 @@ export { BookGeometry, type BookGeometryOptions } from "./geometry/books/BookGeo
 
 // Cemetery
 export {
+  CelticCrossHeadstoneGeometry,
+  type CelticCrossHeadstoneGeometryOptions,
+} from "./geometry/cemetery/CelticCrossHeadstoneGeometry";
+export {
   CrossHeadstoneGeometry,
   type CrossHeadstoneGeometryOptions,
 } from "./geometry/cemetery/CrossHeadstoneGeometry";
@@ -297,6 +301,7 @@ export { SmokeCurl, type SmokeCurlOptions } from "./models/atmosphere/SmokeCurl"
 export { Book, type BookOptions } from "./models/books/Book";
 
 // Cemetery
+export { CelticCrossHeadstone, type CelticCrossHeadstoneOptions } from "./models/cemetery/CelticCrossHeadstone";
 export { CrossHeadstone, type CrossHeadstoneOptions } from "./models/cemetery/CrossHeadstone";
 export { Mausoleum } from "./models/cemetery/Mausoleum";
 export { Obelisk, type ObeliskOptions } from "./models/cemetery/Obelisk";
