@@ -65,6 +65,15 @@ export interface HeadstoneSettleOptions {
   /** Max twist about Y, in radians. Keep it small — a turned stone reads as settled, not knocked over. Defaults to `0.4`. */
   twistMax?: number;
   /**
+   * How the twist is distributed within `±twistMax`, via {@link RandomSource.skewCenter}. Defaults to
+   * `1.6`.
+   *
+   * `1` is uniform — every angle equally likely, so half the stones are dramatically turned. Higher pulls
+   * most stones toward straight while still letting the occasional one reach the full `twistMax`, so a
+   * hard-turned stone reads as the exception it should be, not the rule.
+   */
+  twistBias?: number;
+  /**
    * Max *additional* depth a stone settles into the ground, beyond whatever its lean already
    * demands. Stones only ever sink, never rise. Defaults to `0.08`.
    *
@@ -188,6 +197,7 @@ interface Plot {
 interface Settle {
   leanMax: number;
   twistMax: number;
+  twistBias: number;
   sinkMax: number;
   driftMax: number;
   scaleMin: number;
@@ -234,7 +244,7 @@ function settleStone(
     halfWidth * uniform * Math.abs(Math.sin(leanZ)) + halfDepth * uniform * Math.abs(Math.sin(leanX));
   const sink = lifted + source.float(0, s.sinkMax);
 
-  _rotation.set(leanX, source.float(-s.twistMax, s.twistMax), leanZ, "YXZ");
+  _rotation.set(leanX, source.skewCenter(s.twistBias, -s.twistMax, s.twistMax), leanZ, "YXZ");
   _quaternion.setFromEuler(_rotation);
   _position.set(x + source.float(-s.driftMax, s.driftMax), -sink, z + source.float(-s.driftMax, s.driftMax));
   _scale.setScalar(uniform);
@@ -284,6 +294,7 @@ function layStones(
     seed,
     leanMax = 0.12,
     twistMax = 0.4,
+    twistBias = 1.6,
     sinkMax = 0.08,
     driftMax = 0.05,
     scaleMin = 0.85,
@@ -299,7 +310,7 @@ function layStones(
   const variants = buildPalette(styles);
   const indices = variants.map((_, i) => i);
   const weights = variants.map((variant) => variant.weight);
-  const settle: Settle = { leanMax, twistMax, sinkMax, driftMax, scaleMin, scaleMax, weathering, base: new Color(color) };
+  const settle: Settle = { leanMax, twistMax, twistBias, sinkMax, driftMax, scaleMin, scaleMax, weathering, base: new Color(color) };
 
   const stone =
     material ?? new MeshStandardMaterial({ color: new Color(color), roughness: 0.9, flatShading: true });

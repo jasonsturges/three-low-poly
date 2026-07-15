@@ -18,66 +18,31 @@ export function randomInteger(min = 0, max = 1, source: RandomSource = defaultSo
 }
 
 /**
- * Generates a random number skewed towards the maximum value.
+ * Random number in `[min, max]` skewed toward `max`. See {@link RandomSource.skewMax}.
  *
- * @param {number} [exponent=0.5] - Controls the skew of the distribution.
- *                                  A smaller value (e.g., 0.3) skews the values towards the max.
- *                                  A larger value (e.g., 0.8) creates a more even distribution.
- * @param {number} [min=0] - Minimum value of the range.
- * @param {number} [max=1] - Maximum value of the range.
- * @returns {number} A random number between `min` and `max`, skewed towards `max`.
+ * `exponent` is the bias strength — **higher skews harder** toward `max`; `1` is uniform, `< 1` reverses.
+ * Defaults to `2`.
  */
-export function logarithmicRandomMax(
-  exponent = 0.5,
-  min = 0,
-  max = 1,
-  source: RandomSource = defaultSource,
-) {
+export function randomSkewMax(exponent = 2, min = 0, max = 1, source: RandomSource = defaultSource) {
   return source.skewMax(exponent, min, max);
 }
 
 /**
- * Generates a random number skewed towards the minimum value.
+ * Random number in `[min, max]` skewed toward `min`. See {@link RandomSource.skewMin}.
  *
- * @param {number} [exponent=0.5] - Controls the skew of the distribution.
- *                                  A smaller value (e.g., 0.3) skews the values towards the min.
- *                                  A larger value (e.g., 0.8) creates a more even distribution.
- * @param {number} [min=0] - Minimum value of the range.
- * @param {number} [max=1] - Maximum value of the range.
- * @returns {number} A random number between `min` and `max`, skewed towards `min`.
+ * `exponent` is the bias strength — **higher skews harder** toward `min`; `1` is uniform, `< 1` reverses.
+ * Defaults to `2`.
  */
-export function logarithmicRandomMin(
-  exponent = 0.5,
-  min = 0,
-  max = 1,
-  source: RandomSource = defaultSource,
-) {
+export function randomSkewMin(exponent = 2, min = 0, max = 1, source: RandomSource = defaultSource) {
   return source.skewMin(exponent, min, max);
 }
 
 /**
- * Generates a random number with an inverse logarithmic distribution, biased towards the maximum value.
+ * Random number in `[min, max]` skewed toward the CENTER. See {@link RandomSource.skewCenter}.
  *
- * @param {number} [min=0] - Minimum value of the range.
- * @param {number} [max=1] - Maximum value of the range.
- * @returns {number} A random number between `min` and `max`, skewed towards the maximum.
+ * `exponent` is the bias strength — **higher clusters tighter** to the middle; `1` is uniform, `< 1`
+ * reverses (toward the edges). Defaults to `2`.
  */
-
-function inverseLogarithmicRandomMax(min = 0, max = 1, source: RandomSource = defaultSource) {
-  const randomValue = 1 - Math.log(1 - source.next()) / Math.log(2);
-  return min + (max - min) * randomValue;
-}
-
-/**
- * Generates a random number with an inverse logarithmic distribution, biased towards the minimum value.
- *
- * @param {number} [min=0] - Minimum value of the range.
- * @param {number} [max=1] - Maximum value of the range.
- * @returns {number} A random number between `min` and `max`, skewed towards the minimum.
- */
-function inverseLogarithmicRandomMin(min = 0, max = 1, source: RandomSource = defaultSource) {
-  const randomValue = Math.log(1 - source.next()) / Math.log(2);
-  const adjustedValue = -randomValue;
-  const clampedValue = Math.min(Math.max(adjustedValue, 0), 1);
-  return min + (max - min) * clampedValue;
+export function randomSkewCenter(exponent = 2, min = 0, max = 1, source: RandomSource = defaultSource) {
+  return source.skewCenter(exponent, min, max);
 }

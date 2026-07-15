@@ -24,7 +24,7 @@
  *
  * ### Layer 3 — {@link RandomNumberUtils}
  *
- * Existing helpers (`randomFloat`, `logarithmicRandomMax`, …) accept an optional
+ * Existing helpers (`randomFloat`, `randomSkewMax`, …) accept an optional
  * {@link RandomSource} as their last argument. Omit it for unseeded default behavior.
  *
  * ---
@@ -77,15 +77,24 @@ export interface RandomSource {
   /** `true` with given probability (default 0.5). */
   boolean(probability?: number): boolean;
   /**
-   * Skew toward `max`. Lower `exponent` = stronger bias.
-   * Mirrors {@link logarithmicRandomMax}.
+   * Skew toward `max`. **`exponent` is the bias strength — higher pulls harder;** `1` is uniform, and
+   * `< 1` reverses (piling toward `min` instead). Defaults to `2`. Mirrors {@link randomSkewMax}.
    */
   skewMax(exponent?: number, min?: number, max?: number): number;
   /**
-   * Skew toward `min`. Lower `exponent` = stronger bias.
-   * Mirrors {@link logarithmicRandomMin}.
+   * Skew toward `min` — the mirror of {@link skewMax}. **Higher `exponent` = stronger bias;** `1` is
+   * uniform, `< 1` reverses. Defaults to `2`. Mirrors {@link randomSkewMin}.
    */
   skewMin(exponent?: number, min?: number, max?: number): number;
+  /**
+   * Skew toward the CENTER of the range — the symmetric sibling of {@link skewMax} / {@link skewMin}.
+   *
+   * Small deviations from the middle are common, large ones rare, both directions equally likely: a
+   * gentle jitter with the occasional outlier. Same convention as its siblings — **higher `exponent` =
+   * stronger** pull to the center; `1` is uniform, `< 1` reverses (piling toward the edges). Defaults to
+   * `2`. The full range is still reached, just seldom.
+   */
+  skewCenter(exponent?: number, min?: number, max?: number): number;
 }
 
 /**
@@ -167,11 +176,21 @@ function buildSource(stream: RandomStream, seeded: boolean): RandomSource {
     boolean(probability = 0.5) {
       return stream() < probability;
     },
-    skewMax(exponent = 0.5, min = 0, max = 1) {
-      return min + (max - min) * Math.pow(stream(), exponent);
+    skewMax(exponent = 2, min = 0, max = 1) {
+      // Higher `exponent` = stronger. `pow(u, 1/exp)` with exp > 1 raises `u` toward 1 → toward `max`.
+      return min + (max - min) * Math.pow(stream(), 1 / exponent);
     },
-    skewMin(exponent = 0.5, min = 0, max = 1) {
-      return min + (max - min) * Math.pow(1 - stream(), exponent);
+    skewMin(exponent = 2, min = 0, max = 1) {
+      // The mirror of skewMax: flip the RESULT, not the input, so it piles toward `min`.
+      return min + (max - min) * (1 - Math.pow(stream(), 1 / exponent));
+    },
+    skewCenter(exponent = 2, min = 0, max = 1) {
+      // Draw once in [-1, 1), then shrink the MAGNITUDE toward 0 while keeping the sign, so the result
+      // clusters at the midpoint. Higher `exponent` pulls harder; `1` is uniform (same value as `float`).
+      const center = (min + max) / 2;
+      const half = (max - min) / 2;
+      const t = stream() * 2 - 1;
+      return center + half * Math.sign(t) * Math.pow(Math.abs(t), exponent);
     },
   };
 }

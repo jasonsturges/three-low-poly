@@ -1,7 +1,7 @@
 import { BookGeometry } from "../geometry/books/BookGeometry";
 import { InstancedMesh, Matrix4, Material, Quaternion, Vector3 } from "three";
 import { createRandom, type RandomSource } from "../utils/Random";
-import { logarithmicRandomMax, logarithmicRandomMin, randomFloat } from "../utils/RandomNumberUtils";
+import { randomSkewMax, randomSkewMin, randomFloat } from "../utils/RandomNumberUtils";
 
 /** Default {@link BookGeometry} spine depth — stack layer height when books lay flat. */
 const BOOK_UNIT_DEPTH = 0.5;
@@ -88,8 +88,8 @@ function randomScale({
 }: RandomScaleOptions): Vector3 {
   return new Vector3(
     randomFloat(scaleXMin, scaleXMax, source),
-    logarithmicRandomMax(0.25, scaleYMin, scaleYMax, source),
-    logarithmicRandomMin(0.8, scaleZMin, scaleZMax, source),
+    randomSkewMax(4, scaleYMin, scaleYMax, source),
+    randomSkewMin(1.25, scaleZMin, scaleZMax, source),
   );
 }
 

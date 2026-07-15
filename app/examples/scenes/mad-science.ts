@@ -24,7 +24,7 @@ import {
   MortarAndPestle,
   PotionBottle,
   Stand,
-  logarithmicRandomMax,
+  randomSkewMax,
   randomFloat,
 } from "three-low-poly";
 import { clearDefaultLights } from "../../framework/clearDefaultLights";
@@ -132,12 +132,12 @@ export default function (container: HTMLElement) {
       const shelfSpacing = (8 - 0.1) / (4 + 1);
       for (let j = -1.9; j <= 1.9; j += randomFloat(0.5, 1.5)) {
         const flask = new ErlenmeyerFlask({
-          flaskRadius: logarithmicRandomMax(0.5, 0.1, 0.5),
-          neckRadius: logarithmicRandomMax(0.1, 0.05, 0.1),
-          height: logarithmicRandomMax(0.5, 0.2, 1),
-          neckHeight: logarithmicRandomMax(0.5, 0.1, 0.2),
+          flaskRadius: randomSkewMax(2, 0.1, 0.5),
+          neckRadius: randomSkewMax(10, 0.05, 0.1),
+          height: randomSkewMax(2, 0.2, 1),
+          neckHeight: randomSkewMax(2, 0.1, 0.2),
         });
-        flask.position.set(j, 0.1 / 2 + i * shelfSpacing, logarithmicRandomMax(0.5, -0.1, 0.1));
+        flask.position.set(j, 0.1 / 2 + i * shelfSpacing, randomSkewMax(2, -0.1, 0.1));
         flask.castShadow = true;
         shelf.add(flask);
       }
