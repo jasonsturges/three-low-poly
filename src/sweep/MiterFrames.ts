@@ -214,3 +214,36 @@ export function miterFrames(
 
   return stations;
 }
+
+// TODO: THE MITER TAXONOMY — the six joints this library needs, and where each one stands.
+//
+// Numbered so code, docs, and studies can cite the same thing. Full write-up, with the measurements behind
+// each verdict, in `docs/joining-swept-bars.md`.
+//
+//   1. PICTURE-FRAME MITER — two members of one path meeting at a corner. Cut plane DERIVED from the path
+//      (the bisector). SOLVED: `miterFrames(path, { closed: true })`. Requires equal stock, structurally —
+//      consecutive segments share one ring, so one profile.
+//
+//   2. SEAT CUT — a member landing on a surface. Cut plane SUPPLIED by that surface. SOLVED:
+//      `{ startCut, endCut }`. Guard needed: never cut against a plane the member is nearly PARALLEL to, or
+//      the `1 / |d · n|` widening explodes (measured 50x at 88.85°, throwing a bar 0.25 units off).
+//
+//   3. HIP — two facets meeting where a member reaches a CONVEX CORNER of its boundary, so both bounding
+//      planes trim it. Jason's sketch: an arrowhead, ">". NOT EXPRESSIBLE HERE: one station is one ring is
+//      one plane. Needs a real trimming capability. A single-plane bisector cut gets a CHAMFER instead —
+//      exact at 45°, bounded by half a bar width otherwise. WANTED.
+//
+//   4. T-JUNCTION / X-CROSSING — a member butting into or crossing another. No bisector to share, so no
+//      miter applies. Deliberately NOT mitered: bury the end (partially, never flush — coplanar co-facing
+//      surfaces z-fight) or let them interpenetrate, which is what lead came and ironwork do anyway.
+//
+//   5. THREE-WAY CORNER — two rails and a post sharing one corner, as in a cube frame. Each end wants a
+//      two-facet hip, so it inherits (3)'s limit. Sidestep it: have members SPAN between each other's
+//      surfaces, reading contact planes off `computeBoundingBox()` rather than predicting them.
+//
+//   6. CURVED BOUNDARY — a member terminating on an ARC rather than a plane. There is no flat plane to cut
+//      against, so none of the above reaches it. UNSOLVED, and it is what the arched lattice windows
+//      actually need. Likely wants pairing with the named arch profiles rather than a new cut.
+//
+// Plan of record: isolate each of these in its own study first, then implement. `mitred-corner.ts` covers
+// (1) and (2) today.
