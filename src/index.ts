@@ -239,7 +239,6 @@ export {
 } from "./geometry/lighting/WallSconceGeometry";
 
 // Primitives
-export { ParallelogramBoxGeometry } from "./geometry/primitives/ParallelogramBoxGeometry";
 
 // Rocks
 export { BoulderGeometry, type BoulderGeometryOptions } from "./geometry/rocks/BoulderGeometry";
