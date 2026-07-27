@@ -1,11 +1,20 @@
 import GUI from "lil-gui";
-import { centerObject, GnarledTree, GnarledTreeGeometry } from "three-low-poly";
+import { Color, Mesh, MeshStandardMaterial } from "three";
+import { GnarledTreeGeometry, GroundGrid } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
 
 export const meta = { title: "Gnarled Tree" };
 
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container, { background: 0x8fa6b8, cameraPosition: [5, 4, 6] });
+  const handle = createScene(container, { background: 0x8fa6b8, cameraPosition: [6, 4, 7] });
+  const { scene, dispose } = handle;
+
+  // A grid at y=0 so the trunk's base and anchor are checkable rather than assumed. Deliberately NOT
+  // `centerObject`: that lands the bounding-box CENTRE on the origin, which buries half the tree below the
+  // floor and hides the one thing this example should show.
+  const ground = new GroundGrid({ size: 14, divisions: 14 });
+  scene.add(ground);
 
   const params = {
     seed: 1337,
@@ -20,14 +29,28 @@ export default function (container: HTMLElement) {
     smoothing: 4,
   };
 
-  const stats = { triangles: 0 };
+  const stats = { triangles: 0, baseY: "" };
 
-  const tree = new GnarledTree(params);
+  // The geometry class with a material the example owns — not the `GnarledTree` prefab, which added nothing
+  // but this default material. Same shape as the Clearing Tree example.
+  const colors = { bark: "#2b2620" };
+  const bark = new MeshStandardMaterial({
+    color: new Color(colors.bark),
+    roughness: 1,
+    metalness: 0,
+    flatShading: true,
+  });
+
+  const tree = new Mesh(new GnarledTreeGeometry(params), bark);
+  tree.castShadow = tree.receiveShadow = true;
   scene.add(tree);
 
   const refresh = () => {
-    centerObject(tree);
     stats.triangles = tree.geometry.index ? tree.geometry.index.count / 3 : 0;
+    // Read the base off the geometry, so the anchor claim is verifiable on screen.
+    tree.geometry.computeBoundingBox();
+    const box = tree.geometry.boundingBox!;
+    stats.baseY = box.min.y.toExponential(2);
   };
 
   const rebuild = () => {
@@ -37,6 +60,10 @@ export default function (container: HTMLElement) {
   };
 
   refresh();
+  // Framed ONCE, deliberately not inside `refresh`. `frameObject` recomputes the camera DISTANCE
+  // from the object's bounding sphere, so calling it on every rebuild snaps the zoom back and throws
+  // away whatever the viewer had set.
+  frameObject(handle, tree, { fit: 1.3 });
 
   const gui = new GUI();
   gui.title("Gnarled Tree");
@@ -62,11 +89,18 @@ export default function (container: HTMLElement) {
   // 1 is a faceted, hard-cornered gnarl; 4+ turns it into a genuine curve.
   mesh.add(params, "smoothing", 1, 8, 1).name("Smoothing").onChange(rebuild);
   mesh.add(stats, "triangles").name("Triangles").listen().disable();
+  // Should sit on 0 at every seed and every parameter — that is the base fix holding.
+  mesh.add(stats, "baseY").name("Base Y").listen().disable();
+
+  // No rebuild — geometry is untouched by the bark colour.
+  const material = gui.addFolder("Material");
+  material.addColor(colors, "bark").name("Bark").onChange(() => bark.color.set(colors.bark));
 
   return () => {
     gui.destroy();
     tree.geometry.dispose();
-    tree.material.dispose();
+    bark.dispose();
+    ground.dispose();
     dispose();
   };
 }

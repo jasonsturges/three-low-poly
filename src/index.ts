@@ -94,6 +94,8 @@ export * from "./factory/DoorFactory";
 export * from "./factory/FenceFactory";
 export * from "./factory/HeadstoneFactory";
 export * from "./factory/HexagonalTileFactory";
+export * from "./factory/AppleTree";
+export * from "./factory/AutumnTree";
 export * from "./factory/PumpkinPatch";
 export * from "./factory/RusticFence";
 export * from "./factory/VotiveRack";
@@ -304,6 +306,10 @@ export {
   GnarledTreeGeometry,
   type GnarledTreeGeometryOptions,
 } from "./geometry/trees/GnarledTreeGeometry";
+export {
+  ClearingTreeGeometry,
+  type ClearingTreeGeometryOptions,
+} from "./geometry/trees/ClearingTreeGeometry";
 
 // Vessels
 export { JarGeometry } from "./geometry/vessels/JarGeometry";
@@ -391,7 +397,6 @@ export { TestTube } from "./models/science/TestTube";
 export { Bone } from "./models/skeleton/Bone";
 
 // Trees
-export { GnarledTree, type GnarledTreeOptions } from "./models/trees/GnarledTree";
 
 // Terrain
 export { TerrainMound, type TerrainMoundOptions } from "./models/terrain/TerrainMound";
