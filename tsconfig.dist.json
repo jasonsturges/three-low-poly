@@ -1,0 +1,26 @@
+{
+  // Typechecks the PUBLISHED declarations as a bare browser consumer would see them.
+  //
+  // `npm run typecheck` maps `three-low-poly` to `src/index.ts`, which is what makes one pass cover the library
+  // and the examples together — but it means nothing ever validates `dist/index.d.ts`, the file consumers
+  // actually resolve. A leak into the public surface is invisible to it.
+  //
+  // The two options that matter here:
+  //   `types: []`          — NO ambient type packages. The library's own tsconfig includes "node", so an
+  //                          inferred return type could quietly become `NodeJS.Timeout` and break any consumer
+  //                          without @types/node. That is a real bug this caught.
+  //   `skipLibCheck: false` — declaration files are skipped by default, so leaving it on would check nothing.
+  //
+  // Run AFTER a build, since it reads the build output.
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": false,
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "types": []
+  },
+  "include": ["dist/index.d.ts"]
+}
