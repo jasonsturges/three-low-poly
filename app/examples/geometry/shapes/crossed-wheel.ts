@@ -84,19 +84,19 @@ export default function (container: HTMLElement) {
 
   const wheelFolder = gui.addFolder("Wheel");
   wheelFolder.add(params, "teeth", 6, 120, 1).name("Teeth").onChange(rebuild);
-  wheelFolder.add(params, "outerRadius", 0.3, 2, 0.02).name("Tip Radius").onChange(rebuild);
-  wheelFolder.add(params, "innerRadius", 0.2, 2, 0.02).name("Valley Radius").onChange(rebuild);
+  wheelFolder.add(params, "outerRadius", 0.3, 2, 0.02).name("Outer Radius").onChange(rebuild);
+  wheelFolder.add(params, "innerRadius", 0.2, 2, 0.02).name("Inner Radius").onChange(rebuild);
   wheelFolder.add(params, "depth", 0.01, 0.4, 0.01).name("Depth").onChange(rebuild);
   wheelFolder.open();
 
   const crossing = gui.addFolder("Crossings");
   // Below 2 there are no gaps to define, so the web stays solid — which is just the Gear.
-  crossing.add(params, "crossings", 0, 12, 1).name("Count").onChange(rebuild);
-  crossing.add(params, "crossingWidth", 0.01, 0.4, 0.005).name("Width").onChange(rebuild);
+  crossing.add(params, "crossings", 0, 12, 1).name("Crossings").onChange(rebuild);
+  crossing.add(params, "crossingWidth", 0.01, 0.4, 0.005).name("Crossing Width").onChange(rebuild);
   crossing.add(params, "hubRadius", 0.05, 0.8, 0.01).name("Hub Radius").onChange(rebuild);
   // Drive this to 0 and the cut-outs would reach the valley floor — the clamp stops the teeth detaching.
   crossing.add(params, "rimWidth", 0, 0.6, 0.01).name("Rim Width").onChange(rebuild);
-  crossing.add(params, "crossingSegments", 1, 16, 1).name("Arc Segments").onChange(rebuild);
+  crossing.add(params, "crossingSegments", 1, 16, 1).name("Crossing Segments").onChange(rebuild);
   crossing.open();
 
   const tooth = gui.addFolder("Tooth");
@@ -106,10 +106,10 @@ export default function (container: HTMLElement) {
   tooth.add(params, "lean", -1, 1, 0.01).name("Lean").onChange(rebuild);
 
   const bore = gui.addFolder("Bore");
-  bore.add(params, "holeRadius", 0, 0.6, 0.005).name("Radius").onChange(rebuild);
-  bore.add(params, "holeSides", 3, 24, 1).name("Sides").onChange(rebuild);
+  bore.add(params, "holeRadius", 0, 0.6, 0.005).name("Hole Radius").onChange(rebuild);
+  bore.add(params, "holeSides", 3, 24, 1).name("Hole Sides").onChange(rebuild);
   // Only visible on a low side count: at 4 the bore rests as a diamond, and PI/4 squares it up.
-  bore.add(params, "holeRotation", 0, Math.PI / 2, 0.01).name("Rotation").onChange(rebuild);
+  bore.add(params, "holeRotation", 0, Math.PI / 2, 0.01).name("Hole Rotation").onChange(rebuild);
 
   // No rebuild — geometry is untouched by the colour.
   const material = gui.addFolder("Material");

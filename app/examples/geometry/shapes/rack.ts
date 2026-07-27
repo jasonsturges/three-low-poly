@@ -87,7 +87,7 @@ export default function (container: HTMLElement) {
   const tooth = gui.addFolder("Tooth");
   // The same period as the Gear — 0 points the tooth, Lean 1 makes it a linear ratchet.
   tooth.add(params, "tipWidth", 0, 1, 0.01).name("Tip Width").onChange(rebuild);
-  tooth.add(params, "valleyWidth", 0, 1, 0.01).name("Root Width").onChange(rebuild);
+  tooth.add(params, "valleyWidth", 0, 1, 0.01).name("Valley Width").onChange(rebuild);
   tooth.add(params, "lean", -1, 1, 0.01).name("Lean").onChange(rebuild);
   tooth.open();
 

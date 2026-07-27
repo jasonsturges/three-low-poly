@@ -87,8 +87,8 @@ export default function (container: HTMLElement) {
 
   const wheel = gui.addFolder("Wheel");
   wheel.add(params, "teeth", 2, 48, 1).name("Teeth").onChange(rebuild);
-  wheel.add(params, "innerRadius", 0.1, 2, 0.02).name("Valley Radius").onChange(rebuild);
-  wheel.add(params, "outerRadius", 0.1, 3, 0.02).name("Tip Radius").onChange(rebuild);
+  wheel.add(params, "innerRadius", 0.1, 2, 0.02).name("Inner Radius").onChange(rebuild);
+  wheel.add(params, "outerRadius", 0.1, 3, 0.02).name("Outer Radius").onChange(rebuild);
   wheel.add(params, "depth", 0.02, 1, 0.01).name("Depth").onChange(rebuild);
   wheel.add(params, "rotation", -Math.PI, Math.PI, 0.01).name("Rotation").onChange(rebuild);
   wheel.open();
@@ -102,10 +102,10 @@ export default function (container: HTMLElement) {
   tooth.open();
 
   const bore = gui.addFolder("Bore");
-  boreControl = bore.add(params, "holeRadius", 0, 1.5, 0.01).name("Radius").onChange(rebuild);
-  bore.add(params, "holeSides", 3, 24, 1).name("Sides").onChange(rebuild);
+  boreControl = bore.add(params, "holeRadius", 0, 1.5, 0.01).name("Hole Radius").onChange(rebuild);
+  bore.add(params, "holeSides", 3, 24, 1).name("Hole Sides").onChange(rebuild);
   // Only visible on a low side count: at 4 the bore rests as a diamond, and PI/4 squares it up.
-  bore.add(params, "holeRotation", 0, Math.PI / 2, 0.01).name("Rotation").onChange(rebuild);
+  bore.add(params, "holeRotation", 0, Math.PI / 2, 0.01).name("Hole Rotation").onChange(rebuild);
   bore.open();
 
   // No rebuild — geometry is untouched by the colour.

@@ -110,8 +110,8 @@ export default function (container: HTMLElement) {
   mount.add(geometryParams, "bailSides", 3, 12, 1).name("Bail Sides").onChange(rebuild);
   const roof = gui.addFolder("Roof");
   // The plate tracks `taper`, so it stays fitted to the cage top as you re-rake it.
-  roof.add(geometryParams, "roofSpread", 0.6, 1.6, 0.01).name("Plate Spread").onChange(rebuild);
-  roof.add(geometryParams, "roofThickness", 0.5, 5, 0.1).name("Plate Thickness").onChange(rebuild);
+  roof.add(geometryParams, "roofSpread", 0.6, 1.6, 0.01).name("Roof Spread").onChange(rebuild);
+  roof.add(geometryParams, "roofThickness", 0.5, 5, 0.1).name("Roof Thickness").onChange(rebuild);
   roof.add(geometryParams, "capHeight", 0.02, 0.4, 0.005).name("Cap Height").onChange(rebuild);
   // 1 is the boundary: above it the cap oversails the plate as a ROOF, below it the cap sits inset on a flat
   // roof as a centred GABLE — the country-lantern look. The cap stands ON the plate, so it never intersects.

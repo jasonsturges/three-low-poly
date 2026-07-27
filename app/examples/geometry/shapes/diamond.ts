@@ -47,7 +47,7 @@ export default function (container: HTMLElement) {
   gui.add(params, "width", 0.5, 4, 0.05).name("Width").onChange(rebuild);
   gui.add(params, "height", 0.5, 4, 0.05).name("Height").onChange(rebuild);
   // 0 is a plain rhombus; higher bows the sides inward, the card-diamond `)` curve.
-  gui.add(params, "concavity", 0, 0.5, 0.01).name("Side Curve").onChange(rebuild);
+  gui.add(params, "concavity", 0, 0.5, 0.01).name("Concavity").onChange(rebuild);
   gui.add(params, "depth", 0, 2, 0.05).name("Depth").onChange(rebuild);
 
   rebuild();

@@ -72,7 +72,7 @@ export default function (container: HTMLElement) {
   gui.title("Internal Gear");
 
   const opening = gui.addFolder("Opening");
-  gui.add(params, "teeth", 8, 96, 1).name("Teeth").onChange(rebuild);
+  opening.add(params, "teeth", 8, 96, 1).name("Teeth").onChange(rebuild);
   // The INNER extreme — how far the teeth reach toward the centre. Clamped inside the roots.
   opening.add(params, "tipRadius", 0.1, 1.2, 0.01).name("Tip Radius").onChange(rebuild);
   // The OUTER extreme of the toothed opening. The gap between these two is the tooth depth.
@@ -81,15 +81,15 @@ export default function (container: HTMLElement) {
 
   const rim = gui.addFolder("Rim");
   // Clamped outside the roots — the rim is what the teeth hang from.
-  rim.add(params, "rimRadius", 0.3, 2, 0.02).name("Outer Radius").onChange(rebuild);
-  rim.add(params, "rimSides", 6, 96, 1).name("Sides").onChange(rebuild);
+  rim.add(params, "rimRadius", 0.3, 2, 0.02).name("Rim Radius").onChange(rebuild);
+  rim.add(params, "rimSides", 6, 96, 1).name("Rim Sides").onChange(rebuild);
   rim.add(params, "depth", 0.02, 1, 0.01).name("Depth").onChange(rebuild);
   rim.open();
 
   const tooth = gui.addFolder("Tooth");
   // The same period as the Gear — 0 points the tooth, Lean 1 kills the rising flank.
   tooth.add(params, "tipWidth", 0, 1, 0.01).name("Tip Width").onChange(rebuild);
-  tooth.add(params, "valleyWidth", 0, 1, 0.01).name("Root Width").onChange(rebuild);
+  tooth.add(params, "valleyWidth", 0, 1, 0.01).name("Valley Width").onChange(rebuild);
   tooth.add(params, "lean", -1, 1, 0.01).name("Lean").onChange(rebuild);
   tooth.add(params, "rotation", -Math.PI, Math.PI, 0.01).name("Rotation").onChange(rebuild);
 

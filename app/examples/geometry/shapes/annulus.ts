@@ -75,7 +75,7 @@ export default function (container: HTMLElement) {
   const size = gui.addFolder("Size");
   size.add(params, "radius", 0.2, 2, 0.05).name("Radius").onChange(rebuild);
   // Clamped inside Radius — drive it past and the wall holds rather than inverting.
-  size.add(params, "holeRadius", 0, 2, 0.05).name("Bore").onChange(rebuild);
+  size.add(params, "holeRadius", 0, 2, 0.05).name("Hole Radius").onChange(rebuild);
   size.add(params, "depth", 0.02, 1, 0.01).name("Depth").onChange(rebuild);
   size.open();
 
