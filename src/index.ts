@@ -72,18 +72,16 @@ export {
   type EmissivePulseEffectOptions,
   type EmissivePulseMaterial,
 } from "./effects/EmissivePulseEffect";
-export { FlameFlickerEffect, type FlameFlickerEffectOptions } from "./effects/FlameFlickerEffect";
-export { GlowHalo, type GlowHaloOptions } from "./effects/GlowHalo";
+export {
+  flameFlicker,
+  FlameFlickerEffect,
+  type FlameFlickerEffectOptions,
+} from "./effects/FlameFlickerEffect";
+export { glowFalloffTexture, GlowHalo, type GlowHaloOptions } from "./effects/GlowHalo";
 export { GroundFogEffect, type GroundFogEffectOptions } from "./effects/GroundFogEffect";
 export { LightningEffect, type LightningEffectOptions } from "./effects/LightningEffect";
 export { PetalDriftEffect, type PetalDriftEffectOptions } from "./effects/PetalDriftEffect";
 export { RainEffect, type RainEffectOptions } from "./effects/RainEffect";
-export {
-  StarFieldEffect,
-  type StarBurstShapeOptions,
-  type StarFieldEffectOptions,
-  type StarFieldOrientation,
-} from "./effects/StarFieldEffect";
 export { WispEffect, type WispEffectOptions } from "./effects/WispEffect";
 
 //------------------------------
@@ -96,6 +94,10 @@ export * from "./factory/DoorFactory";
 export * from "./factory/FenceFactory";
 export * from "./factory/HeadstoneFactory";
 export * from "./factory/HexagonalTileFactory";
+export * from "./factory/PumpkinCluster";
+export * from "./factory/PumpkinPatch";
+export * from "./factory/RusticFence";
+export * from "./factory/VotiveRack";
 export * from "./factory/RockFactory";
 export * from "./factory/StaircaseFactory";
 export * from "./factory/WindowFactory";
@@ -199,6 +201,19 @@ export {
   type WroughtIronScrollGeometryOptions,
 } from "./geometry/fence/WroughtIronScrollGeometry";
 
+// Flora
+export {
+  createPumpkinGeometry,
+  createPumpkinRindGeometry,
+  createPumpkinStemGeometry,
+  pumpkinStemMatrix,
+  PumpkinGeometry,
+  type PumpkinAssemblyOptions,
+  type PumpkinGeometryOptions,
+  type PumpkinRindGeometryOptions,
+  type PumpkinStemGeometryOptions,
+} from "./geometry/flora/PumpkinGeometry";
+
 // Furniture
 export { BookshelfGeometry, type BookshelfGeometryOptions } from "./geometry/furniture/BookshelfGeometry";
 export { DeskGeometry } from "./geometry/furniture/DeskGeometry";
@@ -208,9 +223,12 @@ export { EllipticLeafGeometry } from "./geometry/leafs/EllipticLeafGeometry";
 export { LeafGeometry, type LeafGeometryOptions } from "./geometry/leafs/LeafGeometry";
 
 // Lighting
+export {
+  CoachLanternGeometry,
+  type CoachLanternGeometryOptions,
+} from "./geometry/lighting/CoachLanternGeometry";
 export { FlameGeometry, type FlameGeometryOptions } from "./geometry/lighting/FlameGeometry";
 export { CandleGeometry, type CandleGeometryOptions } from "./geometry/lighting/CandleGeometry";
-export { LanternGeometry, type LanternGeometryOptions } from "./geometry/lighting/LanternGeometry";
 export {
   HangingLanternGeometry,
   type HangingLanternGeometryOptions,
@@ -259,6 +277,12 @@ export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
 // Terrain
 export { TerrainMoundGeometry, type TerrainMoundGeometryOptions } from "./geometry/terrain/TerrainMoundGeometry";
 export { TerrainPlaneGeometry, type TerrainPlaneGeometryOptions } from "./geometry/terrain/TerrainPlaneGeometry";
+
+// Timber
+export {
+  WeatheredPlankGeometry,
+  type WeatheredPlankGeometryOptions,
+} from "./geometry/timber/WeatheredPlankGeometry";
 
 // Trees
 export {
@@ -330,7 +354,6 @@ export { Candle, type CandleOptions } from "./models/lighting/Candle";
 export { Flame, type FlameOptions } from "./models/lighting/Flame";
 export { HangingLantern, type HangingLanternOptions } from "./models/lighting/HangingLantern";
 export { WallSconce, type WallSconceOptions } from "./models/lighting/WallSconce";
-export { Lantern, type LanternOptions } from "./models/lighting/Lantern";
 
 // Rocks
 export { Boulder, type BoulderOptions } from "./models/rocks/Boulder";
@@ -418,9 +441,24 @@ export {
 } from "./shapes/ArchProfile";
 
 //------------------------------
+//  Sky
+//------------------------------
+//  Viewer-relative layers: direction without location. Each pins itself to the active camera, so
+//  `scene.add(layer)` is the whole contract — never reachable, and they stack freely together.
+
+export { FullMoon, type FullMoonHaloOptions, type FullMoonOptions } from "./sky/FullMoon";
+export {
+  StarField,
+  type StarBurstShapeOptions,
+  type StarFieldOptions,
+  type StarFieldOrientation,
+} from "./sky/StarField";
+
+//------------------------------
 //  Sweep
 //------------------------------
 
+export { miterFrames, type MiterFramesOptions } from "./sweep/MiterFrames";
 export { circleProfile, rectProfile } from "./sweep/Profiles";
 export { sweep, transportFrames, type Station, type SweepOptions } from "./sweep/Sweep";
 
@@ -428,7 +466,12 @@ export { sweep, transportFrames, type Station, type SweepOptions } from "./sweep
 //  Textures
 //------------------------------
 
-export { checkerboardTexture } from "./textures/checkerboard";
+export { createCheckerboardTexture, type CheckerboardTextureOptions } from "./textures/checkerboard";
+export {
+  createRadialGradientTexture,
+  type RadialGradientStop,
+  type RadialGradientTextureOptions,
+} from "./textures/radialGradient";
 
 //------------------------------
 //  Utils
@@ -444,6 +487,7 @@ export * from "./utils/GeometryBuffers";
 export * from "./utils/OffsetLoop";
 export * from "./utils/InterpolateCurve";
 export * from "./utils/LineEquations";
+export { lockToViewer } from "./utils/LockToViewer";
 export * from "./utils/ParametricCurveUtils";
 export {
   Random,
