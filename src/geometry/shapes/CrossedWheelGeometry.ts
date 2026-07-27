@@ -1,7 +1,7 @@
 import { ExtrudeGeometry } from "three";
-import { ClockWheelShape, type ClockWheelShapeOptions } from "../../shapes/ClockWheelShape";
+import { CrossedWheelShape, type CrossedWheelShapeOptions } from "../../shapes/CrossedWheelShape";
 
-export interface ClockWheelGeometryOptions extends ClockWheelShapeOptions {
+export interface CrossedWheelGeometryOptions extends CrossedWheelShapeOptions {
   /** Extrusion depth. Defaults to `0.06` — clock wheels are thin brass. */
   depth?: number;
 }
@@ -28,10 +28,10 @@ export interface ClockWheelGeometryOptions extends ClockWheelShapeOptions {
  *
  * @example
  * ```typescript
- * const wheel = new Mesh(new ClockWheelGeometry({ teeth: 60, crossings: 5 }), brass);
+ * const wheel = new Mesh(new CrossedWheelGeometry({ teeth: 60, crossings: 5 }), brass);
  * ```
  */
-export class ClockWheelGeometry extends ExtrudeGeometry {
+export class CrossedWheelGeometry extends ExtrudeGeometry {
   /** The bore radius actually used, after clamping inside the tooth profile. */
   readonly holeRadius: number;
   /** Crossings actually cut. `0` means the web was left solid. */
@@ -43,8 +43,8 @@ export class ClockWheelGeometry extends ExtrudeGeometry {
   /** The crossing width actually used, after clamping so spokes cannot overlap at the hub. */
   readonly crossingWidth: number;
 
-  constructor({ depth = 0.06, ...shapeOptions }: ClockWheelGeometryOptions = {}) {
-    const shape = new ClockWheelShape(shapeOptions);
+  constructor({ depth = 0.06, ...shapeOptions }: CrossedWheelGeometryOptions = {}) {
+    const shape = new CrossedWheelShape(shapeOptions);
 
     super(shape, { depth, bevelEnabled: false });
 

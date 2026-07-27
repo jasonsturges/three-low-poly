@@ -258,9 +258,13 @@ export {
 } from "./geometry/shapes/AnnulusGeometry";
 export { GearGeometry, type GearGeometryOptions } from "./geometry/shapes/GearGeometry";
 export {
-  ClockWheelGeometry,
-  type ClockWheelGeometryOptions,
-} from "./geometry/shapes/ClockWheelGeometry";
+  CrossedWheelGeometry,
+  type CrossedWheelGeometryOptions,
+} from "./geometry/shapes/CrossedWheelGeometry";
+export {
+  BevelGearGeometry,
+  type BevelGearGeometryOptions,
+} from "./geometry/shapes/BevelGearGeometry";
 export { HeartGeometry, type HeartGeometryOptions } from "./geometry/shapes/HeartGeometry";
 export { PolygonGeometry, type PolygonGeometryOptions } from "./geometry/shapes/PolygonGeometry";
 export { SpadeGeometry, type SpadeGeometryOptions } from "./geometry/shapes/SpadeGeometry";
@@ -415,7 +419,7 @@ export { BurstShape, type BurstShapeOptions } from "./shapes/BurstShape";
 export { ClubShape, type ClubShapeOptions } from "./shapes/ClubShape";
 export { DiamondShape, type DiamondShapeOptions } from "./shapes/DiamondShape";
 export { GearShape, type GearShapeOptions } from "./shapes/GearShape";
-export { ClockWheelShape, type ClockWheelShapeOptions } from "./shapes/ClockWheelShape";
+export { CrossedWheelShape, type CrossedWheelShapeOptions } from "./shapes/CrossedWheelShape";
 export { HeartShape, type HeartShapeOptions } from "./shapes/HeartShape";
 export { PolygonShape, type PolygonShapeOptions } from "./shapes/PolygonShape";
 export { SpadeShape, type SpadeShapeOptions } from "./shapes/SpadeShape";

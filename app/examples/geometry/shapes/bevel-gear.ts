@@ -8,8 +8,8 @@ export const meta = {
   title: "Bevel Gear",
   description:
     "Teeth cut on a PITCH CONE, for shafts whose axes intersect — the wheel a gearbox or differential is built " +
-    "from. Because the teeth taper toward the cone's apex, this cannot be an extrusion like the Gear or Clock " +
-    "Wheel: it is a LOFT between the full profile at the back face and the same profile uniformly scaled at the " +
+    "from. Because the teeth taper toward the cone's apex, this cannot be an extrusion like the Gear or the " +
+    "Crossed Wheel: it is a LOFT between the full profile at the back face and the same profile uniformly scaled at the " +
     "front, which puts every tooth flank on a plane through the apex by construction. A 45° pair of equal " +
     "wheels meshes at a right angle 1:1 — a miter gear. Not a worm gear, which is a helical screw driving a " +
     "wheel: thread-based rather than conical. Apex Z is where the cone converges: a real pair meshes only when " +

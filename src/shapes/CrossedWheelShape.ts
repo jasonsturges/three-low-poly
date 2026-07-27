@@ -1,7 +1,7 @@
 import { Path } from "three";
 import { GearShape, type GearShapeOptions } from "./GearShape";
 
-export interface ClockWheelShapeOptions extends GearShapeOptions {
+export interface CrossedWheelShapeOptions extends GearShapeOptions {
   /**
    * Number of crossings — the radial spokes. Defaults to `5`.
    *
@@ -33,11 +33,11 @@ export interface ClockWheelShapeOptions extends GearShapeOptions {
  *
  * The anatomy, and the parameters that control it:
  *
- * - **rim** — the toothed outer ring. Its depth inward of the valleys is {@link ClockWheelShapeOptions.rimWidth},
+ * - **rim** — the toothed outer ring. Its depth inward of the valleys is {@link CrossedWheelShapeOptions.rimWidth},
  *   and it is what the teeth are attached to.
- * - **crossings** — the spokes, {@link ClockWheelShapeOptions.crossings} of them at
- *   {@link ClockWheelShapeOptions.crossingWidth} thick.
- * - **hub** — the centre disc, out to {@link ClockWheelShapeOptions.hubRadius}.
+ * - **crossings** — the spokes, {@link CrossedWheelShapeOptions.crossings} of them at
+ *   {@link CrossedWheelShapeOptions.crossingWidth} thick.
+ * - **hub** — the centre disc, out to {@link CrossedWheelShapeOptions.hubRadius}.
  * - **bore** — the hole for the arbor, inherited from {@link GearShape}.
  *
  * Every tooth option is inherited, so a crossed wheel can also be spiked or leaning — a crossed-out ratchet is
@@ -47,7 +47,7 @@ export interface ClockWheelShapeOptions extends GearShapeOptions {
  * which narrows as the radius grows — so the spoke reads as a straight bar rather than a wedge that fattens
  * toward the rim.
  */
-export class ClockWheelShape extends GearShape {
+export class CrossedWheelShape extends GearShape {
   /** Crossings actually cut, after clamping. `0` means the web was left solid. */
   readonly crossings: number;
   /** The hub radius actually used, after clamping clear of the bore. */
@@ -64,7 +64,7 @@ export class ClockWheelShape extends GearShape {
     rimWidth = 0.1,
     crossingSegments = 6,
     ...gearOptions
-  }: ClockWheelShapeOptions = {}) {
+  }: CrossedWheelShapeOptions = {}) {
     super(gearOptions);
 
     const innerRadius = gearOptions.innerRadius ?? 0.5;

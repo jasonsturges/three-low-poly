@@ -1,11 +1,11 @@
 import GUI from "lil-gui";
 import { AxesHelper, Color, Mesh, MeshStandardMaterial } from "three";
-import { ClockWheelGeometry, type ClockWheelGeometryOptions } from "three-low-poly";
+import { CrossedWheelGeometry, type CrossedWheelGeometryOptions } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
-  title: "Clock Wheel",
+  title: "Crossed Wheel",
   description:
     "A CROSSED-OUT WHEEL — the brass wheel from a clock or watch train. In horology the spokes are " +
     "'crossings' and cutting them is 'crossing out', done to shed weight and brass so the train has less " +
@@ -23,7 +23,7 @@ export default function (container: HTMLElement) {
   const axes = new AxesHelper(1.3);
   scene.add(axes);
 
-  const params: Required<ClockWheelGeometryOptions> = {
+  const params: Required<CrossedWheelGeometryOptions> = {
     teeth: 60,
     innerRadius: 0.88,
     outerRadius: 1,
@@ -51,12 +51,12 @@ export default function (container: HTMLElement) {
     flatShading: true,
   });
 
-  const wheel = new Mesh(new ClockWheelGeometry(params), brass);
+  const wheel = new Mesh(new CrossedWheelGeometry(params), brass);
   wheel.castShadow = wheel.receiveShadow = true;
   scene.add(wheel);
 
   const refresh = () => {
-    const g = wheel.geometry as ClockWheelGeometry;
+    const g = wheel.geometry as CrossedWheelGeometry;
     stats.triangles = g.index ? g.index.count / 3 : g.attributes.position.count / 3;
     // Every one of these is the CLAMPED value, not the requested one — the clamps are what stop the teeth
     // coming away from the rim or the bore swallowing the hub.
@@ -69,7 +69,7 @@ export default function (container: HTMLElement) {
 
   const rebuild = () => {
     wheel.geometry.dispose();
-    wheel.geometry = new ClockWheelGeometry(params);
+    wheel.geometry = new CrossedWheelGeometry(params);
     refresh();
   };
   refresh();
@@ -79,7 +79,7 @@ export default function (container: HTMLElement) {
   frameObject(handle, wheel, { fit: 1.35 });
 
   const gui = new GUI();
-  gui.title("Clock Wheel");
+  gui.title("Crossed Wheel");
 
   const wheelFolder = gui.addFolder("Wheel");
   wheelFolder.add(params, "teeth", 6, 120, 1).name("Teeth").onChange(rebuild);
