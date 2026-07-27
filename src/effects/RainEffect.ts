@@ -62,6 +62,10 @@ export interface RainEffectOptions {
 }
 
 function createStreakTexture(): CanvasTexture {
+  // TODO: replace this canvas with a DataTexture to drop the DOM dependency. Unlike the fog and glow
+  // ramps this streak is *linear*, not radial, so it needs a `createLinearGradientTexture` helper
+  // rather than `createRadialGradientTexture`. The material already tints a white gradient correctly,
+  // so only the texture source changes.
   const canvas = document.createElement("canvas");
   canvas.width = 8;
   canvas.height = 64;
