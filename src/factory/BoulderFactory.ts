@@ -41,15 +41,22 @@ export interface ScatterBouldersOptions extends RockScatterPlacementOptions {
 }
 
 /**
- * Scatter a field of instanced boulders inside a horizontal bounds region — a "created
- * layer" of the noise-lumped {@link BoulderGeometry}. Unlike {@link scatterRocks}, which
- * rotates a single shared shape, this generates several distinct boulder geometries
- * (see `variants`) and distributes instances across them, so the field reads as unique
- * rocks while staying to a few draw calls.
+ * Scatter instanced boulders through a horizontal bounds region — a "created layer" of the
+ * noise-lumped {@link BoulderGeometry}. Unlike {@link scatterRocks}, which rotates a single
+ * shared shape, this generates several distinct boulder geometries (see `variants`) and
+ * distributes instances across them, so the group reads as unique rocks while staying to a
+ * few draw calls.
+ *
+ * **Scatter, not field.** Placement is stochastic — a `count` distributed pseudo-randomly
+ * within the bounds — so the name states the operation rather than one of its uses. A
+ * "field" in this library means a laid-out grid (see {@link fieldOfHeadstones}, which walks
+ * rows and columns at fixed spacing), and this is not that. The same scatter serves a
+ * boulder field, stones set proud of a wall, rubble along a path, or rocks in a streambed;
+ * naming it for any one of them would narrow it and misdescribe how it places.
  *
  * Returns a {@link Group} of {@link InstancedMesh}es (one per variant), each sharing the
- * stone material. Pass a `seed` for a reproducible field. Dispose each child's geometry
- * and the shared material when removing it.
+ * stone material. Pass a `seed` to make a scatter reproducible. Dispose each child's
+ * geometry and the shared material when removing it.
  *
  * @example
  * ```ts
