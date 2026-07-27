@@ -288,7 +288,6 @@ export {
   GnarledTreeGeometry,
   type GnarledTreeGeometryOptions,
 } from "./geometry/trees/GnarledTreeGeometry";
-export { TreeGeometry, type TreeGeometryOptions } from "./geometry/trees/TreeGeometry";
 
 // Vessels
 export { JarGeometry } from "./geometry/vessels/JarGeometry";
@@ -386,7 +385,6 @@ export { Bone } from "./models/skeleton/Bone";
 
 // Trees
 export { GnarledTree, type GnarledTreeOptions } from "./models/trees/GnarledTree";
-export { Tree, type TreeOptions } from "./models/trees/Tree";
 
 // Terrain
 export { TerrainMound, type TerrainMoundOptions } from "./models/terrain/TerrainMound";
