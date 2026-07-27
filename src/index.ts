@@ -94,7 +94,6 @@ export * from "./factory/DoorFactory";
 export * from "./factory/FenceFactory";
 export * from "./factory/HeadstoneFactory";
 export * from "./factory/HexagonalTileFactory";
-export * from "./factory/PumpkinCluster";
 export * from "./factory/PumpkinPatch";
 export * from "./factory/RusticFence";
 export * from "./factory/VotiveRack";
