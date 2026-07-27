@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { ArchedSlab, ArchedSlabGeometry, ArchStyle, centerObject } from "three-low-poly";
+import { Color, Mesh, MeshStandardMaterial } from "three";
+import { ArchedSlabGeometry, ArchStyle, centerObject } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Arched Slab" };
@@ -27,7 +28,16 @@ export default function (container: HTMLElement) {
     curveSegments: 16,
   };
 
-  const slab = new ArchedSlab(params);
+  // The material the `ArchedSlab` prefab used to hard-code. It lives here now, so the colour is a control
+  // rather than a constant.
+  const colors = { slab: "#8d8477" };
+  const material = new MeshStandardMaterial({
+    color: new Color(colors.slab),
+    roughness: 0.95,
+    flatShading: true,
+  });
+
+  const slab = new Mesh(new ArchedSlabGeometry(params), material);
   scene.add(slab);
 
   const rebuild = () => {
@@ -53,9 +63,14 @@ export default function (container: HTMLElement) {
 
   rebuild();
 
+  // No rebuild — geometry is untouched by the colour.
+  const materialFolder = gui.addFolder("Material");
+  materialFolder.addColor(colors, "slab").name("Color").onChange(() => material.color.set(colors.slab));
+
   return () => {
     gui.destroy();
     slab.geometry.dispose();
+    material.dispose();
     dispose();
   };
 }

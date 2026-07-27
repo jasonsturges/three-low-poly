@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
-import { DirectionalLight } from "three";
-import { Heart, HeartGeometry, centerObject } from "three-low-poly";
+import { Color, DirectionalLight, Mesh, MeshStandardMaterial } from "three";
+import { HeartGeometry, centerObject } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Heart" };
@@ -21,7 +21,17 @@ export default function (container: HTMLElement) {
     depth: 0.25,
   };
 
-  const heart = new Heart(params);
+  // The material the `Heart` prefab used to hard-code. It lives here now, so the colour is a control
+  // rather than a constant.
+  const colors = { heart: "#e0392b" };
+  const material = new MeshStandardMaterial({
+    color: new Color(colors.heart),
+    metalness: 0.1,
+    roughness: 0.35,
+    flatShading: true,
+  });
+
+  const heart = new Mesh(new HeartGeometry(params), material);
   scene.add(heart);
 
   const rebuild = () => {
@@ -39,9 +49,14 @@ export default function (container: HTMLElement) {
 
   rebuild();
 
+  // No rebuild — geometry is untouched by the colour.
+  const materialFolder = gui.addFolder("Material");
+  materialFolder.addColor(colors, "heart").name("Color").onChange(() => material.color.set(colors.heart));
+
   return () => {
     gui.destroy();
     heart.geometry.dispose();
+    material.dispose();
     dispose();
   };
 }

@@ -252,6 +252,10 @@ export {
 export { BurstGeometry, type BurstGeometryOptions } from "./geometry/shapes/BurstGeometry";
 export { ClubGeometry, type ClubGeometryOptions } from "./geometry/shapes/ClubGeometry";
 export { DiamondGeometry, type DiamondGeometryOptions } from "./geometry/shapes/DiamondGeometry";
+export {
+  AnnulusGeometry,
+  type AnnulusGeometryOptions,
+} from "./geometry/shapes/AnnulusGeometry";
 export { GearGeometry, type GearGeometryOptions } from "./geometry/shapes/GearGeometry";
 export { HeartGeometry, type HeartGeometryOptions } from "./geometry/shapes/HeartGeometry";
 export { PolygonGeometry, type PolygonGeometryOptions } from "./geometry/shapes/PolygonGeometry";
@@ -369,15 +373,6 @@ export { TeslaCoil } from "./models/science/TeslaCoil";
 export { TestTube } from "./models/science/TestTube";
 
 // Shapes
-export { ArchedSlab, type ArchedSlabOptions } from "./models/shapes/ArchedSlab";
-export { Burst, type BurstOptions } from "./models/shapes/Burst";
-export { Club, type ClubOptions } from "./models/shapes/Club";
-export { Diamond, type DiamondOptions } from "./models/shapes/Diamond";
-export { Gear, type GearOptions } from "./models/shapes/Gear";
-export { Heart, type HeartOptions } from "./models/shapes/Heart";
-export { Polygon, type PolygonOptions } from "./models/shapes/Polygon";
-export { Spade, type SpadeOptions } from "./models/shapes/Spade";
-export { Star, type StarOptions } from "./models/shapes/Star";
 
 // Skeleton
 export { Bone } from "./models/skeleton/Bone";

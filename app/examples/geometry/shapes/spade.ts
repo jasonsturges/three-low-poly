@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
-import { DirectionalLight } from "three";
-import { centerObject, Spade, SpadeGeometry } from "three-low-poly";
+import { Color, DirectionalLight, Mesh, MeshStandardMaterial } from "three";
+import { centerObject, SpadeGeometry } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Spade" };
@@ -24,7 +24,17 @@ export default function (container: HTMLElement) {
     depth: 0.25,
   };
 
-  const spade = new Spade(params);
+  // The material the `Spade` prefab used to hard-code. It lives here now, so the colour is a control
+  // rather than a constant.
+  const colors = { spade: "#1c1c1c" };
+  const material = new MeshStandardMaterial({
+    color: new Color(colors.spade),
+    metalness: 0.1,
+    roughness: 0.35,
+    flatShading: true,
+  });
+
+  const spade = new Mesh(new SpadeGeometry(params), material);
   scene.add(spade);
 
   const rebuild = () => {
@@ -45,9 +55,14 @@ export default function (container: HTMLElement) {
 
   rebuild();
 
+  // No rebuild — geometry is untouched by the colour.
+  const materialFolder = gui.addFolder("Material");
+  materialFolder.addColor(colors, "spade").name("Color").onChange(() => material.color.set(colors.spade));
+
   return () => {
     gui.destroy();
     spade.geometry.dispose();
+    material.dispose();
     dispose();
   };
 }

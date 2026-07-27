@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { Polygon, PolygonGeometry } from "three-low-poly";
+import { Color, Mesh, MeshStandardMaterial } from "three";
+import { PolygonGeometry } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Polygon" };
@@ -14,7 +15,19 @@ export default function (container: HTMLElement) {
     depth: 0.01,
   };
 
-  const polygon = new Polygon(params);
+  // The material the `Polygon` prefab used to hard-code. It lives here now, so the colour is a control
+  // rather than a constant.
+  const colors = { polygon: "#ffffff" };
+  const material = new MeshStandardMaterial({
+    color: new Color(colors.polygon),
+    emissive: new Color("#ffffff"),
+    emissiveIntensity: 0.1,
+    metalness: 0.1,
+    roughness: 0.3,
+    flatShading: true,
+  });
+
+  const polygon = new Mesh(new PolygonGeometry(params), material);
   scene.add(polygon);
 
   const rebuild = () => {
@@ -31,9 +44,14 @@ export default function (container: HTMLElement) {
 
   rebuild();
 
+  // No rebuild — geometry is untouched by the colour.
+  const materialFolder = gui.addFolder("Material");
+  materialFolder.addColor(colors, "polygon").name("Color").onChange(() => material.color.set(colors.polygon));
+
   return () => {
     gui.destroy();
     polygon.geometry.dispose();
+    material.dispose();
     dispose();
   };
 }

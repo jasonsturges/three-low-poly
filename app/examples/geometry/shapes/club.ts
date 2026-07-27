@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
-import { DirectionalLight } from "three";
-import { centerObject, Club, ClubGeometry } from "three-low-poly";
+import { Color, DirectionalLight, Mesh, MeshStandardMaterial } from "three";
+import { centerObject, ClubGeometry } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Club" };
@@ -24,7 +24,17 @@ export default function (container: HTMLElement) {
     depth: 0.25,
   };
 
-  const club = new Club(params);
+  // The material the `Club` prefab used to hard-code. It lives here now, so the colour is a control
+  // rather than a constant.
+  const colors = { club: "#1c1c1c" };
+  const material = new MeshStandardMaterial({
+    color: new Color(colors.club),
+    metalness: 0.1,
+    roughness: 0.35,
+    flatShading: true,
+  });
+
+  const club = new Mesh(new ClubGeometry(params), material);
   scene.add(club);
 
   const rebuild = () => {
@@ -45,9 +55,14 @@ export default function (container: HTMLElement) {
 
   rebuild();
 
+  // No rebuild — geometry is untouched by the colour.
+  const materialFolder = gui.addFolder("Material");
+  materialFolder.addColor(colors, "club").name("Color").onChange(() => material.color.set(colors.club));
+
   return () => {
     gui.destroy();
     club.geometry.dispose();
+    material.dispose();
     dispose();
   };
 }

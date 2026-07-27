@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
-import { DirectionalLight } from "three";
-import { centerObject, Diamond, DiamondGeometry } from "three-low-poly";
+import { Color, DirectionalLight, Mesh, MeshStandardMaterial } from "three";
+import { centerObject, DiamondGeometry } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Diamond" };
@@ -22,7 +22,17 @@ export default function (container: HTMLElement) {
     depth: 0.25,
   };
 
-  const diamond = new Diamond(params);
+  // The material the `Diamond` prefab used to hard-code. It lives here now, so the colour is a control
+  // rather than a constant.
+  const colors = { diamond: "#e0392b" };
+  const material = new MeshStandardMaterial({
+    color: new Color(colors.diamond),
+    metalness: 0.1,
+    roughness: 0.35,
+    flatShading: true,
+  });
+
+  const diamond = new Mesh(new DiamondGeometry(params), material);
   scene.add(diamond);
 
   const rebuild = () => {
@@ -42,9 +52,14 @@ export default function (container: HTMLElement) {
 
   rebuild();
 
+  // No rebuild — geometry is untouched by the colour.
+  const materialFolder = gui.addFolder("Material");
+  materialFolder.addColor(colors, "diamond").name("Color").onChange(() => material.color.set(colors.diamond));
+
   return () => {
     gui.destroy();
     diamond.geometry.dispose();
+    material.dispose();
     dispose();
   };
 }

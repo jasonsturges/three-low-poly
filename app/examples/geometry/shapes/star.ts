@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { Star, StarGeometry } from "three-low-poly";
+import { Color, Mesh, MeshStandardMaterial } from "three";
+import { StarGeometry } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Star" };
@@ -15,7 +16,19 @@ export default function (container: HTMLElement) {
     depth: 0.25,
   };
 
-  const star = new Star(params);
+  // The material the `Star` prefab used to hard-code. It lives here now, so the colour is a control
+  // rather than a constant.
+  const colors = { star: "#ffff00" };
+  const material = new MeshStandardMaterial({
+    color: new Color(colors.star),
+    emissive: new Color("#ffd700"),
+    emissiveIntensity: 0.25,
+    metalness: 0.1,
+    roughness: 0.3,
+    flatShading: true,
+  });
+
+  const star = new Mesh(new StarGeometry(params), material);
   scene.add(star);
 
   const rebuild = () => {
@@ -33,9 +46,14 @@ export default function (container: HTMLElement) {
 
   rebuild();
 
+  // No rebuild — geometry is untouched by the colour.
+  const materialFolder = gui.addFolder("Material");
+  materialFolder.addColor(colors, "star").name("Color").onChange(() => material.color.set(colors.star));
+
   return () => {
     gui.destroy();
     star.geometry.dispose();
+    material.dispose();
     dispose();
   };
 }
