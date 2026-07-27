@@ -16,10 +16,7 @@ import {
 import {
   BoneGeometry,
   createWroughtIronFence,
-  FlameFlickerEffect,
-  GlowHalo,
   GroundFogEffect,
-  Lantern,
   LightningEffect,
   RainEffect,
   WispEffect,
@@ -37,7 +34,6 @@ const BG_COLOR = new Color(0x05070c);
 const FOG_COLOR = new Color(0x080b12);
 const FLASH_COLOR = new Color(0x3a527e);
 const RAINFALL = 0.28;
-const LAMP_COLOR = 0xffd700;
 
 export default function (container: HTMLElement) {
   const { scene, camera, controls, renderer, onFrame, dispose } = createScene(container, {
@@ -71,35 +67,6 @@ export default function (container: HTMLElement) {
   mausoleum.position.set(0, 0, -5);
   mausoleum.castShadow = true;
   scene.add(mausoleum);
-
-  const lantern = new Lantern({ bodyHeight: 1.3, baseWidth: 0.5 });
-  lantern.scale.set(0.28, 0.28, 0.28);
-  // Base slab top is y=1; front ledge between the left pillar and the doorway.
-  lantern.position.set(-1.2, 1, 2.2);
-
-  const lanternHalo = new GlowHalo({
-    color: LAMP_COLOR,
-    size: 0.9,
-    opacity: 0.65,
-  });
-  lanternHalo.position.y = lantern.lampCenterY;
-  lantern.add(lanternHalo);
-
-  const lanternLight = new PointLight(LAMP_COLOR, 2.2, 7, 2);
-  lanternLight.position.y = lantern.lampCenterY;
-  lantern.add(lanternLight);
-
-  const lanternFlicker = new FlameFlickerEffect({
-    light: lanternLight,
-    lightIntensity: 2.2,
-    halo: lanternHalo,
-    haloOpacity: 0.65,
-  });
-
-  const lanternGlass = lantern.material[1];
-  const glassEmissiveBase = lanternGlass.emissiveIntensity;
-
-  mausoleum.add(lantern);
 
   for (let i = 0; i < 3; i++) {
     for (let j = 0; j < 2; j++) {
@@ -294,18 +261,12 @@ export default function (container: HTMLElement) {
     rain.intensity = Math.min(1, RAINFALL + flash * 0.5);
     rain.update(delta);
 
-    lanternFlicker.update(delta);
-    lanternFlicker.faceCamera(camera.position);
-    lanternGlass.emissiveIntensity = glassEmissiveBase * (0.85 + 0.3 * lanternFlicker.level);
   });
 
   return () => {
     rain.dispose();
     wisps.dispose();
     groundFog.dispose();
-    lanternHalo.dispose();
-    lantern.geometry.dispose();
-    lantern.material.forEach((material) => material.dispose());
     terrainMesh.geometry.dispose();
     terrainMesh.material.dispose();
     rocks.geometry.dispose();
