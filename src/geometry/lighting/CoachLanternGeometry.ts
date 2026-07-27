@@ -231,7 +231,7 @@ export class CoachLanternGeometry extends BufferGeometry {
     const post = (from: Vector3, to: Vector3, radius: number) =>
       sweep(circleProfile(radius, 4), miterFrames(linePath(from, to, 1), { startCut: UP, endCut: UP, reference: CAGE_AXIS }));
 
-    // A rail loop is ONE closed sweep with mitred corners: every ring sits in the plane bisecting its
+    // A rail loop is ONE closed sweep with mitered corners: every ring sits in the plane bisecting its
     // joint, so consecutive segments share the identical ring and the corner closes exactly.
     const railLoop = (halfWidth: number, y: number, radius: number) =>
       sweep(

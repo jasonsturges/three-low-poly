@@ -19,7 +19,7 @@ import { circleProfile, linePath, miterFrames, sweep, transportFrames } from "th
 import { createScene } from "../../framework/createScene";
 
 export const meta = {
-  title: "Mitred Corner",
+  title: "Mitered Corner",
   description:
     "STUDY — the reference for joining swept bars, isolated to THREE PIECES at one bottom corner of an " +
     "iron cage: two rails and the raked post they meet. Built twice, labelled in the scene. LEFT (BUG) is " +
@@ -105,17 +105,17 @@ function perpendicularCorner({ halfWidth, taper, height, barWidth, railStock }: 
 /**
  * THE FIX. Same dimensions, different framing.
  *
- * The rails become ONE sweep with a mitred station at the corner: the ring sits on the plane bisecting the
+ * The rails become ONE sweep with a mitered station at the corner: the ring sits on the plane bisecting the
  * joint, so both segments share the identical ring and the corner closes exactly — no gap, no overlap, and
  * no end caps to hide. The post is SEAT CUT: its end ring is cut to the horizontal plane it lands on rather
  * than square to its own axis, so the end face is flat and stands ON the rail instead of inside it.
  */
-function mitredCorner(
+function miteredCorner(
   { halfWidth, taper, height, barWidth, railStock }: typeof CAGE,
   squareToCage: boolean,
 ): BufferGeometry[] {
-  // ONE open sweep of three stations — half a rail, the mitred corner, half a rail. The two ends are
-  // arbitrary cut-offs and get ordinary perpendicular frames; only the middle station is mitred.
+  // ONE open sweep of three stations — half a rail, the mitered corner, half a rail. The two ends are
+  // arbitrary cut-offs and get ordinary perpendicular frames; only the middle station is mitered.
   const rails = sweep(
     circleProfile(barWidth * railStock, 4),
     miterFrames(
@@ -275,7 +275,7 @@ export default function (container: HTMLElement) {
     clear(left);
     clear(right);
     if (params.showBug) fill(left, perpendicularCorner(params));
-    fill(right, mitredCorner(params, params.squareToCage));
+    fill(right, miteredCorner(params, params.squareToCage));
 
     // Park each corner point itself on the group origin, so both joints sit at a known place and stay put
     // as the cage is resized — the corner is the subject, not the cage.
@@ -298,7 +298,7 @@ export default function (container: HTMLElement) {
   rebuild();
 
   const gui = new GUI();
-  gui.title("Mitred Corner");
+  gui.title("Mitered Corner");
 
   // Isolation is the point of the study — a joint is easiest to read when you can take one member away and
   // look at the hole it leaves.

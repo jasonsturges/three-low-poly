@@ -16,13 +16,13 @@ import { Vector2 } from "three";
  * runs away (a true cusp needs an infinite spike), so past a `miterLimit` the join BEVELS instead —
  * emitting the two offset-edge endpoints and cutting straight across between them.
  *
- * **A clamped mitre is not a bevel.** Shortening the spike's length leaves a shorter spike that no longer
+ * **A clamped miter is not a bevel.** Shortening the spike's length leaves a shorter spike that no longer
  * reaches either edge; the corner is still a needle, just a stubbier one. The fix is to change the JOIN,
  * not the distance — which is why a sharp ogee point blunts cleanly here rather than growing a thorn.
  *
  * @param points a CLOSED loop, wound counter-clockwise. Do not repeat the first point.
  * @param distance positive pushes OUT, negative pulls IN.
- * @param miterLimit how far a mitre may reach, as a multiple of `distance`, before it bevels. The SVG
+ * @param miterLimit how far a miter may reach, as a multiple of `distance`, before it bevels. The SVG
  *   default is `4`; lower blunts sharp corners sooner. A right angle reaches `1.41`, so anything above
  *   that keeps square corners sharp.
  *
@@ -59,14 +59,14 @@ export function offsetLoop(points: Vector2[], distance: number, miterLimit = 4):
 
     const bisector = new Vector2().addVectors(into, outOf);
     if (bisector.lengthSq() < 1e-12) {
-      // A full reversal — the mitre is infinite. Bevel across the two offset edges.
+      // A full reversal — the miter is infinite. Bevel across the two offset edges.
       offset.push(p.clone().addScaledVector(into, distance), p.clone().addScaledVector(outOf, distance));
       return;
     }
     bisector.normalize();
 
-    // `cos` is the half-angle between the two edge normals; `1/cos` is how far the mitre reaches, as a
-    // multiple of `distance`. Past the limit, a mitre would be a spike — so bevel instead, joining the
+    // `cos` is the half-angle between the two edge normals; `1/cos` is how far the miter reaches, as a
+    // multiple of `distance`. Past the limit, a miter would be a spike — so bevel instead, joining the
     // two offset-edge endpoints with a straight cut across the corner.
     const cos = bisector.dot(outOf);
     if (Math.abs(cos) < 1e-6 || 1 / Math.abs(cos) > miterLimit) {

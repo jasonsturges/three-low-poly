@@ -6,7 +6,7 @@ export interface MiterFramesOptions {
   /** Seed direction for the first frame, projected perpendicular to the path. Defaults to `+Z`. */
   reference?: Vector3;
   /**
-   * Treat the path as a closed loop — the last point joins back to the first, and both get mitred.
+   * Treat the path as a closed loop — the last point joins back to the first, and both get mitered.
    * Do not repeat the start point.
    */
   closed?: boolean;
@@ -37,14 +37,14 @@ export interface MiterFramesOptions {
    *   only: two of a square's four corners push out while the other two stay put.
    *
    * Default to `false` whenever the end is *joining* something, which is nearly always. This does not affect
-   * mitred corners, where the widening is mandatory — consecutive segments share one ring there, and without
+   * mitered corners, where the widening is mandatory — consecutive segments share one ring there, and without
    * it the joint pinches.
    */
   widenSeatCuts?: boolean;
 }
 
 /**
- * Frame a polyline for **mitred** joints — the picture-frame cut.
+ * Frame a polyline for **mitered** joints — the picture-frame cut.
  *
  * {@link transportFrames} keeps every ring perpendicular to the path, which is right for a smooth curve
  * and wrong for a hard corner: two bars meeting at a vertex both terminate on the same point, so the
@@ -71,7 +71,7 @@ export interface MiterFramesOptions {
  *
  * @example
  * ```typescript
- * // A mitred square frame, swept as one closed loop.
+ * // A mitered square frame, swept as one closed loop.
  * const corners = [a, b, c, d].map((position) => ({ position, tangent: new Vector3() }));
  * const rail = sweep(rectProfile(0.03, 0.02), miterFrames(corners, { closed: true }), { closed: true });
  * ```
@@ -180,7 +180,7 @@ export function miterFrames(
     const cosPhi = Math.abs(direction.dot(cut));
     // A seat cut takes the profile as its FOOTPRINT in the cut plane, so it is not widened: widening it
     // would flare the end face past the surface it lands on, and along the lean axis only — two of a
-    // square's four corners push out while the other two stay put. A mitred corner must always widen,
+    // square's four corners push out while the other two stay put. A mitered corner must always widen,
     // because both segments share the ring.
     const widen = cosPhi > 1e-6 && (widenSeatCuts || !seated.has(i)) ? 1 / cosPhi : 1;
 
@@ -245,5 +245,5 @@ export function miterFrames(
 //      against, so none of the above reaches it. UNSOLVED, and it is what the arched lattice windows
 //      actually need. Likely wants pairing with the named arch profiles rather than a new cut.
 //
-// Plan of record: isolate each of these in its own study first, then implement. `mitred-corner.ts` covers
+// Plan of record: isolate each of these in its own study first, then implement. `mitered-corner.ts` covers
 // (1) and (2) today.
