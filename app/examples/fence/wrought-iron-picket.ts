@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { centerObject, WroughtIronPicket, WroughtIronPicketGeometry } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { centerObject, WroughtIronPicketGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Wrought Iron Picket" };
@@ -16,7 +17,14 @@ export default function (container: HTMLElement) {
     radialSegments: 8,
   };
 
-  const picket = new WroughtIronPicket(params);
+  const iron = new MeshStandardMaterial({
+    color: 0x333333,
+    metalness: 0.8,
+    roughness: 0.4,
+    flatShading: true,
+  });
+
+  const picket = new Mesh(new WroughtIronPicketGeometry(params), iron);
   scene.add(picket);
   centerObject(picket);
 
@@ -37,7 +45,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     picket.geometry.dispose();
-    picket.material.dispose();
+    iron.dispose();
     dispose();
   };
 }

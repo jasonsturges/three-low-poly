@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { Boulder, BoulderGeometry, GroundGrid } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { BoulderGeometry, GroundGrid } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = {
@@ -30,7 +31,16 @@ export default function (container: HTMLElement) {
     flatShading: true,
   };
 
-  const boulder = new Boulder(params);
+  const stone = new MeshStandardMaterial({
+    color: params.color,
+    roughness: 1,
+    metalness: 0,
+    flatShading: params.flatShading,
+  });
+
+  const boulder = new Mesh(new BoulderGeometry(params), stone);
+  boulder.castShadow = true;
+  boulder.receiveShadow = true;
   const seat = () => {
     boulder.geometry.computeBoundingBox();
     boulder.position.y = -(boulder.geometry.boundingBox?.min.y ?? 0);
@@ -64,19 +74,19 @@ export default function (container: HTMLElement) {
   meshFolder
     .addColor(params, "color")
     .name("Color")
-    .onChange((value: string) => boulder.material.color.set(value));
+    .onChange((value: string) => stone.color.set(value));
   meshFolder
     .add(params, "flatShading")
     .name("Flat Shading")
     .onChange((value: boolean) => {
-      boulder.material.flatShading = value;
-      boulder.material.needsUpdate = true;
+      stone.flatShading = value;
+      stone.needsUpdate = true;
     });
 
   return () => {
     gui.destroy();
     boulder.geometry.dispose();
-    boulder.material.dispose();
+    stone.dispose();
     floor.dispose();
     dispose();
   };

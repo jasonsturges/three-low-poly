@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { ErlenmeyerFlask, ErlenmeyerFlaskGeometry, centerObject } from "three-low-poly";
+import { DoubleSide, Mesh, MeshPhysicalMaterial } from "three";
+import { ErlenmeyerFlaskGeometry, centerObject } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Erlenmeyer Flask" };
@@ -15,7 +16,18 @@ export default function (container: HTMLElement) {
     radialSegments: 16,
   };
 
-  const flask = new ErlenmeyerFlask(params);
+  const glass = new MeshPhysicalMaterial({
+    color: 0x88ccff,
+    transparent: true,
+    opacity: 0.4,
+    roughness: 0.1,
+    metalness: 0.1,
+    reflectivity: 0.8,
+    transmission: 0.9,
+    side: DoubleSide,
+  });
+
+  const flask = new Mesh(new ErlenmeyerFlaskGeometry(params), glass);
   scene.add(flask);
   centerObject(flask);
 
@@ -36,6 +48,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     flask.geometry.dispose();
+    glass.dispose();
     dispose();
   };
 }

@@ -1,12 +1,9 @@
 import GUI from "lil-gui";
-import { Book, centerObject } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { BookGeometry, centerObject } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Book" };
-
-function disposeMaterials(materials: Book["material"]) {
-  materials.forEach((material) => material.dispose());
-}
 
 export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container);
@@ -21,7 +18,18 @@ export default function (container: HTMLElement) {
     pageColor: "#ffffff",
   };
 
-  const makeBook = () => new Book(params);
+  // Group 0 is the cover shell, group 1 the page block.
+  const materials = [
+    new MeshStandardMaterial({
+      color: params.coverColor,
+      metalness: 0.1,
+      roughness: 0.7,
+      flatShading: true,
+    }),
+    new MeshStandardMaterial({ color: params.pageColor, flatShading: true }),
+  ];
+
+  const makeBook = () => new Mesh(new BookGeometry(params), materials);
 
   let book = makeBook();
   scene.add(book);
@@ -30,7 +38,6 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     scene.remove(book);
     book.geometry.dispose();
-    disposeMaterials(book.material);
     book = makeBook();
     scene.add(book);
     centerObject(book);
@@ -50,17 +57,17 @@ export default function (container: HTMLElement) {
   const materialsFolder = gui.addFolder("Materials");
   materialsFolder.addColor(params, "coverColor")
     .name("Cover")
-    .onChange(() => book.material[0].color.set(params.coverColor));
+    .onChange(() => materials[0]!.color.set(params.coverColor));
   materialsFolder.addColor(params, "pageColor")
     .name("Pages")
-    .onChange(() => book.material[1].color.set(params.pageColor));
+    .onChange(() => materials[1]!.color.set(params.pageColor));
   materialsFolder.open();
 
   return () => {
     gui.destroy();
     scene.remove(book);
     book.geometry.dispose();
-    disposeMaterials(book.material);
+    materials.forEach((m) => m.dispose());
     dispose();
   };
 }

@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { CelticCrossHeadstone, centerObject } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { CelticCrossHeadstoneGeometry, centerObject } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Celtic Cross Headstone" };
@@ -18,17 +19,23 @@ export default function (container: HTMLElement) {
     depth: 0.14,
   };
 
+  // Weathered granite — built once and reused, since only the geometry changes on rebuild.
+  const stone = new MeshStandardMaterial({ color: 0x777777, roughness: 0.85, flatShading: true });
+
   const makeHeadstone = () =>
-    new CelticCrossHeadstone({
-      height: params.height,
-      span: params.span,
-      thickness: params.thickness,
-      crossing: params.crossing,
-      flare: params.flare,
-      ring: params.ring,
-      ringWidth: params.ringWidth,
-      depth: params.depth,
-    });
+    new Mesh(
+      new CelticCrossHeadstoneGeometry({
+        height: params.height,
+        span: params.span,
+        thickness: params.thickness,
+        crossing: params.crossing,
+        flare: params.flare,
+        ring: params.ring,
+        ringWidth: params.ringWidth,
+        depth: params.depth,
+      }),
+      stone,
+    );
 
   let headstone = makeHeadstone();
   scene.add(headstone);
@@ -37,7 +44,6 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     scene.remove(headstone);
     headstone.geometry.dispose();
-    headstone.material.dispose();
     headstone = makeHeadstone();
     scene.add(headstone);
     centerObject(headstone);
@@ -60,7 +66,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     headstone.geometry.dispose();
-    headstone.material.dispose();
+    stone.dispose();
     dispose();
   };
 }

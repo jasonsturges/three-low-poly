@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { centerObject, SmokeCurl, SmokeCurlGeometry } from "three-low-poly";
+import { DoubleSide, Mesh, MeshStandardMaterial } from "three";
+import { centerObject, SmokeCurlGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Smoke Curl" };
@@ -17,7 +18,18 @@ export default function (container: HTMLElement) {
     sides: 8,
   };
 
-  const curl = new SmokeCurl(params);
+  // DoubleSide and translucent: the curl is uncapped and tapers to a point, so at the tip you are
+  // looking through the tube at its own far wall.
+  const smoke = new MeshStandardMaterial({
+    color: 0xcfd8e3,
+    roughness: 1,
+    flatShading: true,
+    side: DoubleSide,
+    transparent: true,
+    opacity: 0.85,
+  });
+
+  const curl = new Mesh(new SmokeCurlGeometry(params), smoke);
   scene.add(curl);
 
   const rebuild = () => {
@@ -47,7 +59,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     curl.geometry.dispose();
-    curl.material.dispose();
+    smoke.dispose();
     dispose();
   };
 }

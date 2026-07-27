@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { MossyRock, centerObject } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { MossyRockGeometry, centerObject } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Mossy Rock" };
@@ -18,7 +19,18 @@ export default function (container: HTMLElement) {
     mossOpacity: 0.8,
   };
 
-  const makeRock = () => new MossyRock(params);
+  // Group 0 is the stone, group 1 the moss shell. Built once — the colour controls mutate them.
+  const materials = [
+    new MeshStandardMaterial({ color: params.rockColor, flatShading: true }),
+    new MeshStandardMaterial({
+      color: params.mossColor,
+      flatShading: true,
+      opacity: params.mossOpacity,
+      transparent: params.mossOpacity < 1,
+    }),
+  ];
+
+  const makeRock = () => new Mesh(new MossyRockGeometry(params), materials);
 
   let rock = makeRock();
   scene.add(rock);
@@ -27,7 +39,6 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     scene.remove(rock);
     rock.geometry.dispose();
-    rock.material.forEach((m) => m.dispose());
     rock = makeRock();
     scene.add(rock);
     centerObject(rock);
@@ -47,16 +58,16 @@ export default function (container: HTMLElement) {
   const materialsFolder = gui.addFolder("Materials");
   materialsFolder.addColor(params, "rockColor")
     .name("Rock")
-    .onChange(() => rock.material[0].color.set(params.rockColor));
+    .onChange(() => materials[0]!.color.set(params.rockColor));
   materialsFolder.addColor(params, "mossColor")
     .name("Moss")
-    .onChange(() => rock.material[1].color.set(params.mossColor));
+    .onChange(() => materials[1]!.color.set(params.mossColor));
   materialsFolder.add(params, "mossOpacity", 0.2, 1, 0.01)
     .name("Moss Opacity")
     .onChange(() => {
-      rock.material[1].opacity = params.mossOpacity;
-      rock.material[1].transparent = params.mossOpacity < 1;
-      rock.material[1].needsUpdate = true;
+      materials[1]!.opacity = params.mossOpacity;
+      materials[1]!.transparent = params.mossOpacity < 1;
+      materials[1]!.needsUpdate = true;
     });
   materialsFolder.open();
 
@@ -64,7 +75,7 @@ export default function (container: HTMLElement) {
     gui.destroy();
     scene.remove(rock);
     rock.geometry.dispose();
-    rock.material.forEach((m) => m.dispose());
+    materials.forEach((m) => m.dispose());
     dispose();
   };
 }

@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { Leaf } from "three-low-poly";
+import { DoubleSide, Mesh, MeshStandardMaterial } from "three";
+import { LeafGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Leaf" };
@@ -13,12 +14,17 @@ export default function (container: HTMLElement) {
     color: "#a8702c",
   };
 
+  // DoubleSide — a leaf is a folded sheet and is read from both faces as it tumbles.
+  const foliage = new MeshStandardMaterial({
+    color: params.color,
+    roughness: 0.85,
+    metalness: 0.05,
+    flatShading: true,
+    side: DoubleSide,
+  });
+
   const makeLeaf = () =>
-    new Leaf({
-      size: params.size,
-      lift: params.lift,
-      color: params.color,
-    });
+    new Mesh(new LeafGeometry({ size: params.size, lift: params.lift }), foliage);
 
   let leaf = makeLeaf();
   scene.add(leaf);
@@ -26,7 +32,6 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     scene.remove(leaf);
     leaf.geometry.dispose();
-    leaf.material.dispose();
     leaf = makeLeaf();
     scene.add(leaf);
   };
@@ -38,14 +43,14 @@ export default function (container: HTMLElement) {
   gui.addColor(params, "color")
     .name("Color")
     .onChange(() => {
-      leaf.material.color.set(params.color);
+      foliage.color.set(params.color);
     });
 
   return () => {
     gui.destroy();
     scene.remove(leaf);
     leaf.geometry.dispose();
-    leaf.material.dispose();
+    foliage.dispose();
     dispose();
   };
 }

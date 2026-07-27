@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { TestTube, TestTubeGeometry } from "three-low-poly";
+import { DoubleSide, Mesh, MeshPhysicalMaterial } from "three";
+import { TestTubeGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Test Tube" };
@@ -14,7 +15,27 @@ export default function (container: HTMLElement) {
     segments: 32,
   };
 
-  const testTube = new TestTube(parameters.radiusTop, parameters.radiusBottom, parameters.height, parameters.segments);
+  const glass = new MeshPhysicalMaterial({
+    color: 0x88ccff,
+    transparent: true,
+    opacity: 0.4,
+    roughness: 0.1,
+    metalness: 0.1,
+    reflectivity: 0.8,
+    transmission: 0.9,
+    depthWrite: false,
+    side: DoubleSide,
+  });
+
+  const testTube = new Mesh(
+    new TestTubeGeometry(
+      parameters.radiusTop,
+      parameters.radiusBottom,
+      parameters.height,
+      parameters.segments,
+    ),
+    glass,
+  );
   scene.add(testTube);
 
   const rebuild = () => {
@@ -37,6 +58,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     testTube.geometry.dispose();
+    glass.dispose();
     dispose();
   };
 }

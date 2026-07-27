@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { centerObject, StoneFencePost, StoneFencePostGeometry } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { centerObject, StoneFencePostGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Stone Fence Post" };
@@ -16,7 +17,9 @@ export default function (container: HTMLElement) {
     capHeight: 0.3,
   };
 
-  const fencePost = new StoneFencePost(params);
+  const stone = new MeshStandardMaterial({ color: 0x8b7d7b, flatShading: true });
+
+  const fencePost = new Mesh(new StoneFencePostGeometry(params), stone);
   scene.add(fencePost);
   centerObject(fencePost);
 
@@ -37,7 +40,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     fencePost.geometry.dispose();
-    fencePost.material.dispose();
+    stone.dispose();
     dispose();
   };
 }

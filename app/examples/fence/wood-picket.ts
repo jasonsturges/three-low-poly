@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { centerObject, WoodPicket, WoodPicketGeometry } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { centerObject, WoodPicketGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Wood Picket" };
@@ -14,7 +15,9 @@ export default function (container: HTMLElement) {
     pointHeight: 0.18,
   };
 
-  const picket = new WoodPicket(params);
+  const wood = new MeshStandardMaterial({ color: 0xe8e4da, flatShading: true });
+
+  const picket = new Mesh(new WoodPicketGeometry(params), wood);
   scene.add(picket);
   centerObject(picket);
 
@@ -33,7 +36,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     picket.geometry.dispose();
-    picket.material.dispose();
+    wood.dispose();
     dispose();
   };
 }

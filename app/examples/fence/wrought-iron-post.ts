@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { centerObject, WroughtIronPost, WroughtIronPostGeometry } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { centerObject, WroughtIronPostGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Wrought Iron Post" };
@@ -17,7 +18,14 @@ export default function (container: HTMLElement) {
     ballHeightSegments: 6,
   };
 
-  const post = new WroughtIronPost(params);
+  const iron = new MeshStandardMaterial({
+    color: 0x333333,
+    metalness: 0.8,
+    roughness: 0.4,
+    flatShading: true,
+  });
+
+  const post = new Mesh(new WroughtIronPostGeometry(params), iron);
   scene.add(post);
   centerObject(post);
 
@@ -39,7 +47,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     post.geometry.dispose();
-    post.material.dispose();
+    iron.dispose();
     dispose();
   };
 }

@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { centerObject, WroughtIronScroll, WroughtIronScrollGeometry } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { centerObject, WroughtIronScrollGeometry } from "three-low-poly";
 import { createOrthographicScene } from "../../framework/createOrthographicScene";
 
 export const meta = { title: "Wrought Iron Scroll" };
@@ -17,7 +18,15 @@ export default function (container: HTMLElement) {
     segments: 96,
   };
 
-  const scroll = new WroughtIronScroll(params);
+  // Slightly rougher than the pickets and posts, which sit at 0.4.
+  const iron = new MeshStandardMaterial({
+    color: 0x2b2b2b,
+    metalness: 0.8,
+    roughness: 0.45,
+    flatShading: true,
+  });
+
+  const scroll = new Mesh(new WroughtIronScrollGeometry(params), iron);
   scene.add(scroll);
 
   const rebuild = () => {
@@ -45,6 +54,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     scroll.geometry.dispose();
+    iron.dispose();
     dispose();
   };
 }

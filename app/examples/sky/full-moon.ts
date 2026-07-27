@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { FullMoon, StarField, TerrainMound } from "three-low-poly";
+import { DoubleSide, Mesh, MeshStandardMaterial } from "three";
+import { FullMoon, StarField, TerrainMoundGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = {
@@ -22,7 +23,21 @@ export default function (container: HTMLElement) {
 
   // Ground gives the disc something to rise behind — the moon is depth-tested, so the
   // terrain edge silhouettes against it rather than being painted over.
-  const ground = new TerrainMound({ radius: 16, height: 1.8, noiseHeight: 0.8, color: "#1d2320", seed: 11 });
+  // DoubleSide because a heightfield seen from below is otherwise invisible.
+  const groundMaterial = new MeshStandardMaterial({
+    color: 0x1d2320,
+    roughness: 1,
+    metalness: 0,
+    flatShading: true,
+    side: DoubleSide,
+  });
+
+  const ground = new Mesh(
+    new TerrainMoundGeometry({ radius: 16, height: 1.8, noiseHeight: 0.8, seed: 11 }),
+    groundMaterial,
+  );
+  ground.castShadow = true;
+  ground.receiveShadow = true;
   scene.add(ground);
 
   // A second, independent sky layer. Nothing here is coordinated with the moon — both simply
@@ -109,7 +124,7 @@ export default function (container: HTMLElement) {
     scene.remove(stars);
     stars.dispose();
     ground.geometry.dispose();
-    ground.material.dispose();
+    groundMaterial.dispose();
     dispose();
   };
 }

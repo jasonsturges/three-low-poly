@@ -1,20 +1,36 @@
 import GUI from "lil-gui";
-import { HangingLantern } from "three-low-poly";
+import { AxesHelper, Color, DoubleSide, Mesh, MeshStandardMaterial } from "three";
+import { HangingLanternGeometry, type HangingLanternGeometryOptions } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
-export const meta = { title: "Hanging Lantern" };
-
-function disposeMaterials(materials: HangingLantern["material"]) {
-  materials.forEach((material) => material.dispose());
-}
+export const meta = {
+  title: "Hanging Lantern",
+  description:
+    "A BufferGeometry with three material groups — 0 mount (chain + cap), 1 cage struts, 2 inner lamp — " +
+    "and the consumer owning the materials, exactly as the Coach Lantern does. Origin is the HANG POINT " +
+    "at the top of the chain, so the lantern hangs into −Y and `drop` lengthens the chain downward " +
+    "without moving where it attaches to the ceiling. That is why the axes sit at the origin and the " +
+    "camera looks up from below, rather than the lantern being nudged into view. Colour and emissive " +
+    "edits mutate materials in place and never rebuild geometry.",
+};
 
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container, {
+  const { scene, controls, dispose } = createScene(container, {
     background: 0xb8bcc4,
-    cameraPosition: [2.5, 1, 4],
+    cameraPosition: [3.2, -1.2, 4.4],
   });
 
-  const params = {
+  // The origin is the hang point, so the lantern hangs below it — no ground grid, and axes at the
+  // origin show exactly where a ceiling or bracket would attach.
+  const axes = new AxesHelper(0.6);
+  scene.add(axes);
+
+  const geometryParams: Required<
+    Pick<
+      HangingLanternGeometryOptions,
+      "drop" | "chainWidth" | "cageRadius" | "cageStretch" | "cageGap" | "cageBarWidth" | "innerScale"
+    >
+  > = {
     drop: 3,
     chainWidth: 0.05,
     cageRadius: 0.42,
@@ -22,90 +38,106 @@ export default function (container: HTMLElement) {
     cageGap: 0,
     cageBarWidth: 0.03,
     innerScale: 0.96,
-    color: "#171a1f",
-    lampColor: "#ffb45a",
-    lampEmissiveIntensity: 1.4,
-    lampOpacity: 0.88,
   };
 
-  const makeLantern = () =>
-    new HangingLantern({
-      drop: params.drop,
-      chainWidth: params.chainWidth,
-      cageRadius: params.cageRadius,
-      cageStretch: params.cageStretch,
-      cageGap: params.cageGap,
-      cageBarWidth: params.cageBarWidth,
-      innerScale: params.innerScale,
-      color: params.color,
-      lampColor: params.lampColor,
-      lampEmissiveIntensity: params.lampEmissiveIntensity,
-      lampOpacity: params.lampOpacity,
-    });
+  const colors = { iron: "#171a1f", glass: "#ffb45a" };
 
-  let lantern = makeLantern();
-  lantern.position.y = 4;
+  const glass = new Color(colors.glass);
+
+  // Group 0 — mount: the chain and the cap it hangs from.
+  const mountMaterial = new MeshStandardMaterial({
+    color: new Color(colors.iron),
+    metalness: 0.7,
+    roughness: 0.5,
+    flatShading: true,
+  });
+
+  // Group 1 — the open cage struts. Separate from the mount so the two can be tinted apart, even
+  // though they default to the same iron.
+  const cageMaterial = new MeshStandardMaterial({
+    color: new Color(colors.iron),
+    metalness: 0.7,
+    roughness: 0.5,
+    flatShading: true,
+  });
+
+  // Group 2 — the inner lamp, which in the iron/glass/wax vocabulary IS the glass: lit from inside
+  // rather than reflecting, the same read as the Coach Lantern's panes. `toneMapped: false` keeps the
+  // emissive from being crushed by the renderer's tone curve; DoubleSide because the octahedron is
+  // read from both faces.
+  const glassMaterial = new MeshStandardMaterial({
+    color: glass,
+    emissive: glass,
+    emissiveIntensity: 1.4,
+    transparent: true,
+    opacity: 0.88,
+    roughness: 0.35,
+    metalness: 0,
+    flatShading: true,
+    side: DoubleSide,
+    toneMapped: false,
+  });
+
+  const materials = [mountMaterial, cageMaterial, glassMaterial];
+
+  const lantern = new Mesh(new HangingLanternGeometry(geometryParams), materials);
   scene.add(lantern);
 
+  // Aim HALFWAY down the drop, derived from the geometry's own cage anchor. Aiming straight at the
+  // cage would push the origin marker out to the frame edge — at the default drop the cage sits 3.5
+  // units below the hang point — and the whole point of this example is that you can see both: the
+  // fixed attachment at 0,0,0 and the lantern hanging off it. The lantern stays put and the CAMERA
+  // moves, which is what keeps the origin meaningful. Aimed once: re-aiming per rebuild would steal
+  // the viewer's orbit every time `drop` changed.
+  controls.target.set(0, lantern.geometry.cageCenterY / 2, 0);
+  controls.update();
+
   const rebuild = () => {
-    scene.remove(lantern);
     lantern.geometry.dispose();
-    disposeMaterials(lantern.material);
-    lantern = makeLantern();
-    lantern.position.y = 4;
-    scene.add(lantern);
+    lantern.geometry = new HangingLanternGeometry(geometryParams);
   };
 
   const gui = new GUI();
   gui.title("Hanging Lantern");
 
   const frameFolder = gui.addFolder("Frame");
-  frameFolder.add(params, "drop", 0.5, 6).name("Drop").step(0.1).onChange(rebuild);
-  frameFolder.add(params, "chainWidth", 0.02, 0.15).name("Chain Width").step(0.01).onChange(rebuild);
-  frameFolder.add(params, "cageRadius", 0.15, 0.8).name("Cage Radius").step(0.01).onChange(rebuild);
-  frameFolder.add(params, "cageStretch", 0.8, 2.5).name("Cage Stretch").step(0.05).onChange(rebuild);
-  frameFolder.add(params, "cageGap", 0, 0.5).name("Cage Drop").step(0.01).onChange(rebuild);
-  frameFolder.add(params, "cageBarWidth", 0.01, 0.08).name("Bar Width").step(0.005).onChange(rebuild);
-  frameFolder.add(params, "innerScale", 0.8, 1).name("Lamp Inset").step(0.01).onChange(rebuild);
+  // The hang point does not move — this lengthens the chain downward from it.
+  frameFolder.add(geometryParams, "drop", 0.5, 6, 0.1).name("Drop").onChange(rebuild);
+  frameFolder.add(geometryParams, "chainWidth", 0.02, 0.15, 0.01).name("Chain Width").onChange(rebuild);
+  frameFolder.add(geometryParams, "cageRadius", 0.15, 0.8, 0.01).name("Cage Radius").onChange(rebuild);
+  frameFolder.add(geometryParams, "cageStretch", 0.8, 2.5, 0.05).name("Cage Stretch").onChange(rebuild);
+  frameFolder.add(geometryParams, "cageGap", 0, 0.5, 0.01).name("Cage Gap").onChange(rebuild);
+  frameFolder.add(geometryParams, "cageBarWidth", 0.01, 0.08, 0.005).name("Cage Bar Width").onChange(rebuild);
+  frameFolder.add(geometryParams, "innerScale", 0.8, 1, 0.01).name("Inner Scale").onChange(rebuild);
   frameFolder.open();
 
-  const lampFolder = gui.addFolder("Lamp");
-  lampFolder.addColor(params, "lampColor")
-    .name("Color")
-    .onChange(() => {
-      const lamp = lantern.material[2];
-      lamp.color.set(params.lampColor);
-      lamp.emissive.set(params.lampColor);
-    });
-  lampFolder.add(params, "lampEmissiveIntensity", 0, 3)
-    .name("Emissive")
-    .step(0.05)
-    .onChange(() => {
-      lantern.material[2].emissiveIntensity = params.lampEmissiveIntensity;
-    });
-  lampFolder.add(params, "lampOpacity", 0.2, 1)
-    .name("Opacity")
-    .step(0.01)
-    .onChange(() => {
-      const lamp = lantern.material[2];
-      lamp.opacity = params.lampOpacity;
-      lamp.transparent = params.lampOpacity < 1;
-      lamp.needsUpdate = true;
-    });
-  lampFolder.open();
-
-  gui.addColor(params, "color")
+  // No rebuild — geometry is untouched by any of these. Same grouping as the Coach Lantern: one
+  // control per material group, named for the material rather than the part it happens to cover.
+  const materialsFolder = gui.addFolder("Materials");
+  // Mount and cage are separate groups but default to the same iron, so one control drives both.
+  materialsFolder
+    .addColor(colors, "iron")
     .name("Iron")
     .onChange(() => {
-      lantern.material[0].color.set(params.color);
-      lantern.material[1].color.set(params.color);
+      mountMaterial.color.set(colors.iron);
+      cageMaterial.color.set(colors.iron);
     });
+  materialsFolder
+    .addColor(colors, "glass")
+    .name("Glass")
+    .onChange(() => {
+      glassMaterial.color.set(colors.glass);
+      glassMaterial.emissive.set(colors.glass);
+    });
+  // Bound straight to the material — the glass is already `transparent`, so this only needs the value.
+  materialsFolder.add(glassMaterial, "opacity", 0, 1, 0.01).name("Glass Opacity");
+  materialsFolder.open();
 
   return () => {
     gui.destroy();
-    scene.remove(lantern);
     lantern.geometry.dispose();
-    disposeMaterials(lantern.material);
+    materials.forEach((m) => m.dispose());
+    axes.dispose();
     dispose();
   };
 }

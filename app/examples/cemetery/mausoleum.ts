@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
-import { PointLight } from "three";
-import { centerObject, createDoubleDoor, DoubleDoor, Mausoleum } from "three-low-poly";
+import { Mesh, MeshStandardMaterial, PointLight } from "three";
+import { centerObject, createDoubleDoor, DoubleDoor, MausoleumGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = {
@@ -13,7 +13,16 @@ export const meta = {
 export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container, { cameraPosition: [4, 3, 9] });
 
-  const mausoleum = new Mausoleum();
+  // One material per geometry group, in the order the geometry declares them. The interior is darkest
+  // and fully rough because nothing in there sees the sun.
+  const stone = [
+    new MeshStandardMaterial({ color: 0x808080, flatShading: true }), // 0 base
+    new MeshStandardMaterial({ color: 0x696969, flatShading: true }), // 1 building — walls and pillars
+    new MeshStandardMaterial({ color: 0x505050, flatShading: true }), // 2 roof
+    new MeshStandardMaterial({ color: 0x2e2e2e, flatShading: true, roughness: 1 }), // 3 interior
+  ];
+
+  const mausoleum = new Mesh(new MausoleumGeometry(), stone);
   mausoleum.castShadow = true;
   mausoleum.receiveShadow = true;
 

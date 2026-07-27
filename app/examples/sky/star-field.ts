@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { StarField, StarFieldOrientation, TerrainMound } from "three-low-poly";
+import { DoubleSide, Mesh, MeshStandardMaterial } from "three";
+import { StarField, StarFieldOrientation, TerrainMoundGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = {
@@ -21,7 +22,21 @@ export default function (container: HTMLElement) {
 
   // A rounded terrain mound as the ground gives the eye a foreground surface to
   // relate the star shell to — dolly in and the sky reads as an enclosing dome.
-  const ground = new TerrainMound({ radius: 14, height: 1.6, noiseHeight: 0.7, color: "#243426", seed: 7 });
+  // DoubleSide because a heightfield seen from below is otherwise invisible.
+  const groundMaterial = new MeshStandardMaterial({
+    color: 0x243426,
+    roughness: 1,
+    metalness: 0,
+    flatShading: true,
+    side: DoubleSide,
+  });
+
+  const ground = new Mesh(
+    new TerrainMoundGeometry({ radius: 14, height: 1.6, noiseHeight: 0.7, seed: 7 }),
+    groundMaterial,
+  );
+  ground.castShadow = true;
+  ground.receiveShadow = true;
   scene.add(ground);
 
   const params = {
@@ -131,7 +146,7 @@ export default function (container: HTMLElement) {
     scene.remove(stars);
     stars.dispose();
     ground.geometry.dispose();
-    ground.material.dispose();
+    groundMaterial.dispose();
     dispose();
   };
 }

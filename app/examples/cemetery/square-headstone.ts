@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { SquareHeadstone, SquareHeadstoneGeometry, centerObject } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { SquareHeadstoneGeometry, centerObject } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Square Headstone" };
@@ -13,7 +14,12 @@ export default function (container: HTMLElement) {
     depth: 0.15,
   };
 
-  const squareHeadstone = new SquareHeadstone();
+  const stone = new MeshStandardMaterial({ color: 0x777777, roughness: 0.8 });
+
+  const squareHeadstone = new Mesh(
+    new SquareHeadstoneGeometry(params.width, params.height, params.depth),
+    stone,
+  );
   scene.add(squareHeadstone);
   centerObject(squareHeadstone);
 
@@ -30,6 +36,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     squareHeadstone.geometry.dispose();
+    stone.dispose();
     dispose();
   };
 }

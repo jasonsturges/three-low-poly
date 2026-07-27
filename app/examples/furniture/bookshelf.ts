@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { Bookshelf, BookshelfGeometry, centerObject } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { BookshelfGeometry, centerObject } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Bookshelf" };
@@ -16,7 +17,9 @@ export default function (container: HTMLElement) {
     open: false,
   };
 
-  const bookshelf = new Bookshelf(params);
+  const frame = new MeshStandardMaterial({ color: 0x8b4513 });
+
+  const bookshelf = new Mesh(new BookshelfGeometry(params), frame);
   scene.add(bookshelf);
   centerObject(bookshelf);
 
@@ -37,6 +40,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     bookshelf.geometry.dispose();
+    frame.dispose();
     dispose();
   };
 }

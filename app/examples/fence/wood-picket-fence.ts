@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
-import { Group, Mesh } from "three";
-import { centerObject, createWoodPicketFence, WoodPost } from "three-low-poly";
+import { Group, Mesh, MeshStandardMaterial } from "three";
+import { centerObject, createWoodPicketFence, WoodPostGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Wood Picket Fence" };
@@ -22,6 +22,9 @@ export default function (container: HTMLElement) {
     railEmbed: 0.02,
   };
 
+  // Shared by the end posts across every rebuild, so it lives outside it.
+  const wood = new MeshStandardMaterial({ color: 0xe8e4da, flatShading: true });
+
   let assembly = new Group();
   scene.add(assembly);
 
@@ -37,7 +40,7 @@ export default function (container: HTMLElement) {
     assembly = new Group();
 
     // The post stands a little proud of the pickets, cap and all.
-    const post = new WoodPost({ height: params.height + params.pointHeight });
+    const post = new Mesh(new WoodPostGeometry({ height: params.height + params.pointHeight }), wood);
 
     // Pickets clear the post's widest point; the stringers reach back in to meet the shaft.
     const clearWidth = post.geometry.maxWidthBetween(0, params.height);
@@ -82,6 +85,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     disposeAssembly();
+    wood.dispose();
     dispose();
   };
 }

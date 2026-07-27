@@ -1,13 +1,14 @@
 import type { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import GUI from "lil-gui";
-import { Staircase } from "three-low-poly";
+import { DoubleSide, Mesh, MeshStandardMaterial } from "three";
+import { StaircaseGeometry } from "three-low-poly";
 import { createOrthographicScene } from "../../framework/createOrthographicScene";
 
 export const meta = { title: "Staircase" };
 
-function frameStaircase(staircase: Staircase, controls: OrbitControls) {
+function frameStaircase(geometry: StaircaseGeometry, controls: OrbitControls) {
   // Geometry runs +Z; the example rotates π so the run extends toward −Z.
-  controls.target.set(0, staircase.totalHeight / 2, -staircase.totalDepth / 2);
+  controls.target.set(0, geometry.totalHeight / 2, -geometry.totalDepth / 2);
   controls.update();
 }
 
@@ -24,36 +25,45 @@ export default function (container: HTMLElement) {
     color: "#8b4513",
   };
 
-  const syncDerived = (staircase: Staircase) => {
-    params.totalHeight = staircase.totalHeight;
-    params.totalDepth = staircase.totalDepth;
+  const syncDerived = (geometry: StaircaseGeometry) => {
+    params.totalHeight = geometry.totalHeight;
+    params.totalDepth = geometry.totalDepth;
   };
 
+  // Open shell (no side stringers yet), so DoubleSide keeps the undersides visible.
+  const wood = new MeshStandardMaterial({
+    color: params.color,
+    roughness: 0.85,
+    metalness: 0.04,
+    side: DoubleSide,
+  });
+
   const makeStaircase = () => {
-    const staircase = new Staircase({
-      width: params.width,
-      riserHeight: params.riserHeight,
-      treadDepth: params.treadDepth,
-      stepCount: params.stepCount,
-      color: params.color,
-    });
+    const staircase = new Mesh(
+      new StaircaseGeometry({
+        width: params.width,
+        riserHeight: params.riserHeight,
+        treadDepth: params.treadDepth,
+        stepCount: params.stepCount,
+      }),
+      wood,
+    );
     staircase.rotation.y = Math.PI;
     return staircase;
   };
 
   let staircase = makeStaircase();
-  syncDerived(staircase);
+  syncDerived(staircase.geometry);
   scene.add(staircase);
-  frameStaircase(staircase, controls);
+  frameStaircase(staircase.geometry, controls);
 
   const rebuild = () => {
     scene.remove(staircase);
     staircase.geometry.dispose();
-    staircase.material.dispose();
     staircase = makeStaircase();
-    syncDerived(staircase);
+    syncDerived(staircase.geometry);
     scene.add(staircase);
-    frameStaircase(staircase, controls);
+    frameStaircase(staircase.geometry, controls);
     totalHeightController.updateDisplay();
     totalDepthController.updateDisplay();
   };
@@ -75,14 +85,14 @@ export default function (container: HTMLElement) {
   gui.addColor(params, "color")
     .name("Color")
     .onChange(() => {
-      staircase.material.color.set(params.color);
+      wood.color.set(params.color);
     });
 
   return () => {
     gui.destroy();
     scene.remove(staircase);
     staircase.geometry.dispose();
-    staircase.material.dispose();
+    wood.dispose();
     dispose();
   };
 }

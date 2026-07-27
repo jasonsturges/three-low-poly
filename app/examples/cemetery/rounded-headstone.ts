@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { ArchStyle, RoundedHeadstone, RoundedHeadstoneGeometry, centerObject } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { ArchStyle, RoundedHeadstoneGeometry, centerObject } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Rounded Headstone" };
@@ -27,7 +28,9 @@ export default function (container: HTMLElement) {
     curveSegments: 16,
   };
 
-  const roundedHeadstone = new RoundedHeadstone();
+  const stone = new MeshStandardMaterial({ color: 0x777777, roughness: 0.8, flatShading: true });
+
+  const roundedHeadstone = new Mesh(new RoundedHeadstoneGeometry(params), stone);
   scene.add(roundedHeadstone);
   centerObject(roundedHeadstone);
 
@@ -53,7 +56,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     roundedHeadstone.geometry.dispose();
-    roundedHeadstone.material.dispose();
+    stone.dispose();
     dispose();
   };
 }

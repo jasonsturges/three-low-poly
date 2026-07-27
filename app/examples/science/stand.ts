@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { Stand, StandGeometry, centerObject } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { StandGeometry, centerObject } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Stand" };
@@ -15,7 +16,9 @@ export default function (container: HTMLElement) {
     radialSegments: 16,
   };
 
-  const stand = new Stand(params);
+  const metal = new MeshStandardMaterial({ color: 0x888888, roughness: 0.7, metalness: 0.3 });
+
+  const stand = new Mesh(new StandGeometry(params), metal);
   scene.add(stand);
   centerObject(stand);
 
@@ -36,6 +39,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     stand.geometry.dispose();
+    metal.dispose();
     dispose();
   };
 }

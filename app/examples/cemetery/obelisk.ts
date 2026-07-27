@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { centerObject, Obelisk, ObeliskGeometry } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { centerObject, ObeliskGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Obelisk" };
@@ -14,7 +15,12 @@ export default function (container: HTMLElement) {
     capHeight: 0.45,
   };
 
-  const obelisk = new Obelisk(params);
+  const stone = new MeshStandardMaterial({ color: 0x777777, roughness: 0.8, flatShading: true });
+
+  const obelisk = new Mesh(new ObeliskGeometry(params), stone);
+  // The prefab set both of these; a monument this tall is the one thing in the scene that casts.
+  obelisk.castShadow = true;
+  obelisk.receiveShadow = true;
   scene.add(obelisk);
 
   const rebuild = () => {
@@ -36,7 +42,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     obelisk.geometry.dispose();
-    obelisk.material.dispose();
+    stone.dispose();
     dispose();
   };
 }

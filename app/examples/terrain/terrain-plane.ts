@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { TerrainPlane, TerrainPlaneGeometry } from "three-low-poly";
+import { DoubleSide, Mesh, MeshStandardMaterial } from "three";
+import { TerrainPlaneGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = {
@@ -27,7 +28,18 @@ export default function (container: HTMLElement) {
     flatShading: true,
   };
 
-  const terrain = new TerrainPlane(params);
+  // DoubleSide because a heightfield seen from below is otherwise invisible.
+  const ground = new MeshStandardMaterial({
+    color: params.color,
+    roughness: 1,
+    metalness: 0,
+    flatShading: params.flatShading,
+    side: DoubleSide,
+  });
+
+  const terrain = new Mesh(new TerrainPlaneGeometry(params), ground);
+  terrain.castShadow = true;
+  terrain.receiveShadow = true;
   scene.add(terrain);
 
   const rebuild = () => {
@@ -58,19 +70,19 @@ export default function (container: HTMLElement) {
   meshFolder
     .addColor(params, "color")
     .name("Color")
-    .onChange((value: string) => terrain.material.color.set(value));
+    .onChange((value: string) => ground.color.set(value));
   meshFolder
     .add(params, "flatShading")
     .name("Flat Shading")
     .onChange((value: boolean) => {
-      terrain.material.flatShading = value;
-      terrain.material.needsUpdate = true;
+      ground.flatShading = value;
+      ground.needsUpdate = true;
     });
 
   return () => {
     gui.destroy();
     terrain.geometry.dispose();
-    terrain.material.dispose();
+    ground.dispose();
     dispose();
   };
 }

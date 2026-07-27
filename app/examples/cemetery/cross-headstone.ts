@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { CrossHeadstone, centerObject } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { CrossHeadstoneGeometry, centerObject } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Cross Headstone" };
@@ -14,7 +15,10 @@ export default function (container: HTMLElement) {
     crossbar: 0.68,
   };
 
-  const makeHeadstone = () => new CrossHeadstone(params);
+  // Carried over from the prefab as-is, smooth-shaded — unlike the celtic cross, which flat-shades.
+  const stone = new MeshStandardMaterial({ color: 0x777777, roughness: 0.8 });
+
+  const makeHeadstone = () => new Mesh(new CrossHeadstoneGeometry(params), stone);
 
   let crossHeadstone = makeHeadstone();
   scene.add(crossHeadstone);
@@ -23,7 +27,6 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     scene.remove(crossHeadstone);
     crossHeadstone.geometry.dispose();
-    crossHeadstone.material.dispose();
     crossHeadstone = makeHeadstone();
     scene.add(crossHeadstone);
     centerObject(crossHeadstone);
@@ -39,6 +42,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     crossHeadstone.geometry.dispose();
+    stone.dispose();
     dispose();
   };
 }

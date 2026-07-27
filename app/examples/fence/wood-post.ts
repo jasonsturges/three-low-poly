@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { centerObject, WoodPost, WoodPostGeometry } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { centerObject, WoodPostGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Wood Post" };
@@ -14,7 +15,9 @@ export default function (container: HTMLElement) {
     capHeight: 0.05,
   };
 
-  const post = new WoodPost(params);
+  const wood = new MeshStandardMaterial({ color: 0xe8e4da, flatShading: true });
+
+  const post = new Mesh(new WoodPostGeometry(params), wood);
   scene.add(post);
   centerObject(post);
 
@@ -33,7 +36,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     post.geometry.dispose();
-    post.material.dispose();
+    wood.dispose();
     dispose();
   };
 }

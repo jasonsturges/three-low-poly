@@ -1,99 +1,128 @@
 import GUI from "lil-gui";
-import { WallSconce } from "three-low-poly";
+import { AxesHelper, Color, DoubleSide, Mesh, MeshStandardMaterial } from "three";
+import { WallSconceGeometry, type WallSconceGeometryOptions } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
+import { frameObject } from "../../framework/frameObject";
 
-export const meta = { title: "Wall Sconce" };
-
-function disposeMaterials(materials: WallSconce["material"]) {
-  materials.forEach((material) => material.dispose());
-}
+export const meta = {
+  title: "Wall Sconce",
+  description:
+    "A BufferGeometry with three material groups — 0 mount (plate + bracket), 1 iron frame (cap + bowl), " +
+    "2 glass chimney — and the consumer owning the materials, the same shape as the Coach and Hanging " +
+    "Lanterns. Origin is the WALL MOUNT POINT: the sconce faces +X from a −X wall, so the plate straddles " +
+    "x=0 and the fixture projects out from it. The axes sit there to show where a wall would be, and the " +
+    "camera is framed to the object rather than the sconce being nudged into view. Colour edits mutate " +
+    "materials in place and never rebuild geometry.",
+};
 
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container, {
+  const handle = createScene(container, {
     background: 0xb8bcc4,
     cameraPosition: [1.2, 0.2, 1.5],
   });
+  const { scene, dispose } = handle;
 
-  const params = {
+  // The origin is where the fixture meets the wall, so the axes stand in for the wall plane itself.
+  const axes = new AxesHelper(0.15);
+  scene.add(axes);
+
+  const geometryParams: Required<
+    Pick<WallSconceGeometryOptions, "bodyOffsetX" | "chimneyHeight" | "innerScale">
+  > = {
     bodyOffsetX: 0.06,
     chimneyHeight: 0.3,
     innerScale: 0.96,
-    color: "#1c1e24",
-    lampColor: "#e8a058",
-    lampEmissiveIntensity: 1.4,
-    lampOpacity: 0.88,
   };
 
-  const makeSconce = () =>
-    new WallSconce({
-      bodyOffsetX: params.bodyOffsetX,
-      chimneyHeight: params.chimneyHeight,
-      innerScale: params.innerScale,
-      color: params.color,
-      lampColor: params.lampColor,
-      lampEmissiveIntensity: params.lampEmissiveIntensity,
-      lampOpacity: params.lampOpacity,
-    });
+  const colors = { iron: "#1c1e24", glass: "#e8a058" };
 
-  let sconce = makeSconce();
-  sconce.position.x = -0.5;
+  const glass = new Color(colors.glass);
+
+  // Group 0 — mount: the wall plate and the bracket that carries the fixture.
+  const mountMaterial = new MeshStandardMaterial({
+    color: new Color(colors.iron),
+    metalness: 0.65,
+    roughness: 0.55,
+    flatShading: true,
+  });
+
+  // Group 1 — iron frame: the cap above and the bowl below. Its own group so it can be tinted apart
+  // from the mount, though both default to the same iron.
+  const frameMaterial = new MeshStandardMaterial({
+    color: new Color(colors.iron),
+    metalness: 0.65,
+    roughness: 0.55,
+    flatShading: true,
+  });
+
+  // Group 2 — the glass chimney. Lit from inside rather than reflecting, as in both lanterns.
+  // `toneMapped: false` keeps the emissive off the renderer's tone curve.
+  const glassMaterial = new MeshStandardMaterial({
+    color: glass,
+    emissive: glass,
+    emissiveIntensity: 1.4,
+    transparent: true,
+    opacity: 0.88,
+    roughness: 0.35,
+    metalness: 0,
+    flatShading: true,
+    side: DoubleSide,
+    toneMapped: false,
+  });
+
+  const materials = [mountMaterial, frameMaterial, glassMaterial];
+
+  const sconce = new Mesh(new WallSconceGeometry(geometryParams), materials);
   scene.add(sconce);
 
+  // Framed ONCE, and it is the CAMERA that moves — the sconce stays on its mount point at the origin.
+  // `frameObject` recomputes distance from the bounding sphere, so calling it per rebuild would steal
+  // the viewer's zoom. This is also why the old `position.x = -0.5` nudge is gone: shifting the object
+  // to centre it is exactly what made the anchor unreadable.
+  frameObject(handle, sconce, { fit: 1.6 });
+
   const rebuild = () => {
-    scene.remove(sconce);
     sconce.geometry.dispose();
-    disposeMaterials(sconce.material);
-    sconce = makeSconce();
-    sconce.position.x = -0.5;
-    scene.add(sconce);
+    sconce.geometry = new WallSconceGeometry(geometryParams);
   };
 
   const gui = new GUI();
   gui.title("Wall Sconce");
 
   const frameFolder = gui.addFolder("Frame");
-  frameFolder.add(params, "bodyOffsetX", 0, 0.2).name("Body Offset X").step(0.01).onChange(rebuild);
-  frameFolder.add(params, "chimneyHeight", 0.15, 0.5).name("Chimney Height").step(0.01).onChange(rebuild);
-  frameFolder.add(params, "innerScale", 0.8, 1).name("Glass Inset").step(0.01).onChange(rebuild);
+  // How far the body stands off the wall plate.
+  frameFolder.add(geometryParams, "bodyOffsetX", 0, 0.2, 0.01).name("Body Offset X").onChange(rebuild);
+  frameFolder.add(geometryParams, "chimneyHeight", 0.15, 0.5, 0.01).name("Chimney Height").onChange(rebuild);
+  frameFolder.add(geometryParams, "innerScale", 0.8, 1, 0.01).name("Inner Scale").onChange(rebuild);
   frameFolder.open();
 
-  const lampFolder = gui.addFolder("Lamp");
-  lampFolder.addColor(params, "lampColor")
-    .name("Color")
-    .onChange(() => {
-      const lamp = sconce.material[2];
-      lamp.color.set(params.lampColor);
-      lamp.emissive.set(params.lampColor);
-    });
-  lampFolder.add(params, "lampEmissiveIntensity", 0, 3)
-    .name("Emissive")
-    .step(0.05)
-    .onChange(() => {
-      sconce.material[2].emissiveIntensity = params.lampEmissiveIntensity;
-    });
-  lampFolder.add(params, "lampOpacity", 0.2, 1)
-    .name("Opacity")
-    .step(0.01)
-    .onChange(() => {
-      const lamp = sconce.material[2];
-      lamp.opacity = params.lampOpacity;
-      lamp.transparent = params.lampOpacity < 1;
-      lamp.needsUpdate = true;
-    });
-  lampFolder.open();
-
-  gui.addColor(params, "color")
+  // No rebuild — geometry is untouched by any of these. One control per material group, named for the
+  // material rather than the part it covers, matching both lanterns.
+  const materialsFolder = gui.addFolder("Materials");
+  // Mount and frame are separate groups but default to the same iron, so one control drives both.
+  materialsFolder
+    .addColor(colors, "iron")
     .name("Iron")
     .onChange(() => {
-      sconce.material[0].color.set(params.color);
-      sconce.material[1].color.set(params.color);
+      mountMaterial.color.set(colors.iron);
+      frameMaterial.color.set(colors.iron);
     });
+  materialsFolder
+    .addColor(colors, "glass")
+    .name("Glass")
+    .onChange(() => {
+      glassMaterial.color.set(colors.glass);
+      glassMaterial.emissive.set(colors.glass);
+    });
+  // Bound straight to the material — the glass is already `transparent`, so this only needs the value.
+  materialsFolder.add(glassMaterial, "opacity", 0, 1, 0.01).name("Glass Opacity");
+  materialsFolder.open();
 
   return () => {
     gui.destroy();
-    scene.remove(sconce);
     sconce.geometry.dispose();
-    disposeMaterials(sconce.material);
+    materials.forEach((m) => m.dispose());
+    axes.dispose();
     dispose();
   };
 }

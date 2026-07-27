@@ -8,11 +8,11 @@ import {
   MeshStandardMaterial,
   PlaneGeometry,
 } from "three";
-import type { GregorianLatticeGrid } from "../../geometry/architecture/gregorianLattice";
+import type { GregorianLatticeGrid } from "../geometry/architecture/gregorianLattice";
 import {
   GregorianLatticeWindowGeometry,
   type GregorianLatticeWindowGeometryOptions,
-} from "../../geometry/architecture/GregorianLatticeWindowGeometry";
+} from "../geometry/architecture/GregorianLatticeWindowGeometry";
 
 export interface GregorianLatticeWindowOptions extends GregorianLatticeWindowGeometryOptions {
   /** Frame + mullion tint. Defaults to `#5c4033` (wood). */

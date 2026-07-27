@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
-import { Group, Mesh } from "three";
-import { centerObject, createWroughtIronFence, StoneFencePost } from "three-low-poly";
+import { Group, Mesh, MeshStandardMaterial } from "three";
+import { centerObject, createWroughtIronFence, StoneFencePostGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Wrought Iron Fence" };
@@ -23,6 +23,9 @@ export default function (container: HTMLElement) {
     railEmbed: 0.05,
   };
 
+  // Shared by the end posts across every rebuild, so it lives outside it.
+  const stone = new MeshStandardMaterial({ color: 0x8b7d7b, flatShading: true });
+
   let assembly = new Group();
   scene.add(assembly);
 
@@ -37,7 +40,7 @@ export default function (container: HTMLElement) {
     scene.remove(assembly);
     assembly = new Group();
 
-    const post = new StoneFencePost();
+    const post = new Mesh(new StoneFencePostGeometry(), stone);
     const upperRailY = params.height - params.railHeight / 2;
 
     // Ask the post how wide it is rather than hardcoding it. Pickets must CLEAR the post's widest
@@ -89,6 +92,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     disposeAssembly();
+    stone.dispose();
     dispose();
   };
 }

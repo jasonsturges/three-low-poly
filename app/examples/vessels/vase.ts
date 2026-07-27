@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { centerObject, Vase, VaseGeometry } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { centerObject, VaseGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Vase" };
@@ -26,7 +27,16 @@ export default function (container: HTMLElement) {
     radialSegments: params.radialSegments,
   });
 
-  const vase = new Vase(options());
+  const glaze = new MeshStandardMaterial({
+    color: 0x7fa8b8,
+    roughness: 0.35,
+    metalness: 0.05,
+    flatShading: true,
+  });
+
+  const vase = new Mesh(new VaseGeometry(options()), glaze);
+  vase.castShadow = true;
+  vase.receiveShadow = true;
   scene.add(vase);
 
   const rebuild = () => {
@@ -58,7 +68,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     vase.geometry.dispose();
-    vase.material.dispose();
+    glaze.dispose();
     dispose();
   };
 }

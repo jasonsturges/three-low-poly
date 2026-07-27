@@ -15,11 +15,11 @@ import {
   traceArchedOpeningOutline,
   type ArchedOpeningMetrics,
   type DiamondLatticeGrid,
-} from "../../geometry/architecture/diamondLattice";
+} from "../geometry/architecture/diamondLattice";
 import {
   ArchedDiamondLatticeWindowGeometry,
   type ArchedDiamondLatticeWindowGeometryOptions,
-} from "../../geometry/architecture/ArchedDiamondLatticeWindowGeometry";
+} from "../geometry/architecture/ArchedDiamondLatticeWindowGeometry";
 
 export interface ArchedDiamondLatticeWindowOptions extends ArchedDiamondLatticeWindowGeometryOptions {
   /** Lead + outer frame tint. Defaults to `#0c0f14`. */

@@ -8,11 +8,11 @@ import {
   MeshStandardMaterial,
   PlaneGeometry,
 } from "three";
-import type { DiamondLatticeGrid } from "../../geometry/architecture/diamondLattice";
+import type { DiamondLatticeGrid } from "../geometry/architecture/diamondLattice";
 import {
   DiamondLatticeWindowGeometry,
   type DiamondLatticeWindowGeometryOptions,
-} from "../../geometry/architecture/DiamondLatticeWindowGeometry";
+} from "../geometry/architecture/DiamondLatticeWindowGeometry";
 
 export interface DiamondLatticeWindowOptions extends DiamondLatticeWindowGeometryOptions {
   /** Lead + outer frame tint. Defaults to `#0c0f14`. */

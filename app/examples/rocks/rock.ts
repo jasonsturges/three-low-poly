@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { Rock, centerObject } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { RockGeometry, centerObject } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = { title: "Rock" };
@@ -14,7 +15,9 @@ export default function (container: HTMLElement) {
     color: "#808080",
   };
 
-  const makeRock = () => new Rock(params);
+  const stone = new MeshStandardMaterial({ color: params.color, flatShading: true });
+
+  const makeRock = () => new Mesh(new RockGeometry(params), stone);
 
   let rock = makeRock();
   scene.add(rock);
@@ -23,7 +26,6 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     scene.remove(rock);
     rock.geometry.dispose();
-    rock.material.dispose();
     rock = makeRock();
     scene.add(rock);
     centerObject(rock);
@@ -34,13 +36,13 @@ export default function (container: HTMLElement) {
   gui.add(params, "radius", 0.25, 2, 0.01).name("Radius").onChange(rebuild);
   gui.add(params, "widthSegments", 2, 8, 1).name("Width Segments").onChange(rebuild);
   gui.add(params, "heightSegments", 2, 8, 1).name("Height Segments").onChange(rebuild);
-  gui.addColor(params, "color").name("Color").onChange(() => rock.material.color.set(params.color));
+  gui.addColor(params, "color").name("Color").onChange(() => stone.color.set(params.color));
 
   return () => {
     gui.destroy();
     scene.remove(rock);
     rock.geometry.dispose();
-    rock.material.dispose();
+    stone.dispose();
     dispose();
   };
 }

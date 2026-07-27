@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
-import { Arch, ArchStyle, centerObject } from "three-low-poly";
+import { Mesh, MeshStandardMaterial } from "three";
+import { ArchGeometry, ArchStyle, centerObject } from "three-low-poly";
 import { createOrthographicScene } from "../../framework/createOrthographicScene";
 
 export const meta = { title: "Arch" };
@@ -32,8 +33,10 @@ export default function (container: HTMLElement) {
     color: "#9a9186",
   };
 
+  const stone = new MeshStandardMaterial({ color: params.color, roughness: 0.9, flatShading: true });
+
   const makeArch = () => {
-    const mesh = new Arch(params);
+    const mesh = new Mesh(new ArchGeometry(params), stone);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
@@ -46,7 +49,6 @@ export default function (container: HTMLElement) {
 
   const rebuild = () => {
     arch.geometry.dispose();
-    arch.material.dispose();
     scene.remove(arch);
 
     arch = makeArch();
@@ -89,7 +91,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     arch.geometry.dispose();
-    arch.material.dispose();
+    stone.dispose();
     dispose();
   };
 }
