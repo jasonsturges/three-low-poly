@@ -56,7 +56,6 @@ export default function (container: HTMLElement) {
     stats.bore = geometry.holeRadius.toFixed(4);
     geometry.computeBoundingBox();
     stats.baseY = geometry.boundingBox!.min.y.toExponential(2);
-    frameObject(handle, washer, { fit: 1.5 });
   };
 
   const rebuild = () => {
@@ -65,6 +64,10 @@ export default function (container: HTMLElement) {
     refresh();
   };
   refresh();
+  // Framed ONCE, deliberately not inside `refresh`. `frameObject` recomputes the camera DISTANCE
+  // from the object's bounding sphere, so calling it on every rebuild snaps the zoom back and throws
+  // away whatever the viewer had set.
+  frameObject(handle, washer, { fit: 1.5 });
 
   const gui = new GUI();
   gui.title("Annulus");
