@@ -135,7 +135,8 @@ export class BevelGearGeometry extends BufferGeometry {
     const boreRing: Vector2[] = [];
     if (bore > 0) {
       const sides = Math.max(3, Math.round(gearOptions.holeSides ?? 5));
-      const start = Math.PI / 2 + (gearOptions.rotation ?? 0);
+      // Same offset convention as `GearShape`: relative to the wheel's phase.
+      const start = Math.PI / 2 + (gearOptions.rotation ?? 0) + (gearOptions.holeRotation ?? 0);
       for (let i = 0; i < sides; i++) {
         const a = start + (Math.PI * 2 * i) / sides;
         boreRing.push(new Vector2(Math.cos(a) * bore, Math.sin(a) * bore));

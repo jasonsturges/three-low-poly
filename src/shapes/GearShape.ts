@@ -33,6 +33,16 @@ export interface GearShapeOptions {
   holeRadius?: number;
   /** Rotation in radians from the resting state. Defaults to `0`. */
   rotation?: number;
+  /**
+   * Rotation of the bore in radians, **relative to the wheel**. Defaults to `0`.
+   *
+   * Only visible on a low {@link GearShapeOptions.holeSides} count: at `4` the bore rests as a diamond, points
+   * at north, south, east and west, and `Math.PI / 4` turns it into a square with flat sides. A round bore has
+   * no orientation to set.
+   *
+   * Relative rather than absolute, so turning the wheel carries the bore with it — the shaft does not slip.
+   */
+  holeRotation?: number;
 }
 
 /** Distance from the origin to segment `ab`. */
@@ -72,6 +82,7 @@ export class GearShape extends Shape {
     holeSides = 5,
     holeRadius = 0.25,
     rotation = 0,
+    holeRotation = 0,
   }: GearShapeOptions = {}) {
     super();
 
@@ -132,7 +143,9 @@ export class GearShape extends Shape {
       const holeStep = (Math.PI * 2) / holeSides;
 
       for (let n = 0; n < holeSides; ++n) {
-        const angle = start + holeStep * n;
+        // Offset from the wheel's own phase, so the bore turns with the teeth and `holeRotation` is the
+        // difference between them.
+        const angle = start + holeRotation + holeStep * n;
         const x = Math.cos(angle) * bore;
         const y = Math.sin(angle) * bore;
 

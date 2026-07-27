@@ -35,6 +35,7 @@ export default function (container: HTMLElement) {
     holeSides: 12,
     holeRadius: 0.22,
     rotation: 0,
+    holeRotation: 0,
   };
 
   const colors = { steel: "#9aa3ad" };
@@ -94,6 +95,8 @@ export default function (container: HTMLElement) {
   const bore = gui.addFolder("Bore");
   bore.add(params, "holeRadius", 0, 0.7, 0.01).name("Radius").onChange(rebuild);
   bore.add(params, "holeSides", 3, 24, 1).name("Sides").onChange(rebuild);
+  // Only visible on a low side count: at 4 the bore rests as a diamond, and PI/4 squares it up.
+  bore.add(params, "holeRotation", 0, Math.PI / 2, 0.01).name("Rotation").onChange(rebuild);
 
   // No rebuild — geometry is untouched by the colour.
   const material = gui.addFolder("Material");
