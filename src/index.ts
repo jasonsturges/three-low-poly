@@ -220,8 +220,8 @@ export { BookshelfGeometry, type BookshelfGeometryOptions } from "./geometry/fur
 export { DeskGeometry } from "./geometry/furniture/DeskGeometry";
 
 // Leafs
-export { EllipticLeafGeometry } from "./geometry/leafs/EllipticLeafGeometry";
-export { LeafGeometry, type LeafGeometryOptions } from "./geometry/leafs/LeafGeometry";
+export { EllipticLeafGeometry } from "./geometry/foliage/EllipticLeafGeometry";
+export { LeafGeometry, type LeafGeometryOptions } from "./geometry/foliage/LeafGeometry";
 
 // Lighting
 export {
@@ -250,7 +250,7 @@ export { RockGeometry, type RockGeometryOptions } from "./geometry/rocks/RockGeo
 export {
   ArchedSlabGeometry,
   type ArchedSlabGeometryOptions,
-} from "./geometry/shapes/ArchedSlabGeometry";
+} from "./geometry/architecture/ArchedSlabGeometry";
 export { BurstGeometry, type BurstGeometryOptions } from "./geometry/shapes/BurstGeometry";
 export { ClubGeometry, type ClubGeometryOptions } from "./geometry/shapes/ClubGeometry";
 export { DiamondGeometry, type DiamondGeometryOptions } from "./geometry/shapes/DiamondGeometry";
@@ -258,20 +258,17 @@ export {
   AnnulusGeometry,
   type AnnulusGeometryOptions,
 } from "./geometry/shapes/AnnulusGeometry";
-export { GearGeometry, type GearGeometryOptions } from "./geometry/shapes/GearGeometry";
+export { GearGeometry, type GearGeometryOptions } from "./geometry/gears/GearGeometry";
 export {
   CrossedWheelGeometry,
   type CrossedWheelGeometryOptions,
-} from "./geometry/shapes/CrossedWheelGeometry";
-export {
-  BevelGearGeometry,
-  type BevelGearGeometryOptions,
-} from "./geometry/shapes/BevelGearGeometry";
+} from "./geometry/gears/CrossedWheelGeometry";
+export { BevelGearGeometry, type BevelGearGeometryOptions } from "./geometry/gears/BevelGearGeometry";
 export {
   InternalGearGeometry,
   type InternalGearGeometryOptions,
-} from "./geometry/shapes/InternalGearGeometry";
-export { RackGeometry, type RackGeometryOptions } from "./geometry/shapes/RackGeometry";
+} from "./geometry/gears/InternalGearGeometry";
+export { RackGeometry, type RackGeometryOptions } from "./geometry/gears/RackGeometry";
 export { HeartGeometry, type HeartGeometryOptions } from "./geometry/shapes/HeartGeometry";
 export { PolygonGeometry, type PolygonGeometryOptions } from "./geometry/shapes/PolygonGeometry";
 export { SpadeGeometry, type SpadeGeometryOptions } from "./geometry/shapes/SpadeGeometry";
@@ -367,7 +364,7 @@ export { Bookshelf, type BookshelfOptions } from "./models/furniture/Bookshelf";
 export { Desk } from "./models/furniture/Desk";
 
 // Leafs
-export { Leaf, type LeafOptions } from "./models/leafs/Leaf";
+export { Leaf, type LeafOptions } from "./models/foliage/Leaf";
 
 // Lighting
 export { Candle, type CandleOptions } from "./models/lighting/Candle";

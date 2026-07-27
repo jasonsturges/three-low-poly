@@ -1,4 +1,4 @@
-import { ArchedSlabGeometry, type ArchedSlabGeometryOptions } from "../shapes/ArchedSlabGeometry";
+import { ArchedSlabGeometry, type ArchedSlabGeometryOptions } from "../architecture/ArchedSlabGeometry";
 
 export interface RoundedHeadstoneGeometryOptions extends ArchedSlabGeometryOptions {}
 

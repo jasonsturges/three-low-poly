@@ -1,5 +1,5 @@
 import { Color, ColorRepresentation, DoubleSide, Mesh, MeshStandardMaterial } from "three";
-import { LeafGeometry, type LeafGeometryOptions } from "../../geometry/leafs/LeafGeometry";
+import { LeafGeometry, type LeafGeometryOptions } from "../../geometry/foliage/LeafGeometry";
 
 export interface LeafOptions extends LeafGeometryOptions {
   /** Leaf tint. Defaults to `#a8702c`. */
