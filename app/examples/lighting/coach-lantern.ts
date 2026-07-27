@@ -135,6 +135,9 @@ export default function (container: HTMLElement) {
     glassMaterial.emissive.set(colors.glass);
   });
   materials.addColor(colors, "wax").name("Wax").onChange(() => waxMaterial.color.set(colors.wax));
+  // Bound straight to the material — the glass is already `transparent`, so this only needs the value.
+  // Wind it up and the panes go milky; wind it down and you read the candle through them.
+  materials.add(glassMaterial, "opacity", 0, 1, 0.01).name("Glass Opacity");
 
   return () => {
     gui.destroy();
