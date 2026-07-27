@@ -265,6 +265,11 @@ export {
   BevelGearGeometry,
   type BevelGearGeometryOptions,
 } from "./geometry/shapes/BevelGearGeometry";
+export {
+  InternalGearGeometry,
+  type InternalGearGeometryOptions,
+} from "./geometry/shapes/InternalGearGeometry";
+export { RackGeometry, type RackGeometryOptions } from "./geometry/shapes/RackGeometry";
 export { HeartGeometry, type HeartGeometryOptions } from "./geometry/shapes/HeartGeometry";
 export { PolygonGeometry, type PolygonGeometryOptions } from "./geometry/shapes/PolygonGeometry";
 export { SpadeGeometry, type SpadeGeometryOptions } from "./geometry/shapes/SpadeGeometry";
@@ -420,6 +425,8 @@ export { ClubShape, type ClubShapeOptions } from "./shapes/ClubShape";
 export { DiamondShape, type DiamondShapeOptions } from "./shapes/DiamondShape";
 export { GearShape, type GearShapeOptions } from "./shapes/GearShape";
 export { CrossedWheelShape, type CrossedWheelShapeOptions } from "./shapes/CrossedWheelShape";
+export { InternalGearShape, type InternalGearShapeOptions } from "./shapes/InternalGearShape";
+export { RackShape, type RackShapeOptions } from "./shapes/RackShape";
 export { HeartShape, type HeartShapeOptions } from "./shapes/HeartShape";
 export { PolygonShape, type PolygonShapeOptions } from "./shapes/PolygonShape";
 export { SpadeShape, type SpadeShapeOptions } from "./shapes/SpadeShape";
