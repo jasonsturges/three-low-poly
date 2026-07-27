@@ -8,7 +8,11 @@
  * }, 100, 500); // Random timeout between 100ms and 500ms
  * ```
  */
-export function setRandomTimeout(callback: () => void, minDelay: number, maxDelay: number) {
+export function setRandomTimeout(
+  callback: () => void,
+  minDelay: number,
+  maxDelay: number,
+): ReturnType<typeof setTimeout> {
   const delay = minDelay + Math.random() * (maxDelay - minDelay);
 
   return setTimeout(callback, delay);
