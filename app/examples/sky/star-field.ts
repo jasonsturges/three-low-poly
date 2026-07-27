@@ -1,16 +1,17 @@
 import GUI from "lil-gui";
-import { StarFieldEffect, StarFieldOrientation, TerrainMound } from "three-low-poly";
+import { StarField, StarFieldOrientation, TerrainMound } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = {
   title: "Star Field",
   description:
-    "Procedural starry night — instanced starbursts, screen-aligned (billboard) or facing the " +
-    "shell center (radial). Orbit the scene; the star shell follows the camera.",
+    "Procedural starry night — instanced starbursts in one draw call. `points` is screen-aligned and " +
+    "sized in pixels; `radial` is real 3D geometry sized in angular extents, and runs on either " +
+    "renderer. The shell pins itself to the camera, so orbit and dolly as far as you like.",
 };
 
 export default function (container: HTMLElement) {
-  const { scene, camera, controls, onFrame, dispose } = createScene(container, {
+  const { scene, controls, onFrame, dispose } = createScene(container, {
     background: 0x000000,
     cameraPosition: [0, 4, 14],
   });
@@ -24,11 +25,13 @@ export default function (container: HTMLElement) {
   scene.add(ground);
 
   const params = {
-    orientation: "billboard" as StarFieldOrientation,
+    orientation: "points" as StarFieldOrientation,
     count: 2500,
     radius: 480,
     sizeMin: 0.008,
     sizeMax: 0.025,
+    pixelSizeMin: 4,
+    pixelSizeMax: 14,
     rotation: 0,
     rotationJitter: 0,
     twinkle: true,
@@ -40,12 +43,14 @@ export default function (container: HTMLElement) {
   };
 
   const createStars = () =>
-    new StarFieldEffect({
+    new StarField({
       orientation: params.orientation,
       count: params.count,
       radius: params.radius,
       sizeMin: params.sizeMin,
       sizeMax: params.sizeMax,
+      pixelSizeMin: params.pixelSizeMin,
+      pixelSizeMax: params.pixelSizeMax,
       rotation: params.rotation,
       rotationJitter: params.rotationJitter,
       twinkle: params.twinkle,
@@ -58,35 +63,37 @@ export default function (container: HTMLElement) {
     });
 
   let stars = createStars();
-  stars.position.copy(camera.position);
   scene.add(stars);
 
   const rebuild = () => {
     scene.remove(stars);
     stars.dispose();
     stars = createStars();
-    stars.position.copy(camera.position);
     scene.add(stars);
   };
 
+  // The shell pins itself to the viewer, so nothing here places it. Twinkle is the only
+  // per-frame work.
   onFrame(() => {
-    stars.position.copy(camera.position);
     if (params.twinkle) stars.update(performance.now() * 0.001);
   });
 
   const gui = new GUI();
   gui.title("Star Field");
   gui
-    .add(params, "orientation", ["billboard", "radial"])
+    .add(params, "orientation", ["points", "radial"])
     .name("Orientation")
     .onChange(() => {
       rebuild();
-      syncDepthVisibility();
+      syncControlVisibility();
     });
   gui.add(params, "count", 100, 8000, 100).name("Count").onChange(rebuild);
   gui.add(params, "radius", 100, 900, 10).name("Radius").onChange(rebuild);
-  gui.add(params, "sizeMin", 0.002, 0.08, 0.001).name("Angular Min").onChange(rebuild);
-  gui.add(params, "sizeMax", 0.002, 0.08, 0.001).name("Angular Max").onChange(rebuild);
+  const angularMin = gui.add(params, "sizeMin", 0.002, 0.08, 0.001).name("Angular Min").onChange(rebuild);
+  const angularMax = gui.add(params, "sizeMax", 0.002, 0.08, 0.001).name("Angular Max").onChange(rebuild);
+  // EXPERIMENTAL (points): size is a pixel radius, so shell depth no longer affects apparent size.
+  const pixelMin = gui.add(params, "pixelSizeMin", 1, 40, 0.5).name("Pixel Min").onChange(rebuild);
+  const pixelMax = gui.add(params, "pixelSizeMax", 1, 40, 0.5).name("Pixel Max").onChange(rebuild);
   gui.add(params, "rotation", 0, Math.PI * 2, 0.01).name("Rotation").onChange(rebuild);
   gui.add(params, "rotationJitter", 0, Math.PI * 2, 0.01).name("Rotation Jitter").onChange(rebuild);
   gui.add(params, "twinkle").name("Twinkle");
@@ -98,9 +105,19 @@ export default function (container: HTMLElement) {
   const depthControl = burstFolder.add(params, "burstDepth", 0, 0.5, 0.01).name("Depth").onChange(rebuild);
   burstFolder.open();
 
-  // Billboards draw the XY profile only, so extrusion depth has nothing to act on.
-  const syncDepthVisibility = () => depthControl.show(params.orientation === "radial");
-  syncDepthVisibility();
+  // Billboards draw the XY profile only, so extrusion depth has nothing to act on. And the two
+  // sizing schemes are mutually exclusive: angular is world-unit, points is screen-pixel.
+  // The size unit follows the orientation: screen-aligned stars are sized in pixels, real geometry
+  // in angular extents. Depth only means something when the star isn't flattened to its XY profile.
+  const syncControlVisibility = () => {
+    const isPoints = params.orientation === "points";
+    depthControl.show(!isPoints);
+    angularMin.show(!isPoints);
+    angularMax.show(!isPoints);
+    pixelMin.show(isPoints);
+    pixelMax.show(isPoints);
+  };
+  syncControlVisibility();
 
   gui
     .add(params, "showReference")

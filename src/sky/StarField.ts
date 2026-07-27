@@ -14,28 +14,30 @@ import {
   Vector3,
 } from "three";
 import { instancedBufferAttribute, instancedDynamicBufferAttribute } from "three/tsl";
-import { SpriteNodeMaterial } from "three/webgpu";
+import { PointsNodeMaterial } from "three/webgpu";
 import { BurstGeometry, type BurstGeometryOptions } from "../geometry/shapes/BurstGeometry";
+import { lockToViewer } from "../utils/LockToViewer";
 
 /** How each star is turned to face the viewer. */
-export type StarFieldOrientation = "billboard" | "radial";
+export type StarFieldOrientation = "points" | "radial";
 
 export interface StarBurstShapeOptions extends BurstGeometryOptions {
   /** Number of burst points. Defaults to `4` — a diffraction-spike star. */
   points?: number;
-  /** Extrusion depth (`orientation: "radial"` only — billboards are flat). Defaults to `0.05`. */
+  /** Extrusion depth (`orientation: "radial"` only — screen-aligned stars are flat). Defaults to `0.05`. */
   depth?: number;
 }
 
-export interface StarFieldEffectOptions {
+export interface StarFieldOptions {
   /**
-   * How each star faces the viewer.
+   * How each star faces the viewer. This also decides which size options apply.
    *
-   * - `billboard` (default) — every star is screen-aligned, so the field holds its
-   *   orientation as the camera orbits. Only the geometry's **XY profile** is drawn;
-   *   any Z extent is ignored.
-   * - `radial` — full 3D geometry rotated to face the shell center. Depth is real here,
-   *   and stars shear as the camera moves, the way any world-space mesh does.
+   * - `points` (default) — screen-aligned, so the field holds its orientation as the camera
+   *   orbits. Only the geometry's **XY profile** is drawn; any Z extent is ignored. Sized with
+   *   `pixelSizeMin` / `pixelSizeMax`. **Requires `WebGPURenderer`** (node material).
+   * - `radial` — full 3D geometry rotated to face the shell center. Depth is real here, and stars
+   *   shear as the camera moves, the way any world-space mesh does. Sized with `sizeMin` /
+   *   `sizeMax` as angular extents. Uses only standard materials, so it runs on either renderer.
    */
   orientation?: StarFieldOrientation;
   /** Star shape used to build the default {@link BurstGeometry}. */
@@ -43,9 +45,8 @@ export interface StarFieldEffectOptions {
   /** Replace the star geometry entirely. Billboards use its XY profile; radial uses all of it. */
   geometry?: BufferGeometry;
   /**
-   * Override the default field material. In `billboard` mode this must be a
-   * `SpriteNodeMaterial` — per-star position, scale, and rotation are assigned onto it
-   * as node inputs.
+   * Override the default field material. In `points` mode this must be a `PointsNodeMaterial` —
+   * per-star position, size, and rotation are assigned onto it as node inputs.
    */
   material?: Material;
   /** Number of stars. Defaults to `1500`. */
@@ -63,23 +64,41 @@ export interface StarFieldEffectOptions {
   sizeMin?: number;
   /** Maximum angular size. Defaults to `0.025`. */
   sizeMax?: number;
+  /**
+   * Star radius in logical (CSS) pixels — **`points` only**. Defaults to `4` / `14`.
+   *
+   * Screen-aligned stars are naturally sized in screen space, so there is no distance term at all:
+   * a star is the same size wherever it sits in the shell, and nothing depends on the viewer being
+   * at the shell's centre. The trade against angular sizing is that pixels are absolute, so stars
+   * occupy a smaller fraction of a larger display.
+   */
+  pixelSizeMin?: number;
+  /** Star radius in logical pixels, maximum — **`points` only**. Defaults to `14`. */
+  pixelSizeMax?: number;
   /** Single color or palette; multiple entries pick a random color per star. */
   color?: ColorRepresentation | ColorRepresentation[];
-  /** Enable pulsing brightness; call {@link StarFieldEffect.update} each frame when `true`. */
+  /**
+   * Whether `scene.fog` tints the stars. Defaults to `false` — the shell sits far enough out
+   * that any usable fog density saturates and flattens the whole field to fog color.
+   *
+   * Ignored when you supply your own `material`; set the flag on that material instead.
+   */
+  fog?: boolean;
+  /** Enable pulsing brightness; call {@link StarField.update} each frame when `true`. */
   twinkle?: boolean;
   /**
    * Base star rotation, in radians. Defaults to `0`.
    *
-   * Measured in screen space for `billboard` and world space for `radial` — the same knob
-   * means different things, because a billboard re-aligns every frame and a radial star
+   * Measured in screen space for `points` and world space for `radial` — the same knob means
+   * different things, because a screen-aligned star re-aligns every frame and a radial star
    * does not.
    */
   rotation?: number;
   /**
    * Random rotation spread added per star, in radians. Defaults to `Math.PI * 2`.
    *
-   * `0` aligns every star — with `billboard` that yields a coherent diffraction-spike field
-   * that stays locked as the camera orbits. `2π` is fully random.
+   * `0` aligns every star — with `points` that yields a coherent diffraction-spike field that
+   * stays locked as the camera orbits. `2π` is fully random.
    */
   rotationJitter?: number;
 }
@@ -100,7 +119,7 @@ function resolvePalette(color: ColorRepresentation | ColorRepresentation[]): Col
 }
 
 /**
- * Largest radius in the XY plane. A billboard only ever draws the XY profile, so measuring
+ * Largest radius in the XY plane. A screen-aligned star only ever draws the XY profile, so measuring
  * the full bounding sphere would let an extruded geometry's depth shrink the visible star.
  */
 function profileRadiusXY(geometry: BufferGeometry): number {
@@ -118,47 +137,54 @@ function profileRadiusXY(geometry: BufferGeometry): number {
 /**
  * Procedural star field distributed on a spherical shell — intended as an infinite sky dome.
  *
- * Stars are placed in world space around the origin. To keep the shell centered on the
- * viewer, add this object to the **scene** (not the camera) and copy the camera position
- * every frame. Parenting to the camera is not supported: Three.js does not render
- * objects attached to the active camera.
+ * The shell pins itself to the active camera every frame (see {@link lockToViewer}), so
+ * `scene.add(stars)` is the whole contract — the field is unreachable no matter how far the
+ * viewer travels, and there is no per-frame placement call. {@link update} remains necessary
+ * only for `twinkle`.
  *
- * **Orientation** — the only axis that distinguishes how stars are drawn:
+ * **Orientation** decides how stars are drawn *and* how they are sized — the two travel together,
+ * because screen-aligned stars are naturally measured in screen space and real geometry in world
+ * space:
  *
- * - `billboard` — screen-aligned via `SpriteNodeMaterial`, with per-star position, scale,
- *   and rotation supplied as instanced attributes. The field stays visually fixed as the
- *   camera orbits. Flat by construction: only the geometry's XY profile is used.
- * - `radial` — instanced 3D meshes rotated to face the shell center, drawn `DoubleSide` so
- *   stars stay visible from inside the shell.
+ * - `points` — screen-aligned via `PointsNodeMaterial`, with per-star position, size, and rotation
+ *   supplied as instanced attributes. The field stays visually fixed as the camera orbits. Flat by
+ *   construction: only the geometry's XY profile is used. Sized by `pixelSizeMin` / `pixelSizeMax`
+ *   in logical pixels, with **no distance term at all**. Requires `WebGPURenderer`.
+ * - `radial` — instanced 3D meshes rotated to face the shell center, drawn `DoubleSide` so stars
+ *   stay visible from inside the shell. Sized by `sizeMin` / `sizeMax` as angular extents (radians
+ *   at unit distance), scaled by each star's distance from the origin so stars look similar
+ *   regardless of shell depth. That conversion assumes the viewer sits at the shell's centre, which
+ *   {@link lockToViewer} guarantees. Uses only standard materials, so it runs on either renderer.
  *
- * Both orientations render as a single instanced draw call, so the geometry you pass is a
- * matter of looks rather than cost.
- *
- * **Sizing** — `sizeMin` / `sizeMax` are angular extents (radians at unit distance),
- * multiplied by each star's distance from the origin so stars look similar regardless
- * of shell depth (`minRadius`–`maxRadius`).
+ * Both render as a single instanced draw call, so the geometry you pass is a matter of looks rather
+ * than cost.
  *
  * @example
  * ```typescript
- * const stars = new StarFieldEffect({
+ * const stars = new StarField({
  *   count: 2500,
  *   radius: 480,
  *   rotationJitter: 0, // every burst locked vertical on screen
  *   twinkle: true,
  * });
  *
- * scene.add(stars);
+ * scene.add(stars); // pins itself to the viewer — no placement call needed
  *
  * function animate() {
- *   stars.position.copy(camera.position); // sky dome follows the viewer
- *   stars.update(); // no-op when twinkle is false
+ *   stars.update(); // only for twinkle; a no-op when twinkle is false
  *   renderer.render(scene, camera);
  * }
  * ```
  *
  * Call {@link dispose} when removing the effect to free geometry and materials.
  */
-export class StarFieldEffect extends Object3D {
+// TODO: split the two strategies. `points` and `radial` share only *data* — the shell distribution
+// (offsets, rotations, colours, twinkle phases) — while diverging on material, sizing units, twinkle
+// write-back, and renderer requirement. Extract a `starShellDistribution()` returning plain arrays and
+// give each strategy its own thin class. Payoff: the radial variant becomes importable WITHOUT
+// `three/webgpu`, since only `points` needs a node material. Do not name the classes after their
+// implementations (`StarFieldInstancedMesh`) — name them for what they are to a consumer.
+export class StarField extends Object3D {
   readonly orientation: StarFieldOrientation;
 
   private readonly field: InstancedMesh;
@@ -169,18 +195,21 @@ export class StarFieldEffect extends Object3D {
   private scaleAttribute?: InstancedBufferAttribute;
   private readonly dummy = new Object3D();
 
-  constructor(options: StarFieldEffectOptions = {}) {
+  constructor(options: StarFieldOptions = {}) {
     super();
 
     const {
-      orientation = "billboard",
+      orientation = "points",
       count = 1500,
       radius = 500,
       minRadius = radius,
       maxRadius = radius,
       sizeMin = 0.008,
       sizeMax = 0.025,
+      pixelSizeMin = 4,
+      pixelSizeMax = 14,
       color = [0xffffff, 0xcad7ff, 0xfff4e0],
+      fog = false,
       twinkle = false,
       rotation = 0,
       rotationJitter = Math.PI * 2,
@@ -213,7 +242,10 @@ export class StarFieldEffect extends Object3D {
       maxRadius,
       sizeMin,
       sizeMax,
+      pixelSizeMin,
+      pixelSizeMax,
       color,
+      fog,
       material,
       geometry: starGeometry,
       rotation,
@@ -221,9 +253,10 @@ export class StarFieldEffect extends Object3D {
     };
 
     this.field =
-      orientation === "billboard" ? this.createBillboardField(shared) : this.createRadialField(shared);
+      orientation === "points" ? this.createPointsField(shared) : this.createRadialField(shared);
 
     this.add(this.field);
+    lockToViewer(this, [this.field]);
   }
 
   get mesh(): InstancedMesh {
@@ -255,7 +288,7 @@ export class StarFieldEffect extends Object3D {
   update(elapsed = performance.now() * 0.001): void {
     if (!this.twinkle || !this.baseScales || !this.twinklePhases) return;
 
-    if (this.orientation === "billboard") {
+    if (this.orientation !== "radial") {
       const attribute = this.scaleAttribute;
       if (!attribute) return;
       const array = attribute.array as Float32Array;
@@ -289,17 +322,27 @@ export class StarFieldEffect extends Object3D {
   }
 
   /**
-   * Screen-aligned stars. `SpriteNodeMaterial` builds its quad from the geometry's XY and
-   * reads the sprite center from `positionNode` — it never consults `instanceMatrix` — so
-   * every per-star value has to arrive as an instanced attribute.
+   * EXPERIMENTAL — screen-aligned stars sized in **screen pixels** instead of world units.
+   *
+   * `PointsNodeMaterial` extends `SpriteNodeMaterial`, aligning the geometry's XY to the view plane
+   * the same way, but scaling that offset by a pixel size and dividing by the viewport. A star is
+   * therefore N pixels wherever it sits in the shell — no angular-to-world conversion, and no
+   * dependence on where the viewer is.
+   *
+   * The geometry is normalized so its XY profile radius is `1`, which makes `pixelSize` mean an
+   * honest pixel radius rather than a multiple of whatever the burst happened to measure.
+   *
+   * Note the dispatch in `PointsNodeMaterial.setupVertex`: the pixel path runs for objects that are
+   * **not** `isPoints`, so an `InstancedMesh` is precisely what selects it.
    */
-  private createBillboardField({
+  private createPointsField({
     count,
     minRadius,
     maxRadius,
-    sizeMin,
-    sizeMax,
+    pixelSizeMin,
+    pixelSizeMax,
     color,
+    fog,
     material,
     geometry,
     rotation,
@@ -308,9 +351,10 @@ export class StarFieldEffect extends Object3D {
     count: number;
     minRadius: number;
     maxRadius: number;
-    sizeMin: number;
-    sizeMax: number;
+    pixelSizeMin: number;
+    pixelSizeMax: number;
     color: ColorRepresentation | ColorRepresentation[];
+    fog: boolean;
     material?: Material;
     geometry: BufferGeometry;
     rotation: number;
@@ -322,10 +366,12 @@ export class StarFieldEffect extends Object3D {
 
     const centered = geometry.clone();
     centered.center();
-    const meshRadius = profileRadiusXY(centered);
+    const profile = profileRadiusXY(centered);
+    const inverse = 1 / profile;
+    centered.scale(inverse, inverse, inverse);
 
     const offsets = new Float32Array(count * 3);
-    const scales = new Float32Array(count);
+    const sizes = new Float32Array(count);
     const rotations = new Float32Array(count);
     const perStarColor = palette.length > 1;
     const colors = perStarColor ? new Float32Array(count * 3) : null;
@@ -337,15 +383,15 @@ export class StarFieldEffect extends Object3D {
       offsets[i * 3 + 1] = direction.y;
       offsets[i * 3 + 2] = direction.z;
 
-      const angular = sizeMin + Math.random() * (sizeMax - sizeMin);
-      scales[i] = (distance * angular) / meshRadius;
+      // No distance term — that is what makes shell depth irrelevant to apparent size.
+      sizes[i] = pixelSizeMin + Math.random() * (pixelSizeMax - pixelSizeMin);
       rotations[i] = rotation + Math.random() * rotationJitter;
 
-      if (this.baseScales) this.baseScales[i] = scales[i];
+      if (this.baseScales) this.baseScales[i] = sizes[i];
       if (this.twinklePhases) this.twinklePhases[i] = Math.random() * Math.PI * 2;
 
       if (colors) {
-        const starColor = palette[Math.floor(Math.random() * palette.length)];
+        const starColor = palette[Math.floor(Math.random() * palette.length)]!;
         colors[i * 3] = starColor.r;
         colors[i * 3 + 1] = starColor.g;
         colors[i * 3 + 2] = starColor.b;
@@ -353,26 +399,32 @@ export class StarFieldEffect extends Object3D {
     }
 
     const offsetAttribute = new InstancedBufferAttribute(offsets, 3);
-    const scaleAttribute = new InstancedBufferAttribute(scales, 1);
+    const sizeAttribute = new InstancedBufferAttribute(sizes, 1);
     const rotationAttribute = new InstancedBufferAttribute(rotations, 1);
-    this.scaleAttribute = scaleAttribute;
+    // `update()` rewrites this attribute for twinkle.
+    this.scaleAttribute = sizeAttribute;
 
     const starMaterial =
-      (material as SpriteNodeMaterial | undefined) ??
-      new SpriteNodeMaterial({
-        color: perStarColor ? 0xffffff : palette[0].getHex(),
+      (material as PointsNodeMaterial | undefined) ??
+      new PointsNodeMaterial({
+        color: perStarColor ? 0xffffff : palette[0]!.getHex(),
         side: DoubleSide,
         depthWrite: false,
         toneMapped: false,
+        fog,
       });
+    // Pure pixel size — no perspective falloff, so a star never shrinks with shell depth.
+    starMaterial.sizeAttenuation = false;
 
     starMaterial.positionNode = instancedBufferAttribute(offsetAttribute, "vec3");
     starMaterial.rotationNode = instancedBufferAttribute(rotationAttribute, "float");
+
+    // `sizeNode` is consumed as logical pixels — the material multiplies by `screenDPR` itself.
     if (this.twinkle) {
-      scaleAttribute.setUsage(DynamicDrawUsage);
-      starMaterial.scaleNode = instancedDynamicBufferAttribute(scaleAttribute, "float");
+      sizeAttribute.setUsage(DynamicDrawUsage);
+      starMaterial.sizeNode = instancedDynamicBufferAttribute(sizeAttribute, "float");
     } else {
-      starMaterial.scaleNode = instancedBufferAttribute(scaleAttribute, "float");
+      starMaterial.sizeNode = instancedBufferAttribute(sizeAttribute, "float");
     }
     if (colors) {
       starMaterial.colorNode = instancedBufferAttribute(new InstancedBufferAttribute(colors, 3), "vec3");
@@ -382,8 +434,6 @@ export class StarFieldEffect extends Object3D {
     mesh.frustumCulled = false;
     mesh.renderOrder = 1;
 
-    // The sprite path ignores instanceMatrix, but InstancedMesh allocates it zeroed —
-    // leave identities behind so bounds and raycasts aren't looking at degenerate matrices.
     const identity = new Matrix4();
     for (let i = 0; i < count; i++) mesh.setMatrixAt(i, identity);
     mesh.instanceMatrix.needsUpdate = true;
@@ -399,6 +449,7 @@ export class StarFieldEffect extends Object3D {
     sizeMin,
     sizeMax,
     color,
+    fog,
     material,
     geometry,
     rotation,
@@ -410,6 +461,7 @@ export class StarFieldEffect extends Object3D {
     sizeMin: number;
     sizeMax: number;
     color: ColorRepresentation | ColorRepresentation[];
+    fog: boolean;
     material?: Material;
     geometry: BufferGeometry;
     rotation: number;
@@ -431,6 +483,7 @@ export class StarFieldEffect extends Object3D {
         side: DoubleSide,
         depthWrite: false,
         toneMapped: false,
+        fog,
       });
 
     const mesh = new InstancedMesh(centered, starMaterial, count);
