@@ -1,5 +1,5 @@
 import GUI from "lil-gui";
-import { VotiveRack } from "three-low-poly";
+import { GroundGrid, VotiveRack } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -14,10 +14,14 @@ export const meta = {
 export default function (container: HTMLElement) {
   const { scene, renderer, controls, onFrame, dispose } = createScene(container, {
     background: 0x07070b,
-    cameraPosition: [0, 1.2, 3.6],
+    cameraPosition: [2.1, 1.75, 2.8],
   });
   controls.target.set(0, 0.9, 0);
   controls.update();
+
+  // The frame's posts run from y=0, so the rack stands on the floor rather than floating at its base shelf.
+  const ground = new GroundGrid({ size: 6, divisions: 6 });
+  scene.add(ground);
 
   const params = {
     seed: 7,
@@ -84,6 +88,7 @@ export default function (container: HTMLElement) {
     gui.destroy();
     scene.remove(rack);
     rack.dispose();
+    ground.dispose();
     dispose();
   };
 }

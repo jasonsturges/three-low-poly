@@ -37,7 +37,12 @@ export interface VotiveRackOptions {
   width?: number;
   /** Vertical rise per shelf. Defaults to `0.28`. */
   rowRise?: number;
-  /** Depth offset per shelf, so upper rows sit back. Defaults to `0.18`. */
+  /**
+   * Depth offset per shelf, so upper rows sit back. Defaults to `0.18`.
+   *
+   * The lowest shelf is the nearest to `+Z` and each row above steps away — stadium seating, so no row hides
+   * behind the one in front. The rack stays centred on `z = 0` whatever the row count.
+   */
   rowDepth?: number;
   /** Height of the lowest shelf. Defaults to `0.55`. */
   baseHeight?: number;
@@ -191,6 +196,13 @@ export class VotiveRack extends Group {
     this.#materials.push(iron);
 
     const topY = baseHeight + (rows - 1) * rowRise;
+
+    // Z of a shelf, centred so the rack still straddles z=0 whatever the row count. Row 0 is the LOWEST shelf
+    // and sits FORWARD; each row above steps back by `rowDepth` — stadium seating, so every candle is visible
+    // and reachable over the row in front of it. Shared by the frame and the candle placement below: the two
+    // must agree exactly, since the candles stand on these shelves.
+    const shelfZ = (row: number) => ((rows - 1) / 2 - row) * rowDepth;
+
     const frameParts: BufferGeometry[] = [];
     for (const x of [-width / 2, width / 2]) {
       frameParts.push(new CylinderGeometry(0.045, 0.045, topY, 6).translate(x, topY / 2, 0));
@@ -198,8 +210,7 @@ export class VotiveRack extends Group {
     frameParts.push(new BoxGeometry(width + 0.16, 0.065, 0.065).translate(0, topY, 0));
     for (let row = 0; row < rows; row++) {
       const y = baseHeight + row * rowRise;
-      const z = (row - (rows - 1) / 2) * rowDepth;
-      frameParts.push(new BoxGeometry(width + 0.1, 0.045, 0.25).translate(0, y, z));
+      frameParts.push(new BoxGeometry(width + 0.1, 0.045, 0.25).translate(0, y, shelfZ(row)));
     }
     const frameGeometry = mergeGeometries(frameParts, false) as BufferGeometry;
     frameParts.forEach((part) => part.dispose());
@@ -215,7 +226,7 @@ export class VotiveRack extends Group {
     const columnStep = width / Math.max(1, columns - 0.35);
     for (let row = 0; row < rows; row++) {
       const y = baseHeight + row * rowRise;
-      const z = (row - (rows - 1) / 2) * rowDepth;
+      const z = shelfZ(row);
       for (let column = 0; column < columns; column++) {
         // Rolled only when density < 1, so a full rack draws the same sequence a seed always did.
         if (density < 1 && source.next() >= density) continue;
