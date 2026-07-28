@@ -3,20 +3,13 @@ import { Path, Shape, Vector2 } from "three";
 export interface InternalGearShapeOptions {
   /** Number of teeth. Defaults to `36`. */
   teeth?: number;
-  /**
-   * Radius the tooth tips reach — the **inner** extreme, since these teeth point inward. Defaults to `0.72`.
-   */
+  /** Radius the tooth tips reach. Defaults to `0.72`. */
   tipRadius?: number;
-  /** Radius of the tooth roots — the **outer** extreme of the toothed opening. Defaults to `0.85`. */
-  rootRadius?: number;
-  /**
-   * Outside radius of the ring. Defaults to `1`.
-   *
-   * Clamped to stay outside {@link InternalGearShapeOptions.rootRadius}, since the rim is what the teeth hang
-   * from — let it inside and the ring parts into loose teeth.
-   */
+  /** Radius the valley floors sit at. Defaults to `0.85`. */
+  valleyRadius?: number;
+  /** Outside radius of the ring. Clamped to stay outside the toothed opening. Defaults to `1`. */
   rimRadius?: number;
-  /** Sides on the outer rim. Defaults to `48` — high enough to read as round. */
+  /** Sides on the outer rim. Defaults to `48`. */
   rimSides?: number;
   /**
    * Width of the flat at the tooth tip, as a fraction of one tooth period. `0` brings the tooth to a point.
@@ -24,8 +17,8 @@ export interface InternalGearShapeOptions {
    */
   tipWidth?: number;
   /**
-   * Width of the flat at the root, as a fraction of one tooth period. `0` brings the root to a point. Defaults
-   * to `0.25`.
+   * Width of the flat at the valley floor, as a fraction of one tooth period. `0` brings the valley to a point.
+   * Defaults to `0.25`.
    */
   valleyWidth?: number;
   /**
@@ -40,26 +33,29 @@ export interface InternalGearShapeOptions {
 /**
  * Internal gear profile — a plain ring whose **opening is toothed**, teeth pointing inward.
  *
- * The role of the tooth profile is what distinguishes this from {@link GearShape}. There, the teeth *are* the
- * outer contour and the bore is a hole. Here the outer contour is a plain circle and **the teeth are the hole**
- * — so there is no bore to guard: the opening *is* the toothing.
+ * Where {@link GearShape} makes the teeth its outer contour and cuts a bore, this inverts the roles: the outer
+ * contour is a plain circle and the teeth are the hole. The tooth period is the external gear's, unchanged.
  *
- * The tooth period is identical to the external gear's — tip, falling flank, root, rising flank, with the two
- * flats sized independently and the flanks taking the remainder. Only the radii swap roles: the **tip** is the
- * inner extreme and the **root** the outer, because the teeth grow inward.
- *
- * This is the ring of a planetary set, and the mating half of an internal gear pair.
+ * **Three radii, all absolute from the centre.** {@link InternalGearShapeOptions.tipRadius} and
+ * {@link InternalGearShapeOptions.valleyRadius} are the two extremes of the toothing; their order is not
+ * enforced, so a valley inside the tip inverts it. {@link InternalGearShapeOptions.rimRadius} is the third
+ * because the teeth do not define the outer edge here — the opening is a hole, so the ring needs its own
+ * outside dimension.
  */
 export class InternalGearShape extends Shape {
-  /** The rim radius actually used, after clamping outside the tooth roots. */
-  readonly rimRadius: number;
-  /** The tip radius actually used, after clamping inside the roots. */
+  /** The tip radius actually used. */
   readonly tipRadius: number;
+  /** The valley radius actually used. */
+  readonly valleyRadius: number;
+  /** The rim radius actually used, after clamping outside the toothed opening. */
+  readonly rimRadius: number;
+  /** Tooth depth — `valleyRadius − tipRadius`. Negative when the toothing is inverted. */
+  readonly toothDepth: number;
 
   constructor({
     teeth = 36,
     tipRadius = 0.72,
-    rootRadius = 0.85,
+    valleyRadius = 0.85,
     rimRadius = 1,
     rimSides = 48,
     tipWidth = 0.25,
@@ -70,20 +66,20 @@ export class InternalGearShape extends Shape {
     super();
 
     const count = Math.max(3, Math.round(teeth));
-    // Teeth point inward, so the tip must sit inside the root. Reversed, the profile would turn itself out.
-    const tip = Math.min(Math.max(tipRadius, 1e-3), rootRadius * 0.999);
+    const tip = Math.max(tipRadius, 1e-3);
+    const valley = Math.max(valleyRadius, 1e-3);
+
     this.tipRadius = tip;
+    this.valleyRadius = valley;
+    this.toothDepth = valley - tip;
 
     const step = (Math.PI * 2) / count;
     const start = Math.PI / 2 + rotation;
 
-    // --- the outer rim: a plain circle, no teeth ---
     const sides = Math.max(3, Math.round(rimSides));
     const rimStep = (Math.PI * 2) / sides;
-    // The farthest point of the toothed opening is a root corner, and distance from the origin is convex along
-    // a chord — so the extreme is always AT a vertex. That is why this needs no segment search, unlike the
-    // external gear's bore, where a flank chord passes NEARER the origin than either endpoint.
-    const rim = Math.max(rimRadius, rootRadius * 1.02);
+    // The opening's farthest point is always a vertex, so the larger extreme is what the rim must clear.
+    const rim = Math.max(rimRadius, Math.max(tip, valley) * 1.02);
     this.rimRadius = rim;
 
     for (let n = 0; n < sides; n++) {
@@ -95,10 +91,9 @@ export class InternalGearShape extends Shape {
     }
     this.closePath();
 
-    // --- the toothed opening, cut as a hole ---
     const flatTip = Math.max(0, Math.min(tipWidth, 1));
-    const flatRoot = Math.max(0, Math.min(valleyWidth, 1 - flatTip));
-    const flanks = 1 - flatTip - flatRoot;
+    const flatValley = Math.max(0, Math.min(valleyWidth, 1 - flatTip));
+    const flanks = 1 - flatTip - flatValley;
     const bias = Math.max(-1, Math.min(lean, 1));
     const falling = (flanks * (1 + bias)) / 2;
 
@@ -119,11 +114,11 @@ export class InternalGearShape extends Shape {
         at(0, tip);
       }
 
-      if (flatRoot > 0) {
-        at(flatTip / 2 + falling, rootRadius);
-        at(flatTip / 2 + falling + flatRoot, rootRadius);
+      if (flatValley > 0) {
+        at(flatTip / 2 + falling, valley);
+        at(flatTip / 2 + falling + flatValley, valley);
       } else {
-        at(flatTip / 2 + falling, rootRadius);
+        at(flatTip / 2 + falling, valley);
       }
     }
 

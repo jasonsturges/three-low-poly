@@ -11,9 +11,9 @@ export const meta = {
     "of an internal pair. Where the Gear makes its teeth the outer contour and cuts a bore, this inverts the " +
     "roles: the outer contour is a plain circle and the TEETH ARE THE HOLE. So there is no bore to guard here — " +
     "the opening is the toothing, and the question of a bore reaching past the tooth tips never arises. The " +
-    "tooth period is the Gear's, unchanged; only the radii swap roles, with the TIP as the inner extreme and " +
-    "the ROOT as the outer, because the teeth grow inward. An externally toothed ring needs nothing new — that " +
-    "is the Gear with a bore set just inside its valley radius.",
+    "tooth period is the Gear's, unchanged. Three radii size it, all absolute from the centre: TIP and VALLEY " +
+    "for the toothing, in either order, and RIM for the outside, which the teeth do not define here. An " +
+    "externally toothed ring needs nothing new — that is the Gear with a bore set just inside its valley radius.",
 };
 
 export default function (container: HTMLElement) {
@@ -26,7 +26,7 @@ export default function (container: HTMLElement) {
   const params: Required<InternalGearGeometryOptions> = {
     teeth: 36,
     tipRadius: 0.72,
-    rootRadius: 0.85,
+    valleyRadius: 0.85,
     rimRadius: 1,
     rimSides: 48,
     tipWidth: 0.25,
@@ -37,7 +37,7 @@ export default function (container: HTMLElement) {
   };
 
   const colors = { steel: "#8f97a1" };
-  const stats = { triangles: 0, tip: "", rim: "", toothDepth: "" };
+  const stats = { triangles: 0, rim: "", toothDepth: "" };
 
   const steel = new MeshStandardMaterial({
     color: new Color(colors.steel),
@@ -53,10 +53,8 @@ export default function (container: HTMLElement) {
   const refresh = () => {
     const g = ring.geometry as InternalGearGeometry;
     stats.triangles = g.index ? g.index.count / 3 : g.attributes.position.count / 3;
-    // Both are the CLAMPED values: the rim is held outside the roots, the tip inside them.
-    stats.tip = g.tipRadius.toFixed(4);
     stats.rim = g.rimRadius.toFixed(4);
-    stats.toothDepth = (params.rootRadius - g.tipRadius).toFixed(4);
+    stats.toothDepth = g.toothDepth.toFixed(4);
   };
 
   const rebuild = () => {
@@ -73,14 +71,12 @@ export default function (container: HTMLElement) {
 
   const opening = gui.addFolder("Opening");
   opening.add(params, "teeth", 8, 96, 1).name("Teeth").onChange(rebuild);
-  // The INNER extreme — how far the teeth reach toward the centre. Clamped inside the roots.
   opening.add(params, "tipRadius", 0.1, 1.2, 0.01).name("Tip Radius").onChange(rebuild);
-  // The OUTER extreme of the toothed opening. The gap between these two is the tooth depth.
-  opening.add(params, "rootRadius", 0.2, 1.4, 0.01).name("Root Radius").onChange(rebuild);
+  opening.add(params, "valleyRadius", 0.2, 1.4, 0.01).name("Valley Radius").onChange(rebuild);
   opening.open();
 
   const rim = gui.addFolder("Rim");
-  // Clamped outside the roots — the rim is what the teeth hang from.
+  // Clamped outside the toothed opening — the rim is what the teeth hang from.
   rim.add(params, "rimRadius", 0.3, 2, 0.02).name("Rim Radius").onChange(rebuild);
   rim.add(params, "rimSides", 6, 96, 1).name("Rim Sides").onChange(rebuild);
   rim.add(params, "depth", 0.02, 1, 0.01).name("Depth").onChange(rebuild);
@@ -99,7 +95,6 @@ export default function (container: HTMLElement) {
 
   const readout = gui.addFolder("Measured");
   readout.add(stats, "triangles").name("Triangles").listen().disable();
-  readout.add(stats, "tip").name("Tip (clamped)").listen().disable();
   readout.add(stats, "rim").name("Rim (clamped)").listen().disable();
   readout.add(stats, "toothDepth").name("Tooth Depth").listen().disable();
   readout.open();

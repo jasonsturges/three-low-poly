@@ -13,10 +13,13 @@ export interface InternalGearGeometryOptions extends InternalGearShapeOptions {
  * outer contour is a plain circle and **the teeth are the hole**. So there is no bore to guard — the opening
  * *is* the toothing, and the question of a bore reaching past the tips never arises.
  *
- * The tooth period is the external gear's, unchanged: tip, falling flank, root, rising flank, with
+ * The tooth period is the external gear's, unchanged: tip, falling flank, valley, rising flank, with
  * {@link InternalGearShapeOptions.tipWidth} and {@link InternalGearShapeOptions.valleyWidth} sized
- * independently and {@link InternalGearShapeOptions.lean} for asymmetry. Only the radii swap roles — the
- * **tip** is the inner extreme and the **root** the outer, because the teeth grow inward.
+ * independently and {@link InternalGearShapeOptions.lean} for asymmetry.
+ *
+ * **Three radii, all absolute from the centre** — {@link InternalGearShapeOptions.tipRadius} and
+ * {@link InternalGearShapeOptions.valleyRadius} for the toothing, in either order, and
+ * {@link InternalGearShapeOptions.rimRadius} for the outside, which the teeth do not define here.
  *
  * This is the ring of a planetary gearset and the mating half of an internal pair. Note that an *externally*
  * toothed ring — a flywheel starter ring — needs nothing new: it is {@link GearGeometry} with a bore set just
@@ -33,20 +36,25 @@ export interface InternalGearGeometryOptions extends InternalGearShapeOptions {
  * ```
  */
 export class InternalGearGeometry extends ExtrudeGeometry {
-  /** The rim radius actually used, after clamping outside the tooth roots. */
-  readonly rimRadius: number;
-  /** The tip radius actually used, after clamping inside the roots. */
+  /** The tip radius actually used. */
   readonly tipRadius: number;
+  /** The valley radius actually used. */
+  readonly valleyRadius: number;
+  /** The rim radius actually used, after clamping outside the toothed opening. */
+  readonly rimRadius: number;
+  /** Tooth depth — `valleyRadius − tipRadius`. Negative when the toothing is inverted. */
+  readonly toothDepth: number;
 
   constructor({ depth = 0.25, ...shapeOptions }: InternalGearGeometryOptions = {}) {
     const shape = new InternalGearShape(shapeOptions);
 
     super(shape, { depth, bevelEnabled: false });
 
-    // Centre on the thickness rather than extruding forward from zero.
     this.translate(0, 0, -depth / 2);
 
-    this.rimRadius = shape.rimRadius;
     this.tipRadius = shape.tipRadius;
+    this.valleyRadius = shape.valleyRadius;
+    this.rimRadius = shape.rimRadius;
+    this.toothDepth = shape.toothDepth;
   }
 }
