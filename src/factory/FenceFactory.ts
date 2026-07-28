@@ -251,6 +251,10 @@ export interface WoodPicketFenceOptions extends WoodPicketGeometryOptions {
 /**
  * Wood picket fence run — pointed planks on two stringers.
  *
+ * Every {@link WoodPicketGeometry} option passes through, so the whole run takes its top treatment together:
+ * `tipInset` and `tipDrop` sweep the pickets from a flat top through a dog-ear to a point, and are equal for
+ * the 45° dog-ear the trade assumes.
+ *
  * The iron fence's counterpart, and it differs in two ways that matter. Its spacing is specified as
  * the **gap** between planks rather than a center-to-center pitch, because a plank's width is a
  * lumber constant while the gap is the design choice. And its stringers sit **behind** the pickets
@@ -279,16 +283,20 @@ export interface WoodPicketFenceOptions extends WoodPicketGeometryOptions {
  */
 export function createWoodPicketFence({
   width = 0.35,
-  height = 1.2,
+  height = 1.38,
+  // A 45° point, matching WoodPicketGeometry's own defaults.
+  tipDrop = 0.175,
+  tipInset = 0.175,
   thickness = 0.04,
-  pointHeight = 0.18,
   gap = 0.18,
   count,
   length,
   railHeight = 0.12,
   railThickness = 0.04,
   lowerRailY = 0.25,
-  upperRailY = height - 0.25,
+  // Below the SHOULDER, not below the tip: the upper stringer is nailed under where the planks start to taper,
+  // so it should not move when the top is reshaped.
+  upperRailY = height - tipDrop - 0.25,
   railOverhang = 0.0,
   material,
   color = "#e8e4da",
@@ -297,7 +305,10 @@ export function createWoodPicketFence({
   // as the iron one does — same helper, same tiling, same by-count / by-length behavior.
   const span = resolveFenceSpan({ pitch: width + gap, count, length, itemWidth: width });
 
-  const picket = new WoodPicketGeometry({ width, height, thickness, pointHeight });
+  // Every picket option must be forwarded by hand. `WoodPicketFenceOptions extends WoodPicketGeometryOptions`,
+  // so a new picket option is ACCEPTED here the moment it is declared there — and silently dropped unless it is
+  // also added to the destructure above and this call. Type-checking cannot catch the omission.
+  const picket = new WoodPicketGeometry({ width, height, tipDrop, tipInset, thickness });
 
   const parts: BufferGeometry[] = [];
 
