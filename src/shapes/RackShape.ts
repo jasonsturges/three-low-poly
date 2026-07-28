@@ -5,13 +5,25 @@ export interface RackShapeOptions {
   length?: number;
   /** Number of teeth. Defaults to `12`. */
   teeth?: number;
-  /** Height of the tooth roots — the top of the solid bar the teeth stand on. Defaults to `0.2`. */
-  rootHeight?: number;
   /**
-   * Height the tooth tips reach — the **full** height of the rack, since these teeth point up. Defaults to
-   * `0.38`.
+   * Height the tooth tips reach, measured from the underside. Defaults to `0.38`.
+   *
+   * Absolute, like the radii on the circular gears — and paired with
+   * {@link RackShapeOptions.valleyHeight} the same way {@link RackShapeOptions.tipWidth} is paired with
+   * {@link RackShapeOptions.valleyWidth}.
    */
   tipHeight?: number;
+  /**
+   * Height the valley floors sit at, measured from the underside — the top of the plain **back** the teeth
+   * stand on. Defaults to `0.2`.
+   *
+   * Absolute from the same datum as {@link RackShapeOptions.tipHeight}, so the two are directly comparable and
+   * their difference is the tooth's depth, published as {@link RackShape.tipDrop}.
+   *
+   * **Their order is not enforced.** Set the valley above the tip and the teeth invert into channels cut down
+   * into the bar — a legitimate shape, and the caller's business.
+   */
+  valleyHeight?: number;
   /**
    * Flat carved out of **each** end before the toothed run begins. Defaults to `0`.
    *
@@ -54,9 +66,16 @@ export interface RackShapeOptions {
  * fixed run instead of extending it, so every tooth is whole by construction and adding teeth never moves the
  * ends.
  *
- * {@link RackShapeOptions.tipHeight} and {@link RackShapeOptions.rootHeight} are absolute, like the radii on the
- * circular gears, and their order is not enforced. Put the tip *below* the root and the profile cuts channels
- * into the bar rather than raising teeth off it.
+ * **{@link RackShapeOptions.tipHeight} and {@link RackShapeOptions.valleyHeight} are absolute**, both measured
+ * from the underside, exactly as the circular gears measure both their radii from the centre. That completes a
+ * grid with the tooth flats — `tipWidth`/`tipHeight`, `valleyWidth`/`valleyHeight` — and their order is not
+ * enforced: put the valley above the tip and the teeth invert into channels.
+ *
+ * The tooth's depth is therefore a consequence, published as {@link tipDrop}. Note the cost of that choice:
+ * thickening the plain **back** without disturbing the teeth means moving BOTH heights by the same amount,
+ * since neither one alone holds the depth fixed.
+ *
+ * Throughout, **bar** means the whole rack and **back** means the plain material below the valleys.
  *
  * Rests with the bar's underside on `y = 0`, teeth pointing up, running along `+X` from the origin.
  */
@@ -65,16 +84,24 @@ export class RackShape extends Shape {
   readonly length: number;
   /** Tooth period, centre to centre — `(length − inset × 2) / teeth`. */
   readonly pitch: number;
-  /** Y of the root line, where the teeth spring from the bar. */
-  readonly rootY: number;
-  /** Y of the tooth tips. */
-  readonly tipY: number;
+  /** Height the tooth tips reach, after clamping. */
+  readonly tipHeight: number;
+  /** Height the valley floors sit at, after clamping. */
+  readonly valleyHeight: number;
+  /** Tooth depth — `tipHeight − valleyHeight`. Negative when the teeth are inverted into channels. */
+  readonly tipDrop: number;
+  /** Tip flat as a fraction of the period, after clamping. */
+  readonly tipWidth: number;
+  /** Root flat as a fraction of the period, after clamping — see the note on {@link tipWidth}'s priority. */
+  readonly valleyWidth: number;
+  /** What the two flanks are left with — `1 − tipWidth − valleyWidth`. Zero gives square teeth. */
+  readonly flankWidth: number;
 
   constructor({
     length = 3,
     teeth = 12,
     tipHeight = 0.38,
-    rootHeight = 0.2,
+    valleyHeight = 0.2,
     inset = 0,
     tipWidth = 0.25,
     valleyWidth = 0.25,
@@ -87,19 +114,31 @@ export class RackShape extends Shape {
     // The insets are carved out of the span, so they can never consume the whole of it.
     const margin = Math.min(Math.max(inset, 0), span / 2 - 1e-5);
     const period = (span - margin * 2) / count;
-    const rootY = Math.max(rootHeight, 1e-4);
+    // Both clamped only off the floor: at or below y=0 the outline would cross its own underside and leave no
+    // polygon to triangulate. Their ORDER is deliberately free — valley above tip inverts the teeth.
     const tipY = Math.max(tipHeight, 1e-4);
+    const rootY = Math.max(valleyHeight, 1e-4);
 
+    this.tipHeight = tipY;
+    this.valleyHeight = rootY;
+    this.tipDrop = tipY - rootY;
     this.length = span;
     this.pitch = period;
-    this.rootY = rootY;
-    this.tipY = tipY;
 
     // Identical period split to the circular gears: the two flats are sized independently and whatever is left
     // of the period is divided between the flanks, biased by `lean`.
+    //
+    // NOTE the priority, which is shared with `GearShape` and is currently undocumented behaviour rather than a
+    // decision: the TIP takes what it asks for and the VALLEY absorbs the whole overflow. So a request of
+    // tip 0.8 / valley 0.4 resolves to 0.8 / 0.2 — a 2:1 ratio arrives as 4:1 — and `tipWidth: 1` erases the
+    // valley entirely, leaving a plain bar. The resolved values are published so this is at least visible.
     const tip = Math.max(0, Math.min(tipWidth, 1));
     const valley = Math.max(0, Math.min(valleyWidth, 1 - tip));
     const flanks = 1 - tip - valley;
+
+    this.tipWidth = tip;
+    this.valleyWidth = valley;
+    this.flankWidth = flanks;
     const bias = Math.max(-1, Math.min(lean, 1));
     const falling = (flanks * (1 + bias)) / 2;
     const rising = flanks - falling;
@@ -147,5 +186,15 @@ export class RackShape extends Shape {
     this.lineTo(span, 0);
     for (let i = top.length - 1; i >= 0; i--) this.lineTo(top[i]!.x, top[i]!.y);
     this.closePath();
+  }
+
+  /**
+   * Height of the bar's highest point.
+   *
+   * The same as {@link tipHeight} for any upright rack. They differ only when the teeth are inverted, where the
+   * valley floor is the top and the teeth are channels cut below it.
+   */
+  get totalHeight(): number {
+    return Math.max(this.tipHeight, this.valleyHeight);
   }
 }

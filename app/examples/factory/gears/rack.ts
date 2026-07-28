@@ -12,9 +12,12 @@ export const meta = {
     "circle. That is why the tooth profile is the Gear's unchanged, and why there is no polar arithmetic here " +
     "at all: Lean 1 gives a linear ratchet exactly as it gives a rotary one. PITCH IS AN OUTPUT, not an " +
     "input — length less the insets, divided by teeth — so teeth SUBDIVIDE a bar you have already sized " +
-    "instead of extending it, exactly as they subdivide a gear's circumference. Root and Tip Height are " +
-    "absolute from the ground, like the gear's two radii: put the tip below the root and the teeth cut " +
-    "channels into the bar instead of standing on it. Both ends carry HALF A VALLEY rather than starting flush " +
+    "instead of extending it, exactly as they subdivide a gear's circumference. THE BAR IS THE INPUT and the " +
+    "teeth are cut out of it: Tip Height is the whole bar, Tip Drop is how deep the valleys reach into it, and " +
+    "the back the teeth stand on is derived. That split matters because A MESHING PINION FIXES THE TOOTH " +
+    "DEPTH and leaves the back free — so raising Tip Height thickens the back without disturbing the mesh, " +
+    "where two absolute heights would have forced you to edit both at once to achieve the same thing. Both " +
+    "ends carry HALF A VALLEY rather than starting flush " +
     "on a tooth, which is what lets racks TILE — butt two together and the seam is indistinguishable from any " +
     "interior valley, so a pinion rolls the length of a run as if it were one bar. Inset opens that seam, which " +
     "is why it defaults to 0.",
@@ -29,8 +32,8 @@ export default function (container: HTMLElement) {
   const params: Required<RackGeometryOptions> = {
     length: 3,
     teeth: 12,
-    rootHeight: 0.2,
     tipHeight: 0.38,
+    valleyHeight: 0.2,
     inset: 0,
     tipWidth: 0.25,
     valleyWidth: 0.25,
@@ -39,7 +42,7 @@ export default function (container: HTMLElement) {
   };
 
   const colors = { steel: "#9aa3ad" };
-  const stats = { triangles: 0, pitch: "", pinion20: "" };
+  const stats = { triangles: 0, pitch: "", back: "", split: "", pinion20: "" };
 
   const steel = new MeshStandardMaterial({
     color: new Color(colors.steel),
@@ -57,6 +60,11 @@ export default function (container: HTMLElement) {
     stats.triangles = g.index ? g.index.count / 3 : g.attributes.position.count / 3;
     // Derived from the length, not asked for: adding teeth divides the same bar more finely.
     stats.pitch = g.pitch.toFixed(4);
+    // Derived: the gap between the two absolute heights. Invert them and it goes negative.
+    stats.back = g.tipDrop.toFixed(4);
+    // How the period ACTUALLY divided. Tip takes what it asks and the valley absorbs the overflow, so these
+    // stop matching the sliders once the two flats want more than a whole period between them.
+    stats.split = `${g.tipWidth.toFixed(2)} / ${g.valleyWidth.toFixed(2)} / ${g.flankWidth.toFixed(2)}`;
     // The relationship that makes a rack and pinion mesh, shown rather than illustrated with a second object:
     // a pinion's circumferential pitch flattened out is the rack's linear pitch.
     stats.pinion20 = ((g.pitch * 20) / (Math.PI * 2)).toFixed(4);
@@ -68,34 +76,36 @@ export default function (container: HTMLElement) {
     refresh();
   };
   refresh();
-  // Framed ONCE — `frameObject` recomputes the camera distance, so calling it per rebuild steals the zoom.
   frameObject(handle, rack, { fit: 1.3 });
 
   const gui = new GUI();
   gui.title("Rack");
 
-  const run = gui.addFolder("Run");
-  // Length is the size; teeth divide it. Neither one is pitch — that falls out below.
-  run.add(params, "length", 0.5, 8, 0.05).name("Length").onChange(rebuild);
-  run.add(params, "teeth", 1, 40, 1).name("Teeth").onChange(rebuild);
-  // Carved out of the length, never added to it: the bar stays exactly as long as it was. Defaults to 0 because
-  // any nonzero inset destroys tiling — the ends already carry half a valley each so racks butt together.
-  run.add(params, "inset", 0, 0.5, 0.01).name("Inset").onChange(rebuild);
-  run.open();
-
+  // "Bar" is the WHOLE rack — its stock dimensions. The plain material below the roots is the "back", and it
+  // is derived rather than dialled.
   const bar = gui.addFolder("Bar");
-  // Both absolute from y=0, like the gear's inner and outer radii — so they can be inverted.
-  bar.add(params, "rootHeight", 0.04, 0.8, 0.01).name("Root Height").onChange(rebuild);
-  bar.add(params, "tipHeight", 0.04, 0.8, 0.01).name("Tip Height").onChange(rebuild);
+  bar.add(params, "length", 0.5, 8, 0.05).name("Length").onChange(rebuild);
   bar.add(params, "depth", 0.05, 1, 0.01).name("Depth").onChange(rebuild);
   bar.open();
 
-  const tooth = gui.addFolder("Tooth");
-  // The same period as the Gear — 0 points the tooth, Lean 1 makes it a linear ratchet.
-  tooth.add(params, "tipWidth", 0, 1, 0.01).name("Tip Width").onChange(rebuild);
-  tooth.add(params, "valleyWidth", 0, 1, 0.01).name("Valley Width").onChange(rebuild);
-  tooth.add(params, "lean", -1, 1, 0.01).name("Lean").onChange(rebuild);
-  tooth.open();
+  const teeth = gui.addFolder("Teeth");
+  // The count subdivides the bar; pitch falls out of it below.
+  teeth.add(params, "teeth", 1, 40, 1).name("Teeth").onChange(rebuild);
+  // Where the toothed run starts and stops. It leaves the BAR untouched — still `length` long — and only
+  // shortens the run the teeth divide, which is why it lives here and not under Bar. Defaults to 0: the period
+  // split already leaves half a valley at each end, and any inset adds plain material on top of that, which is
+  // what breaks tiling.
+  teeth.add(params, "inset", 0, 0.5, 0.01).name("Inset").onChange(rebuild);
+  // Both absolute from the underside, like the gear's two radii — and their order is free, so putting the
+  // valley above the tip inverts the teeth into channels.
+  teeth.add(params, "tipHeight", 0.04, 0.8, 0.01).name("Tip Height").onChange(rebuild);
+  teeth.add(params, "valleyHeight", 0.04, 0.8, 0.01).name("Valley Height").onChange(rebuild);
+  // Fractions of one period. The same split as the Gear — 0 points the tooth, Lean 1 makes it a linear ratchet.
+  // Watch the Split readout: these two compete for the period, and the tip currently wins.
+  teeth.add(params, "tipWidth", 0, 1, 0.01).name("Tip Width").onChange(rebuild);
+  teeth.add(params, "valleyWidth", 0, 1, 0.01).name("Valley Width").onChange(rebuild);
+  teeth.add(params, "lean", -1, 1, 0.01).name("Lean").onChange(rebuild);
+  teeth.open();
 
   // No rebuild — geometry is untouched by the colour.
   const material = gui.addFolder("Material");
@@ -105,6 +115,10 @@ export default function (container: HTMLElement) {
   readout.add(stats, "triangles").name("Triangles").listen().disable();
   // An output of length and teeth, not a parameter.
   readout.add(stats, "pitch").name("Pitch").listen().disable();
+  // An output of the two heights, not a parameter.
+  readout.add(stats, "back").name("Tooth Depth").listen().disable();
+  // Resolved tip / valley / flank fractions — what the period actually divided into.
+  readout.add(stats, "split").name("Split t/v/flank").listen().disable();
   // Radius a 20-tooth pinion would need to mesh this pitch: pitch x teeth / 2pi.
   readout.add(stats, "pinion20").name("Pinion r (20T)").listen().disable();
   readout.open();
