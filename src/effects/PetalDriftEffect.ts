@@ -9,7 +9,7 @@ import {
   MeshStandardMaterial,
   Object3D,
 } from "three";
-import { EllipticLeafGeometry } from "../geometry/leafs/EllipticLeafGeometry";
+import { EllipticLeafGeometry } from "../geometry/foliage/EllipticLeafGeometry";
 import { randomFloat } from "../utils/RandomNumberUtils";
 
 export interface PetalDriftEffectOptions {

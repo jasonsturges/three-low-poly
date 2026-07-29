@@ -49,17 +49,6 @@ const star = new Mesh(geometry, material);
 scene.add(star);
 ```
 
-### Prefab
-
-The same shape as a ready-made model — geometry and materials already wired. Drop it straight into the scene.
-
-```ts
-import { Star } from "three-low-poly";
-
-const star = new Star({ points: 5, color: "#ffcc33" });
-scene.add(star);
-```
-
 ### Factory
 
 Assemble or scatter many parts from a single call.

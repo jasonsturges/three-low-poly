@@ -11,7 +11,7 @@ export const meta = {
 };
 
 export default function (container: HTMLElement) {
-  const { scene, camera, onFrame, dispose } = createScene(container, {
+  const { scene, onFrame, dispose } = createScene(container, {
     background: 0x0a0806,
     cameraPosition: [0, 2.2, 5],
   });
@@ -73,7 +73,6 @@ export default function (container: HTMLElement) {
 
   onFrame((dt) => {
     flicker.update(dt);
-    flicker.faceCamera(camera.position);
   });
 
   const sync = () => {

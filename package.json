@@ -37,10 +37,12 @@
   ],
   "scripts": {
     "dev": "vite build --watch",
-    "build": "tsc && vite build",
+    "build": "npm run typecheck:lib && vite build && npm run typecheck:dist",
     "host": "vite --config vite.host.config.ts",
-    "build:host": "vite build --config vite.host.config.ts",
-    "typecheck:host": "tsc --noEmit -p app/tsconfig.json"
+    "build:host": "npm run typecheck && vite build --config vite.host.config.ts",
+    "typecheck": "tsc --noEmit -p app/tsconfig.json",
+    "typecheck:lib": "tsc --noEmit -p tsconfig.json",
+    "typecheck:dist": "tsc -p tsconfig.dist.json"
   },
   "peerDependencies": {
     "three": ">=0.180.0"

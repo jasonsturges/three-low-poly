@@ -163,7 +163,13 @@ export class GnarledTreeGeometry extends BufferGeometry {
       .filter((path) => path.length >= 2)
       .map((path) => sweep(profile, transportFrames(path)));
 
-    this.copy(mergeGeometries(parts, false) as BufferGeometry);
+    // Not cast — `mergeGeometries` returns null on mismatched attributes, and a cast turns that into an
+    // unreadable "cannot read properties of null" further down.
+    const merged = mergeGeometries(parts, false);
+    if (!merged) throw new Error("GnarledTreeGeometry: branch sweeps failed to merge.");
+
+    this.copy(merged);
+    merged.dispose();
     parts.forEach((part) => part.dispose());
   }
 

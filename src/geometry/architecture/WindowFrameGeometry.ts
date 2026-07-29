@@ -71,7 +71,7 @@ export class WindowFrameGeometry extends ExtrudeGeometry {
     // The two edges of the frame want opposite things at a sharp arch (an ogee or a pointed crown), and
     // it is the same corner offset in two directions:
     //   - the OUTER edge is the frame's silhouette, so it should come to a POINT like the arch does — a
-    //     generous mitre limit lets that finial form;
+    //     generous miter limit lets that finial form;
     //   - the INNER edge is the aperture, where a sharp point would stab a needle down into the glass —
     //     a tight limit bevels it into a clean blunt.
     const outer = new Shape(offsetLoop(outline, outset, OUTER_MITER));

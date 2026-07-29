@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
-import { Group, Mesh } from "three";
-import { centerObject, createWoodPicketFence, WoodPost } from "three-low-poly";
+import { Group, Mesh, MeshStandardMaterial } from "three";
+import { centerObject, createWoodPicketFence, WoodPostGeometry } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Wood Picket Fence" };
@@ -12,15 +12,20 @@ export default function (container: HTMLElement) {
     count: 10,
     width: 0.35,
     gap: 0.18,
-    height: 1.2,
+    height: 1.38,
+    // A 45° point, mirroring WoodPicketGeometry's defaults. Equal cuts = 45°, inset at half the width = a point.
+    tipDrop: 0.175,
+    tipInset: 0.175,
     thickness: 0.04,
-    pointHeight: 0.18,
     railHeight: 0.12,
     railThickness: 0.04,
     lowerRailY: 0.25,
     upperRailY: 0.95,
     railEmbed: 0.02,
   };
+
+  // Shared by the end posts across every rebuild, so it lives outside it.
+  const wood = new MeshStandardMaterial({ color: 0xe8e4da, flatShading: true });
 
   let assembly = new Group();
   scene.add(assembly);
@@ -36,11 +41,14 @@ export default function (container: HTMLElement) {
     scene.remove(assembly);
     assembly = new Group();
 
-    // The post stands a little proud of the pickets, cap and all.
-    const post = new WoodPost({ height: params.height + params.pointHeight });
+    // The post stands a little proud of the pickets, cap and all. `height` is the whole plank now, so this no
+    // longer has to add the point back on to find the top.
+    const post = new Mesh(new WoodPostGeometry({ height: params.height }), wood);
 
-    // Pickets clear the post's widest point; the stringers reach back in to meet the shaft.
-    const clearWidth = post.geometry.maxWidthBetween(0, params.height);
+    // Pickets clear the post's widest point; the stringers reach back in to meet the shaft. Measured to the
+    // SHOULDER — above it the planks are tapering away and no longer the widest thing to clear.
+    const shoulderHeight = params.height - params.tipDrop;
+    const clearWidth = post.geometry.maxWidthBetween(0, shoulderHeight);
     const railReach = post.geometry.widthAt(params.upperRailY);
 
     const fence = createWoodPicketFence({
@@ -70,9 +78,13 @@ export default function (container: HTMLElement) {
   gui.add(params, "count", 1, 30, 1).name("Pickets").onChange(rebuild);
   gui.add(params, "width", 0.1, 0.8, 0.01).name("Plank Width").onChange(rebuild);
   gui.add(params, "gap", 0.02, 0.6, 0.01).name("Gap").onChange(rebuild);
-  gui.add(params, "height", 0.4, 2.5, 0.05).name("Height").onChange(rebuild);
+  // The whole plank; the two cuts come out of its top and side.
+  gui.add(params, "height", 0.4, 2.5, 0.01).name("Height").onChange(rebuild);
   gui.add(params, "thickness", 0.01, 0.15, 0.005).name("Thickness").onChange(rebuild);
-  gui.add(params, "pointHeight", 0, 0.5, 0.01).name("Point Height").onChange(rebuild);
+  // The whole run takes its top treatment together. Equal values are a 45° dog-ear; an inset of half the plank
+  // width brings the flanks together into a point.
+  gui.add(params, "tipDrop", 0, 0.5, 0.005).name("Tip Drop").onChange(rebuild);
+  gui.add(params, "tipInset", 0, 0.4, 0.005).name("Tip Inset").onChange(rebuild);
   gui.add(params, "railHeight", 0.04, 0.3, 0.01).name("Stringer Height").onChange(rebuild);
   gui.add(params, "railThickness", 0.01, 0.15, 0.005).name("Stringer Thickness").onChange(rebuild);
   gui.add(params, "lowerRailY", 0.05, 2, 0.01).name("Lower Stringer Y").onChange(rebuild);
@@ -82,6 +94,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     disposeAssembly();
+    wood.dispose();
     dispose();
   };
 }

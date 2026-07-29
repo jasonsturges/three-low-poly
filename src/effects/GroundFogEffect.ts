@@ -184,6 +184,11 @@ export class GroundFogEffect extends Object3D {
   }
 }
 
+/**
+ * TODO: replace with `createRadialGradientTexture` from `../textures/radialGradient`. Two wins beyond
+ * dropping the DOM dependency: build the ramp **colourless** and tint via `material.color`, which makes
+ * retinting free (no texture rebuild) and lets every patch share one texture instead of one each.
+ */
 function createFogTexture(color: ColorRepresentation): CanvasTexture {
   const hex = `#${new Color(color).getHexString()}`;
   const canvas = document.createElement("canvas");

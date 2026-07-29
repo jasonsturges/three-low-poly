@@ -1,4 +1,4 @@
-import { Color, ColorRepresentation, MeshBasicMaterial, PointLight, Vector3 } from "three";
+import { Color, ColorRepresentation, MeshBasicMaterial, PointLight } from "three";
 import { GlowHalo } from "./GlowHalo";
 
 export interface FlameFlickerEffectOptions {
@@ -10,13 +10,25 @@ export interface FlameFlickerEffectOptions {
   light?: PointLight;
   /** Base intensity when `light` is set. Defaults to `4`. */
   lightIntensity?: number;
-  /** Optional flame core material (e.g. `MeshBasicMaterial` on a small sphere). */
+  /**
+   * Optional flame core material (e.g. `MeshBasicMaterial` on a small sphere).
+   *
+   * TODO: `update()` mutates `flame.color` in place, so several flickers sharing one material will
+   * fight over it and gutter in lockstep. Give each flame its own material, or move the tint off
+   * the shared material. Worth a runtime warning or a doc note at minimum.
+   */
   flame?: MeshBasicMaterial;
   /** Flame tint when `flame` is set. Defaults to `0xffaa44`. */
   flameColor?: ColorRepresentation;
   /** Optional {@link GlowHalo}; opacity scales with the flicker factor. */
   halo?: GlowHalo;
-  /** Halo opacity multiplier at flicker peak. Defaults to `0.75`. */
+  /**
+   * Halo opacity multiplier at flicker peak. Defaults to `0.75`.
+   *
+   * TODO: this duplicates {@link GlowHalo}'s own `opacity`. Once a flicker drives a halo, whatever
+   * `opacity` the halo was constructed with is overwritten every frame, so two places own one
+   * number. Decide which is authoritative — probably read the halo's own opacity as the peak.
+   */
   haloOpacity?: number;
 }
 
@@ -27,6 +39,21 @@ export interface FlameFlickerEffectOptions {
  * Use without a `light` for mass candlefields (halo + bloom only). Add a
  * `light` for hero sconces that must cast on walls and props.
  */
+/**
+ * Flicker factor from a sum of detuned sines — roughly `0.5`–`1.1`, never repeating because the two
+ * frequencies are incommensurate.
+ *
+ * A plain function on purpose: **mass populations want one loop over an array, not N flicker objects each
+ * carrying a clock.** {@link FlameFlickerEffect} is the convenience wrapper for a single flame; anything
+ * driving many flames — a chandelier, a votive rack — should call this directly with a per-item `phase`.
+ *
+ * @param elapsed - Seconds.
+ * @param phase - Per-item offset, so a population doesn't gutter in unison.
+ */
+export function flameFlicker(elapsed: number, phase = 0): number {
+  return 0.8 + 0.2 * Math.sin(elapsed * 9 + phase) + 0.08 * Math.sin(elapsed * 23 + phase * 2);
+}
+
 export class FlameFlickerEffect {
   public readonly seed: number;
   public light?: PointLight;
@@ -60,7 +87,7 @@ export class FlameFlickerEffect {
    * Flicker factor at elapsed time — lazy sum of detuned sines (~0.5–1.1).
    */
   static factor(elapsed: number, seed: number): number {
-    return 0.8 + 0.2 * Math.sin(elapsed * 9 + seed) + 0.08 * Math.sin(elapsed * 23 + seed * 2);
+    return flameFlicker(elapsed, seed);
   }
 
   /** Current flicker factor after the last `update`. */
@@ -85,8 +112,4 @@ export class FlameFlickerEffect {
     }
   }
 
-  /** Billboard linked halo toward the eye, if present. */
-  faceCamera(eye: Vector3): void {
-    this.halo?.faceCamera(eye);
-  }
 }

@@ -70,7 +70,7 @@ export interface ArchGeometryOptions {
  * **A swept band tolerates corners; it tears only at reversals.** Nothing in this vocabulary reverses, so
  * every style sweeps — but two of them put a corner where the arc meets the leg (`segmental`,
  * `horseshoe`, which do not spring vertically), and two put one at the crown (`pointed`, `ogee`, which
- * come to a point). Those corners are joints, not bugs: an impost and a mitre.
+ * come to a point). Those corners are joints, not bugs: an impost and a miter.
  *
  * Set `legHeight: 0` and the arch stands on the floor by itself — still flat, because a `semicircle`,
  * `elliptical`, `pointed` or `ogee` arch all supply a vertical tangent at their springing.

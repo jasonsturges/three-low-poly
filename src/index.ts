@@ -72,18 +72,16 @@ export {
   type EmissivePulseEffectOptions,
   type EmissivePulseMaterial,
 } from "./effects/EmissivePulseEffect";
-export { FlameFlickerEffect, type FlameFlickerEffectOptions } from "./effects/FlameFlickerEffect";
-export { GlowHalo, type GlowHaloOptions } from "./effects/GlowHalo";
+export {
+  flameFlicker,
+  FlameFlickerEffect,
+  type FlameFlickerEffectOptions,
+} from "./effects/FlameFlickerEffect";
+export { glowFalloffTexture, GlowHalo, type GlowHaloOptions } from "./effects/GlowHalo";
 export { GroundFogEffect, type GroundFogEffectOptions } from "./effects/GroundFogEffect";
 export { LightningEffect, type LightningEffectOptions } from "./effects/LightningEffect";
 export { PetalDriftEffect, type PetalDriftEffectOptions } from "./effects/PetalDriftEffect";
 export { RainEffect, type RainEffectOptions } from "./effects/RainEffect";
-export {
-  StarFieldEffect,
-  type StarBurstShapeOptions,
-  type StarFieldEffectOptions,
-  type StarFieldOrientation,
-} from "./effects/StarFieldEffect";
 export { WispEffect, type WispEffectOptions } from "./effects/WispEffect";
 
 //------------------------------
@@ -93,9 +91,17 @@ export { WispEffect, type WispEffectOptions } from "./effects/WispEffect";
 export * from "./factory/BookFactory";
 export * from "./factory/BoulderFactory";
 export * from "./factory/DoorFactory";
+export * from "./factory/ArchedDiamondLatticeWindow";
+export * from "./factory/DiamondLatticeWindow";
+export * from "./factory/GregorianLatticeWindow";
 export * from "./factory/FenceFactory";
 export * from "./factory/HeadstoneFactory";
 export * from "./factory/HexagonalTileFactory";
+export * from "./factory/AppleTree";
+export * from "./factory/AutumnTree";
+export * from "./factory/PumpkinPatch";
+export * from "./factory/RusticFence";
+export * from "./factory/VotiveRack";
 export * from "./factory/RockFactory";
 export * from "./factory/StaircaseFactory";
 export * from "./factory/WindowFactory";
@@ -199,18 +205,32 @@ export {
   type WroughtIronScrollGeometryOptions,
 } from "./geometry/fence/WroughtIronScrollGeometry";
 
+// Flora
+export {
+  createPumpkinGeometry,
+  createPumpkinRindGeometry,
+  createPumpkinStemGeometry,
+  pumpkinStemMatrix,
+  PumpkinGeometry,
+  type PumpkinAssemblyOptions,
+  type PumpkinGeometryOptions,
+  type PumpkinRindGeometryOptions,
+  type PumpkinStemGeometryOptions,
+} from "./geometry/flora/PumpkinGeometry";
+
 // Furniture
 export { BookshelfGeometry, type BookshelfGeometryOptions } from "./geometry/furniture/BookshelfGeometry";
 export { DeskGeometry } from "./geometry/furniture/DeskGeometry";
 
 // Leafs
-export { EllipticLeafGeometry } from "./geometry/leafs/EllipticLeafGeometry";
-export { LeafGeometry, type LeafGeometryOptions } from "./geometry/leafs/LeafGeometry";
+export { EllipticLeafGeometry } from "./geometry/foliage/EllipticLeafGeometry";
+export { LeafGeometry, type LeafGeometryOptions } from "./geometry/foliage/LeafGeometry";
 
 // Lighting
-export { FlameGeometry, type FlameGeometryOptions } from "./geometry/lighting/FlameGeometry";
-export { CandleGeometry, type CandleGeometryOptions } from "./geometry/lighting/CandleGeometry";
-export { LanternGeometry, type LanternGeometryOptions } from "./geometry/lighting/LanternGeometry";
+export {
+  CoachLanternGeometry,
+  type CoachLanternGeometryOptions,
+} from "./geometry/lighting/CoachLanternGeometry";
 export {
   HangingLanternGeometry,
   type HangingLanternGeometryOptions,
@@ -221,7 +241,6 @@ export {
 } from "./geometry/lighting/WallSconceGeometry";
 
 // Primitives
-export { ParallelogramBoxGeometry } from "./geometry/primitives/ParallelogramBoxGeometry";
 
 // Rocks
 export { BoulderGeometry, type BoulderGeometryOptions } from "./geometry/rocks/BoulderGeometry";
@@ -232,11 +251,25 @@ export { RockGeometry, type RockGeometryOptions } from "./geometry/rocks/RockGeo
 export {
   ArchedSlabGeometry,
   type ArchedSlabGeometryOptions,
-} from "./geometry/shapes/ArchedSlabGeometry";
+} from "./geometry/architecture/ArchedSlabGeometry";
 export { BurstGeometry, type BurstGeometryOptions } from "./geometry/shapes/BurstGeometry";
 export { ClubGeometry, type ClubGeometryOptions } from "./geometry/shapes/ClubGeometry";
 export { DiamondGeometry, type DiamondGeometryOptions } from "./geometry/shapes/DiamondGeometry";
-export { GearGeometry, type GearGeometryOptions } from "./geometry/shapes/GearGeometry";
+export {
+  AnnulusGeometry,
+  type AnnulusGeometryOptions,
+} from "./geometry/shapes/AnnulusGeometry";
+export { GearGeometry, type GearGeometryOptions } from "./geometry/gears/GearGeometry";
+export {
+  CrossedWheelGeometry,
+  type CrossedWheelGeometryOptions,
+} from "./geometry/gears/CrossedWheelGeometry";
+export { BevelGearGeometry, type BevelGearGeometryOptions } from "./geometry/gears/BevelGearGeometry";
+export {
+  InternalGearGeometry,
+  type InternalGearGeometryOptions,
+} from "./geometry/gears/InternalGearGeometry";
+export { RackGeometry, type RackGeometryOptions } from "./geometry/gears/RackGeometry";
 export { HeartGeometry, type HeartGeometryOptions } from "./geometry/shapes/HeartGeometry";
 export { PolygonGeometry, type PolygonGeometryOptions } from "./geometry/shapes/PolygonGeometry";
 export { SpadeGeometry, type SpadeGeometryOptions } from "./geometry/shapes/SpadeGeometry";
@@ -252,6 +285,7 @@ export {
 } from "./geometry/science/ErlenmeyerFlaskGeometry";
 export { FlorenceFlaskGeometry } from "./geometry/science/FlorenceFlaskGeometry";
 export { MortarGeometry } from "./geometry/science/MortarGeometry";
+export { PestleGeometry, type PestleGeometryOptions } from "./geometry/science/PestleGeometry";
 export { StandGeometry, type StandGeometryOptions } from "./geometry/science/StandGeometry";
 export { TeslaCoilGeometry } from "./geometry/science/TeslaCoilGeometry";
 export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
@@ -260,12 +294,21 @@ export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
 export { TerrainMoundGeometry, type TerrainMoundGeometryOptions } from "./geometry/terrain/TerrainMoundGeometry";
 export { TerrainPlaneGeometry, type TerrainPlaneGeometryOptions } from "./geometry/terrain/TerrainPlaneGeometry";
 
+// Timber
+export {
+  WeatheredPlankGeometry,
+  type WeatheredPlankGeometryOptions,
+} from "./geometry/timber/WeatheredPlankGeometry";
+
 // Trees
 export {
   GnarledTreeGeometry,
   type GnarledTreeGeometryOptions,
 } from "./geometry/trees/GnarledTreeGeometry";
-export { TreeGeometry, type TreeGeometryOptions } from "./geometry/trees/TreeGeometry";
+export {
+  ClearingTreeGeometry,
+  type ClearingTreeGeometryOptions,
+} from "./geometry/trees/ClearingTreeGeometry";
 
 // Vessels
 export { JarGeometry } from "./geometry/vessels/JarGeometry";
@@ -278,103 +321,6 @@ export { WineBottleGeometry, type WineBottleGeometryOptions } from "./geometry/v
 //------------------------------
 
 export { GroundGrid, type GroundGridOptions } from "./helpers/GroundGrid";
-
-//------------------------------
-//  Materials
-//------------------------------
-
-//------------------------------
-//  Models
-//------------------------------
-
-// Architecture
-export { Arch, type ArchOptions } from "./models/architecture/Arch";
-export { SpiralStaircase, type SpiralStaircaseOptions } from "./models/architecture/SpiralStaircase";
-export { Staircase, type StaircaseOptions } from "./models/architecture/Staircase";
-export { ArchedDiamondLatticeWindow } from "./models/architecture/ArchedDiamondLatticeWindow";
-export { DiamondLatticeWindow } from "./models/architecture/DiamondLatticeWindow";
-export { GregorianLatticeWindow } from "./models/architecture/GregorianLatticeWindow";
-
-// Atmosphere
-export { SmokeCurl, type SmokeCurlOptions } from "./models/atmosphere/SmokeCurl";
-
-// Books
-export { Book, type BookOptions } from "./models/books/Book";
-
-// Cemetery
-export { CelticCrossHeadstone, type CelticCrossHeadstoneOptions } from "./models/cemetery/CelticCrossHeadstone";
-export { CrossHeadstone, type CrossHeadstoneOptions } from "./models/cemetery/CrossHeadstone";
-export { Mausoleum } from "./models/cemetery/Mausoleum";
-export { Obelisk, type ObeliskOptions } from "./models/cemetery/Obelisk";
-export { ObeliskHeadstone, type ObeliskHeadstoneOptions } from "./models/cemetery/ObeliskHeadstone";
-export { RoundedHeadstone } from "./models/cemetery/RoundedHeadstone";
-export { SquareHeadstone } from "./models/cemetery/SquareHeadstone";
-
-// Fence
-export { StoneFencePost, type StoneFencePostOptions } from "./models/fence/StoneFencePost";
-export { WoodPicket, type WoodPicketOptions } from "./models/fence/WoodPicket";
-export { WoodPost, type WoodPostOptions } from "./models/fence/WoodPost";
-export { WroughtIronPicket, type WroughtIronPicketOptions } from "./models/fence/WroughtIronPicket";
-export { WroughtIronPost, type WroughtIronPostOptions } from "./models/fence/WroughtIronPost";
-export { WroughtIronScroll, type WroughtIronScrollOptions } from "./models/fence/WroughtIronScroll";
-
-// Furniture
-export { Bookshelf, type BookshelfOptions } from "./models/furniture/Bookshelf";
-export { Desk } from "./models/furniture/Desk";
-
-// Leafs
-export { Leaf, type LeafOptions } from "./models/leafs/Leaf";
-
-// Lighting
-export { Candle, type CandleOptions } from "./models/lighting/Candle";
-export { Flame, type FlameOptions } from "./models/lighting/Flame";
-export { HangingLantern, type HangingLanternOptions } from "./models/lighting/HangingLantern";
-export { WallSconce, type WallSconceOptions } from "./models/lighting/WallSconce";
-export { Lantern, type LanternOptions } from "./models/lighting/Lantern";
-
-// Rocks
-export { Boulder, type BoulderOptions } from "./models/rocks/Boulder";
-export { MossyRock, type MossyRockOptions } from "./models/rocks/MossyRock";
-export { Rock, type RockOptions } from "./models/rocks/Rock";
-
-// Science
-export { BunsenBurner } from "./models/science/BunsenBurner";
-export { ErlenmeyerFlask, type ErlenmeyerFlaskOptions } from "./models/science/ErlenmeyerFlask";
-export { FlorenceFlask } from "./models/science/FlorenceFlask";
-export { Microscope } from "./models/science/Microscope";
-export { MortarAndPestle } from "./models/science/MortarAndPestle";
-export { SpiralTube } from "./models/science/SpiralTube";
-export { Stand, type StandOptions } from "./models/science/Stand";
-export { TeslaCoil } from "./models/science/TeslaCoil";
-export { TestTube } from "./models/science/TestTube";
-
-// Shapes
-export { ArchedSlab, type ArchedSlabOptions } from "./models/shapes/ArchedSlab";
-export { Burst, type BurstOptions } from "./models/shapes/Burst";
-export { Club, type ClubOptions } from "./models/shapes/Club";
-export { Diamond, type DiamondOptions } from "./models/shapes/Diamond";
-export { Gear, type GearOptions } from "./models/shapes/Gear";
-export { Heart, type HeartOptions } from "./models/shapes/Heart";
-export { Polygon, type PolygonOptions } from "./models/shapes/Polygon";
-export { Spade, type SpadeOptions } from "./models/shapes/Spade";
-export { Star, type StarOptions } from "./models/shapes/Star";
-
-// Skeleton
-export { Bone } from "./models/skeleton/Bone";
-
-// Trees
-export { GnarledTree, type GnarledTreeOptions } from "./models/trees/GnarledTree";
-export { Tree, type TreeOptions } from "./models/trees/Tree";
-
-// Terrain
-export { TerrainMound, type TerrainMoundOptions } from "./models/terrain/TerrainMound";
-export { TerrainPlane, type TerrainPlaneOptions } from "./models/terrain/TerrainPlane";
-
-// Vessels
-export { Jar } from "./models/vessels/Jar";
-export { PotionBottle } from "./models/vessels/PotionBottle";
-export { Vase, type VaseOptions } from "./models/vessels/Vase";
-export { WineBottle, type WineBottleOptions } from "./models/vessels/WineBottle";
 
 //------------------------------
 //  Paths
@@ -397,6 +343,9 @@ export { BurstShape, type BurstShapeOptions } from "./shapes/BurstShape";
 export { ClubShape, type ClubShapeOptions } from "./shapes/ClubShape";
 export { DiamondShape, type DiamondShapeOptions } from "./shapes/DiamondShape";
 export { GearShape, type GearShapeOptions } from "./shapes/GearShape";
+export { CrossedWheelShape, type CrossedWheelShapeOptions } from "./shapes/CrossedWheelShape";
+export { InternalGearShape, type InternalGearShapeOptions } from "./shapes/InternalGearShape";
+export { RackShape, type RackShapeOptions } from "./shapes/RackShape";
 export { HeartShape, type HeartShapeOptions } from "./shapes/HeartShape";
 export { PolygonShape, type PolygonShapeOptions } from "./shapes/PolygonShape";
 export { SpadeShape, type SpadeShapeOptions } from "./shapes/SpadeShape";
@@ -418,9 +367,22 @@ export {
 } from "./shapes/ArchProfile";
 
 //------------------------------
+//  Sky
+//------------------------------
+
+export { FullMoon, type FullMoonHaloOptions, type FullMoonOptions } from "./sky/FullMoon";
+export {
+  StarField,
+  type StarBurstShapeOptions,
+  type StarFieldOptions,
+  type StarFieldOrientation,
+} from "./sky/StarField";
+
+//------------------------------
 //  Sweep
 //------------------------------
 
+export { miterFrames, type MiterFramesOptions } from "./sweep/MiterFrames";
 export { circleProfile, rectProfile } from "./sweep/Profiles";
 export { sweep, transportFrames, type Station, type SweepOptions } from "./sweep/Sweep";
 
@@ -428,7 +390,12 @@ export { sweep, transportFrames, type Station, type SweepOptions } from "./sweep
 //  Textures
 //------------------------------
 
-export { checkerboardTexture } from "./textures/checkerboard";
+export { createCheckerboardTexture, type CheckerboardTextureOptions } from "./textures/checkerboard";
+export {
+  createRadialGradientTexture,
+  type RadialGradientStop,
+  type RadialGradientTextureOptions,
+} from "./textures/radialGradient";
 
 //------------------------------
 //  Utils
@@ -444,6 +411,7 @@ export * from "./utils/GeometryBuffers";
 export * from "./utils/OffsetLoop";
 export * from "./utils/InterpolateCurve";
 export * from "./utils/LineEquations";
+export { lockToViewer } from "./utils/LockToViewer";
 export * from "./utils/ParametricCurveUtils";
 export {
   Random,
