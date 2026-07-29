@@ -31,7 +31,9 @@ const FACE_FRACTION = 0.3;
 const TOOTH = { tipWidth: 0.25, valleyWidth: 0.25 };
 
 export default function (container: HTMLElement) {
-  const handle = createScene(container, { background: 0x0a0b10, cameraPosition: [2.4, 1.6, 2.4] });
+  // Raised well above the pair, so the flat wheel reads as lying down and the upright one is seen across its
+  // teeth. `frameObject` only dollies along this direction, so the angle set here is the angle you get.
+  const handle = createScene(container, { background: 0x0a0b10, cameraPosition: [2.4, 2.6, 2.4] });
   const { scene, onFrame, dispose } = handle;
 
   const params = { shaftAngle: 90, teethA: 20, teethB: 20, animate: true, speed: 0.5 };
@@ -43,10 +45,11 @@ export default function (container: HTMLElement) {
 
   // Each wheel hangs in its own pivot, and every pivot's ORIGIN is the shared apex. The mesh is pushed back
   // down its own axis so its apex lands there, which turns "share an apex" into one translate per wheel.
-  // Turned over so the wheel sits below and its mate rises out of it — a rigid half turn about X, so it flips
-  // top for bottom while leaving left and right alone. Nothing below is aware of it.
+  // A rigid half turn about Z: it drops one wheel below the apex and swings the other to the FAR side, so the
+  // pair is read from above rather than square into a back face. Only the upright wheel appears to move —
+  // the flat one's axis is the turn axis, so spinning it about itself changes nothing you can see.
   const train = new Group();
-  train.rotation.x = Math.PI;
+  train.rotation.z = Math.PI;
   const pivotA = new Group();
   const pivotB = new Group();
   const gearA = new Mesh(new BevelGearGeometry(), brass);
