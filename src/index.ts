@@ -323,44 +323,6 @@ export { WineBottleGeometry, type WineBottleGeometryOptions } from "./geometry/v
 export { GroundGrid, type GroundGridOptions } from "./helpers/GroundGrid";
 
 //------------------------------
-//  Materials
-//------------------------------
-
-//------------------------------
-//  Models
-//------------------------------
-
-// Architecture
-
-// Atmosphere
-
-// Books
-
-// Cemetery
-
-// Fence
-
-// Furniture
-
-// Leafs
-
-// Lighting
-
-// Rocks
-
-// Science
-
-// Shapes
-
-// Skeleton
-
-// Trees
-
-// Terrain
-
-// Vessels
-
-//------------------------------
 //  Paths
 //------------------------------
 
@@ -407,8 +369,6 @@ export {
 //------------------------------
 //  Sky
 //------------------------------
-//  Viewer-relative layers: direction without location. Each pins itself to the active camera, so
-//  `scene.add(layer)` is the whole contract — never reachable, and they stack freely together.
 
 export { FullMoon, type FullMoonHaloOptions, type FullMoonOptions } from "./sky/FullMoon";
 export {
