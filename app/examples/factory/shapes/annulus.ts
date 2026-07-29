@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
-import { Color, Mesh, MeshStandardMaterial } from "three";
-import { AnnulusGeometry, type AnnulusGeometryOptions, GroundGrid } from "three-low-poly";
+import { AxesHelper, Color, Mesh, MeshStandardMaterial } from "three";
+import { AnnulusGeometry, type AnnulusGeometryOptions } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
 
@@ -12,15 +12,17 @@ export const meta = {
     "is why it costs so little. At 8 sides it is 64 triangles across 45 shared vertices; the same ring " +
     "extruded from a 2D shape with a hole runs to 384 unshared vertices for no visual gain. Sides is the " +
     "low-poly dial — 24 reads smooth, 8 is faceted, and 4 is a genuine square washer, all one construction. " +
-    "It rests on y=0, so the grid is where it sits rather than where it is centred.",
+    "It rests on y=0 rather than straddling it, which the Base Y readout holds at zero through every change.",
 };
 
 export default function (container: HTMLElement) {
   const handle = createScene(container, { background: 0x8fa6b8, cameraPosition: [2.2, 1.8, 2.6] });
   const { scene, dispose } = handle;
 
-  const ground = new GroundGrid({ size: 6, divisions: 12 });
-  scene.add(ground);
+  // Unlike the gears, this rests ON the plane rather than straddling it — so the axes mark the origin the
+  // ring sits on, not one it is centred through. That is what Base Y reads out.
+  const axes = new AxesHelper(1.4);
+  scene.add(axes);
 
   const params: Required<AnnulusGeometryOptions> = {
     radius: 1,
@@ -62,11 +64,11 @@ export default function (container: HTMLElement) {
     washer.geometry.dispose();
     washer.geometry = new AnnulusGeometry(params);
     refresh();
+    // Recentre without re-fitting — it rests on y=0, so Depth lifts its centre. `dolly: false` is what
+    // keeps the viewer's zoom from snapping back on every change.
+    frameObject(handle, washer, { dolly: false });
   };
   refresh();
-  // Framed ONCE, deliberately not inside `refresh`. `frameObject` recomputes the camera DISTANCE
-  // from the object's bounding sphere, so calling it on every rebuild snaps the zoom back and throws
-  // away whatever the viewer had set.
   frameObject(handle, washer, { fit: 1.5 });
 
   const gui = new GUI();
@@ -102,7 +104,7 @@ export default function (container: HTMLElement) {
     gui.destroy();
     washer.geometry.dispose();
     iron.dispose();
-    ground.dispose();
+    axes.dispose();
     dispose();
   };
 }

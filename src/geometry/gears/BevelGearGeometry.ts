@@ -12,8 +12,9 @@ export interface BevelGearGeometryOptions extends GearShapeOptions {
   /**
    * Half-angle of the pitch cone, measured from the axis, in radians. Defaults to `Math.PI / 4` (45°).
    *
-   * A 45° pair of equal wheels meshes at a right angle with a 1:1 ratio — a **miter gear**. Shallower angles
-   * approach a flat crown wheel; steeper ones approach a plain spur gear.
+   * A 45° pair of equal wheels meshes at a right angle with a 1:1 ratio — a **miter gear**. Approaching `90°`
+   * flattens the cone into a **crown wheel**, its teeth standing on the face; approaching `0` stretches it into
+   * a long thin cone, which is a plain spur gear.
    */
   pitchAngle?: number;
   /**
@@ -41,9 +42,12 @@ function contour(points: Vector2[]): Vector2[] {
  * tooth flank therefore lies on a plane through the apex, correct by construction rather than by adjustment.
  *
  * A 45° pair of equal wheels is a **miter gear** — right angle, 1:1. Change
- * {@link BevelGearGeometryOptions.pitchAngle} and the same construction spans a flat crown wheel through to
- * something approaching a spur gear. This is the wheel a gearbox or differential is built from; the differential's
- * crown wheel, pinion, and spider gears are all bevels.
+ * {@link BevelGearGeometryOptions.pitchAngle} and the same construction spans a spur-like cone near `0` through
+ * to a flat crown wheel near `90°`. This is the wheel a gearbox or differential is built from; the
+ * differential's crown wheel, pinion, and spider gears are all bevels.
+ *
+ * A pair meshes when their pitch cones share an apex, which makes the shaft angle the **sum** of the two cone
+ * angles — so 45° + 45° is the right-angle case, and unequal angles give unequal ratios.
  *
  * Not a **worm** gear, which is a different mechanism: a helical screw driving a wheel, thread-based rather than
  * conical.

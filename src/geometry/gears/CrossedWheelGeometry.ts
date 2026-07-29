@@ -7,24 +7,21 @@ export interface CrossedWheelGeometryOptions extends CrossedWheelShapeOptions {
 }
 
 /**
- * Extruded **crossed-out wheel** — a clock or watch wheel: a toothed rim carried on radial spokes.
+ * Extruded **crossed-out wheel** — a clock or watch wheel: a toothed rim carried on radial spokes. See
+ * {@link CrossedWheelShape} for the anatomy and the horological vocabulary.
  *
- * In horology those spokes are **crossings** and cutting them is *crossing out*, done to shed weight and brass
- * so the train has less inertia to drive. A wheel is named by the count: a *five-crossing wheel*. Where
- * {@link GearGeometry} is a solid disc with a bore, this removes the web between hub and rim.
+ * Where {@link GearGeometry} is a solid disc with a bore, this removes the web between hub and rim. Every tooth
+ * option is inherited, so the crossings compose with the tooth profile — a crossed-out escapement wheel is
+ * `{ crossings: 5, tipWidth: 0, lean: 1 }`.
  *
- * Every tooth option is inherited, so the crossings compose with the tooth profile — a crossed-out escapement
- * wheel is `{ crossings: 5, tipWidth: 0, lean: 1 }`.
+ * The clamps are load-bearing rather than defensive: the hub is held clear of the bore and the rim keeps
+ * backing inward of the tooth valleys, since without either the cut-outs reach through and the teeth come away
+ * from the wheel. {@link crossings} reports `0` when no annulus was left to cut, leaving the web solid.
  *
  * Local frame: **centred on its own thickness**, spanning `±depth / 2` in Z, matching
  * {@link GearGeometry} so a rank of wheels on one arbor lines up on the plane they turn in.
  *
  * Material groups: **none** — one material for the whole wheel.
- *
- * The clamps are load-bearing rather than defensive: the hub is held clear of the bore, and the rim keeps
- * backing inward of the tooth valleys. Without either, the cut-outs would reach through and the teeth would
- * come away from the wheel. {@link crossings} reports `0` when there was no annulus left to cut, in which case
- * the web is solid and this is a {@link GearGeometry} with extra steps.
  *
  * @example
  * ```typescript

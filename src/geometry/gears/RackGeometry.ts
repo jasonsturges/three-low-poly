@@ -7,37 +7,19 @@ export interface RackGeometryOptions extends RackShapeOptions {
 }
 
 /**
- * Extruded **rack** — the straight member of a rack and pinion.
+ * Extruded **rack** — the straight member of a rack and pinion. See {@link RackShape} for the profile.
  *
- * **A rack is a gear of infinite radius.** Its teeth no longer converge on a centre, so they stand parallel and
- * the period advances along a line. The tooth profile is {@link GearShape}'s unchanged — same `tipWidth`,
- * `valleyWidth`, and `lean`, so `lean: 1` gives a linear ratchet exactly as it gives a rotary one.
- *
- * **{@link pitch} is an output, not an input:** `(length − inset × 2) / teeth`, exactly as a gear's
- * circumferential pitch is `2π × outerRadius / teeth`. Size the bar, then divide it — adding teeth makes them
- * finer rather than making the rack longer, and every tooth stays whole because the period is derived.
- *
- * To mesh with a pinion, size the bar so the derived pitch lands on the pinion's: a run of `n` teeth against a
- * `pinionTeeth` pinion of radius `r` wants `length = n × 2π × r / pinionTeeth + inset × 2`.
- *
- * **`tipHeight` and `valleyHeight` are absolute**, both from the underside, the way the circular gears measure
- * both radii from the centre — completing a grid with the flats: `tipWidth`/`tipHeight`,
- * `valleyWidth`/`valleyHeight`. Their order is free, so a valley above the tip inverts the teeth into channels.
- * Tooth depth is the difference, published as {@link tipDrop}; thickening the plain **back** without changing
- * the teeth therefore means moving both heights together.
- *
- * **Racks tile end to end** at the default {@link RackShapeOptions.inset} of `0`: each end carries exactly half
- * a valley, so a seam between two bars is identical to any interior valley and a pinion rolls across it without
- * a hitch. Any nonzero inset opens that seam by `inset × 2` and the join becomes visible.
+ * To mesh with a pinion, size the bar so its derived {@link pitch} lands on the pinion's: a run of `n` teeth
+ * against a `pinionTeeth` pinion of pitch radius `r` wants `length = n × 2π × r / pinionTeeth + inset × 2`.
  *
  * Local frame: **rests on `y = 0`** with teeth pointing up, running along `+X` from the origin and extruded
  * across `+Z`. Ground contact, like the rest of the library — no translate needed to lay it on a surface.
  *
- * Material groups: **none** — one material for the whole bar.
+ * Material groups: **none** — one material for the whole rack.
  *
  * @example
  * ```typescript
- * // A 24-tooth rack cut to mesh with a 20-tooth pinion of radius 0.8.
+ * // A 24-tooth rack cut to mesh with a 20-tooth pinion of pitch radius 0.8.
  * const length = (24 * 2 * Math.PI * 0.8) / 20;
  * const rack = new Mesh(new RackGeometry({ teeth: 24, length }), steel);
  * ```
@@ -51,16 +33,10 @@ export class RackGeometry extends ExtrudeGeometry {
   readonly tipHeight: number;
   /** Height the valley floors sit at, after clamping. */
   readonly valleyHeight: number;
-  /** Tooth depth — `tipHeight − valleyHeight`. Negative when the teeth are inverted. */
-  readonly tipDrop: number;
-  /** Height of the bar's highest point. Differs from {@link tipHeight} only when the teeth are inverted. */
-  readonly totalHeight: number;
   /** Tip flat as a fraction of the period, after clamping. */
   readonly tipWidth: number;
-  /** Root flat as a fraction of the period, after clamping. */
+  /** Valley flat as a fraction of the period, after clamping. */
   readonly valleyWidth: number;
-  /** What the two flanks are left with — `1 − tipWidth − valleyWidth`. */
-  readonly flankWidth: number;
 
   constructor({ depth = 0.25, ...shapeOptions }: RackGeometryOptions = {}) {
     const shape = new RackShape(shapeOptions);
@@ -71,10 +47,7 @@ export class RackGeometry extends ExtrudeGeometry {
     this.pitch = shape.pitch;
     this.tipHeight = shape.tipHeight;
     this.valleyHeight = shape.valleyHeight;
-    this.tipDrop = shape.tipDrop;
-    this.totalHeight = shape.totalHeight;
     this.tipWidth = shape.tipWidth;
     this.valleyWidth = shape.valleyWidth;
-    this.flankWidth = shape.flankWidth;
   }
 }

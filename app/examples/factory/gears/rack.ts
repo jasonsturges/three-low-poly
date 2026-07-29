@@ -11,12 +11,11 @@ export const meta = {
     "converge on a centre, so they stand parallel and the period advances along a line instead of around a " +
     "circle. That is why the tooth profile is the Gear's unchanged, and why there is no polar arithmetic here " +
     "at all: Lean 1 gives a linear ratchet exactly as it gives a rotary one. PITCH IS AN OUTPUT, not an " +
-    "input — length less the insets, divided by teeth — so teeth SUBDIVIDE a bar you have already sized " +
-    "instead of extending it, exactly as they subdivide a gear's circumference. THE BAR IS THE INPUT and the " +
-    "teeth are cut out of it: Tip Height is the whole bar, Tip Drop is how deep the valleys reach into it, and " +
-    "the back the teeth stand on is derived. That split matters because A MESHING PINION FIXES THE TOOTH " +
-    "DEPTH and leaves the back free — so raising Tip Height thickens the back without disturbing the mesh, " +
-    "where two absolute heights would have forced you to edit both at once to achieve the same thing. Both " +
+    "input — length less the insets, divided by teeth — so teeth SUBDIVIDE a rack you have already sized " +
+    "instead of extending it, exactly as they subdivide a gear's circumference. TIP HEIGHT AND VALLEY HEIGHT " +
+    "ARE BOTH ABSOLUTE, measured from the underside, exactly as the circular gears measure both radii from " +
+    "the centre — so the pair reads like Outer and Inner Radius does there, and their order is not enforced: " +
+    "put the valley above the tip and the teeth invert into channels. Both " +
     "ends carry HALF A VALLEY rather than starting flush " +
     "on a tooth, which is what lets racks TILE — butt two together and the seam is indistinguishable from any " +
     "interior valley, so a pinion rolls the length of a run as if it were one bar. Inset opens that seam, which " +
@@ -42,7 +41,7 @@ export default function (container: HTMLElement) {
   };
 
   const colors = { steel: "#9aa3ad" };
-  const stats = { triangles: 0, pitch: "", back: "", split: "", pinion20: "" };
+  const stats = { triangles: 0, pitch: "", pinion20: "" };
 
   const steel = new MeshStandardMaterial({
     color: new Color(colors.steel),
@@ -60,11 +59,6 @@ export default function (container: HTMLElement) {
     stats.triangles = g.index ? g.index.count / 3 : g.attributes.position.count / 3;
     // Derived from the length, not asked for: adding teeth divides the same bar more finely.
     stats.pitch = g.pitch.toFixed(4);
-    // Derived: the gap between the two absolute heights. Invert them and it goes negative.
-    stats.back = g.tipDrop.toFixed(4);
-    // How the period ACTUALLY divided. Tip takes what it asks and the valley absorbs the overflow, so these
-    // stop matching the sliders once the two flats want more than a whole period between them.
-    stats.split = `${g.tipWidth.toFixed(2)} / ${g.valleyWidth.toFixed(2)} / ${g.flankWidth.toFixed(2)}`;
     // The relationship that makes a rack and pinion mesh, shown rather than illustrated with a second object:
     // a pinion's circumferential pitch flattened out is the rack's linear pitch.
     stats.pinion20 = ((g.pitch * 20) / (Math.PI * 2)).toFixed(4);
@@ -74,6 +68,9 @@ export default function (container: HTMLElement) {
     rack.geometry.dispose();
     rack.geometry = new RackGeometry(params);
     refresh();
+    // The bar's origin is its left end, so Length walks its centre away from the camera. Recentre without
+    // re-fitting: this keeps it framed as it grows and leaves the viewer's zoom alone.
+    frameObject(handle, rack, { dolly: false });
   };
   refresh();
   frameObject(handle, rack, { fit: 1.3 });
@@ -115,10 +112,6 @@ export default function (container: HTMLElement) {
   readout.add(stats, "triangles").name("Triangles").listen().disable();
   // An output of length and teeth, not a parameter.
   readout.add(stats, "pitch").name("Pitch").listen().disable();
-  // An output of the two heights, not a parameter.
-  readout.add(stats, "back").name("Tooth Depth").listen().disable();
-  // Resolved tip / valley / flank fractions — what the period actually divided into.
-  readout.add(stats, "split").name("Split t/v/flank").listen().disable();
   // Radius a 20-tooth pinion would need to mesh this pitch: pitch x teeth / 2pi.
   readout.add(stats, "pinion20").name("Pinion r (20T)").listen().disable();
   readout.open();

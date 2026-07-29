@@ -7,14 +7,8 @@ export interface GearGeometryOptions extends GearShapeOptions {
 }
 
 /**
- * Extruded gear profile with a centre bore.
- *
- * One tooth period runs tip, falling flank, valley, rising flank. The two flats are sized independently by
- * {@link GearShapeOptions.tipWidth} and {@link GearShapeOptions.valleyWidth}, and whatever is left of the
- * period is split between the flanks — so a single profile spans a blunt trapezoidal gear, a spiked one, and
- * an asymmetric ratchet. Set `tipWidth` to `0` and the tooth comes to a point; set
- * {@link GearShapeOptions.lean} to `1` and the rising flank vanishes, dropping the trailing face radially into
- * an escapement wheel.
+ * Extruded gear profile with a centre bore. See {@link GearShape} for the tooth period and how the two flats
+ * divide it.
  *
  * Local frame: **centred on its own thickness**, spanning `±depth / 2` in Z, so a rank of gears sharing an
  * arbor lines up on the plane they turn in rather than each one starting where the last began.

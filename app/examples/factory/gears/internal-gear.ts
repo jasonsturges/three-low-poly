@@ -37,7 +37,7 @@ export default function (container: HTMLElement) {
   };
 
   const colors = { steel: "#8f97a1" };
-  const stats = { triangles: 0, rim: "", toothDepth: "" };
+  const stats = { triangles: 0, rim: "" };
 
   const steel = new MeshStandardMaterial({
     color: new Color(colors.steel),
@@ -54,7 +54,6 @@ export default function (container: HTMLElement) {
     const g = ring.geometry as InternalGearGeometry;
     stats.triangles = g.index ? g.index.count / 3 : g.attributes.position.count / 3;
     stats.rim = g.rimRadius.toFixed(4);
-    stats.toothDepth = g.toothDepth.toFixed(4);
   };
 
   const rebuild = () => {
@@ -96,7 +95,6 @@ export default function (container: HTMLElement) {
   const readout = gui.addFolder("Measured");
   readout.add(stats, "triangles").name("Triangles").listen().disable();
   readout.add(stats, "rim").name("Rim (clamped)").listen().disable();
-  readout.add(stats, "toothDepth").name("Tooth Depth").listen().disable();
   readout.open();
 
   return () => {

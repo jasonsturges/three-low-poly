@@ -49,8 +49,6 @@ export class InternalGearShape extends Shape {
   readonly valleyRadius: number;
   /** The rim radius actually used, after clamping outside the toothed opening. */
   readonly rimRadius: number;
-  /** Tooth depth — `valleyRadius − tipRadius`. Negative when the toothing is inverted. */
-  readonly toothDepth: number;
 
   constructor({
     teeth = 36,
@@ -71,7 +69,6 @@ export class InternalGearShape extends Shape {
 
     this.tipRadius = tip;
     this.valleyRadius = valley;
-    this.toothDepth = valley - tip;
 
     const step = (Math.PI * 2) / count;
     const start = Math.PI / 2 + rotation;
