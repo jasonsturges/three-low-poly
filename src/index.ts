@@ -382,7 +382,12 @@ export {
 //  Sweep
 //------------------------------
 
-export { miterFrames, type MiterFramesOptions } from "./sweep/MiterFrames";
+export {
+  miterCuts,
+  type MiterCutsOptions,
+  miterFrames,
+  type MiterFramesOptions,
+} from "./sweep/MiterFrames";
 export { circleProfile, rectProfile } from "./sweep/Profiles";
 export { sweep, transportFrames, type Station, type SweepOptions } from "./sweep/Sweep";
 

@@ -2,6 +2,129 @@ import { Quaternion, Vector3 } from "three";
 import type { PathPoint } from "../paths/PathPoint";
 import type { Station } from "./Sweep";
 
+/**
+ * Drop coincident entries. A repeated point has no direction, and a zero-length edge normalizes to a zero
+ * vector rather than erroring — the mesh then comes out quietly wrong, with no NaN to catch.
+ *
+ * A closed path additionally drops a final point sitting on the first: `closed` already means the loop
+ * wraps, so repeating the start would put a zero-length edge at the seam.
+ */
+function distinct<T>(items: T[], positionOf: (item: T) => Vector3, closed: boolean): T[] {
+  const kept = items.filter(
+    (item, i) => i === 0 || positionOf(item).distanceToSquared(positionOf(items[i - 1]!)) > 1e-12,
+  );
+  if (closed && kept.length > 1) {
+    const first = positionOf(kept[0]!);
+    const last = positionOf(kept[kept.length - 1]!);
+    if (first.distanceToSquared(last) < 1e-12) kept.pop();
+  }
+  return kept;
+}
+
+/**
+ * Unit direction of the edge arriving at, and the edge leaving, each point.
+ *
+ * An open path's ends have only one edge between them, so each borrows the other's — which is what makes
+ * an end's "bisector" come out as the segment direction, i.e. an ordinary perpendicular cut.
+ */
+function edgeDirections(points: Vector3[], closed: boolean): { incoming: Vector3[]; outgoing: Vector3[] } {
+  const count = points.length;
+
+  const outgoing: Vector3[] = [];
+  for (let i = 0; i < count; i++) {
+    if (!closed && i === count - 1) {
+      outgoing.push(outgoing[i - 1]!.clone());
+      continue;
+    }
+    outgoing.push(points[(i + 1) % count]!.clone().sub(points[i]!).normalize());
+  }
+
+  const incoming: Vector3[] = [];
+  for (let i = 0; i < count; i++) {
+    if (!closed && i === 0) {
+      incoming.push(outgoing[0]!.clone());
+      continue;
+    }
+    incoming.push(outgoing[(i - 1 + count) % count]!.clone());
+  }
+
+  return { incoming, outgoing };
+}
+
+/** The bisecting plane at each corner: `normalize(incoming + outgoing)`. */
+function cutPlanes(incoming: Vector3[], outgoing: Vector3[]): Vector3[] {
+  return incoming.map((a, i) => {
+    const bisector = a.clone().add(outgoing[i]!);
+    // A full reversal has no bisector — the two directions cancel. Fall back to the segment.
+    return bisector.lengthSq() < 1e-10 ? outgoing[i]!.clone() : bisector.normalize();
+  });
+}
+
+export interface MiterCutsOptions {
+  /** Treat the corners as a closed loop, so the last corner joins back to the first. Do not repeat the
+   * start point. */
+  closed?: boolean;
+}
+
+/**
+ * The cut plane at every corner of a polyline — **the miter as data**, for members that do not contain
+ * the corner.
+ *
+ * {@link miterFrames} frames *one* path, and that covers the case where a cornered run is a single piece
+ * of stock: a rail loop, a frame swept as one closed sweep. But a joint between **separate members** — two
+ * sticks meeting, four sides of a picture frame, a gate rail into a stile — is a property of the
+ * *assembly*, not of any one member. Neither stick contains the corner, so neither can derive the plane
+ * it is cut on. This derives it once, from the corner list they share.
+ *
+ * Feed the result straight back as {@link MiterFramesOptions.startCut} and
+ * {@link MiterFramesOptions.endCut}: the corner at index `i` is where piece `i` starts and piece `i − 1`
+ * ends, so both are cut on `cuts[i]` and their end faces come out as the identical polygon.
+ *
+ * **Pair it with `widenSeatCuts: true`.** These planes join members to each other; they are not surfaces
+ * to land on. The default preserves the member's footprint in the cut plane, which is right for an end
+ * *landing* on a plate and wrong for an end meeting its own mirror image — there, what must be preserved
+ * is the true cross-section, and both halves widen by the same `1 / cos φ`.
+ *
+ * **Equal stock is still structural.** The plane closes the joint whatever the stock, but members of
+ * different section land their outer faces at different radii, so the outer corner *steps* instead of
+ * turning. Splitting a miter into separate pieces buys you separate materials and separate transforms —
+ * it does not buy you unequal stock.
+ *
+ * Ends of an open path have no corner, so they return the segment's own direction — exactly the
+ * perpendicular cut {@link miterFrames} gives an unseated end. Passing one back changes nothing, which
+ * means a caller can loop uniformly without special-casing the first and last piece.
+ *
+ * Coincident corners are dropped, exactly as {@link miterFrames} drops them, so the two agree
+ * index-for-index on the same input.
+ *
+ * @param corners the joint's corner points, in order.
+ *
+ * @example
+ * ```typescript
+ * // A picture frame as four separate sticks, each mitered at both ends.
+ * const cuts = miterCuts(corners, { closed: true });
+ *
+ * const sides = corners.map((from, i) => {
+ *   const to = corners[(i + 1) % corners.length];
+ *   return sweep(
+ *     rectProfile(faceWidth, depth),
+ *     miterFrames(linePath(from, to, 1), {
+ *       startCut: cuts[i],
+ *       endCut: cuts[(i + 1) % corners.length],
+ *       widenSeatCuts: true,
+ *     }),
+ *   );
+ * });
+ * ```
+ */
+export function miterCuts(corners: Vector3[], { closed = false }: MiterCutsOptions = {}): Vector3[] {
+  const points = distinct(corners, (position) => position, closed);
+  if (points.length < 2) return [];
+
+  const { incoming, outgoing } = edgeDirections(points, closed);
+  return cutPlanes(incoming, outgoing);
+}
+
 export interface MiterFramesOptions {
   /** Seed direction for the first frame, projected perpendicular to the path. Defaults to `+Z`. */
   reference?: Vector3;
@@ -93,47 +216,18 @@ export function miterFrames(
     widenSeatCuts = false,
   }: MiterFramesOptions = {},
 ): Station[] {
-  // Duplicate points have no direction, and a zero tangent silently normalizes to zero rather than
-  // erroring — the mesh comes out quietly wrong. Drop them.
-  const points = path.filter(
-    (p, i) => i === 0 || p.position.distanceToSquared(path[i - 1]!.position) > 1e-12,
-  );
-  if (closed && points.length > 1) {
-    const first = points[0]!;
-    const final = points[points.length - 1]!;
-    if (first.position.distanceToSquared(final.position) < 1e-12) points.pop();
-  }
-
+  const points = distinct(path, (p) => p.position, closed);
   const count = points.length;
   if (count < 2) return [];
 
-  // Direction of the segment leaving each point. For an open path the last point has none, so it
-  // borrows the previous segment's.
-  const outgoing: Vector3[] = [];
-  for (let i = 0; i < count; i++) {
-    const next = points[(i + 1) % count];
-    if (!closed && i === count - 1) {
-      outgoing.push(outgoing[i - 1]!.clone());
-      continue;
-    }
-    outgoing.push(next!.position.clone().sub(points[i]!.position).normalize());
-  }
-
-  const incoming: Vector3[] = [];
-  for (let i = 0; i < count; i++) {
-    if (!closed && i === 0) {
-      incoming.push(outgoing[0]!.clone());
-      continue;
-    }
-    incoming.push(outgoing[(i - 1 + count) % count]!.clone());
-  }
-
-  // Cut-plane normals: the bisector at a corner, the segment direction at an end.
-  const cuts = incoming.map((a, i) => {
-    const bisector = a.clone().add(outgoing[i]!);
-    // A full reversal has no bisector — the two directions cancel. Fall back to the segment.
-    return bisector.lengthSq() < 1e-10 ? outgoing[i]!.clone() : bisector.normalize();
-  });
+  // Cut-plane normals: the bisector at a corner, the segment direction at an end. Shared with
+  // `miterCuts`, so a member framed from its own path and a member cut against a corner it does not
+  // contain are cut on the identical plane — not on two independently derived ones that agree by luck.
+  const { incoming, outgoing } = edgeDirections(
+    points.map((p) => p.position),
+    closed,
+  );
+  const cuts = cutPlanes(incoming, outgoing);
 
   // A seat cut replaces the end's perpendicular plane with one the caller supplies. Orient it along the
   // path, so a single `+Y` serves both ends of a vertical member and the transport below turns by the
@@ -222,7 +316,9 @@ export function miterFrames(
 //
 //   1. PICTURE-FRAME MITER — two members of one path meeting at a corner. Cut plane DERIVED from the path
 //      (the bisector). SOLVED: `miterFrames(path, { closed: true })`. Requires equal stock, structurally —
-//      consecutive segments share one ring, so one profile.
+//      consecutive segments share one ring, so one profile. For the same joint built as SEPARATE members,
+//      `miterCuts` hands the shared planes to each member's `startCut` / `endCut`; that buys separate
+//      materials and transforms, but not unequal stock — the outer corner still steps.
 //
 //   2. SEAT CUT — a member landing on a surface. Cut plane SUPPLIED by that surface. SOLVED:
 //      `{ startCut, endCut }`. Guard needed: never cut against a plane the member is nearly PARALLEL to, or

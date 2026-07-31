@@ -24,7 +24,7 @@ export const meta = {
     "STUDY — the reference for joining swept bars, isolated to THREE PIECES at one bottom corner of an " +
     "iron cage: two rails and the raked post they meet. Built twice, labelled in the scene. LEFT (BUG) is " +
     "framed perpendicular to each path — the rails stop dead at the corner leaving a wedge of nothing, and " +
-    "the post's slanted end lip punches out through the rail. RIGHT (MITRED) shares one ring between rail " +
+    "the post's slanted end lip punches out through the rail. RIGHT (MITERED) shares one ring between rail " +
     "segments and seat cuts the post to the surface it stands on, so nothing interpenetrates. Overlay the " +
     "wireframe to see the corner share a single ring rather than two bars overlapping, and drop Rail Stock " +
     "to 1.00 to watch the outer edge graze.",
@@ -240,7 +240,7 @@ export default function (container: HTMLElement) {
   scene.add(left, right);
 
   const bugLabel = createLabel("PERPENDICULAR — BUG", "#ff9d6b");
-  const fixLabel = createLabel("MITRED — FIX", "#7fe3a1");
+  const fixLabel = createLabel("MITERED — FIX", "#7fe3a1");
   left.add(bugLabel);
   right.add(fixLabel);
 

@@ -20,6 +20,7 @@ import {
 import {
   circleProfile,
   linePath,
+  miterCuts,
   miterFrames,
   offsetLoop,
   rectProfile,
@@ -111,21 +112,6 @@ function profileFor({ stock, stockWidth, stockThickness }: Params, scale = 1): P
   return circleProfile((stockWidth * scale) / 2, stock === "square" ? 4 : 16);
 }
 
-/** Unit direction of the edge leaving corner `i`. */
-const edgeDirection = (corners: Vector3[], i: number) =>
-  corners[(i + 1) % corners.length]!.clone().sub(corners[i]!).normalize();
-
-/**
- * The cut plane's normal at corner `i` — the bisector of the edge arriving and the edge leaving.
- *
- * This is the same quantity `miterFrames` derives internally for a closed path; the four-piece build has
- * to compute it explicitly because neither stick contains the corner, so neither can derive it.
- */
-const bisectorAt = (corners: Vector3[], i: number) =>
-  edgeDirection(corners, (i - 1 + corners.length) % corners.length)
-    .add(edgeDirection(corners, i))
-    .normalize();
-
 /**
  * ONE LOOP — the frame as a single closed sweep.
  *
@@ -152,6 +138,10 @@ function buildLoop(params: Params, profile: Profile): Build {
  */
 function buildPieces(params: Params): Build {
   const corners = frameCorners(params);
+  // One cut plane per corner, derived from the corner list all four sticks share. A stick's own path is
+  // just a straight run — it has no corner in it, so it cannot work out the plane it is cut on. That is
+  // the whole reason this exists separately from `miterFrames`.
+  const cuts = miterCuts(corners, { closed: true });
   const centre = new Vector3();
   const parts: BufferGeometry[] = [];
   const stations: Station[] = [];
@@ -160,9 +150,11 @@ function buildPieces(params: Params): Build {
   for (let i = 0; i < corners.length; i++) {
     const from = corners[i]!;
     const to = corners[(i + 1) % corners.length]!;
+    // Corner `i` is where this stick starts and its predecessor ends, so both are cut on the same plane
+    // and their end faces come out as the identical polygon.
     const frames = miterFrames(linePath(from, to, 1), {
-      startCut: bisectorAt(corners, i),
-      endCut: bisectorAt(corners, (i + 1) % corners.length),
+      startCut: cuts[i],
+      endCut: cuts[(i + 1) % corners.length],
       widenSeatCuts: true,
     });
 

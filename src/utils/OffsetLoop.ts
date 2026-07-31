@@ -12,7 +12,7 @@ import { Vector2 } from "three";
  * takes points and returns points; it owns nothing.
  *
  * Each vertex offsets with a JOIN, exactly as a stroked path does — the Cairo / SVG model. Most corners
- * MITRE: the two offset edges are extended until they meet at a point. But at a sharp corner that point
+ * MITER: the two offset edges are extended until they meet at a point. But at a sharp corner that point
  * runs away (a true cusp needs an infinite spike), so past a `miterLimit` the join BEVELS instead —
  * emitting the two offset-edge endpoints and cutting straight across between them.
  *

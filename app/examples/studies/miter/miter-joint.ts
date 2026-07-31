@@ -17,6 +17,7 @@ import {
 import {
   circleProfile,
   linePath,
+  miterCuts,
   miterFrames,
   rectProfile,
   type Station,
@@ -129,21 +130,17 @@ function buildOneSweep(params: Params, profile: Profile): Build {
 function buildTwoPieces(params: Params, profile: Profile): Build {
   const [d0, d1] = arms(params.includedAngle);
   const corner = new Vector3();
-  // Arm A runs INTO the corner along -d0 and arm B leaves along +d1, so the bisector normal of the joint
-  // is normalize(-d0 + d1). By the symmetry above that is always ±Z; deriving it anyway keeps the
-  // construction honest if the layout ever changes.
-  const cut = d1.clone().sub(d0).normalize();
+  const outerA = d0.clone().multiplyScalar(params.armLength);
+  const outerB = d1.clone().multiplyScalar(params.armLength);
 
-  const a = miterFrames(linePath(d0.clone().multiplyScalar(params.armLength), corner, 1), {
-    reference: UP,
-    endCut: cut,
-    widenSeatCuts: true,
-  });
-  const b = miterFrames(linePath(corner, d1.clone().multiplyScalar(params.armLength), 1), {
-    reference: UP,
-    startCut: cut,
-    widenSeatCuts: true,
-  });
+  // The joint's cut plane, derived from the corner list the two pieces SHARE. Neither piece contains the
+  // corner, so neither could derive it — an open path's ends are square by definition. `miterCuts` returns
+  // the same bisector `miterFrames` uses internally, which is why the two constructions agree exactly
+  // rather than agreeing by luck. Index 1 is the corner; 0 and 2 are the arms' free ends.
+  const cut = miterCuts([outerA, corner, outerB])[1]!;
+
+  const a = miterFrames(linePath(outerA, corner, 1), { reference: UP, endCut: cut, widenSeatCuts: true });
+  const b = miterFrames(linePath(corner, outerB, 1), { reference: UP, startCut: cut, widenSeatCuts: true });
 
   const pieceA = sweep(profile, a);
   const pieceB = sweep(profile, b);
