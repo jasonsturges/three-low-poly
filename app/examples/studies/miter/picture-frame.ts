@@ -78,9 +78,9 @@ interface Build {
  * The frame's corners, wound counter-clockwise in the XY plane — so the frame stands up facing the
  * viewer, the way a frame on a wall does.
  *
- * These are the molding's CENTRELINE, not its outer edge: the stock straddles the path, so the frame
+ * These are the molding's CENTERLINE, not its outer edge: the stock straddles the path, so the frame
  * measures `width + stockWidth` across the outside and `width − stockWidth` across the opening. The
- * centreline is what the miter is about — the bisector is a property of the path, and the faces follow.
+ * centerline is what the miter is about — the bisector is a property of the path, and the faces follow.
  */
 function frameCorners({ sides, width, height }: Params): Vector3[] {
   if (sides === 4) {
@@ -142,7 +142,7 @@ function buildPieces(params: Params): Build {
   // just a straight run — it has no corner in it, so it cannot work out the plane it is cut on. That is
   // the whole reason this exists separately from `miterFrames`.
   const cuts = miterCuts(corners, { closed: true });
-  const centre = new Vector3();
+  const center = new Vector3();
   const parts: BufferGeometry[] = [];
   const stations: Station[] = [];
   const joint: Station[] = [];
@@ -162,13 +162,13 @@ function buildPieces(params: Params): Build {
     const piece = sweep(profileFor(params, i % 2 === 1 ? params.stileStock : 1), frames);
 
     if (params.explode > 0) {
-      // Outward from the frame's centre, perpendicular to the stick's own run — the way an exploded
+      // Outward from the frame's center, perpendicular to the stick's own run — the way an exploded
       // frame diagram separates, and the only direction that opens both of a stick's joints at once.
       const push = from
         .clone()
         .add(to)
         .multiplyScalar(0.5)
-        .sub(centre)
+        .sub(center)
         .normalize()
         .multiplyScalar(params.explode);
       piece.translate(push.x, push.y, push.z);
@@ -191,7 +191,7 @@ function buildPieces(params: Params): Build {
  */
 function buildButt(params: Params): Build {
   const corners = frameCorners(params);
-  const centre = new Vector3();
+  const center = new Vector3();
   const parts: BufferGeometry[] = [];
   const stations: Station[] = [];
 
@@ -206,7 +206,7 @@ function buildButt(params: Params): Build {
         .clone()
         .add(to)
         .multiplyScalar(0.5)
-        .sub(centre)
+        .sub(center)
         .normalize()
         .multiplyScalar(params.explode);
       piece.translate(push.x, push.y, push.z);
@@ -231,7 +231,7 @@ function buildPanel(params: Params): BufferGeometry {
   // Half the stock reaches the molding's inner face; a touch more tucks the panel behind it.
   const inner = offsetLoop(corners, -params.stockWidth * 0.52);
   const geometry = new ShapeGeometry(new Shape(inner));
-  // Behind the frame's centreline, so the molding sits proud of it as a real rabbet does.
+  // Behind the frame's centerline, so the molding sits proud of it as a real rabbet does.
   geometry.translate(0, 0, -params.stockThickness * 0.3);
   return geometry;
 }

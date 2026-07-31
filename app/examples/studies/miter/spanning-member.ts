@@ -183,9 +183,9 @@ function capEnd(
 ): void {
   const at = (p: Vector3): Vec3 => [p.x, p.y, p.z];
   const count = spans.length;
-  const centre = spans.reduce((sum, s) => sum.add(s.ring), new Vector3()).divideScalar(count);
+  const center = spans.reduce((sum, s) => sum.add(s.ring), new Vector3()).divideScalar(count);
   const lateral = new Vector3(-axis.y, axis.x, 0).normalize();
-  const u = spans.map((s) => s.ring.clone().sub(centre).dot(lateral));
+  const u = spans.map((s) => s.ring.clone().sub(center).dot(lateral));
 
   let low = 0;
   let high = 0;
@@ -322,7 +322,7 @@ export default function (container: HTMLElement) {
     spinRate: 20,
     width: 0.09,
     sides: 4,
-    showCentre: true,
+    showCenter: true,
     showBoundary: true,
     wireframe: false,
     opacity: 1,
@@ -355,9 +355,9 @@ export default function (container: HTMLElement) {
 
     const angle = MathUtils.degToRad(params.rotation);
     const axis = new Vector3(Math.cos(angle), Math.sin(angle), 0);
-    const centre = new Vector3(params.centerX, params.centerY, 0);
+    const center = new Vector3(params.centerX, params.centerY, 0);
 
-    const station = miterFrames(linePath(centre, centre.clone().add(axis), 1), {
+    const station = miterFrames(linePath(center, center.clone().add(axis), 1), {
       reference: new Vector3(0, 0, 1),
     })[0]!;
     const profile = circleProfile(params.width / 2, Math.max(3, Math.round(params.sides)));
@@ -382,25 +382,25 @@ export default function (container: HTMLElement) {
       stage.add(
         new Line(
           new BufferGeometry().setFromPoints([
-            centre.clone().addScaledVector(axis, -reach),
-            centre.clone().addScaledVector(axis, reach),
+            center.clone().addScaledVector(axis, -reach),
+            center.clone().addScaledVector(axis, reach),
           ]),
           rejected,
         ),
       );
     }
 
-    if (params.showCentre) {
+    if (params.showCenter) {
       // A member that spans the whole opening hides the one point you are steering with. A crosshair on
-      // the centre keeps Centre X and Centre Y findable no matter how far the ends run.
+      // the center keeps Center X and Center Y findable no matter how far the ends run.
       const tick = Math.max(params.width, 0.06);
       stage.add(
         new LineSegments(
           new BufferGeometry().setFromPoints([
-            centre.clone().add(new Vector3(-tick, 0, 0)),
-            centre.clone().add(new Vector3(tick, 0, 0)),
-            centre.clone().add(new Vector3(0, -tick, 0)),
-            centre.clone().add(new Vector3(0, tick, 0)),
+            center.clone().add(new Vector3(-tick, 0, 0)),
+            center.clone().add(new Vector3(tick, 0, 0)),
+            center.clone().add(new Vector3(0, -tick, 0)),
+            center.clone().add(new Vector3(0, tick, 0)),
           ]),
           pivot,
         ),
@@ -428,8 +428,8 @@ export default function (container: HTMLElement) {
           spans.map((s) => castToBoundary(new Vector2(s.ring.x, s.ring.y), direction, boundary).owner),
         ).size;
       params.ends = `front ${edgesHit(flat)} edge(s) · back ${edgesHit(flat.clone().negate())} edge(s)`;
-      const centreSpan = spans[0]!;
-      params.length = `${centreSpan.front.distanceTo(centreSpan.back).toFixed(4)} · ${spans.length} ring points`;
+      const centerSpan = spans[0]!;
+      params.length = `${centerSpan.front.distanceTo(centerSpan.back).toFixed(4)} · ${spans.length} ring points`;
     } else {
       params.ends = "—";
       params.length = "—";
@@ -459,8 +459,8 @@ export default function (container: HTMLElement) {
   member.add(params, "rotation", 0, 360, 0.5).name("Rotation").onChange(rebuild).listen();
   member.add(params, "spin").name("Spin");
   member.add(params, "spinRate", 2, 90, 1).name("Spin Rate");
-  member.add(params, "centerX", -0.9, 0.9, 0.01).name("Centre X").onChange(rebuild);
-  member.add(params, "centerY", 0, 1.8, 0.01).name("Centre Y").onChange(rebuild);
+  member.add(params, "centerX", -0.9, 0.9, 0.01).name("Center X").onChange(rebuild);
+  member.add(params, "centerY", 0, 1.8, 0.01).name("Center Y").onChange(rebuild);
   member.add(params, "width", 0.02, 0.35, 0.005).name("Width").onChange(rebuild);
   member.add(params, "sides", 3, 16, 1).name("Sides").onChange(rebuild);
   member.open();
@@ -485,7 +485,7 @@ export default function (container: HTMLElement) {
   arch.open();
 
   const inspect = gui.addFolder("Inspect");
-  inspect.add(params, "showCentre").name("Centre Crosshair").onChange(rebuild);
+  inspect.add(params, "showCenter").name("Center Crosshair").onChange(rebuild);
   inspect.add(params, "showBoundary").name("Boundary Outline").onChange(rebuild);
   inspect.add(params, "wireframe").name("Wireframe Overlay").onChange(rebuild);
   inspect.add(params, "opacity", 0.15, 1, 0.01).name("Opacity").onChange(rebuild);

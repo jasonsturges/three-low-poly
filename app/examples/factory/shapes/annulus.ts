@@ -20,7 +20,7 @@ export default function (container: HTMLElement) {
   const { scene, dispose } = handle;
 
   // Unlike the gears, this rests ON the plane rather than straddling it — so the axes mark the origin the
-  // ring sits on, not one it is centred through. That is what Base Y reads out.
+  // ring sits on, not one it is centered through. That is what Base Y reads out.
   const axes = new AxesHelper(1.4);
   scene.add(axes);
 
@@ -64,7 +64,7 @@ export default function (container: HTMLElement) {
     washer.geometry.dispose();
     washer.geometry = new AnnulusGeometry(params);
     refresh();
-    // Recentre without re-fitting — it rests on y=0, so Depth lifts its centre. `dolly: false` is what
+    // Recenter without re-fitting — it rests on y=0, so Depth lifts its center. `dolly: false` is what
     // keeps the viewer's zoom from snapping back on every change.
     frameObject(handle, washer, { dolly: false });
   };

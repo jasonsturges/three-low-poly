@@ -36,7 +36,7 @@ export interface CoachLanternGeometryOptions {
    *
    * - **above `1`** — the cap oversails the plate and reads as a **roof** over the whole lantern. The plate
    *   vanishes beneath it, and a consumer need not know it is there.
-   * - **below `1`** — the cap sits inset on a flat roof and reads as a centred **gable**. This is the
+   * - **below `1`** — the cap sits inset on a flat roof and reads as a centered **gable**. This is the
    *   country-lantern look.
    *
    * The cap always stands *on* the plate, so it cannot intersect or pass through it at any value.
@@ -74,11 +74,11 @@ export interface CoachLanternGeometryOptions {
   /** Sides on the bail's wire cross-section. Defaults to `6`. Minimum `3`. */
   bailSides?: number;
   /**
-   * Floor plate size, as a multiple of the distance from centre to the cage's bottom corners.
+   * Floor plate size, as a multiple of the distance from center to the cage's bottom corners.
    * Defaults to `1.15` — just proud of the posts, so the plate closes the cage rather than leaving a
    * gap you can see the interior through.
    *
-   * `1` lands exactly on the corner centrelines (the bars' outer halves stay proud). Raise past `1.3`
+   * `1` lands exactly on the corner centerlines (the bars' outer halves stay proud). Raise past `1.3`
    * for a plate that oversails the cage like a country lantern's tray.
    */
   plateSpread?: number;
@@ -124,11 +124,11 @@ export class CoachLanternGeometry extends BufferGeometry {
   readonly width: number;
   readonly height: number;
   /**
-   * Y of the cage top — the upper rail's centreline. The roof plate rests on that rail and the pyramid cap
+   * Y of the cage top — the upper rail's centerline. The roof plate rests on that rail and the pyramid cap
    * rests on the plate, so both sit *above* this.
    */
   readonly capY: number;
-  /** Y of the cage bottom — the lower rail's centreline, and the floor plate's centreline. */
+  /** Y of the cage bottom — the lower rail's centerline, and the floor plate's centerline. */
   readonly baseY: number;
   /**
    * Y of the floor plate's upper face — the surface the candle stands on. The plate stacks below the lower
@@ -203,7 +203,7 @@ export class CoachLanternGeometry extends BufferGeometry {
       ring.translate(0, lift, 0);
       iron.push(ring);
 
-      // The rod starts at the ring's centreline bottom so the two overlap rather than butt.
+      // The rod starts at the ring's centerline bottom so the two overlap rather than butt.
       rodTop = ringRadius - lift;
     }
     // The rod is pushed further down, once the roof it disappears into has been placed.
@@ -245,7 +245,7 @@ export class CoachLanternGeometry extends BufferGeometry {
 
     // Rails and posts are the SAME stock, and that is not a stylistic default — it is the condition that
     // makes the post's faces continue the rails' rather than overhanging them. There is deliberately no
-    // option to vary it: thinning the rails while leaving their centreline in place oversizes the post on
+    // option to vary it: thinning the rails while leaving their centerline in place oversizes the post on
     // all four faces at once, and it cannot be tuned back, because moving a rail's outer face toward the
     // post moves its inner face away by the same amount. Lighter rails would need them INSET so their outer
     // faces stay flush — a different construction, not a scalar.
@@ -265,10 +265,10 @@ export class CoachLanternGeometry extends BufferGeometry {
     const footY = lowerRail.boundingBox!.max.y;
     const headY = upperRail.boundingBox!.min.y;
 
-    // The post's centre must land on the RAIL's centre radius at the contact plane, which is not the same
+    // The post's center must land on the RAIL's center radius at the contact plane, which is not the same
     // as the nominal corner line evaluated there: the corner line rakes inward as it rises, so by `footY`
     // it has already drifted in by the rake, and the post's faces miss the rail's by that drift. Take the
-    // rails' own radii at the rails' own faces instead of interpolating a line between their centrelines.
+    // rails' own radii at the rails' own faces instead of interpolating a line between their centerlines.
     for (let i = 0; i < 4; i++) {
       iron.push(post(cornerAt(bottom * Math.SQRT2, footY, i), cornerAt(top * Math.SQRT2, headY, i), barWidth));
     }
@@ -281,10 +281,10 @@ export class CoachLanternGeometry extends BufferGeometry {
     //
     //   `capSpread > 1` — the cap oversails the plate and reads as a ROOF over the whole lantern; the plate
     //                     disappears beneath it and a consumer need not know it is there.
-    //   `capSpread < 1` — the cap sits inset on a flat roof and reads as a centred GABLE, which is the
+    //   `capSpread < 1` — the cap sits inset on a flat roof and reads as a centered GABLE, which is the
     //                     country-lantern look.
     //
-    // The cap previously had its base ON `capY` while the plate was CENTRED there, so the cap's base plane
+    // The cap previously had its base ON `capY` while the plate was CENTERED there, so the cap's base plane
     // was buried in the plate's slab. A wide cap hid that; a narrow one emerged from the middle of the
     // plate and eventually passed through it entirely.
     const roofY = upperRail.boundingBox!.max.y;
@@ -339,7 +339,7 @@ export class CoachLanternGeometry extends BufferGeometry {
         .translate(0, soffitY - floorPlate / 2, 0),
     );
     if (finial) {
-      // Base parked on the plate's CENTRELINE, so it stays buried in the plate at any thickness. Its old
+      // Base parked on the plate's CENTERLINE, so it stays buried in the plate at any thickness. Its old
       // fixed offset sat just inside a 0.03 plate and would have floated free of a thinner one, leaving a
       // gap between spike and tray.
       const spikeHeight = height * 0.3;

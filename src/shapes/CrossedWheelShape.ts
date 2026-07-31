@@ -37,7 +37,7 @@ export interface CrossedWheelShapeOptions extends GearShapeOptions {
  *   and it is what the teeth are attached to.
  * - **crossings** — the spokes, {@link CrossedWheelShapeOptions.crossings} of them at
  *   {@link CrossedWheelShapeOptions.crossingWidth} thick.
- * - **hub** — the centre disc, out to {@link CrossedWheelShapeOptions.hubRadius}.
+ * - **hub** — the center disc, out to {@link CrossedWheelShapeOptions.hubRadius}.
  * - **bore** — the hole for the arbor, inherited from {@link GearShape}.
  *
  * Every tooth option is inherited, so a crossed wheel can also be spiked or leaning — a crossed-out ratchet is
@@ -95,7 +95,7 @@ export class CrossedWheelShape extends GearShape {
     this.crossingWidth = width;
 
     const segments = Math.max(1, Math.round(crossingSegments));
-    // Spoke centres share the outline's phase so a crossing lines up under a tooth rather than a valley.
+    // Spoke centers share the outline's phase so a crossing lines up under a tooth rather than a valley.
     const start = Math.PI / 2 + (gearOptions.rotation ?? 0);
     /** Half-angle the spoke occupies at radius `r` — shrinking with radius keeps the spoke a straight bar. */
     const half = (r: number) => Math.asin(Math.min(1, width / 2 / r));

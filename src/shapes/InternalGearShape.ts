@@ -36,7 +36,7 @@ export interface InternalGearShapeOptions {
  * Where {@link GearShape} makes the teeth its outer contour and cuts a bore, this inverts the roles: the outer
  * contour is a plain circle and the teeth are the hole. The tooth period is the external gear's, unchanged.
  *
- * **Three radii, all absolute from the centre.** {@link InternalGearShapeOptions.tipRadius} and
+ * **Three radii, all absolute from the center.** {@link InternalGearShapeOptions.tipRadius} and
  * {@link InternalGearShapeOptions.valleyRadius} are the two extremes of the toothing; their order is not
  * enforced, so a valley inside the tip inverts it. {@link InternalGearShapeOptions.rimRadius} is the third
  * because the teeth do not define the outer edge here — the opening is a hole, so the ring needs its own

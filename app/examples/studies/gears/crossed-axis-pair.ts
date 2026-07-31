@@ -10,7 +10,7 @@ export const meta = {
     "STUDY — a pinion meeting a horizontal clock wheel at an angle, and the fact that WHICH LINE you tilt " +
     "it about is the whole mechanism. Hinge it up out of the wheel's plane, folding paper about the TANGENT, " +
     "and the two axes INTERSECT: the surface velocities come out collinear and equal, so the pitch point " +
-    "rolls with no sliding at any angle. Tip it sideways about the LINE OF CENTRES instead and the axes stay " +
+    "rolls with no sliding at any angle. Tip it sideways about the LINE OF CENTERS instead and the axes stay " +
     "SKEW — never meeting, always `r₁ + r₂` apart — and the same two velocities, still equal in magnitude, " +
     "now differ in DIRECTION by the crossing angle. Their difference is the chord across it, so the teeth " +
     "scrub at `2 × sin(Σ/2)` of pitch-line speed: 43% at 25°, 100% at 60°, and not recoverable by any ratio. " +
@@ -30,7 +30,7 @@ export default function (container: HTMLElement) {
   const { scene, onFrame, dispose } = handle;
 
   const params = {
-    tilt: "tangent (axes meet)" as "tangent (axes meet)" | "line of centres (skew)",
+    tilt: "tangent (axes meet)" as "tangent (axes meet)" | "line of centers (skew)",
     crossAngle: 25,
     module: 0.05,
     wheelTeeth: 56,
@@ -39,7 +39,7 @@ export default function (container: HTMLElement) {
     speed: 0.4,
   };
   const colors = { wheel: "#a8935e", pinion: "#c9a227" };
-  const stats = { wheelRadius: "", pinionRadius: "", centreDistance: "", ratio: "", slide: "" };
+  const stats = { wheelRadius: "", pinionRadius: "", centerDistance: "", ratio: "", slide: "" };
 
   const brass = new MeshStandardMaterial({ color: new Color(colors.wheel), metalness: 0.85, roughness: 0.32, flatShading: true });
   const gilt = new MeshStandardMaterial({ color: new Color(colors.pinion), metalness: 0.9, roughness: 0.26, flatShading: true });
@@ -72,8 +72,8 @@ export default function (container: HTMLElement) {
     const wheelRadius = (params.module * params.wheelTeeth) / 2;
     const pinionRadius = (params.module * params.pinionTeeth) / 2;
     // Two skew lines have exactly one common perpendicular, and the pitch cylinders touch on it — so the
-    // centre distance is the plain sum, with no apex to reconcile and no cone angle to convert.
-    const centreDistance = wheelRadius + pinionRadius;
+    // center distance is the plain sum, with no apex to reconcile and no cone angle to convert.
+    const centerDistance = wheelRadius + pinionRadius;
 
     wheel.geometry = new CrossedWheelGeometry({
       teeth: params.wheelTeeth,
@@ -107,9 +107,9 @@ export default function (container: HTMLElement) {
     //
     //   tangent        — hinge the pinion up out of the wheel's plane, like folding paper. The two axes then
     //                    INTERSECT, and the pitch cylinders roll on each other with no sliding at all.
-    //   line of centres — tip the pinion sideways about the line joining the centres. The axes stay SKEW,
+    //   line of centers — tip the pinion sideways about the line joining the centers. The axes stay SKEW,
     //                    never meeting, and the teeth scrub past each other forever.
-    const skew = params.tilt === "line of centres (skew)";
+    const skew = params.tilt === "line of centers (skew)";
     // Hinging the fold the other way is just the negative angle — it lifts the pinion above the wheel's plane
     // instead of dropping it below, and every quantity below is even or odd in step, so nothing else moves.
     const fold = -sigma;
@@ -117,9 +117,9 @@ export default function (container: HTMLElement) {
       ? new Vector3(0, Math.sin(sigma), Math.cos(sigma))
       : new Vector3(Math.sin(fold), 0, Math.cos(fold));
 
-    // Folding about the tangent swings the pinion's centre along an arc around the contact; tipping about the
-    // line of centres leaves it where it was.
-    if (skew) pinionPivot.position.set(centreDistance, 0, 0);
+    // Folding about the tangent swings the pinion's center along an arc around the contact; tipping about the
+    // line of centers leaves it where it was.
+    if (skew) pinionPivot.position.set(centerDistance, 0, 0);
     else pinionPivot.position.set(wheelRadius + pinionRadius * Math.cos(fold), 0, -pinionRadius * Math.sin(fold));
 
     // Explicit basis again: local +Z on the pinion's own axis, local +Y aimed back at the contact, so
@@ -139,7 +139,7 @@ export default function (container: HTMLElement) {
 
     stats.wheelRadius = wheelRadius.toFixed(4);
     stats.pinionRadius = pinionRadius.toFixed(4);
-    stats.centreDistance = centreDistance.toFixed(4);
+    stats.centerDistance = centerDistance.toFixed(4);
     stats.ratio = `${(params.wheelTeeth / params.pinionTeeth).toFixed(3)} : 1`;
     // Skew: both surface velocities have the SAME magnitude and differ only in direction, by the crossing
     // angle — so their difference is the chord across it, and depends on nothing else. Intersecting: the two
@@ -166,7 +166,7 @@ export default function (container: HTMLElement) {
 
   const drive = gui.addFolder("Drive");
   // THE choice. Same two gears, same angle, two different mechanisms.
-  drive.add(params, "tilt", ["tangent (axes meet)", "line of centres (skew)"]).name("Tilt About").onChange(rebuild);
+  drive.add(params, "tilt", ["tangent (axes meet)", "line of centers (skew)"]).name("Tilt About").onChange(rebuild);
   // 0 is an ordinary spur pair either way. Every degree off it separates them.
   drive.add(params, "crossAngle", 0, 60, 1).name("Crossing Angle °").onChange(rebuild);
   drive.add(params, "module", 0.03, 0.09, 0.005).name("Module (tooth size)").onChange(rebuild);
@@ -186,7 +186,7 @@ export default function (container: HTMLElement) {
   const readout = gui.addFolder("Measured");
   readout.add(stats, "wheelRadius").name("Wheel Pitch Radius").listen().disable();
   readout.add(stats, "pinionRadius").name("Pinion Pitch Radius").listen().disable();
-  readout.add(stats, "centreDistance").name("Centre Distance").listen().disable();
+  readout.add(stats, "centerDistance").name("Center Distance").listen().disable();
   readout.add(stats, "ratio").name("Ratio").listen().disable();
   // The finding: 2 x sin(angle / 2), as a fraction of pitch-line speed. Zero only at zero.
   readout.add(stats, "slide").name("Tooth Scrub").listen().disable();

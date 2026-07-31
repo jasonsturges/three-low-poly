@@ -44,7 +44,7 @@ export interface PanelDoorGeometryOptions {
    */
   bottomRail?: number;
   /**
-   * Height of the lock rail's CENTRE, as a fraction of the door's height. Defaults to `0.44`.
+   * Height of the lock rail's CENTER, as a fraction of the door's height. Defaults to `0.44`.
    *
    * A fraction rather than a distance, deliberately. Given in world units it would stay put while the
    * door grew around it, so resizing would quietly change the door's character instead of scaling it —
@@ -111,7 +111,7 @@ export interface PanelDoorGeometryOptions {
  * With `molding` on, an ovolo section wraps each opening as one closed **mitered** loop. That is the
  * only miter on the door, and it is the one a joiner cuts too.
  *
- * Stands on the `y = 0` plane, centred on X, with its faces at `±thickness / 2`. To hang it, move the
+ * Stands on the `y = 0` plane, centered on X, with its faces at `±thickness / 2`. To hang it, move the
  * origin onto the hinge stile first — `geometry.translate(width / 2, 0, 0)` puts it on the left edge, so
  * rotating the mesh about Y swings the door.
  *
@@ -125,7 +125,7 @@ export interface PanelDoorGeometryOptions {
  */
 export class PanelDoorGeometry extends BufferGeometry {
   /**
-   * Height of the lock rail's centre, in world units — where a knob, a latch, or a letter plate mounts.
+   * Height of the lock rail's center, in world units — where a knob, a latch, or a letter plate mounts.
    *
    * Reported rather than assumed, because it follows `lockRailPosition` and the door's height.
    */

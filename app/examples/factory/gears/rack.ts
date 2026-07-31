@@ -8,13 +8,13 @@ export const meta = {
   title: "Rack",
   description:
     "The straight member of a rack and pinion. A RACK IS A GEAR OF INFINITE RADIUS — its teeth no longer " +
-    "converge on a centre, so they stand parallel and the period advances along a line instead of around a " +
+    "converge on a center, so they stand parallel and the period advances along a line instead of around a " +
     "circle. That is why the tooth profile is the Gear's unchanged, and why there is no polar arithmetic here " +
     "at all: Lean 1 gives a linear ratchet exactly as it gives a rotary one. PITCH IS AN OUTPUT, not an " +
     "input — length less the insets, divided by teeth — so teeth SUBDIVIDE a rack you have already sized " +
     "instead of extending it, exactly as they subdivide a gear's circumference. TIP HEIGHT AND VALLEY HEIGHT " +
     "ARE BOTH ABSOLUTE, measured from the underside, exactly as the circular gears measure both radii from " +
-    "the centre — so the pair reads like Outer and Inner Radius does there, and their order is not enforced: " +
+    "the center — so the pair reads like Outer and Inner Radius does there, and their order is not enforced: " +
     "put the valley above the tip and the teeth invert into channels. Both " +
     "ends carry HALF A VALLEY rather than starting flush " +
     "on a tooth, which is what lets racks TILE — butt two together and the seam is indistinguishable from any " +
@@ -68,7 +68,7 @@ export default function (container: HTMLElement) {
     rack.geometry.dispose();
     rack.geometry = new RackGeometry(params);
     refresh();
-    // The bar's origin is its left end, so Length walks its centre away from the camera. Recentre without
+    // The bar's origin is its left end, so Length walks its center away from the camera. Recenter without
     // re-fitting: this keeps it framed as it grows and leaves the viewer's zoom alone.
     frameObject(handle, rack, { dolly: false });
   };

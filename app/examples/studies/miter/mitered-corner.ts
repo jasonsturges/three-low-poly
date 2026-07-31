@@ -94,7 +94,7 @@ function perpendicularCorner({ halfWidth, taper, height, barWidth, railStock }: 
     // Two separate rails, each terminating ON the corner point.
     sweep(rail, transportFrames(linePath(before, at, 1))),
     sweep(rail, transportFrames(linePath(at, after, 1))),
-    // The post, cut square to its own raked axis, run to the rail's centreline.
+    // The post, cut square to its own raked axis, run to the rail's centerline.
     sweep(
       circleProfile(barWidth, 4),
       transportFrames(linePath(at, corner(halfWidth * taper, height, 0), 1)),
@@ -131,7 +131,7 @@ function miteredCorner(
   rails.computeBoundingBox();
   const footY = rails.boundingBox!.max.y;
 
-  // The post's centre sits on the RAIL's centre radius at the contact plane — NOT on the nominal corner
+  // The post's center sits on the RAIL's center radius at the contact plane — NOT on the nominal corner
   // line evaluated there. The corner line rakes inward as it rises, so by `footY` it has already drifted in
   // and the post's faces miss the rail's by that drift.
   const foot = corner(halfWidth, footY, 0);

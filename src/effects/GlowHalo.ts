@@ -80,7 +80,7 @@ export interface GlowHaloOptions {
  *
  * **Additive on purpose.** Light adds, and additive keeps overlaps *flat*: as one glow dims the next
  * brightens at the same rate, so their sum stays constant where they meet. Bright cores can clip at
- * 1.0 without an HDR target, which reads as a blown-out white centre — acceptable, and the consumer's
+ * 1.0 without an HDR target, which reads as a blown-out white center — acceptable, and the consumer's
  * to solve with tone mapping or bloom if they want to.
  *
  * A screen blend (`a + b - ab`) is tempting since it never clips, but its `-ab` term is largest where

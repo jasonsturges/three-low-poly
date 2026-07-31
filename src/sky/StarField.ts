@@ -69,7 +69,7 @@ export interface StarFieldOptions {
    *
    * Screen-aligned stars are naturally sized in screen space, so there is no distance term at all:
    * a star is the same size wherever it sits in the shell, and nothing depends on the viewer being
-   * at the shell's centre. The trade against angular sizing is that pixels are absolute, so stars
+   * at the shell's center. The trade against angular sizing is that pixels are absolute, so stars
    * occupy a smaller fraction of a larger display.
    */
   pixelSizeMin?: number;
@@ -153,7 +153,7 @@ function profileRadiusXY(geometry: BufferGeometry): number {
  * - `radial` — instanced 3D meshes rotated to face the shell center, drawn `DoubleSide` so stars
  *   stay visible from inside the shell. Sized by `sizeMin` / `sizeMax` as angular extents (radians
  *   at unit distance), scaled by each star's distance from the origin so stars look similar
- *   regardless of shell depth. That conversion assumes the viewer sits at the shell's centre, which
+ *   regardless of shell depth. That conversion assumes the viewer sits at the shell's center, which
  *   {@link lockToViewer} guarantees. Uses only standard materials, so it runs on either renderer.
  *
  * Both render as a single instanced draw call, so the geometry you pass is a matter of looks rather

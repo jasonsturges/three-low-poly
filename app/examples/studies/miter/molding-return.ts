@@ -38,8 +38,8 @@ export const meta = {
     "STUDY — what it takes to close the END of a molding run. A run that just stops shows its whole " +
     "section to the room, which is why a joiner RETURNS it: the profile wraps around and dies on the wall. " +
     "SQUARE is the bare end, the thing being fixed. ONE PATH adds a leg to the same run — the obvious " +
-    "move, and it hides a trap, because `facing` is judged from the run's centre and adding the leg moves " +
-    "that centre. TWO PIECE builds it as a joiner does, two lengths sharing one mitered plane off " +
+    "move, and it hides a trap, because `facing` is judged from the run's center and adding the leg moves " +
+    "that center. TWO PIECE builds it as a joiner does, two lengths sharing one mitered plane off " +
     "`miterCuts`; that settles the facing, since each piece is framed from its own path, but a swept leg " +
     "carries a CONSTANT section and so still ends in a full square face. LOFT is the answer: take the " +
     "run's own mitered end RING and carry every point of it back to the wall. The ring is slanted, so it " +
@@ -214,7 +214,7 @@ export default function (container: HTMLElement) {
   /**
    * TWO PIECE — the joiner's construction, and the one that fixes the flip.
    *
-   * Each length is framed from ITS OWN path, so neither has a centre that the other can move; they agree
+   * Each length is framed from ITS OWN path, so neither has a center that the other can move; they agree
    * only because they are cut on the same supplied plane. That is exactly the picture frame's four
    * sticks, with three points instead of four.
    *

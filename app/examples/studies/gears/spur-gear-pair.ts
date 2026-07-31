@@ -10,10 +10,10 @@ export const meta = {
     "STUDY — two spur gears in mesh, and the one quantity they must share. A gear's tooth size is its MODULE: " +
     "pitch diameter divided by tooth count, or equivalently `2 × pitchRadius / teeth`. Two gears mesh when " +
     "their modules are equal and for no other reason — so the module is the input here, and each wheel's " +
-    "RADIUS is solved from it. Set the two tooth counts and the sizes follow; the centre distance is the sum " +
+    "RADIUS is solved from it. Set the two tooth counts and the sizes follow; the center distance is the sum " +
     "of the two pitch radii, and the ratio is the tooth counts, not the radii. Drive a 30-tooth against an " +
     "8-tooth and the small one spins nearly four times per turn of the large — that is the whole of gearing. " +
-    "The phase is the other half: the driver carries a TOOTH toward the line of centres and the driven a " +
+    "The phase is the other half: the driver carries a TOOTH toward the line of centers and the driven a " +
     "VALLEY, or they collide instead of meshing. NOTE THE TOOTH FORM: these are straight-flanked trapezoids, " +
     "not involutes, so they mesh convincingly across a range and bind outside it — which is why tooth counts " +
     "start at 12 here. Real gearing uses the involute curve precisely to remove that limit.",
@@ -41,7 +41,7 @@ export default function (container: HTMLElement) {
 
   const params = { module: 0.09, teethA: 22, teethB: 11, animate: true, speed: 0.5 };
   const colors = { driver: "#b08d4f", driven: "#8f97a1" };
-  const stats = { radiusA: "", radiusB: "", centreDistance: "", ratio: "" };
+  const stats = { radiusA: "", radiusB: "", centerDistance: "", ratio: "" };
 
   const brass = new MeshStandardMaterial({ color: new Color(colors.driver), metalness: 0.85, roughness: 0.3, flatShading: true });
   const steel = new MeshStandardMaterial({ color: new Color(colors.driven), metalness: 0.8, roughness: 0.35, flatShading: true });
@@ -81,16 +81,16 @@ export default function (container: HTMLElement) {
     const radiusA = (params.module * params.teethA) / 2;
     const radiusB = (params.module * params.teethB) / 2;
     // Their pitch circles roll on each other, so the shafts sit exactly that far apart.
-    const centreDistance = radiusA + radiusB;
+    const centerDistance = radiusA + radiusB;
 
     gearA.geometry = cut(params.teethA, radiusA, params.module, false);
     gearB.geometry = cut(params.teethB, radiusB, params.module, true);
 
     gearA.position.set(0, 0, 0);
-    gearB.position.set(centreDistance, 0, 0);
+    gearB.position.set(centerDistance, 0, 0);
 
     // ---- phasing ----
-    // On the line of centres, A must present a TOOTH and B a VALLEY, or they collide instead of meshing.
+    // On the line of centers, A must present a TOOTH and B a VALLEY, or they collide instead of meshing.
     // `GearShape` rests with a tooth at +Y, so a quarter turn back puts one at +X, facing B.
     const stepB = (Math.PI * 2) / params.teethB;
     phaseA = -Math.PI / 2;
@@ -102,11 +102,11 @@ export default function (container: HTMLElement) {
     gearB.rotation.z = phaseB;
     spin = 0;
 
-    train.position.x = -centreDistance / 2;
+    train.position.x = -centerDistance / 2;
 
     stats.radiusA = radiusA.toFixed(4);
     stats.radiusB = radiusB.toFixed(4);
-    stats.centreDistance = centreDistance.toFixed(4);
+    stats.centerDistance = centerDistance.toFixed(4);
     stats.ratio = `${(params.teethB / params.teethA).toFixed(3)} : 1`;
 
     frameObject(handle, train, { dolly: false });
@@ -148,7 +148,7 @@ export default function (container: HTMLElement) {
   const readout = gui.addFolder("Measured");
   readout.add(stats, "radiusA").name("Pitch Radius A").listen().disable();
   readout.add(stats, "radiusB").name("Pitch Radius B").listen().disable();
-  readout.add(stats, "centreDistance").name("Centre Distance").listen().disable();
+  readout.add(stats, "centerDistance").name("Center Distance").listen().disable();
   // Tooth counts, never radii — a 22:11 pair turns 2:1 at any module.
   readout.add(stats, "ratio").name("Ratio (driven turns)").listen().disable();
   readout.open();

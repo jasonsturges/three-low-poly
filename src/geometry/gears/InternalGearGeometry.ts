@@ -14,7 +14,7 @@ export interface InternalGearGeometryOptions extends InternalGearShapeOptions {
  * toothed ring — a flywheel starter ring — needs nothing new: it is {@link GearGeometry} with a bore set just
  * inside the valley radius. "Ring gear" names the form, not the tooth direction.
  *
- * Local frame: **centred on its own thickness**, spanning `±depth / 2` in Z, matching {@link GearGeometry} so
+ * Local frame: **centered on its own thickness**, spanning `±depth / 2` in Z, matching {@link GearGeometry} so
  * meshing wheels share the plane they turn in.
  *
  * Material groups: **none** — one material for the whole ring.

@@ -1,7 +1,7 @@
 import { LatheGeometry, Vector2 } from "three";
 
 export interface AnnulusGeometryOptions {
-  /** Outer radius — centre to the outer wall. Defaults to `1`. */
+  /** Outer radius — center to the outer wall. Defaults to `1`. */
   radius?: number;
   /**
    * Radius of the bore. Defaults to `0.5`.
@@ -31,7 +31,7 @@ export interface AnnulusGeometryOptions {
  * around `+Y`. That is why it costs so little — at 8 sides it is 64 triangles across 45 shared vertices,
  * where the same ring extruded from a 2D shape with a hole runs to 384 unshared vertices for no visual gain.
  *
- * Local frame: **rests on the `y = 0` plane**, occupying `+Y` up to `depth`, centred on the origin in XZ.
+ * Local frame: **rests on the `y = 0` plane**, occupying `+Y` up to `depth`, centered on the origin in XZ.
  * Ground contact, like the rest of the library — no translate needed to stand it on a floor.
  *
  * Material groups: **none** — one continuous surface, one material.

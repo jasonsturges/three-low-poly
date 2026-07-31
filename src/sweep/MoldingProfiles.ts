@@ -151,7 +151,7 @@ export function moldingProfile({
     case "scotia": {
       // A hollow of two different radii — deeper against the wall than against the ceiling, which is the
       // whole difference from a `cove`. As ONE cubic curve rather than two arcs: two arcs of unequal
-      // radius only meet smoothly if their centres share a normal at the join, and getting that wrong
+      // radius only meet smoothly if their centers share a normal at the join, and getting that wrong
       // gives a 90° crease at the waist instead of a hollow.
       //
       // The control points sit ON the two backs, so the curve leaves each one tangentially, exactly as a

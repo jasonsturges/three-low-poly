@@ -54,7 +54,7 @@ export interface RackShapeOptions {
 /**
  * Rack profile — the straight counterpart of a gear, as in rack and pinion.
  *
- * **A rack is a gear of infinite radius.** The teeth no longer converge on a centre, so they stand parallel and
+ * **A rack is a gear of infinite radius.** The teeth no longer converge on a center, so they stand parallel and
  * the period advances along a line rather than around a circle. That is why the tooth fractions are identical to
  * {@link GearShape}'s — tip, falling flank, valley, rising flank, with the two flats sized independently and the
  * flanks taking the remainder — and why there is no polar arithmetic here at all.
@@ -65,7 +65,7 @@ export interface RackShapeOptions {
  * `2π × outerRadius / teeth`, though it does not publish the result.
  *
  * **{@link RackShapeOptions.tipHeight} and {@link RackShapeOptions.valleyHeight} are absolute**, both measured
- * from the underside, exactly as the circular gears measure both their radii from the centre. That completes a
+ * from the underside, exactly as the circular gears measure both their radii from the center. That completes a
  * grid with the tooth flats — `tipWidth`/`tipHeight`, `valleyWidth`/`valleyHeight` — and their order is not
  * enforced: put the valley above the tip and the teeth invert into channels.
  *
@@ -74,7 +74,7 @@ export interface RackShapeOptions {
 export class RackShape extends Shape {
   /** Overall length of the bar, after clamping. */
   readonly length: number;
-  /** Tooth period, centre to centre — `(length − inset × 2) / teeth`. */
+  /** Tooth period, center to center — `(length − inset × 2) / teeth`. */
   readonly pitch: number;
   /** Height the tooth tips reach, after clamping. */
   readonly tipHeight: number;

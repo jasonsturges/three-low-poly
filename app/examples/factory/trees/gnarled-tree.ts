@@ -11,7 +11,7 @@ export default function (container: HTMLElement) {
   const { scene, dispose } = handle;
 
   // A grid at y=0 so the trunk's base and anchor are checkable rather than assumed. Deliberately NOT
-  // `centerObject`: that lands the bounding-box CENTRE on the origin, which buries half the tree below the
+  // `centerObject`: that lands the bounding-box CENTER on the origin, which buries half the tree below the
   // floor and hides the one thing this example should show.
   const ground = new GroundGrid({ size: 14, divisions: 14 });
   scene.add(ground);

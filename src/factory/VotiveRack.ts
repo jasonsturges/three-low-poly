@@ -41,7 +41,7 @@ export interface VotiveRackOptions {
    * Depth offset per shelf, so upper rows sit back. Defaults to `0.18`.
    *
    * The lowest shelf is the nearest to `+Z` and each row above steps away — stadium seating, so no row hides
-   * behind the one in front. The rack stays centred on `z = 0` whatever the row count.
+   * behind the one in front. The rack stays centered on `z = 0` whatever the row count.
    */
   rowDepth?: number;
   /** Height of the lowest shelf. Defaults to `0.55`. */
@@ -197,7 +197,7 @@ export class VotiveRack extends Group {
 
     const topY = baseHeight + (rows - 1) * rowRise;
 
-    // Z of a shelf, centred so the rack still straddles z=0 whatever the row count. Row 0 is the LOWEST shelf
+    // Z of a shelf, centered so the rack still straddles z=0 whatever the row count. Row 0 is the LOWEST shelf
     // and sits FORWARD; each row above steps back by `rowDepth` — stadium seating, so every candle is visible
     // and reachable over the row in front of it. Shared by the frame and the candle placement below: the two
     // must agree exactly, since the candles stand on these shelves.

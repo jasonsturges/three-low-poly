@@ -114,12 +114,12 @@ export default function (container: HTMLElement) {
   roof.add(geometryParams, "roofThickness", 0.5, 5, 0.1).name("Roof Thickness").onChange(rebuild);
   roof.add(geometryParams, "capHeight", 0.02, 0.4, 0.005).name("Cap Height").onChange(rebuild);
   // 1 is the boundary: above it the cap oversails the plate as a ROOF, below it the cap sits inset on a flat
-  // roof as a centred GABLE — the country-lantern look. The cap stands ON the plate, so it never intersects.
+  // roof as a centered GABLE — the country-lantern look. The cap stands ON the plate, so it never intersects.
   roof.add(geometryParams, "capSpread", 0.3, 2.5, 0.05).name("Cap Spread").onChange(rebuild);
   roof.open();
 
   const detail = gui.addFolder("Detail");
-  // 1 lands on the corner centrelines; past 1.3 the plate oversails the cage like a country lantern.
+  // 1 lands on the corner centerlines; past 1.3 the plate oversails the cage like a country lantern.
   detail.add(geometryParams, "plateSpread", 0.8, 1.8, 0.01).name("Plate Spread").onChange(rebuild);
   // Grows downward — the plate stacks BELOW the cage, so no thickness can bury the bottom rail.
   detail.add(geometryParams, "plateThickness", 0.5, 5, 0.1).name("Plate Thickness").onChange(rebuild);

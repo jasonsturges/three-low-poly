@@ -110,14 +110,14 @@ export default function (container: HTMLElement) {
       depth: TOOTH.depth,
     });
 
-    // A pinion tooth has to land in a rack VALLEY, and the rack's valleys are centred at whole multiples of
+    // A pinion tooth has to land in a rack VALLEY, and the rack's valleys are centered at whole multiples of
     // the pitch from its left end. Park the wheel over the one nearest the middle.
     contactX = Math.round(params.length / 2 / pitch) * pitch;
     // Then turn it until a tooth points straight down. `GearShape` rests with a tooth UP, so the offset is
     // half a turn — folded back into a single tooth period, since every tooth is equivalent.
     phase = Math.PI % ((Math.PI * 2) / params.pinionTeeth);
 
-    // Both parts are centred on the same Z plane: the rack extrudes forward from 0, the gear straddles its
+    // Both parts are centered on the same Z plane: the rack extrudes forward from 0, the gear straddles its
     // own thickness.
     pinion.position.set(contactX, pitchLine + pitchRadius, TOOTH.depth / 2);
     pinion.rotation.z = phase;

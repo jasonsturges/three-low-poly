@@ -27,7 +27,7 @@ export interface RackGeometryOptions extends RackShapeOptions {
 export class RackGeometry extends ExtrudeGeometry {
   /** Overall length of the bar, after clamping. */
   readonly length: number;
-  /** Tooth period, centre to centre — `(length − inset × 2) / teeth`. */
+  /** Tooth period, center to center — `(length − inset × 2) / teeth`. */
   readonly pitch: number;
   /** Height the tooth tips reach, after clamping. */
   readonly tipHeight: number;

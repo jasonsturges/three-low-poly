@@ -82,7 +82,7 @@ interface Params {
   topRail: number;
   lockRail: number;
   bottomRail: number;
-  lockRailCentre: number;
+  lockRailCenter: number;
   muntinWidth: number;
   frameJoint: "butt" | "miter";
   panelStyle: "raised" | "flat";
@@ -125,7 +125,7 @@ function boxBetween(x0: number, x1: number, y0: number, y1: number, z0: number, 
  * precisely why real panel doors are not mitered.
  */
 function layout(params: Params) {
-  const { width, height, stileWidth, muntinWidth, lockRail, lockRailCentre } = params;
+  const { width, height, stileWidth, muntinWidth, lockRail, lockRailCenter } = params;
   const mitered = params.frameJoint === "miter";
   const topRail = mitered ? stileWidth : params.topRail;
   const bottomRail = mitered ? stileWidth : params.bottomRail;
@@ -133,7 +133,7 @@ function layout(params: Params) {
   const halfWidth = width / 2;
   const innerLeft = -halfWidth + stileWidth;
   const innerRight = halfWidth - stileWidth;
-  const lockBottom = height * lockRailCentre - lockRail / 2;
+  const lockBottom = height * lockRailCenter - lockRail / 2;
   const lockTop = lockBottom + lockRail;
   const topRailBottom = height - topRail;
 
@@ -174,7 +174,7 @@ function buildFrame(params: Params, place: ReturnType<typeof layout>): Part[] {
       { geometry: boxBetween(innerLeft, innerRight, 0, bottomRail, -front, front), role: "rail", push: new Vector3(0, -1, 0) },
     );
   } else {
-    // The frame's CENTRELINE — the miter is a property of the path, and the stock straddles it.
+    // The frame's CENTERLINE — the miter is a property of the path, and the stock straddles it.
     const inset = stileWidth / 2;
     const corners = [
       new Vector3(-halfWidth + inset, inset, 0),
@@ -458,7 +458,7 @@ export default function (container: HTMLElement) {
     topRail: 0.115,
     lockRail: 0.2,
     bottomRail: 0.235,
-    lockRailCentre: 0.44,
+    lockRailCenter: 0.44,
     muntinWidth: 0.1,
     frameJoint: "butt",
     panelStyle: "raised",
@@ -538,7 +538,7 @@ export default function (container: HTMLElement) {
     frame.add(params, "bottomRail", 0.06, 0.35, 0.005).name("Bottom Rail").onChange(rebuild),
   );
   frame.add(params, "lockRail", 0.08, 0.35, 0.005).name("Lock Rail").onChange(rebuild);
-  frame.add(params, "lockRailCentre", 0.25, 0.6, 0.005).name("Lock Rail Height").onChange(rebuild);
+  frame.add(params, "lockRailCenter", 0.25, 0.6, 0.005).name("Lock Rail Height").onChange(rebuild);
   frame.add(params, "muntinWidth", 0.05, 0.2, 0.005).name("Muntin Width").onChange(rebuild);
 
   const panel = gui.addFolder("Panel");

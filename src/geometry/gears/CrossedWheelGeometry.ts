@@ -18,7 +18,7 @@ export interface CrossedWheelGeometryOptions extends CrossedWheelShapeOptions {
  * backing inward of the tooth valleys, since without either the cut-outs reach through and the teeth come away
  * from the wheel. {@link crossings} reports `0` when no annulus was left to cut, leaving the web solid.
  *
- * Local frame: **centred on its own thickness**, spanning `±depth / 2` in Z, matching
+ * Local frame: **centered on its own thickness**, spanning `±depth / 2` in Z, matching
  * {@link GearGeometry} so a rank of wheels on one arbor lines up on the plane they turn in.
  *
  * Material groups: **none** — one material for the whole wheel.
@@ -45,7 +45,7 @@ export class CrossedWheelGeometry extends ExtrudeGeometry {
 
     super(shape, { depth, bevelEnabled: false });
 
-    // Centre on the thickness rather than extruding forward from zero.
+    // Center on the thickness rather than extruding forward from zero.
     this.translate(0, 0, -depth / 2);
 
     this.holeRadius = shape.holeRadius;

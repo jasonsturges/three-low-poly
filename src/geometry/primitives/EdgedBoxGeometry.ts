@@ -84,7 +84,7 @@ interface Level {
  * The inset is a true offset rather than a scale, so a long thin box keeps a constant edge all the way
  * round instead of a wider one on its long sides.
  *
- * Sits on the `y = 0` plane, centred on X and Z — whichever `axis` is worked. Material groups: none; pass
+ * Sits on the `y = 0` plane, centered on X and Z — whichever `axis` is worked. Material groups: none; pass
  * one material, not an array.
  *
  * @example
@@ -118,7 +118,7 @@ export class EdgedBoxGeometry extends BufferGeometry {
     if (axis === "x") geometry.rotateZ(-Math.PI / 2);
     else if (axis === "z") geometry.rotateX(Math.PI / 2);
 
-    // Stated anchor: standing on y = 0, centred on X and Z, whichever axis was worked.
+    // Stated anchor: standing on y = 0, centered on X and Z, whichever axis was worked.
     geometry.computeBoundingBox();
     const box = geometry.boundingBox!;
     geometry.translate(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);

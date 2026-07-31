@@ -11,7 +11,7 @@ export const meta = {
     "of an internal pair. Where the Gear makes its teeth the outer contour and cuts a bore, this inverts the " +
     "roles: the outer contour is a plain circle and the TEETH ARE THE HOLE. So there is no bore to guard here — " +
     "the opening is the toothing, and the question of a bore reaching past the tooth tips never arises. The " +
-    "tooth period is the Gear's, unchanged. Three radii size it, all absolute from the centre: TIP and VALLEY " +
+    "tooth period is the Gear's, unchanged. Three radii size it, all absolute from the center: TIP and VALLEY " +
     "for the toothing, in either order, and RIM for the outside, which the teeth do not define here. An " +
     "externally toothed ring needs nothing new — that is the Gear with a bore set just inside its valley radius.",
 };

@@ -272,12 +272,12 @@ export default function (container: HTMLElement) {
     if (params.end === "hip") {
       points = hipEnd(ring, axis, planes, params.corner === "inside" ? "min" : "max");
     } else if (params.end === "seat") {
-      // What the library manages today: one plane for the whole end. Pick the one the member's CENTRE
+      // What the library manages today: one plane for the whole end. Pick the one the member's CENTER
       // meets, which is the best a single cut can do.
-      const centre = ring
+      const center = ring
         .reduce((sum, p) => sum.add(p), new Vector3())
         .divideScalar(ring.length);
-      const t = [hitDistance(centre, axis, planes[0]), hitDistance(centre, axis, planes[1])];
+      const t = [hitDistance(center, axis, planes[0]), hitDistance(center, axis, planes[1])];
       const chosen = params.corner === "inside" ? (t[0]! <= t[1]! ? 0 : 1) : t[0]! >= t[1]! ? 0 : 1;
       points = ring.map((p) => ({
         start: p.clone(),
@@ -286,8 +286,8 @@ export default function (container: HTMLElement) {
       }));
     } else {
       // Square to its own axis — the bare end, ignoring the corner entirely.
-      const centre = ring.reduce((sum, p) => sum.add(p), new Vector3()).divideScalar(ring.length);
-      const t = Math.min(hitDistance(centre, axis, planes[0]), hitDistance(centre, axis, planes[1]));
+      const center = ring.reduce((sum, p) => sum.add(p), new Vector3()).divideScalar(ring.length);
+      const t = Math.min(hitDistance(center, axis, planes[0]), hitDistance(center, axis, planes[1]));
       points = ring.map((p) => ({
         start: p.clone(),
         end: p.clone().addScaledVector(axis, t),

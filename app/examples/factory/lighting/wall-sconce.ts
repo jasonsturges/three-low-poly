@@ -78,7 +78,7 @@ export default function (container: HTMLElement) {
   // Framed ONCE, and it is the CAMERA that moves — the sconce stays on its mount point at the origin.
   // `frameObject` recomputes distance from the bounding sphere, so calling it per rebuild would steal
   // the viewer's zoom. This is also why the old `position.x = -0.5` nudge is gone: shifting the object
-  // to centre it is exactly what made the anchor unreadable.
+  // to center it is exactly what made the anchor unreadable.
   frameObject(handle, sconce, { fit: 1.6 });
 
   const rebuild = () => {

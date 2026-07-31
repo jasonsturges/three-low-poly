@@ -49,7 +49,7 @@ export interface MoldingGeometryOptions {
   /**
    * Which side of the run the molding stands on. Defaults to `"inward"` — a room, seen from inside.
    *
-   * Honored **regardless of how the points are wound**: the run is measured against its own centre and
+   * Honored **regardless of how the points are wound**: the run is measured against its own center and
    * reversed if it came out facing the wrong way. A winding rule the caller has to remember is a rule
    * that silently produces molding facing into the wall.
    *
@@ -131,16 +131,16 @@ export class MoldingGeometry extends BufferGeometry {
     let stations = frame(ordered);
 
     // Which side the face lands on falls out of the traversal direction, which callers should not have
-    // to reason about. Measure it instead: the binormal either points away from the run's own centre or
+    // to reason about. Measure it instead: the binormal either points away from the run's own center or
     // toward it, and `facing` says which is wanted. Reversing the point list turns the frame 180° about
     // its normal — a rotation, not a reflection, so the swept surface keeps its winding.
-    const centre = ordered
+    const center = ordered
       .reduce((sum, point) => sum.add(point), new Vector3())
       .divideScalar(ordered.length);
     const first = stations[0];
     if (first) {
-      const away = first.binormal.dot(first.position.clone().sub(centre));
-      // A straight run has no inside — its centre lies on the line, so the test is meaningless and
+      const away = first.binormal.dot(first.position.clone().sub(center));
+      // A straight run has no inside — its center lies on the line, so the test is meaningless and
       // nothing is flipped.
       if (Math.abs(away) > 1e-6 && away > 0 === (facing === "inward")) {
         ordered = ordered.reverse();

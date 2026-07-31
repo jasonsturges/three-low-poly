@@ -7,10 +7,10 @@ export interface GearGeometryOptions extends GearShapeOptions {
 }
 
 /**
- * Extruded gear profile with a centre bore. See {@link GearShape} for the tooth period and how the two flats
+ * Extruded gear profile with a center bore. See {@link GearShape} for the tooth period and how the two flats
  * divide it.
  *
- * Local frame: **centred on its own thickness**, spanning `±depth / 2` in Z, so a rank of gears sharing an
+ * Local frame: **centered on its own thickness**, spanning `±depth / 2` in Z, so a rank of gears sharing an
  * arbor lines up on the plane they turn in rather than each one starting where the last began.
  *
  * Material groups: **none** — one material for the whole wheel.
@@ -30,7 +30,7 @@ export class GearGeometry extends ExtrudeGeometry {
 
     super(shape, { depth, bevelEnabled: false });
 
-    // Centre on the thickness rather than extruding forward from zero.
+    // Center on the thickness rather than extruding forward from zero.
     this.translate(0, 0, -depth / 2);
     this.holeRadius = shape.holeRadius;
   }

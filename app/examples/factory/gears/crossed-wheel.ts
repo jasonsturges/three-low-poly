@@ -19,7 +19,7 @@ export default function (container: HTMLElement) {
   const handle = createScene(container, { background: 0x0a0b10, cameraPosition: [1.3, 1.0, 2.1] });
   const { scene, dispose } = handle;
 
-  // Centred on its own thickness, so the axes sit on the plane the wheel turns in.
+  // Centered on its own thickness, so the axes sit on the plane the wheel turns in.
   const axes = new AxesHelper(1.3);
   scene.add(axes);
 

@@ -225,11 +225,11 @@ function capEnd(
   const count = points.length;
 
   // Lateral offset, measured on the START ring where the geometry is still a flat convex polygon.
-  const centre = points
+  const center = points
     .reduce((sum, p) => sum.add(p.start), new Vector3())
     .divideScalar(count);
   const lateral = new Vector3(-axis.y, axis.x, 0).normalize();
-  const u = points.map((p) => p.start.clone().sub(centre).dot(lateral));
+  const u = points.map((p) => p.start.clone().sub(center).dot(lateral));
 
   let low = 0;
   let high = 0;
@@ -399,9 +399,9 @@ export default function (container: HTMLElement) {
     if (params.follow) {
       points = followBoundary(ring, axis, boundary);
     } else {
-      // What a single cut manages: one plane for the whole end, taken where the member's CENTRE lands.
-      const centre = ring.reduce((s, p) => s.add(p), new Vector3()).divideScalar(ring.length);
-      const hit = castToBoundary(new Vector2(centre.x, centre.y), new Vector2(axis.x, axis.y), boundary);
+      // What a single cut manages: one plane for the whole end, taken where the member's CENTER lands.
+      const center = ring.reduce((s, p) => s.add(p), new Vector3()).divideScalar(ring.length);
+      const hit = castToBoundary(new Vector2(center.x, center.y), new Vector2(axis.x, axis.y), boundary);
       const a = boundary[hit.owner]!;
       const b = boundary[(hit.owner + 1) % boundary.length]!;
       const edge = b.clone().sub(a);

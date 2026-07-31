@@ -12,14 +12,14 @@ export const meta = {
     "and the flanks take whatever is left. Tip Width at 0 brings the tooth to a point; Valley Width at 0 " +
     "sharpens the trough. Lean at 1 kills the rising flank and drops the trailing face radially, turning the " +
     "same profile into a ratchet wheel for an escapement. The bore is clamped against the OUTLINE, not the " +
-    "valley radius — a flank chord passes nearer the centre than either of its endpoints.",
+    "valley radius — a flank chord passes nearer the center than either of its endpoints.",
 };
 
 export default function (container: HTMLElement) {
   const handle = createScene(container, { background: 0x0a0b10, cameraPosition: [1.4, 1.1, 2.2] });
   const { scene, dispose } = handle;
 
-  // The gear is centred on its own thickness, so the axes sit on the plane it turns in.
+  // The gear is centered on its own thickness, so the axes sit on the plane it turns in.
   const axes = new AxesHelper(1.4);
   scene.add(axes);
 
@@ -115,7 +115,7 @@ export default function (container: HTMLElement) {
   const readout = gui.addFolder("Measured");
   readout.add(stats, "triangles").name("Triangles").listen().disable();
   readout.add(stats, "bore").name("Bore (clamped)").listen().disable();
-  // Symmetric about 0 — the wheel is centred on its thickness.
+  // Symmetric about 0 — the wheel is centered on its thickness.
   readout.add(stats, "zExtent").name("Z Extent").listen().disable();
   readout.open();
 
