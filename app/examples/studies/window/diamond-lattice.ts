@@ -60,6 +60,9 @@ export const meta = {
 //  SPRINGING  the height where the arch leaves the jambs.
 //  CHORD      the part of a came's infinite line that lies inside the opening. What actually gets built.
 
+/** How close to a shared vertex a crossing counts as being ON it. See {@link lineChords}. */
+const VERTEX_EPSILON = 1e-9;
+
 const cross2 = (a: Vector2, b: Vector2) => a.x * b.y - a.y * b.x;
 
 /** Where a ray from `p` along `d` first meets the boundary. `owner: -1` when it misses. */
@@ -101,9 +104,15 @@ function lineChords(p: Vector2, d: Vector2, boundary: Vector2[]): [number, numbe
     if (Math.abs(denominator) < 1e-12) continue;
     const w = a.clone().sub(p);
     const u = cross2(w, d) / denominator;
-    // Half-open on `u` so a crossing exactly on a shared vertex is counted once, not twice — otherwise
-    // the pairing flips inside for outside for the rest of the line.
-    if (u >= 0 && u < 1) hits.push(cross2(w, edge) / denominator);
+    // Half-open on `u`, so a crossing landing exactly on a shared VERTEX is counted once rather than
+    // twice — that would be `u = 1` on the arriving edge and `u = 0` on the leaving one.
+    //
+    // The tolerance is not decoration. Exact `u < 1` fails to exclude a `u` that rounds to
+    // `0.999999999...`, the vertex gets counted twice, the crossing count goes ODD, and the
+    // inside/outside pairing shifts for the rest of the line — turning the real chord into a zero-length
+    // one and losing the came. It fires only when a line passes exactly through a corner, and then on
+    // one side and not the other, purely by how the arithmetic rounded.
+    if (u >= -VERTEX_EPSILON && u < 1 - VERTEX_EPSILON) hits.push(cross2(w, edge) / denominator);
   }
   hits.sort((a, b) => a - b);
 
