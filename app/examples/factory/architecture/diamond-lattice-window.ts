@@ -121,7 +121,9 @@ export default function (container: HTMLElement) {
   const parts = gui.addFolder("Parts");
   parts.add(params, "frame").name("Frame").onChange(build);
   parts.add(params, "glass").name("Glass").onChange(build);
-  parts.add(params, "frameOutset", 0.005, 0.12, 0.001).name("Frame Outset").onChange(build);
+  // Reaches 0 on purpose. The frame's visible band is `inset + outset`, and `inset` is already the came's
+  // width — so at 0 the frame is exactly one came wide and the leading reads as running right through it.
+  parts.add(params, "frameOutset", 0, 0.12, 0.001).name("Frame Outset").onChange(build);
   parts.open();
 
   const readout = gui.addFolder("Readout");

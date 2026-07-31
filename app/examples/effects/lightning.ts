@@ -7,14 +7,14 @@ import {
   Group,
   Mesh,
   MeshStandardMaterial,
-  ShapeGeometry,
 } from "three";
 import GUI from "lil-gui";
 import {
-  ArchedDiamondLatticeWindow,
-  ArchedSlabShape,
+  DiamondLatticeWindow,
   GroundGrid,
   LightningEffect,
+  PaneGeometry,
+  type WallOpeningOptions,
   WallShape,
 } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
@@ -37,13 +37,24 @@ const WALL_FACE_Z = -6.9;
 
 // Shared arched opening — the wall hole, the window prefab, and the sky pane all
 // derive their silhouette from these three numbers so nothing drifts out of line.
-const OPENING = { width: 2.4, rectHeight: 3.4, archHeight: 1.2 };
+/**
+ * ONE description, used by everything: the hole in the wall, the leaded light, and the sky pane behind it.
+ *
+ * It used to be two — the wall took a `WallOpeningOptions` while the window took its own
+ * `{ width, rectHeight, archHeight }` — and the two were kept in step by hand. They cannot drift now,
+ * because there is only one of them.
+ */
+const OPENING: WallOpeningOptions = {
+  width: 2.4,
+  height: 3.4,
+  archHeight: 1.2,
+  arch: "semicircle",
+};
 const SILL_Y = 1.4;
-const OPENING_CENTER_Y = SILL_Y + (OPENING.rectHeight + OPENING.archHeight) / 2;
 const WINDOW_X = [-5.5, 0, 5.5];
 
-const LEAD_THICKNESS = 0.05;
-const LEAD_DEPTH = 0.11;
+const CAME_WIDTH = 0.05;
+const CAME_DEPTH = 0.11;
 
 /** One solid slab, extruded +Z, with an arched opening punched per window. */
 function buildWall() {
@@ -61,14 +72,7 @@ function buildWall() {
   const shape = new WallShape({
     width: WALL_WIDTH,
     height: WALL_HEIGHT,
-    windows: WINDOW_X.map((x) => ({
-      width: OPENING.width,
-      height: OPENING.rectHeight,
-      archHeight: OPENING.archHeight,
-      arch: "semicircle",
-      x,
-      y: SILL_Y,
-    })),
+    windows: WINDOW_X.map((x) => ({ ...OPENING, x, y: SILL_Y })),
   });
 
   const geo = new ExtrudeGeometry(shape, { depth: WALL_THICKNESS, bevelEnabled: false });
@@ -79,13 +83,6 @@ function buildWall() {
   wall.receiveShadow = true;
 
   return { wall, wallMaterial };
-}
-
-function disposeWindow(window: ArchedDiamondLatticeWindow): void {
-  window.lattice.geometry.dispose();
-  window.lattice.material.dispose();
-  window.frame.geometry.dispose();
-  (window.frame.material as MeshStandardMaterial).dispose();
 }
 
 export default function (container: HTMLElement) {
@@ -119,37 +116,30 @@ export default function (container: HTMLElement) {
   const { wall, wallMaterial } = buildWall();
   architecture.add(wall);
 
-  // One arched pane, reused across every opening by positioning each mesh at its own x and sill. The
-  // pane FILLS the same outline the wall punches — so it is an arched slab, drawn from the same arc as
-  // the hole and the lattice frame. Three things, one curve, and nothing to drift out of line.
-  const paneGeo = new ShapeGeometry(
-    new ArchedSlabShape({
-      width: OPENING.width,
-      height: OPENING.rectHeight,
-      archHeight: OPENING.archHeight,
-      arch: "semicircle",
-    }),
-    48,
-  );
+  // One pane, reused across every opening by positioning each mesh at its own x and sill. It fills the
+  // same outline the wall punches, from the same object — three things, one curve, nothing to drift.
+  const paneGeo = new PaneGeometry({ opening: OPENING, curveSegments: 48 });
   const exteriorZ = WALL_FACE_Z - WALL_THICKNESS;
   const windowZ = WALL_FACE_Z - WALL_THICKNESS / 2;
 
-  const windows: ArchedDiamondLatticeWindow[] = [];
+  const windows: DiamondLatticeWindow[] = [];
   for (const x of WINDOW_X) {
     // The slab's base is its sill, so the pane is placed by its sill rather than by a baked-in centerY.
     const pane = new Mesh(paneGeo, skyMaterial);
     pane.position.set(x, SILL_Y, exteriorZ + 0.01);
     architecture.add(pane);
 
-    const window = new ArchedDiamondLatticeWindow({
-      ...OPENING,
+    const window = new DiamondLatticeWindow({
+      opening: OPENING,
       cellsX: 6,
       cellsY: 10,
-      leadThickness: LEAD_THICKNESS,
-      leadDepth: LEAD_DEPTH,
+      cameWidth: CAME_WIDTH,
+      cameDepth: CAME_DEPTH,
       glass: false,
     });
-    window.position.set(x, OPENING_CENTER_Y, windowZ);
+    // Placed by its SILL, exactly like the hole — the window's own anchor is `y = 0` at the sill, so no
+    // centre has to be computed and kept in agreement.
+    window.position.set(x, SILL_Y, windowZ);
     architecture.add(window);
     windows.push(window);
   }
@@ -244,7 +234,7 @@ export default function (container: HTMLElement) {
   return () => {
     gui.destroy();
     floor.dispose();
-    for (const window of windows) disposeWindow(window);
+    for (const window of windows) window.dispose();
     wall.geometry.dispose();
     wallMaterial.dispose();
     paneGeo.dispose();

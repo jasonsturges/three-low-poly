@@ -91,7 +91,6 @@ export { WispEffect, type WispEffectOptions } from "./effects/WispEffect";
 export * from "./factory/BookFactory";
 export * from "./factory/BoulderFactory";
 export * from "./factory/DoorFactory";
-export * from "./factory/ArchedDiamondLatticeWindow";
 export * from "./factory/DiamondLatticeWindow";
 export * from "./factory/GregorianLatticeWindow";
 export * from "./factory/FenceFactory";
@@ -131,33 +130,12 @@ export {
   WindowFrameGeometry,
   type WindowFrameGeometryOptions,
 } from "./geometry/architecture/WindowFrameGeometry";
-export { ArchedDiamondLatticeWindowGeometry } from "./geometry/architecture/ArchedDiamondLatticeWindowGeometry";
-export { DiamondLatticeWindowGeometry } from "./geometry/architecture/DiamondLatticeWindowGeometry";
 export { GregorianLatticeWindowGeometry } from "./geometry/architecture/GregorianLatticeWindowGeometry";
 export {
   buildGregorianLatticeParts,
   gregorianLatticeGridFromCells,
   type GregorianLatticeGrid,
 } from "./geometry/architecture/gregorianLattice";
-export {
-  archedOpeningMetrics,
-  buildArchedDiamondLatticeCameParts,
-  buildArchedDiamondLatticeFrameGeometry,
-  buildArchedDiamondLatticeParts,
-  buildDiamondLatticeCameParts,
-  insetArchedOpeningMetrics,
-  traceArchedOpeningOutline,
-  buildDiamondLatticeParts,
-  clipSegmentToAabb,
-  clipSegmentToArchedOpening,
-  diamondLatticeCellFromCount,
-  diamondLatticeCornerSpan,
-  diamondLatticeGridFromCells,
-  fitDiamondLatticeCell,
-  type ArchedOpeningBounds,
-  type ArchedOpeningMetrics,
-  type DiamondLatticeGrid,
-} from "./geometry/architecture/diamondLattice";
 export {
   SpiralStaircaseGeometry,
   type SpiralStaircaseGeometryOptions,
