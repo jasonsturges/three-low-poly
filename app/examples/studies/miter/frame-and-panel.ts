@@ -40,7 +40,7 @@ export const meta = {
     "between the panels butts into the rails the same way. Switch Frame Joint to MITER for the other real " +
     "style, the mitered cabinet door, built as four separate sticks off `miterCuts` — and note the rail " +
     "widths lock to the stile's, because a miter cannot join unequal stock. What DOES miter on a door is " +
-    "the applied panel moulding: turn it on and an arbitrary routed profile wraps each opening as one " +
+    "the applied panel molding: turn it on and an arbitrary routed profile wraps each opening as one " +
     "closed mitered loop. Panels are RAISED — a field, a bevel, and a tongue that floats in the frame's " +
     "groove — and their four bevels meet at the corners in a 45° hip, which is the same joint the taxonomy " +
     "calls unbuildable by framing. Here it costs nothing, because the surface is lofted between two loops " +
@@ -60,12 +60,12 @@ export const meta = {
 //  FIELD     the flat middle of a raised panel. The slope around it is the BEVEL, or the raise; where the
 //            two meet is the FILLET.
 //  TONGUE    the thinned edge of the panel that sits in the frame's groove.
-//  STICKING  moulding worked into the frame's own edge. Moulding applied separately is PLANTED.
+//  STICKING  molding worked into the frame's own edge. Molding applied separately is PLANTED.
 
-type Role = "stile" | "rail" | "muntin" | "panel" | "moulding";
+type Role = "stile" | "rail" | "muntin" | "panel" | "molding";
 
 /** Group order in the merged geometry, so a material index means the same thing every rebuild. */
-const ROLES: Role[] = ["stile", "rail", "muntin", "panel", "moulding"];
+const ROLES: Role[] = ["stile", "rail", "muntin", "panel", "molding"];
 
 interface Part {
   geometry: BufferGeometry;
@@ -90,10 +90,10 @@ interface Params {
   bevelWidth: number;
   tongueThickness: number;
   grooveDepth: number;
-  moulding: boolean;
-  mouldingWidth: number;
-  mouldingHeight: number;
-  mouldingSegments: number;
+  molding: boolean;
+  moldingWidth: number;
+  moldingHeight: number;
+  moldingSegments: number;
   explode: number;
   tintRoles: boolean;
   showPanels: boolean;
@@ -315,13 +315,13 @@ function buildPanel(opening: Opening, params: Params): BufferGeometry {
 }
 
 /**
- * A quarter-round (ovolo) moulding section, in the station's own axes.
+ * A quarter-round (ovolo) molding section, in the station's own axes.
  *
  * `px` runs along the frame's normal — proud of the door's face — and `py` along its binormal, which on
  * a loop wound counter-clockwise points radially OUTWARD, away from the opening. So the section is a lip
  * standing at the opening's edge, curving down onto the frame.
  *
- * This is the entire answer to "can a routed moulding be mitered": a profile is a list of 2D points and
+ * This is the entire answer to "can a routed molding be mitered": a profile is a list of 2D points and
  * nothing else, so a decorative section goes exactly where `rectProfile` goes. The miter never sees it —
  * the corner is a property of the PATH.
  */
@@ -335,13 +335,13 @@ function ovoloProfile(width: number, height: number, segments: number): Vec2[] {
 }
 
 /**
- * Planted moulding around one opening, on both faces — one closed mitered loop each.
+ * Planted molding around one opening, on both faces — one closed mitered loop each.
  *
  * The back face runs the loop REVERSED with a `-Z` reference, which lands the section proud of the back
  * and still pointing outward: same construction, mirrored, rather than a mirrored copy of the geometry.
  */
-function buildMoulding(opening: Opening, params: Params): Part[] {
-  const profile = ovoloProfile(params.mouldingWidth, params.mouldingHeight, params.mouldingSegments);
+function buildMolding(opening: Opening, params: Params): Part[] {
+  const profile = ovoloProfile(params.moldingWidth, params.moldingHeight, params.moldingSegments);
   const front = params.thickness / 2;
   const corners = (z: number) => [
     new Vector3(opening.x0, opening.y0, z),
@@ -359,7 +359,7 @@ function buildMoulding(opening: Opening, params: Params): Part[] {
     );
     return {
       geometry: sweep(profile, stations, { closed: true }),
-      role: "moulding" as Role,
+      role: "molding" as Role,
       push: new Vector3(0, 0, side),
     };
   });
@@ -381,14 +381,14 @@ function buildDoor(params: Params): { geometry: BufferGeometry; parts: number } 
   if (params.showPanels) {
     for (const opening of place.openings) {
       parts.push({ geometry: buildPanel(opening, params), role: "panel", push: new Vector3(0, 0, 1) });
-      if (params.moulding) parts.push(...buildMoulding(opening, params));
+      if (params.molding) parts.push(...buildMolding(opening, params));
     }
   }
 
   if (params.explode > 0) {
     for (const part of parts) {
-      // Moulding leads, then panels, then the frame — an assembly diagram reads outside-in.
-      const reach = params.explode * (part.role === "moulding" ? 2.2 : part.role === "panel" ? 1.4 : 1);
+      // Molding leads, then panels, then the frame — an assembly diagram reads outside-in.
+      const reach = params.explode * (part.role === "molding" ? 2.2 : part.role === "panel" ? 1.4 : 1);
       const push = part.push.clone().multiplyScalar(reach);
       part.geometry.translate(push.x, push.y, push.z);
     }
@@ -443,7 +443,7 @@ export default function (container: HTMLElement) {
     rail: 0x9fb0c6,
     muntin: 0x7f93ad,
     panel: 0xb9c6d6,
-    moulding: 0xe4c98a,
+    molding: 0xe4c98a,
   };
   const PLAIN = 0xb9c2cf;
   const materials = ROLES.map(() => paint(PLAIN));
@@ -466,10 +466,10 @@ export default function (container: HTMLElement) {
     bevelWidth: 0.055,
     tongueThickness: 0.008,
     grooveDepth: 0.012,
-    moulding: false,
-    mouldingWidth: 0.022,
-    mouldingHeight: 0.012,
-    mouldingSegments: 4,
+    molding: false,
+    moldingWidth: 0.022,
+    moldingHeight: 0.012,
+    moldingSegments: 4,
     explode: 0,
     tintRoles: true,
     showPanels: true,
@@ -524,7 +524,7 @@ export default function (container: HTMLElement) {
       for (const controller of railControllers) controller.enable(params.frameJoint === "butt");
       rebuild();
     });
-  joint.add(params, "moulding").name("Panel Moulding").onChange(rebuild);
+  joint.add(params, "molding").name("Panel Molding").onChange(rebuild);
   joint.add(params, "explode", 0, 0.25, 0.005).name("Explode").onChange(rebuild);
   joint.open();
 
@@ -552,11 +552,11 @@ export default function (container: HTMLElement) {
   panel.add(params, "grooveDepth", 0, 0.03, 0.001).name("Groove Depth").onChange(rebuild);
   panel.open();
 
-  const mould = gui.addFolder("Moulding");
-  mould.add(params, "mouldingWidth", 0.008, 0.05, 0.001).name("Width").onChange(rebuild);
-  mould.add(params, "mouldingHeight", 0.004, 0.03, 0.001).name("Height").onChange(rebuild);
+  const molding = gui.addFolder("Molding");
+  molding.add(params, "moldingWidth", 0.008, 0.05, 0.001).name("Width").onChange(rebuild);
+  molding.add(params, "moldingHeight", 0.004, 0.03, 0.001).name("Height").onChange(rebuild);
   // The low-poly knob on the section, exactly as `segments` is on a curve: 1 is a chamfer, 12 is turned.
-  mould.add(params, "mouldingSegments", 1, 12, 1).name("Segments").onChange(rebuild);
+  molding.add(params, "moldingSegments", 1, 12, 1).name("Segments").onChange(rebuild);
 
   const inspect = gui.addFolder("Inspect");
   inspect.add(params, "tintRoles").name("Tint by Role").onChange(rebuild);

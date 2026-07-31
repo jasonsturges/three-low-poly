@@ -78,7 +78,7 @@ interface Build {
  * The frame's corners, wound counter-clockwise in the XY plane — so the frame stands up facing the
  * viewer, the way a frame on a wall does.
  *
- * These are the moulding's CENTRELINE, not its outer edge: the stock straddles the path, so the frame
+ * These are the molding's CENTRELINE, not its outer edge: the stock straddles the path, so the frame
  * measures `width + stockWidth` across the outside and `width − stockWidth` across the opening. The
  * centreline is what the miter is about — the bisector is a property of the path, and the faces follow.
  */
@@ -224,14 +224,14 @@ function buildButt(params: Params): Build {
  *
  * Not by scaling it: shrinking a rectangle's width and height does not give its inset — the two sides
  * move by different amounts unless it happens to be square, and on a polygon nothing lines up at all.
- * `offsetLoop` is the library's own answer to that, so the opening always hugs the moulding.
+ * `offsetLoop` is the library's own answer to that, so the opening always hugs the molding.
  */
 function buildPanel(params: Params): BufferGeometry {
   const corners = frameCorners(params).map((p) => new Vector2(p.x, p.y));
-  // Half the stock reaches the moulding's inner face; a touch more tucks the panel behind it.
+  // Half the stock reaches the molding's inner face; a touch more tucks the panel behind it.
   const inner = offsetLoop(corners, -params.stockWidth * 0.52);
   const geometry = new ShapeGeometry(new Shape(inner));
-  // Behind the frame's centreline, so the moulding sits proud of it as a real rabbet does.
+  // Behind the frame's centreline, so the molding sits proud of it as a real rabbet does.
   geometry.translate(0, 0, -params.stockThickness * 0.3);
   return geometry;
 }
@@ -313,7 +313,7 @@ export default function (container: HTMLElement) {
   };
 
   // flatShading is a free planarity checker — a quad shading in two tones is non-planar, every time.
-  const moulding = (color: number) =>
+  const molding = (color: number) =>
     new MeshStandardMaterial({
       color,
       roughness: 0.72,
@@ -324,8 +324,8 @@ export default function (container: HTMLElement) {
       polygonOffsetFactor: 1,
       polygonOffsetUnits: 1,
     });
-  const stockA = moulding(0xd9b98a);
-  const stockB = moulding(0xbf9a68);
+  const stockA = molding(0xd9b98a);
+  const stockB = molding(0xbf9a68);
   const panel = new MeshStandardMaterial({ color: 0x2b3140, roughness: 0.95, side: DoubleSide });
 
   const wire = new LineBasicMaterial({ color: 0x00e5ff });
@@ -425,7 +425,7 @@ export default function (container: HTMLElement) {
 
   const stock = gui.addFolder("Stock");
   stock
-    .add(params, "stock", { "Flat Moulding": "flat", "Square Bar": "square", "Round Bar": "round" })
+    .add(params, "stock", { "Flat Molding": "flat", "Square Bar": "square", "Round Bar": "round" })
     .name("Section")
     .onChange(rebuild);
   stock.add(params, "stockWidth", 0.04, 0.3, 0.005).name("Face Width").onChange(rebuild);
