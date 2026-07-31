@@ -113,6 +113,12 @@ export * from "./factory/WindowFactory";
 // Architecture
 export { ArchGeometry, type ArchGeometryOptions } from "./geometry/architecture/ArchGeometry";
 export {
+  MoldingGeometry,
+  type MoldingGeometryOptions,
+  type MoldingFacing,
+  type MoldingRun,
+} from "./geometry/architecture/MoldingGeometry";
+export {
   PanelDoorGeometry,
   type PanelDoorGeometryOptions,
 } from "./geometry/architecture/PanelDoorGeometry";
@@ -392,6 +398,11 @@ export {
   miterFrames,
   type MiterFramesOptions,
 } from "./sweep/MiterFrames";
+export {
+  moldingProfile,
+  type MoldingProfileOptions,
+  type MoldingStyle,
+} from "./sweep/MoldingProfiles";
 export { circleProfile, rectProfile } from "./sweep/Profiles";
 export { sweep, transportFrames, type Station, type SweepOptions } from "./sweep/Sweep";
 
