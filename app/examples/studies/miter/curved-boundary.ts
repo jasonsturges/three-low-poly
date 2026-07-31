@@ -336,6 +336,10 @@ export default function (container: HTMLElement) {
   });
   const wire = new LineBasicMaterial({ color: 0x00e5ff });
   const outline = new LineBasicMaterial({ color: 0xffd166 });
+  // A refusal has to be VISIBLE. When the construction declines to build there is no mesh to tint, and an
+  // empty viewport reads as a crash rather than as a rejection — so the member is ghosted in its place,
+  // showing where it sat and which way it pointed.
+  const rejected = new LineBasicMaterial({ color: 0xd85a5a });
 
   const params = {
     style: "semicircle" as ArchStyle,
@@ -417,6 +421,17 @@ export default function (container: HTMLElement) {
     const geometry = buildMember(points, axis);
     stage.add(new Mesh(geometry, strays > 0 ? invalid : lead));
     if (params.wireframe) stage.add(new LineSegments(new WireframeGeometry(geometry), wire));
+
+    if (points.length < 3) {
+      // Refused. Ghost the member where it stood, so a rejection cannot be mistaken for a crash.
+      stage.add(new Line(new BufferGeometry().setFromPoints([...ring, ring[0]!]), rejected));
+      stage.add(
+        new Line(
+          new BufferGeometry().setFromPoints([start, start.clone().addScaledVector(axis, params.halfSpan)]),
+          rejected,
+        ),
+      );
+    }
 
     if (params.showBoundary) {
       const loop = [...boundary, boundary[0]!].map((p) => new Vector3(p.x, p.y, 0));
@@ -516,6 +531,7 @@ export default function (container: HTMLElement) {
     clear();
     lead.dispose();
     invalid.dispose();
+    rejected.dispose();
     wire.dispose();
     outline.dispose();
     dispose();

@@ -302,6 +302,12 @@ export default function (container: HTMLElement) {
   });
   const wire = new LineBasicMaterial({ color: 0x00e5ff });
   const outline = new LineBasicMaterial({ color: 0xffd166 });
+  // A refusal has to be VISIBLE. When the construction declines to build there is no mesh to tint, and an
+  // empty viewport reads as a crash rather than as a rejection — so the member is ghosted in its place,
+  // showing where it sat and which way it pointed.
+  const rejected = new LineBasicMaterial({ color: 0xd85a5a });
+  // Dim on purpose: it has to be findable without competing with the joint under study.
+  const pivot = new LineBasicMaterial({ color: 0x6f7b8a });
 
   const params = {
     style: "semicircle" as ArchStyle,
@@ -316,6 +322,7 @@ export default function (container: HTMLElement) {
     spinRate: 20,
     width: 0.09,
     sides: 4,
+    showCentre: true,
     showBoundary: true,
     wireframe: false,
     opacity: 1,
@@ -367,6 +374,39 @@ export default function (container: HTMLElement) {
     stage.add(new Mesh(geometry, strays > 0 ? invalid : came));
     if (params.wireframe) stage.add(new LineSegments(new WireframeGeometry(geometry), wire));
 
+    if (spans.length < 3) {
+      // Refused. Ghost the member where it stood — its section and its line — so a rejection cannot be
+      // mistaken for the study having broken.
+      stage.add(new Line(new BufferGeometry().setFromPoints([...ring, ring[0]!]), rejected));
+      const reach = params.halfSpan;
+      stage.add(
+        new Line(
+          new BufferGeometry().setFromPoints([
+            centre.clone().addScaledVector(axis, -reach),
+            centre.clone().addScaledVector(axis, reach),
+          ]),
+          rejected,
+        ),
+      );
+    }
+
+    if (params.showCentre) {
+      // A member that spans the whole opening hides the one point you are steering with. A crosshair on
+      // the centre keeps Centre X and Centre Y findable no matter how far the ends run.
+      const tick = Math.max(params.width, 0.06);
+      stage.add(
+        new LineSegments(
+          new BufferGeometry().setFromPoints([
+            centre.clone().add(new Vector3(-tick, 0, 0)),
+            centre.clone().add(new Vector3(tick, 0, 0)),
+            centre.clone().add(new Vector3(0, -tick, 0)),
+            centre.clone().add(new Vector3(0, tick, 0)),
+          ]),
+          pivot,
+        ),
+      );
+    }
+
     if (params.showBoundary) {
       const loop = [...boundary, boundary[0]!].map((p) => new Vector3(p.x, p.y, 0));
       stage.add(new Line(new BufferGeometry().setFromPoints(loop), outline));
@@ -396,10 +436,10 @@ export default function (container: HTMLElement) {
     }
 
     params.verdict =
-      strays > 0
-        ? `OUT OF DOMAIN — ${strays} of ${ring.length} ring points start outside`
-        : spans.length < 3
-          ? "member escapes the opening"
+      spans.length < 3
+        ? `REFUSED — ${strays} of ${ring.length} ring points start outside; ghosted in place`
+        : strays > 0
+          ? `OUT OF DOMAIN — ${strays} of ${ring.length} ring points start outside`
           : "both ends cut into the boundary";
   };
   rebuild();
@@ -445,6 +485,7 @@ export default function (container: HTMLElement) {
   arch.open();
 
   const inspect = gui.addFolder("Inspect");
+  inspect.add(params, "showCentre").name("Centre Crosshair").onChange(rebuild);
   inspect.add(params, "showBoundary").name("Boundary Outline").onChange(rebuild);
   inspect.add(params, "wireframe").name("Wireframe Overlay").onChange(rebuild);
   inspect.add(params, "opacity", 0.15, 1, 0.01).name("Opacity").onChange(rebuild);
@@ -462,6 +503,8 @@ export default function (container: HTMLElement) {
     clear();
     came.dispose();
     invalid.dispose();
+    rejected.dispose();
+    pivot.dispose();
     wire.dispose();
     outline.dispose();
     dispose();
