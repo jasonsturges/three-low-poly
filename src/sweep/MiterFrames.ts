@@ -324,10 +324,13 @@ export function miterFrames(
 //      `{ startCut, endCut }`. Guard needed: never cut against a plane the member is nearly PARALLEL to, or
 //      the `1 / |d · n|` widening explodes (measured 50x at 88.85°, throwing a bar 0.25 units off).
 //
-//   3. HIP — two facets meeting where a member reaches a CONVEX CORNER of its boundary, so both bounding
-//      planes trim it. Jason's sketch: an arrowhead, ">". Not expressible by FRAMING: one station is one
-//      ring is one plane. A single-plane bisector cut gets a CHAMFER instead — exact at 45°, bounded by
-//      half a bar width otherwise. STILL WANTED, but see the note below: trimming may not be the answer.
+//   3. HIP — two facets meeting where a member's end is bounded by TWO planes. Jason's sketch: an
+//      arrowhead, ">". Not expressible by FRAMING — one station is one ring is one plane — but SOLVED by
+//      LOFTING, in `app/examples/studies/miter/hip-end.ts`. Run every ring point along the axis to
+//      whichever plane it meets first (an inside corner) or last (an outside one), splitting the ring
+//      exactly where that choice changes so the facets meet on a clean ridge. Measured planar to 1e-16
+//      at every corner angle, rake, azimuth and side count tried. Domain: every ring point must start on
+//      the legal side of both planes — a member already through a plane has no correct cut.
 //
 //   4. T-JUNCTION / X-CROSSING — a member butting into or crossing another. No bisector to share, so no
 //      miter applies. Deliberately NOT mitered: bury the end (partially, never flush — coplanar co-facing
@@ -358,9 +361,17 @@ export function miterFrames(
 //     a swept leg leaves 100% of a full section standing on its outer plane; the loft leaves 0.0% (two
 //     vertices, no area), in 46 verts against 68.
 //
-// The pattern: **when the region you want is bounded by two planes and you already have a ring on one of
-// them, loft to the other.** The intersection is the loft. One station is one ring is one plane constrains
-// SWEEPING, not geometry.
+//   - The HIP itself, (3) above. A ring lofted to TWO planes, each point taking whichever it meets first
+//     or last, with the ring split exactly where that choice changes. Two facets, planar to 1e-16.
 //
-// Whether that reaches (3) itself is unproven and is the next thing to try: a hip needs the ring to reach
-// TWO planes, so the ring would have to split where those planes intersect. Plausible, not demonstrated.
+// The pattern: **when the region you want is bounded by planes and you already have a ring, loft each of
+// its points to the plane it meets.** The intersection is the loft. One station is one ring is one plane
+// constrains SWEEPING, not geometry.
+//
+// Nothing in this list now needs trimming. What (3) did need was a SPLIT: without inserting a vertex where
+// the winning plane changes, the band spanning that change is one quad straddling both planes and the
+// ridge smears. The split is exact — with the axis fixed, `t` is linear along a ring edge, so the crossing
+// is one division rather than a search.
+//
+// Still open: (6), the curved boundary. It is the same shape of problem with a SURFACE instead of a plane,
+// so `hitDistance` becomes a ray-curve intersection and the split becomes a tangency. Worth trying next.
