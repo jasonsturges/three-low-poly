@@ -141,14 +141,26 @@ function followBoundary(ring: Vector3[], axis: Vector3, boundary: Vector2[]): En
 
     // Every vertex between the two segments is a crossing — a wide member over a finely cut arch spans
     // several at once, and each one needs its own split or the facets in between are lost.
-    const step = next.owner > here.owner ? 1 : -1;
-    for (let k = here.owner; k !== next.owner; k += step) {
-      const vertex = boundary[((step > 0 ? k + 1 : k) + boundary.length) % boundary.length]!;
+    //
+    // Walk the SHORT way round. Segment indices are cyclic — the sill is `0` and the left jamb is the last
+    // index, and they share the opening's bottom-left corner — so comparing them as plain numbers sends
+    // the walk the long way over the crown, inserting a split at every arch vertex instead of the one at
+    // the corner.
+    const total = boundary.length;
+    const ahead = (next.owner - here.owner + total) % total;
+    const behind = (here.owner - next.owner + total) % total;
+    const step = ahead <= behind ? 1 : -1;
+    const steps = Math.min(ahead, behind);
+
+    let k = here.owner;
+    for (let c = 0; c < steps; c++) {
+      const vertex = boundary[step > 0 ? (k + 1) % total : k]!;
       // The ray from `p(s)` passes through `vertex` when `(vertex − p(s)) × d = 0`, and `p(s)` is linear
       // in `s`, so this is exact.
       const gi = cross2(vertex.clone().sub(new Vector2(ring[i]!.x, ring[i]!.y)), flat);
       const gj = cross2(vertex.clone().sub(new Vector2(ring[j]!.x, ring[j]!.y)), flat);
       const s = gi / (gi - gj);
+      k = (k + step + total) % total;
       if (!Number.isFinite(s) || s <= 0 || s >= 1) continue;
 
       const start = ring[i]!.clone().lerp(ring[j]!, s);
