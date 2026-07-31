@@ -112,6 +112,10 @@ export * from "./factory/WindowFactory";
 // Architecture
 export { ArchGeometry, type ArchGeometryOptions } from "./geometry/architecture/ArchGeometry";
 export {
+  GregorianLatticeGeometry,
+  type GregorianLatticeGeometryOptions,
+} from "./geometry/architecture/GregorianLatticeGeometry";
+export {
   DiamondLatticeGeometry,
   type DiamondLatticeGeometryOptions,
 } from "./geometry/architecture/DiamondLatticeGeometry";
@@ -130,12 +134,6 @@ export {
   WindowFrameGeometry,
   type WindowFrameGeometryOptions,
 } from "./geometry/architecture/WindowFrameGeometry";
-export { GregorianLatticeWindowGeometry } from "./geometry/architecture/GregorianLatticeWindowGeometry";
-export {
-  buildGregorianLatticeParts,
-  gregorianLatticeGridFromCells,
-  type GregorianLatticeGrid,
-} from "./geometry/architecture/gregorianLattice";
 export {
   SpiralStaircaseGeometry,
   type SpiralStaircaseGeometryOptions,

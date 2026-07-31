@@ -1,17 +1,9 @@
-import { BufferGeometry, Vector2, Vector3 } from "three";
+import { BufferGeometry } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { linePath } from "../../paths/LinePath";
-import { openingOutline, type WallOpeningOptions } from "../../shapes/WallShape";
-import { miterFrames } from "../../sweep/MiterFrames";
+import type { WallOpeningOptions } from "../../shapes/WallShape";
 import { circleProfile } from "../../sweep/Profiles";
-import {
-  createGeometryBuffers,
-  pushQuad,
-  pushTriangle,
-  toBufferGeometry,
-  type Vec2,
-  type Vec3,
-} from "../../utils/GeometryBuffers";
+import type { Vec2 } from "../../utils/GeometryBuffers";
+import { buildLatticeBars, openingBoundary } from "./latticeBars";
 
 export interface DiamondLatticeGeometryOptions {
   /**
@@ -65,13 +57,6 @@ export interface DiamondLatticeGeometryOptions {
   curveSegments?: number;
 }
 
-/** A came's end, and the ring point it came from. */
-interface Span {
-  ring: Vector3;
-  back: Vector3;
-  front: Vector3;
-}
-
 /**
  * Diamond lattice leading — the cames of a leaded light, cut into the opening at both ends.
  *
@@ -122,16 +107,7 @@ export class DiamondLatticeGeometry extends BufferGeometry {
     super();
 
     // At the origin: the lattice does not care where its opening sits in a wall, only what shape it is.
-    const boundary = openingOutline({ ...opening, x: 0, y: 0 })
-      .getPoints(Math.max(2, Math.round(curveSegments)))
-      .map((p) => new Vector2(p.x, p.y));
-    // `getPoints` closes the loop by repeating the start; a repeated point is a zero-length edge.
-    if (
-      boundary.length > 1 &&
-      boundary[0]!.distanceToSquared(boundary[boundary.length - 1]!) < 1e-12
-    ) {
-      boundary.pop();
-    }
+    const boundary = openingBoundary(opening, curveSegments);
 
     // `circleProfile` is a regular polygon, so it is square by construction. Scaling the axis that maps
     // to the frame's NORMAL — the one running through the glass — makes it rectangular without touching
@@ -140,10 +116,18 @@ export class DiamondLatticeGeometry extends BufferGeometry {
     const profile = circleProfile(cameWidth / 2, Math.max(3, Math.round(cameSides))).map(
       ([px, py]) => [px * depthScale, py] as Vec2,
     );
-    const parts = [
-      ...cameFamily(angle, boundary, profile, spacing, phase, cameWidth),
-      ...cameFamily(-angle, boundary, profile, spacing, phase, cameWidth),
-    ];
+    // Two families at ±angle. The lattice TYPE is only ever a choice of angles — a Gregorian is the same
+    // call at 90° and 0° — which is why the bar machinery lives in `latticeBars` and neither geometry
+    // knows what the other is building.
+    const parts = buildLatticeBars(
+      boundary,
+      [
+        { angle, spacing, phase },
+        { angle: -angle, spacing, phase },
+      ],
+      profile,
+      cameWidth * 3,
+    );
     this.cameCount = parts.length;
 
     if (parts.length === 0) {
@@ -166,270 +150,3 @@ export class DiamondLatticeGeometry extends BufferGeometry {
 /** How close to a shared vertex a crossing counts as being ON it. See {@link lineChords}. */
 const VERTEX_EPSILON = 1e-9;
 
-const cross2 = (a: Vector2, b: Vector2) => a.x * b.y - a.y * b.x;
-
-/** Where a ray from `p` along `d` first meets the boundary. `owner: -1` when it misses entirely. */
-function castToBoundary(p: Vector2, d: Vector2, boundary: Vector2[]): { t: number; owner: number } {
-  let best = Infinity;
-  let owner = -1;
-  for (let i = 0; i < boundary.length; i++) {
-    const a = boundary[i]!;
-    const b = boundary[(i + 1) % boundary.length]!;
-    const edge = b.clone().sub(a);
-    const denominator = cross2(d, edge);
-    if (Math.abs(denominator) < 1e-12) continue;
-    const w = a.clone().sub(p);
-    const t = cross2(w, edge) / denominator;
-    const u = cross2(w, d) / denominator;
-    // The SEGMENT, not its infinite line. Taking the nearest LINE would cut against edges that are not
-    // there, which is what makes a concave head — an ogee — come out wrong.
-    if (t > 1e-9 && u >= -1e-9 && u <= 1 + 1e-9 && t < best) {
-      best = t;
-      owner = i;
-    }
-  }
-  return { t: best, owner };
-}
-
-/**
- * Every stretch of the infinite line through `p` along `d` that lies INSIDE the boundary.
- *
- * A came laid across an ogee or a horseshoe enters and leaves more than once, so the crossings are
- * collected, sorted, and taken in pairs — between the first and second you are inside, between the second
- * and third you are out. Half-open on `u` so a crossing exactly on a shared vertex counts once; counted
- * twice, the pairing swaps inside for outside along the rest of the line.
- */
-function lineChords(p: Vector2, d: Vector2, boundary: Vector2[]): [number, number][] {
-  const hits: number[] = [];
-  for (let i = 0; i < boundary.length; i++) {
-    const a = boundary[i]!;
-    const b = boundary[(i + 1) % boundary.length]!;
-    const edge = b.clone().sub(a);
-    const denominator = cross2(d, edge);
-    if (Math.abs(denominator) < 1e-12) continue;
-    const w = a.clone().sub(p);
-    const u = cross2(w, d) / denominator;
-    // Half-open on `u`, so a crossing landing exactly on a shared VERTEX is counted once rather than
-    // twice — that would be `u = 1` on the arriving edge and `u = 0` on the leaving one.
-    //
-    // The tolerance is not decoration. Exact `u < 1` fails to exclude a `u` that rounds to
-    // `0.999999999...`, the vertex gets counted twice, the crossing count goes ODD, and the
-    // inside/outside pairing shifts for the rest of the line — turning the real chord into a zero-length
-    // one and losing the came. It fires only when a line passes exactly through a corner, and then on
-    // one side and not the other, purely by how the arithmetic rounded.
-    if (u >= -VERTEX_EPSILON && u < 1 - VERTEX_EPSILON) hits.push(cross2(w, edge) / denominator);
-  }
-  hits.sort((a, b) => a - b);
-
-  const chords: [number, number][] = [];
-  for (let i = 0; i + 1 < hits.length; i += 2) chords.push([hits[i]!, hits[i + 1]!]);
-  return chords;
-}
-
-/** Even-odd ray cast. A came that starts outside gets a perfect cut to a meaningless question. */
-function insideBoundary(p: Vector2, boundary: Vector2[]): boolean {
-  let inside = false;
-  for (let i = 0, j = boundary.length - 1; i < boundary.length; j = i++) {
-    const a = boundary[i]!;
-    const b = boundary[j]!;
-    if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) {
-      inside = !inside;
-    }
-  }
-  return inside;
-}
-
-/**
- * Where along a ring edge the winning boundary segment changes, for one direction.
- *
- * The ray through `lerp(a, b, s)` passes through a boundary vertex when `(vertex − p(s)) × d = 0`, and
- * `p(s)` is linear in `s`, so each root is one division rather than a search. A wide came crosses several
- * vertices at once, so every one between the two owners contributes a split.
- */
-function splitParams(a: Vector3, b: Vector3, d: Vector2, boundary: Vector2[]): number[] {
-  const here = castToBoundary(new Vector2(a.x, a.y), d, boundary);
-  const next = castToBoundary(new Vector2(b.x, b.y), d, boundary);
-  if (here.owner < 0 || next.owner < 0 || here.owner === next.owner) return [];
-
-  // Segment indices are CYCLIC — the sill is `0` and the last jamb is the final index, and they share the
-  // opening's bottom corner. Comparing them as plain numbers sends the walk the long way over the crown.
-  const count = boundary.length;
-  const ahead = (next.owner - here.owner + count) % count;
-  const behind = (here.owner - next.owner + count) % count;
-  const step = ahead <= behind ? 1 : -1;
-  const steps = Math.min(ahead, behind);
-
-  const out: number[] = [];
-  let k = here.owner;
-  for (let i = 0; i < steps; i++) {
-    const vertex = boundary[step > 0 ? (k + 1) % count : k]!;
-    const gi = cross2(vertex.clone().sub(new Vector2(a.x, a.y)), d);
-    const gj = cross2(vertex.clone().sub(new Vector2(b.x, b.y)), d);
-    const s = gi / (gi - gj);
-    if (Number.isFinite(s) && s > 1e-9 && s < 1 - 1e-9) out.push(s);
-    k = (k + step + count) % count;
-  }
-  return out;
-}
-
-/**
- * Both ends cut to the boundary, on ONE ring.
- *
- * The two ends cross different segments, so each wants its own splits — and a side band built on a ring
- * carrying only one set tears where the other falls. So the splits are unioned before the ring is
- * subdivided. A split the far end did not ask for costs a degenerate seam, never a hole.
- */
-function spanOpening(ring: Vector3[], axis: Vector3, boundary: Vector2[]): Span[] {
-  const forward = new Vector2(axis.x, axis.y).normalize();
-  const backward = forward.clone().negate();
-
-  const points: Vector3[] = [];
-  for (let i = 0; i < ring.length; i++) {
-    const a = ring[i]!;
-    const b = ring[(i + 1) % ring.length]!;
-    points.push(a.clone());
-    const cuts = [...splitParams(a, b, forward, boundary), ...splitParams(a, b, backward, boundary)]
-      .sort((p, q) => p - q)
-      .filter((s, index, all) => index === 0 || s - all[index - 1]! > 1e-9);
-    for (const s of cuts) points.push(a.clone().lerp(b, s));
-  }
-
-  const spans: Span[] = [];
-  for (const p of points) {
-    const flat = new Vector2(p.x, p.y);
-    const ahead = castToBoundary(flat, forward, boundary);
-    const behind = castToBoundary(flat, backward, boundary);
-    // A point that escapes in either direction has no came at all. Refusing beats silently dropping a
-    // vertex out of a closed loop, which would open the solid.
-    if (ahead.owner < 0 || behind.owner < 0) return [];
-    spans.push({
-      ring: p,
-      front: p.clone().addScaledVector(axis, ahead.t),
-      back: p.clone().addScaledVector(axis, -behind.t),
-    });
-  }
-  return spans;
-}
-
-/**
- * A came's end cap, triangulated so no triangle spans two facets.
- *
- * The cast reads only a point's LATERAL offset, so facet boundaries are lines of constant lateral offset,
- * and the cap — which projects exactly onto the ring, every point travelling along the same axis — is a
- * polygon monotone in that coordinate with a vertex on both chains at every cut. Walking the two chains in
- * lateral order therefore never reaches past a cut. Fanning each facet instead leaves a hole the moment
- * there are more than two crossings.
- */
-function capEnd(
-  buffers: ReturnType<typeof createGeometryBuffers>,
-  spans: Span[],
-  pick: (s: Span) => Vector3,
-  axis: Vector3,
-  flip: boolean,
-): void {
-  const at = (p: Vector3): Vec3 => [p.x, p.y, p.z];
-  const count = spans.length;
-  const center = spans.reduce((sum, s) => sum.add(s.ring), new Vector3()).divideScalar(count);
-  const lateral = new Vector3(-axis.y, axis.x, 0).normalize();
-  const u = spans.map((s) => s.ring.clone().sub(center).dot(lateral));
-
-  let low = 0;
-  let high = 0;
-  for (let i = 1; i < count; i++) {
-    if (u[i]! < u[low]!) low = i;
-    if (u[i]! > u[high]!) high = i;
-  }
-  const chain = (step: number) => {
-    const out = [low];
-    for (let i = (low + step + count) % count; i !== high; i = (i + step + count) % count) out.push(i);
-    out.push(high);
-    return out;
-  };
-  const forward = chain(1);
-  const backward = chain(-1);
-
-  const emit = (a: number, b: number, c: number) => {
-    const tri: [Vec3, Vec3, Vec3] = [at(pick(spans[a]!)), at(pick(spans[b]!)), at(pick(spans[c]!))];
-    pushTriangle(buffers, flip ? [tri[0], tri[2], tri[1]] : tri, undefined);
-  };
-
-  let a = 0;
-  let b = 0;
-  while (a < forward.length - 1 || b < backward.length - 1) {
-    const advance =
-      b >= backward.length - 1 || (a < forward.length - 1 && u[forward[a + 1]!]! <= u[backward[b + 1]!]!);
-    if (advance) {
-      emit(forward[a]!, backward[b]!, forward[a + 1]!);
-      a++;
-    } else {
-      emit(forward[a]!, backward[b]!, backward[b + 1]!);
-      b++;
-    }
-  }
-}
-
-/** One came: sides between its two cut ends, and a cap on each. */
-function buildCame(spans: Span[], axis: Vector3): BufferGeometry | null {
-  if (spans.length < 3) return null;
-
-  const buffers = createGeometryBuffers();
-  const at = (p: Vector3): Vec3 => [p.x, p.y, p.z];
-  for (let i = 0; i < spans.length; i++) {
-    const j = (i + 1) % spans.length;
-    pushQuad(
-      buffers,
-      [at(spans[j]!.back), at(spans[i]!.back), at(spans[i]!.front), at(spans[j]!.front)],
-      undefined,
-    );
-  }
-  capEnd(buffers, spans, (s) => s.front, axis, false);
-  capEnd(buffers, spans, (s) => s.back, axis, true);
-  return toBufferGeometry(buffers);
-}
-
-/**
- * One family of parallel cames.
- *
- * Lines are laid out by their PERPENDICULAR offset, which is what makes `spacing` mean the same thing at
- * any angle. Short offcuts are dropped: a chord barely longer than the stock is a scrap of lead no glazier
- * would cut, and its ring would straddle the boundary anyway.
- */
-function cameFamily(
-  angleDegrees: number,
-  boundary: Vector2[],
-  profile: Vec2[],
-  spacing: number,
-  phase: number,
-  cameWidth: number,
-): BufferGeometry[] {
-  const angle = (angleDegrees * Math.PI) / 180;
-  const axis = new Vector3(Math.cos(angle), Math.sin(angle), 0);
-  const normal = new Vector2(-Math.sin(angle), Math.cos(angle));
-  const flat = new Vector2(axis.x, axis.y);
-
-  const offsets = boundary.map((p) => p.dot(normal));
-  const step = Math.max(spacing, 1e-4);
-  const from = Math.ceil((Math.min(...offsets) - phase) / step);
-  const to = Math.floor((Math.max(...offsets) - phase) / step);
-
-  const parts: BufferGeometry[] = [];
-  for (let k = from; k <= to; k++) {
-    const seed = normal.clone().multiplyScalar(k * step + phase);
-    for (const [near, far] of lineChords(seed, flat, boundary)) {
-      if (far - near < cameWidth * 3) continue;
-
-      const center = new Vector3(seed.x, seed.y, 0).addScaledVector(axis, (near + far) / 2);
-      const station = miterFrames(linePath(center, center.clone().add(axis), 1), {
-        reference: new Vector3(0, 0, 1),
-      })[0]!;
-      const ring = profile.map(([px, py]) =>
-        station.position.clone().addScaledVector(station.normal, px).addScaledVector(station.binormal, py),
-      );
-      if (ring.some((p) => !insideBoundary(new Vector2(p.x, p.y), boundary))) continue;
-
-      const came = buildCame(spanOpening(ring, axis, boundary), axis);
-      if (came) parts.push(came);
-    }
-  }
-  return parts;
-}

@@ -1,122 +1,135 @@
-import { DirectionalLight, HemisphereLight, Mesh, MeshStandardMaterial, PlaneGeometry } from "three";
 import GUI from "lil-gui";
-import { GregorianLatticeWindow } from "three-low-poly";
-import { clearDefaultLights } from "../../../framework/clearDefaultLights";
+import { Group } from "three";
+import {
+  type ArchStyle,
+  GregorianLatticeWindow,
+  GroundGrid,
+  type WallOpeningOptions,
+} from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
-export const meta = { title: "Gregorian Lattice Window" };
-
-const WALL_T = 0.4;
-
-function disposeWindow(window: GregorianLatticeWindow): void {
-  window.mullions.geometry.dispose();
-  window.mullions.material.dispose();
-  window.glass?.geometry.dispose();
-  window.glass?.material.dispose();
-}
+export const meta = {
+  title: "Gregorian Lattice Window",
+  description:
+    "A Gregorian light: glass, glazing bars, and the frame that carries them — the sibling of the diamond " +
+    "lattice window, assembled the same way. Underneath it is literally the same construction: a lattice " +
+    "type is only ever a choice of angles, and this is two bar families at 90° and 0° where the diamond " +
+    "is two at ±45°. There are no miters, and none wanted — mullion crosses transom, and an X-junction has " +
+    "no bisector to share. What the bars DO need is their ends cut to the boundary, and switching Arch off " +
+    "`square` shows why: in a rectangle every end is already square, but under an arch the mullions run " +
+    "into a curve. Drive it with LIGHT counts; the spacings are worked out and reported.",
+};
 
 export default function (container: HTMLElement) {
-  const { scene, controls, renderer, dispose } = createScene(container, {
-    background: 0x0a0a12,
-    cameraPosition: [0, 0, 9],
+  const { scene, controls, dispose } = createScene(container, {
+    background: 0x8e9aa6,
+    cameraPosition: [1.0, 1.5, 2.7],
   });
-  clearDefaultLights(scene);
-  controls.target.set(0, 0, 0);
+
+  controls.target.set(0, 0.95, 0);
   controls.update();
 
-  renderer.shadowMap.enabled = true;
-
-  scene.add(new HemisphereLight(0x8899bb, 0x1a1a22, 0.4));
-
-  const exteriorLight = new DirectionalLight(0xffffff, 1.1);
-  exteriorLight.position.set(4, 6, 8);
-  exteriorLight.castShadow = true;
-  exteriorLight.shadow.mapSize.set(2048, 2048);
-  exteriorLight.shadow.camera.near = 0.5;
-  exteriorLight.shadow.camera.far = 30;
-  exteriorLight.shadow.camera.left = -8;
-  exteriorLight.shadow.camera.right = 8;
-  exteriorLight.shadow.camera.top = 8;
-  exteriorLight.shadow.camera.bottom = -8;
-  exteriorLight.shadow.bias = -0.0002;
-  scene.add(exteriorLight);
-
-  const interiorLight = new DirectionalLight(0xffeedd, 0.35);
-  interiorLight.position.set(-1, 3, -7);
-  scene.add(interiorLight);
-
-  const floor = new Mesh(
-    new PlaneGeometry(14, 14),
-    new MeshStandardMaterial({ color: 0x1a1a22, roughness: 0.9 }),
-  );
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -3.5;
-  floor.receiveShadow = true;
+  const floor = new GroundGrid({ size: 6, planeColor: 0x3f4954, gridColor: 0x4c5866 });
   scene.add(floor);
 
   const params = {
-    width: 4.5,
-    height: 5.5,
-    cellsX: 4,
-    cellsY: 6,
-    mullionThickness: 0.055,
-    mullionDepth: WALL_T * 0.28,
+    arch: "semicircle" as ArchStyle,
+    width: 1.2,
+    springing: 1.5,
+    archHeight: 0.6,
+    lightsAcross: 3,
+    lightsUp: 4,
+    barWidth: 0.03,
+    barDepth: 0.03,
+    curveSegments: 24,
+    frame: true,
     glass: true,
-    paneWidth: 0,
-    paneHeight: 0,
+    frameOutset: 0.048,
+    readout: "",
   };
 
-  const makeWindow = () => {
-    const window = new GregorianLatticeWindow({
-      width: params.width,
-      height: params.height,
-      cellsX: params.cellsX,
-      cellsY: params.cellsY,
-      mullionThickness: params.mullionThickness,
-      mullionDepth: params.mullionDepth,
+  const stage = new Group();
+  scene.add(stage);
+
+  let light: GregorianLatticeWindow | null = null;
+
+  const opening = (): WallOpeningOptions => ({
+    width: params.width,
+    height: params.springing,
+    arch: params.arch,
+    archHeight: params.archHeight,
+  });
+
+  const build = () => {
+    light?.dispose();
+    if (light) stage.remove(light);
+
+    light = new GregorianLatticeWindow({
+      opening: opening(),
+      lightsAcross: params.lightsAcross,
+      lightsUp: params.lightsUp,
+      barWidth: params.barWidth,
+      barDepth: params.barDepth,
+      curveSegments: params.curveSegments,
+      frame: params.frame ? { outset: params.frameOutset } : false,
       glass: params.glass,
     });
-    params.paneWidth = window.fittedGrid.paneWidth;
-    params.paneHeight = window.fittedGrid.paneHeight;
-    window.castShadow = true;
-    return window;
-  };
+    stage.add(light);
 
-  let window = makeWindow();
-  scene.add(window);
-
-  const rebuild = () => {
-    scene.remove(window);
-    disposeWindow(window);
-    window = makeWindow();
-    scene.add(window);
-    paneWidthController.updateDisplay();
-    paneHeightController.updateDisplay();
+    params.readout =
+      `${light.lightsAcross}x${light.lightsUp} lights · mullions ${light.mullionSpacing.toFixed(4)} · ` +
+      `transoms ${light.transomSpacing.toFixed(4)} · ${light.bars.geometry.barCount} bars`;
   };
+  build();
 
   const gui = new GUI();
   gui.title("Gregorian Lattice Window");
 
-  const openingFolder = gui.addFolder("Opening");
-  openingFolder.add(params, "width", 2, 8).name("Width").step(0.1).onChange(rebuild);
-  openingFolder.add(params, "height", 2, 10).name("Height").step(0.1).onChange(rebuild);
-  openingFolder.open();
+  const shape = gui.addFolder("Opening");
+  // `square` is the plain sash. Every other entry is the same code with a curved head.
+  shape
+    .add(params, "arch", [
+      "square",
+      "segmental",
+      "semicircle",
+      "horseshoe",
+      "elliptical",
+      "pointed",
+      "ogee",
+    ])
+    .name("Arch")
+    .onChange(build);
+  shape.add(params, "width", 0.5, 2.2, 0.02).name("Width").onChange(build);
+  shape.add(params, "springing", 0.3, 2.2, 0.02).name("Springing").onChange(build);
+  shape.add(params, "archHeight", 0.1, 1.4, 0.02).name("Rise").onChange(build);
+  shape.add(params, "curveSegments", 4, 48, 1).name("Curve Segments").onChange(build);
+  shape.open();
 
-  const gridFolder = gui.addFolder("Pane Grid");
-  gridFolder.add(params, "cellsX", 1, 16).name("Panes X (width)").step(1).onChange(rebuild);
-  gridFolder.add(params, "cellsY", 1, 16).name("Panes Y (height)").step(1).onChange(rebuild);
-  const paneWidthController = gridFolder.add(params, "paneWidth").name("Pane width").disable();
-  const paneHeightController = gridFolder.add(params, "paneHeight").name("Pane height").disable();
-  gridFolder.add(params, "mullionThickness", 0.02, 0.12).name("Mullion Thickness").step(0.005).onChange(rebuild);
-  gridFolder.add(params, "mullionDepth", 0.04, 0.2).name("Mullion Depth").step(0.01).onChange(rebuild);
-  gridFolder.add(params, "glass").name("Glass Pane").onChange(rebuild);
+  const glazing = gui.addFolder("Glazing Bars");
+  // A LIGHT is one pane; 3 across gives two mullions. An odd count puts a light on the centreline, an
+  // even one puts a bar there — the factory phases the family accordingly.
+  glazing.add(params, "lightsAcross", 1, 8, 1).name("Lights Across").onChange(build);
+  glazing.add(params, "lightsUp", 1, 10, 1).name("Lights Up").onChange(build);
+  // Sizes the frame as well, which is why the assembly owns it.
+  glazing.add(params, "barWidth", 0.008, 0.08, 0.001).name("Bar Width").onChange(build);
+  glazing.add(params, "barDepth", 0.008, 0.12, 0.001).name("Bar Depth").onChange(build);
+  glazing.open();
+
+  const parts = gui.addFolder("Parts");
+  parts.add(params, "frame").name("Frame").onChange(build);
+  parts.add(params, "glass").name("Glass").onChange(build);
+  // Reaches 0: the frame's band is `inset + outset`, and `inset` is already the bar's width.
+  parts.add(params, "frameOutset", 0, 0.14, 0.001).name("Frame Outset").onChange(build);
+  parts.open();
+
+  const readout = gui.addFolder("Readout");
+  readout.add(params, "readout").name("Fitted").listen().disable();
+  readout.open();
 
   return () => {
     gui.destroy();
-    scene.remove(window);
-    disposeWindow(window);
-    floor.geometry.dispose();
-    (floor.material as MeshStandardMaterial).dispose();
+    light?.dispose();
+    floor.dispose();
     dispose();
   };
 }
