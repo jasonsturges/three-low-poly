@@ -44,8 +44,16 @@ export interface DiamondLatticeGeometryOptions {
    * pattern relative to the opening, and it is what decides which cames clip a corner and get dropped.
    */
   phase?: number;
-  /** Thickness of the came, across and through. Defaults to `0.022`. */
+  /** Width of the came ACROSS the glass — what you see from the front. Defaults to `0.022`. */
   cameWidth?: number;
+  /**
+   * Depth of the came THROUGH the glass. Defaults to `cameWidth`, a square section.
+   *
+   * Free to vary because it is the one dimension none of the cutting depends on: a came's end is decided
+   * by casting in the opening's own plane, so a point's depth never reaches the boundary maths. Real lead
+   * is deeper than it is wide, and a flat came reads as painted rather than leaded.
+   */
+  cameDepth?: number;
   /** Sides on the came's section — the low-poly knob. `4` is square lead, `12` reads round. Defaults to `4`. */
   cameSides?: number;
   /**
@@ -107,6 +115,7 @@ export class DiamondLatticeGeometry extends BufferGeometry {
     spacing = 0.19,
     phase = 0,
     cameWidth = 0.022,
+    cameDepth = cameWidth,
     cameSides = 4,
     curveSegments = 20,
   }: DiamondLatticeGeometryOptions = {}) {
@@ -124,7 +133,13 @@ export class DiamondLatticeGeometry extends BufferGeometry {
       boundary.pop();
     }
 
-    const profile = circleProfile(cameWidth / 2, Math.max(3, Math.round(cameSides)));
+    // `circleProfile` is a regular polygon, so it is square by construction. Scaling the axis that maps
+    // to the frame's NORMAL — the one running through the glass — makes it rectangular without touching
+    // the axis the cutting reads.
+    const depthScale = cameWidth > 0 ? cameDepth / cameWidth : 1;
+    const profile = circleProfile(cameWidth / 2, Math.max(3, Math.round(cameSides))).map(
+      ([px, py]) => [px * depthScale, py] as Vec2,
+    );
     const parts = [
       ...cameFamily(angle, boundary, profile, spacing, phase, cameWidth),
       ...cameFamily(-angle, boundary, profile, spacing, phase, cameWidth),
