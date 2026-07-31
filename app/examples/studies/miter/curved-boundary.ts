@@ -39,7 +39,11 @@ export const meta = {
     "the axis to whichever boundary segment it meets, and split the ring wherever that changes. Drop Arch " +
     "Segments to 6 and the came's end grows exactly as many facets as the arch has edges under it; raise " +
     "it and the end follows the curve as closely as the curve itself is cut. The member can never be " +
-    "smoother than its boundary, and it is never rougher.",
+    "smoother than its boundary, and it is never rougher. DOMAIN: every ring point has to START inside the " +
+    "opening. One that begins outside still meets the boundary — from the wrong side — so the cut is " +
+    "geometrically correct and completely meaningless, and it reads as a long taper. Set Start Y to 0 with " +
+    "any real Width and half the member is below the sill; the readout says so rather than leaving you to " +
+    "wonder whether the miter broke.",
 };
 
 /** 2D cross product — the sign tells which side of `a` the vector `b` lies on. */
@@ -71,6 +75,27 @@ function castToBoundary(p: Vector2, d: Vector2, boundary: Vector2[]): { t: numbe
   return { t: best, owner };
 }
 
+/**
+ * Is the point inside the closed boundary? Even-odd ray cast.
+ *
+ * This is the construction's DOMAIN, and it is not optional. A ring point that starts OUTSIDE the opening
+ * still meets the boundary — from the wrong side — so the cast returns a perfectly good answer to a
+ * meaningless question. A member half below the sill has its lower points cut against the sill from
+ * underneath while its upper points run on to the jamb, and the end comes out as a long taper. Every point
+ * lands exactly on the boundary; the input was simply not a member that fits in the opening.
+ */
+function insideBoundary(p: Vector2, boundary: Vector2[]): boolean {
+  let inside = false;
+  for (let i = 0, j = boundary.length - 1; i < boundary.length; j = i++) {
+    const a = boundary[i]!;
+    const b = boundary[j]!;
+    if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
 interface EndPoint {
   start: Vector3;
   end: Vector3;
@@ -95,12 +120,16 @@ function followBoundary(ring: Vector3[], axis: Vector3, boundary: Vector2[]): En
   const flat = new Vector2(axis.x, axis.y).normalize();
   const hits = ring.map((p) => castToBoundary(new Vector2(p.x, p.y), flat, boundary));
 
+  // A ring point that never meets the boundary has no end at all. Dropping it would quietly delete a
+  // vertex from a closed loop and open the solid — the same class of hole the cap used to have — so the
+  // whole build is refused instead, and the study says so.
+  if (hits.some((h) => h.owner < 0)) return [];
+
   const out: EndPoint[] = [];
   for (let i = 0; i < ring.length; i++) {
     const j = (i + 1) % ring.length;
     const here = hits[i]!;
     const next = hits[j]!;
-    if (here.owner < 0) continue;
 
     out.push({
       start: ring[i]!.clone(),
@@ -108,7 +137,7 @@ function followBoundary(ring: Vector3[], axis: Vector3, boundary: Vector2[]): En
       owner: here.owner,
     });
 
-    if (here.owner === next.owner || next.owner < 0) continue;
+    if (here.owner === next.owner) continue;
 
     // Every vertex between the two segments is a crossing — a wide member over a finely cut arch spans
     // several at once, and each one needs its own split or the facets in between are lost.
@@ -154,30 +183,84 @@ function buildMember(points: EndPoint[], axis: Vector3): BufferGeometry {
     );
   }
 
-  // One fan per RUN of points sharing a segment. A single fan over the whole loop would span every facet
-  // at once and produce non-planar triangles; the crossings are exactly where it must be cut.
-  const crossings = points.map((p, i) => (p.owner === -1 ? i : -1)).filter((i) => i >= 0);
-  if (crossings.length >= 2) {
-    for (let c = 0; c < crossings.length; c++) {
-      const from = crossings[c]!;
-      const to = crossings[(c + 1) % crossings.length]!;
-      const arc: Vector3[] = [];
-      for (let i = from; ; i = (i + 1) % count) {
-        arc.push(points[i]!.end);
-        if (i === to) break;
-      }
-      if (arc.length < 3) continue;
-      for (let i = 1; i < arc.length - 1; i++) {
-        pushTriangle(buffers, [at(arc[0]!), at(arc[i]!), at(arc[i + 1]!)], undefined);
-      }
-    }
-  } else {
-    for (let i = 1; i < count - 1; i++) {
-      pushTriangle(buffers, [at(points[0]!.end), at(points[i]!.end), at(points[i + 1]!.end)], undefined);
-    }
+  capEnd(buffers, points, axis);
+  return toBufferGeometry(buffers);
+}
+
+/**
+ * The end cap, triangulated so that **no triangle spans two facets**.
+ *
+ * The naive move is a fan per run of points sharing a segment, closing each run with the chord between its
+ * two crossings. That tiles the cap only when there are exactly TWO crossings, because then the two chords
+ * are the same edge and the fans meet along it. With four or more, the chords bound an inner polygon that
+ * nothing fills — a hole in the cap, and the reason a came straddling two arch vertices came out open.
+ *
+ * The real structure: the cast reads only a point's LATERAL offset (the ray direction is fixed, so points
+ * differing along the member's thickness get the identical answer). The facet boundaries are therefore
+ * lines of constant lateral offset, and the cap — which projects exactly onto the ring, since every point
+ * travels along the same axis — is a polygon MONOTONE in that coordinate, with a vertex on both of its
+ * chains at every cut.
+ *
+ * So walk the two chains together in lateral order. Each triangle then lies between two adjacent cuts,
+ * which is to say on a single facet, and the cap closes.
+ */
+function capEnd(
+  buffers: ReturnType<typeof createGeometryBuffers>,
+  points: EndPoint[],
+  axis: Vector3,
+): void {
+  const at = (p: Vector3): Vec3 => [p.x, p.y, p.z];
+  const count = points.length;
+
+  // Lateral offset, measured on the START ring where the geometry is still a flat convex polygon.
+  const centre = points
+    .reduce((sum, p) => sum.add(p.start), new Vector3())
+    .divideScalar(count);
+  const lateral = new Vector3(-axis.y, axis.x, 0).normalize();
+  const u = points.map((p) => p.start.clone().sub(centre).dot(lateral));
+
+  let low = 0;
+  let high = 0;
+  for (let i = 1; i < count; i++) {
+    if (u[i]! < u[low]!) low = i;
+    if (u[i]! > u[high]!) high = i;
   }
 
-  return toBufferGeometry(buffers);
+  // The two chains from the lowest lateral vertex to the highest, one each way round the loop.
+  const chain = (step: number) => {
+    const out = [low];
+    for (let i = (low + step + count) % count; i !== high; i = (i + step + count) % count) out.push(i);
+    out.push(high);
+    return out;
+  };
+  const forward = chain(1);
+  const backward = chain(-1);
+
+  // Merge-walk: always advance whichever chain has the nearer next vertex, so no triangle ever reaches
+  // past a cut — every cut is a vertex on both chains.
+  let a = 0;
+  let b = 0;
+  while (a < forward.length - 1 || b < backward.length - 1) {
+    const advanceForward =
+      b >= backward.length - 1 ||
+      (a < forward.length - 1 && u[forward[a + 1]!]! <= u[backward[b + 1]!]!);
+
+    if (advanceForward) {
+      pushTriangle(
+        buffers,
+        [at(points[forward[a]!]!.end), at(points[backward[b]!]!.end), at(points[forward[a + 1]!]!.end)],
+        undefined,
+      );
+      a++;
+    } else {
+      pushTriangle(
+        buffers,
+        [at(points[forward[a]!]!.end), at(points[backward[b]!]!.end), at(points[backward[b + 1]!]!.end)],
+        undefined,
+      );
+      b++;
+    }
+  }
 }
 
 /** The opening's outline: sill, jambs, and the named arch across the head. */
@@ -220,6 +303,19 @@ export default function (container: HTMLElement) {
     roughness: 0.6,
     metalness: 0.2,
     // Each facet of the end MUST be flat. A facet shading in two tones means a split was missed.
+    flatShading: true,
+    side: DoubleSide,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1,
+  });
+  // Out-of-domain builds are still DRAWN — seeing the failure is the point of a study — but they must not
+  // be mistakable for a result. A readout is easy to miss when the viewport looks plausible, and an
+  // out-of-domain wedge looks very plausible indeed: it is a geometrically perfect cut, just to a question
+  // that was never meaningful.
+  const invalid = new MeshStandardMaterial({
+    color: 0xd85a5a,
+    roughness: 0.6,
     flatShading: true,
     side: DoubleSide,
     polygonOffset: true,
@@ -302,8 +398,12 @@ export default function (container: HTMLElement) {
       });
     }
 
+    // The domain check, before anything is believed. A member that starts partly outside the opening gets
+    // a geometrically correct cut to a question that was never meaningful.
+    const strays = ring.filter((p) => !insideBoundary(new Vector2(p.x, p.y), boundary)).length;
+
     const geometry = buildMember(points, axis);
-    stage.add(new Mesh(geometry, lead));
+    stage.add(new Mesh(geometry, strays > 0 ? invalid : lead));
     if (params.wireframe) stage.add(new LineSegments(new WireframeGeometry(geometry), wire));
 
     if (params.showBoundary) {
@@ -311,9 +411,11 @@ export default function (container: HTMLElement) {
       stage.add(new Line(new BufferGeometry().setFromPoints(loop), outline));
     }
 
-    lead.opacity = params.opacity;
-    lead.transparent = params.opacity < 1;
-    lead.depthWrite = params.opacity >= 1;
+    for (const material of [lead, invalid]) {
+      material.opacity = params.opacity;
+      material.transparent = params.opacity < 1;
+      material.depthWrite = params.opacity >= 1;
+    }
 
     // How many boundary segments the end spans, and whether each facet really lies on its own segment.
     //
@@ -336,11 +438,13 @@ export default function (container: HTMLElement) {
     }
     params.planarity = worst.toExponential(2);
     params.verdict =
-      points.length < 3
-        ? "member misses the boundary entirely"
-        : facets > 1
-          ? `end follows ${facets} edges of the arch`
-          : "single facet — the member fits under one edge";
+      strays > 0
+        ? `OUT OF DOMAIN — ${strays} of ${ring.length} ring points start outside the opening`
+        : points.length < 3
+          ? "member misses the boundary entirely"
+          : facets > 1
+            ? `end follows ${facets} edges of the arch`
+            : "single facet — the member fits under one edge";
   };
   rebuild();
 
@@ -399,6 +503,7 @@ export default function (container: HTMLElement) {
     gui.destroy();
     clear();
     lead.dispose();
+    invalid.dispose();
     wire.dispose();
     outline.dispose();
     dispose();
