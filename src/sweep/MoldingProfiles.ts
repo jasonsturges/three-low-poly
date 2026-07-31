@@ -13,8 +13,20 @@ import type { Vec2 } from "../utils/GeometryBuffers";
  *   flat facet no matter how `segments` is set.
  * - `ogee` (cyma recta) — an S: hollow at the ceiling flowing into a bulge at the wall. The classical
  *   cornice, and the section most people picture when they picture molding.
+ * - `cyma` (cyma reversa) — the same S the other way up: a bulge at the ceiling over a hollow at the wall.
+ *   Reads heavier than an `ogee`, because the mass sits high.
+ * - `scotia` — a hollow of TWO radii rather than one, so it is deeper on one side than the other. The
+ *   asymmetry is the whole point; a symmetric hollow is just a `cove`.
+ * - `fillet` — no face at all: a plain square band filling the corner. A listel. On its own it is the
+ *   cheapest possible trim, and it is what the members of a built-up cornice are separated by.
+ * - `step` — a corbelled two-step block, oversailing as it rises. Stone and brick rather than plaster or
+ *   timber, and the lowest-poly section here.
+ *
+ * **These are CORNER sections**, every one — they bridge two surfaces. Beads, astragals, chair rails, and
+ * picture rails sit on a SINGLE face instead, which is a different convention; supply those as a custom
+ * `profile` to {@link MoldingGeometry}.
  */
-export type MoldingStyle = "cove" | "ovolo" | "chamfer" | "ogee";
+export type MoldingStyle = "cove" | "ovolo" | "chamfer" | "ogee" | "cyma" | "scotia" | "fillet" | "step";
 
 export interface MoldingProfileOptions {
   /** Which section. Defaults to `"cove"`. */
@@ -119,7 +131,79 @@ export function moldingProfile({
       }
       break;
     }
+
+    case "cyma": {
+      // The reversa: the same two quarters, swapped. Hollow nearest the wall, bulge nearest the ceiling.
+      const half = Math.max(1, Math.round(steps / 2));
+      const hx = drop / 2;
+      const hy = projection / 2;
+      for (let i = 0; i <= half; i++) {
+        const t = (i / half) * (Math.PI / 2);
+        points.push([drop - hx * Math.sin(t), hy * (1 - Math.cos(t))]);
+      }
+      for (let i = 1; i <= half; i++) {
+        const t = (i / half) * (Math.PI / 2);
+        points.push([hx * Math.cos(t), hy + hy * Math.sin(t)]);
+      }
+      break;
+    }
+
+    case "scotia": {
+      // A hollow of two different radii — deeper against the wall than against the ceiling, which is the
+      // whole difference from a `cove`. As ONE cubic curve rather than two arcs: two arcs of unequal
+      // radius only meet smoothly if their centres share a normal at the join, and getting that wrong
+      // gives a 90° crease at the waist instead of a hollow.
+      //
+      // The control points sit ON the two backs, so the curve leaves each one tangentially, exactly as a
+      // cove does. Pulling them in by different amounts is what makes it asymmetric — and because a
+      // Bézier stays inside its control points' hull, the section is guaranteed to stay inside
+      // `drop × projection` however they are set.
+      const p0: Vec2 = [drop, 0];
+      const p1: Vec2 = [drop * (1 - SCOTIA_WALL_PULL), 0];
+      const p2: Vec2 = [0, projection * (1 - SCOTIA_CEILING_PULL)];
+      const p3: Vec2 = [0, projection];
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const u = 1 - t;
+        const a = u * u * u;
+        const b = 3 * u * u * t;
+        const c = 3 * u * t * t;
+        const d = t * t * t;
+        points.push([
+          a * p0[0] + b * p1[0] + c * p2[0] + d * p3[0],
+          a * p0[1] + b * p1[1] + c * p2[1] + d * p3[1],
+        ]);
+      }
+      break;
+    }
+
+    case "fillet":
+      // The corner filled square. No face — this IS the band.
+      points.push([drop, 0], [drop, projection], [0, projection]);
+      break;
+
+    case "step":
+      // A corbel: out, up, out again. Fixed at two steps rather than driven by `segments`, because more
+      // steps would be a different SILHOUETTE and `segments` may only change tessellation.
+      points.push(
+        [drop, 0],
+        [drop, projection * STEP_FRACTION],
+        [drop * STEP_FRACTION, projection * STEP_FRACTION],
+        [drop * STEP_FRACTION, projection],
+        [0, projection],
+      );
+      break;
   }
 
   return points;
 }
+
+/** Where a `step`'s riser lands, as a fraction of each dimension. Even-ish, and it reads as masonry. */
+const STEP_FRACTION = 0.45;
+
+/**
+ * How far a `scotia`'s hollow is drawn in along each back. Unequal on purpose — equal pulls would give a
+ * symmetric hollow, which is a `cove`.
+ */
+const SCOTIA_WALL_PULL = 0.85;
+const SCOTIA_CEILING_PULL = 0.35;

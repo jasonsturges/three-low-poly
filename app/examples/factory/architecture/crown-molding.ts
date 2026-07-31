@@ -164,6 +164,10 @@ export default function (container: HTMLElement) {
       Ovolo: "ovolo",
       Chamfer: "chamfer",
       "Ogee (cyma recta)": "ogee",
+      "Cyma (reversa)": "cyma",
+      Scotia: "scotia",
+      "Fillet (plain band)": "fillet",
+      "Step (corbel)": "step",
     })
     .name("Profile")
     .onChange(rebuild);
