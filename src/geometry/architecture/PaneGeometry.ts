@@ -20,6 +20,16 @@ export interface PaneGeometryOptions {
   rebate?: number;
   /** How finely the arch is followed — the low-poly knob. Defaults to `24`. */
   curveSegments?: number;
+  /**
+   * How far a corner's offset may reach before it bevels, as a multiple of `rebate`. Defaults to `4`,
+   * the SVG default. Only consulted when `rebate` is non-zero.
+   *
+   * It matters when the pane is glazed inside a JAMB: the lining's inner edge is offset with a tight
+   * limit so a sharp ogee or pointed head blunts rather than growing a needle, and the glass has to be
+   * offset the same way or it will spike where the lining does not. Pass the same value the lining used —
+   * {@link WindowFrameGeometry} uses `2` for its inner aperture.
+   */
+  miterLimit?: number;
 }
 
 /**
@@ -50,7 +60,12 @@ export interface PaneGeometryOptions {
  * ```
  */
 export class PaneGeometry extends ShapeGeometry {
-  constructor({ opening = {}, rebate = 0, curveSegments = 24 }: PaneGeometryOptions = {}) {
+  constructor({
+    opening = {},
+    rebate = 0,
+    curveSegments = 24,
+    miterLimit = 4,
+  }: PaneGeometryOptions = {}) {
     // At the origin: the pane does not care where its opening sits in the wall, only what shape it is.
     const outline = openingOutline({ ...opening, x: 0, y: 0 });
     const segments = Math.max(2, Math.round(curveSegments));
@@ -64,6 +79,6 @@ export class PaneGeometry extends ShapeGeometry {
     // amounts, and on an arch nothing lines up at all — the pane has to keep a constant engagement all
     // the way round, which is what `offsetLoop` is for.
     const points = outline.getPoints(segments).map((p) => new Vector2(p.x, p.y));
-    super(new Shape(offsetLoop(points, rebate)), segments);
+    super(new Shape(offsetLoop(points, rebate, miterLimit)), segments);
   }
 }
