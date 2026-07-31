@@ -119,7 +119,15 @@ export class MoldingGeometry extends BufferGeometry {
         { closed, reference },
       );
 
-    let ordered = [...points];
+    // A crown seeds its frame with DOWN where a base seeds it with UP, and the binormal is `cut × normal`
+    // — so flipping the reference also flips WHICH SIDE of the path the section projects to. Where the run
+    // has an inside (a room, an L) the test below judges that and corrects it. A STRAIGHT run has no
+    // inside, nothing is corrected, and the identical points would put a base in the room and a crown
+    // inside the wall. Pre-flipping the traversal keeps the two agreeing.
+    //
+    // Reversing turns the frame 180° about its normal — a rotation, not a reflection — so the swept
+    // surface keeps its winding either way.
+    let ordered = run === "crown" ? [...points].reverse() : [...points];
     let stations = frame(ordered);
 
     // Which side the face lands on falls out of the traversal direction, which callers should not have

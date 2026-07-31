@@ -325,9 +325,9 @@ export function miterFrames(
 //      the `1 / |d · n|` widening explodes (measured 50x at 88.85°, throwing a bar 0.25 units off).
 //
 //   3. HIP — two facets meeting where a member reaches a CONVEX CORNER of its boundary, so both bounding
-//      planes trim it. Jason's sketch: an arrowhead, ">". NOT EXPRESSIBLE HERE: one station is one ring is
-//      one plane. Needs a real trimming capability. A single-plane bisector cut gets a CHAMFER instead —
-//      exact at 45°, bounded by half a bar width otherwise. WANTED.
+//      planes trim it. Jason's sketch: an arrowhead, ">". Not expressible by FRAMING: one station is one
+//      ring is one plane. A single-plane bisector cut gets a CHAMFER instead — exact at 45°, bounded by
+//      half a bar width otherwise. STILL WANTED, but see the note below: trimming may not be the answer.
 //
 //   4. T-JUNCTION / X-CROSSING — a member butting into or crossing another. No bisector to share, so no
 //      miter applies. Deliberately NOT mitered: bury the end (partially, never flush — coplanar co-facing
@@ -343,3 +343,24 @@ export function miterFrames(
 //
 // Plan of record: isolate each of these in its own study first, then implement. `mitered-corner.ts` covers
 // (1) and (2) today.
+//
+// ---
+//
+// LOFT BEFORE YOU REACH FOR TRIMMING. Twice now a problem filed under "needs a plane cut" has dissolved
+// instead, and both times the same way:
+//
+//   - The RAISED PANEL's four bevels meet at the corners in a 45° hip, which (3) calls unbuildable. It
+//     costs nothing, because the surface is lofted between two closed loops rather than swept along one:
+//     a corner is just where two bands of the loft meet, and each band brings its own plane.
+//   - The MOLDING RETURN is the run's section bounded by the miter plane and the wall. Rather than cut a
+//     swept leg against the wall, take the mitered end RING and loft it to its own shadow on the wall.
+//     The ring is slanted, so it already touches the wall along one edge — the taper falls out. Measured:
+//     a swept leg leaves 100% of a full section standing on its outer plane; the loft leaves 0.0% (two
+//     vertices, no area), in 46 verts against 68.
+//
+// The pattern: **when the region you want is bounded by two planes and you already have a ring on one of
+// them, loft to the other.** The intersection is the loft. One station is one ring is one plane constrains
+// SWEEPING, not geometry.
+//
+// Whether that reaches (3) itself is unproven and is the next thing to try: a hip needs the ring to reach
+// TWO planes, so the ring would have to split where those planes intersect. Plausible, not demonstrated.
