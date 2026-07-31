@@ -113,6 +113,10 @@ export * from "./factory/WindowFactory";
 // Architecture
 export { ArchGeometry, type ArchGeometryOptions } from "./geometry/architecture/ArchGeometry";
 export {
+  DiamondLatticeGeometry,
+  type DiamondLatticeGeometryOptions,
+} from "./geometry/architecture/DiamondLatticeGeometry";
+export {
   MoldingGeometry,
   type MoldingGeometryOptions,
   type MoldingFacing,
