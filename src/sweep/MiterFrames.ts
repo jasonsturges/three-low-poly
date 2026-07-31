@@ -340,9 +340,14 @@ export function miterFrames(
 //      two-facet hip, so it inherits (3)'s limit. Sidestep it: have members SPAN between each other's
 //      surfaces, reading contact planes off `computeBoundingBox()` rather than predicting them.
 //
-//   6. CURVED BOUNDARY — a member terminating on an ARC rather than a plane. There is no flat plane to cut
-//      against, so none of the above reaches it. UNSOLVED, and it is what the arched lattice windows
-//      actually need. Likely wants pairing with the named arch profiles rather than a new cut.
+//   6. CURVED BOUNDARY — a member terminating on an ARC rather than a plane. SOLVED, in
+//      `app/examples/studies/miter/curved-boundary.ts`, and it needed no curve intersection at all:
+//      **in a low-poly library the arch is ALREADY a polyline**, so this is (3) with N facets instead of
+//      two. Cast each ring point to whichever boundary SEGMENT it meets (the segment, not its infinite
+//      line — that is what makes a concave ogee work), and split the ring at every shared vertex between.
+//      The member ends up with exactly as many facets as the arch has edges beneath it: it can never be
+//      smoother than its boundary, and it is never rougher. Measured planar to 1e-16 across all seven
+//      named arches, 315 configurations. This is what the arched lattice windows have always needed.
 //
 // Plan of record: isolate each of these in its own study first, then implement. `mitered-corner.ts` covers
 // (1) and (2) today.
@@ -373,5 +378,10 @@ export function miterFrames(
 // ridge smears. The split is exact — with the axis fixed, `t` is linear along a ring edge, so the crossing
 // is one division rather than a search.
 //
-// Still open: (6), the curved boundary. It is the same shape of problem with a SURFACE instead of a plane,
-// so `hitDistance` becomes a ray-curve intersection and the split becomes a tangency. Worth trying next.
+// (6) then fell to the same move, and taught the sharpest lesson of the six: it was filed as needing curve
+// intersection, and needed none. A low-poly boundary is ALREADY a polyline, so there was never a curve to
+// intersect — `segments` had made it a sequence of planes before the question was asked. The tessellation
+// knob that exists for the silhouette's sake turns out to be what makes the hard case easy.
+//
+// ALL SIX ARE NOW ACCOUNTED FOR. (1) and (2) by framing, (3) and (6) by lofting, (4) deliberately not
+// mitered, (5) by spanning.
