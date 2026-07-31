@@ -1,126 +1,138 @@
-import { DirectionalLight, HemisphereLight, Mesh, MeshStandardMaterial, PlaneGeometry } from "three";
 import GUI from "lil-gui";
-import { DiamondLatticeWindow } from "three-low-poly";
-import { clearDefaultLights } from "../../../framework/clearDefaultLights";
+import { Group, Mesh, MeshStandardMaterial } from "three";
+import {
+  type ArchStyle,
+  DiamondLatticeWindow,
+  GroundGrid,
+  type WallOpeningOptions,
+} from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
-export const meta = { title: "Diamond Lattice Window" };
-
-const WALL_T = 0.4;
-
-function disposeWindow(window: DiamondLatticeWindow): void {
-  window.lattice.geometry.dispose();
-  window.lattice.material.dispose();
-  window.glass?.geometry.dispose();
-  window.glass?.material.dispose();
-}
+export const meta = {
+  title: "Diamond Lattice Window",
+  description:
+    "A leaded light: glass, diamond leading, and the frame that carries it — one factory, because leading " +
+    "has to be framed and the three are a unit that exists in the world. There is no separate arched " +
+    "version: `arch: \"square\"` is a flat head, so every style in the dropdown is the same code. Drive it " +
+    "with CELL COUNTS rather than an angle — the diamonds' corners then land exactly on the jambs, the " +
+    "sill and the springing, and the readout shows the angle and spacing that fell out. Above the " +
+    "springing the head cuts what it cuts; a curve is not a whole number of anything. One `opening` object " +
+    "builds all three parts, and it is the same object you would punch the wall with.",
+};
 
 export default function (container: HTMLElement) {
-  const { scene, controls, renderer, dispose } = createScene(container, {
-    background: 0x0a0a12,
-    cameraPosition: [0, 0, 9],
+  const { scene, controls, dispose } = createScene(container, {
+    background: 0x7d8a99,
+    cameraPosition: [1.1, 1.5, 2.7],
   });
-  clearDefaultLights(scene);
-  controls.target.set(0, 0, 0);
+
+  controls.target.set(0, 0.95, 0);
   controls.update();
 
-  renderer.shadowMap.enabled = true;
-
-  scene.add(new HemisphereLight(0x8899bb, 0x1a1a22, 0.4));
-
-  const exteriorLight = new DirectionalLight(0xffffff, 1.1);
-  exteriorLight.position.set(4, 6, 8);
-  exteriorLight.castShadow = true;
-  exteriorLight.shadow.mapSize.set(2048, 2048);
-  exteriorLight.shadow.camera.near = 0.5;
-  exteriorLight.shadow.camera.far = 30;
-  exteriorLight.shadow.camera.left = -8;
-  exteriorLight.shadow.camera.right = 8;
-  exteriorLight.shadow.camera.top = 8;
-  exteriorLight.shadow.camera.bottom = -8;
-  exteriorLight.shadow.bias = -0.0002;
-  scene.add(exteriorLight);
-
-  const interiorLight = new DirectionalLight(0xffeedd, 0.35);
-  interiorLight.position.set(-1, 3, -7);
-  scene.add(interiorLight);
-
-  const floor = new Mesh(
-    new PlaneGeometry(14, 14),
-    new MeshStandardMaterial({ color: 0x1a1a22, roughness: 0.9 }),
-  );
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -3.5;
-  floor.receiveShadow = true;
+  const floor = new GroundGrid({ size: 6, planeColor: 0x3f4954, gridColor: 0x4c5866 });
   scene.add(floor);
 
+  // A stand-in for the wall, punched with the SAME opening — the point of sharing the description.
+  const backdrop = new MeshStandardMaterial({ color: 0x5c6672, roughness: 1 });
+
   const params = {
-    width: 4.5,
-    height: 5.5,
-    cellsX: 10,
-    cellsY: 10,
-    leadThickness: 0.055,
-    leadDepth: WALL_T * 0.28,
+    arch: "pointed" as ArchStyle,
+    width: 1.24,
+    springing: 1.15,
+    archHeight: 0.78,
+    cellsX: 4,
+    cellsY: 4,
+    cameWidth: 0.022,
+    cameDepth: 0.031,
+    curveSegments: 24,
+    frame: true,
     glass: true,
-    halfDiagonalA: 0,
-    halfDiagonalB: 0,
-    cameAngleDeg: 0,
+    frameOutset: 0.035,
+    readout: "",
   };
 
-  const makeWindow = () => {
-    const window = new DiamondLatticeWindow({
-      width: params.width,
-      height: params.height,
+  const stage = new Group();
+  scene.add(stage);
+
+  let light: DiamondLatticeWindow | null = null;
+
+  const opening = (): WallOpeningOptions => ({
+    width: params.width,
+    height: params.springing,
+    arch: params.arch,
+    archHeight: params.archHeight,
+  });
+
+  const build = () => {
+    light?.dispose();
+    if (light) stage.remove(light);
+
+    light = new DiamondLatticeWindow({
+      opening: opening(),
       cellsX: params.cellsX,
       cellsY: params.cellsY,
-      leadThickness: params.leadThickness,
-      leadDepth: params.leadDepth,
+      cameWidth: params.cameWidth,
+      cameDepth: params.cameDepth,
+      curveSegments: params.curveSegments,
+      frame: params.frame ? { outset: params.frameOutset } : false,
       glass: params.glass,
     });
-    params.halfDiagonalA = window.fittedGrid.a;
-    params.halfDiagonalB = window.fittedGrid.b;
-    params.cameAngleDeg = (window.fittedGrid.angle * 180) / Math.PI;
-    window.castShadow = true;
-    return window;
-  };
+    stage.add(light);
 
-  let window = makeWindow();
-  scene.add(window);
-
-  const rebuild = () => {
-    scene.remove(window);
-    disposeWindow(window);
-    window = makeWindow();
-    scene.add(window);
-    halfAController.updateDisplay();
-    halfBController.updateDisplay();
-    angleController.updateDisplay();
+    // Angle and spacing are OUTPUTS of the cell counts — reported, never asked for.
+    params.readout =
+      `${light.cellsX}x${light.cellsY} cells · angle ${light.angle.toFixed(2)}° · ` +
+      `spacing ${light.spacing.toFixed(4)} · ${light.lattice.geometry.cameCount} cames`;
   };
+  build();
 
   const gui = new GUI();
   gui.title("Diamond Lattice Window");
 
-  const openingFolder = gui.addFolder("Opening");
-  openingFolder.add(params, "width", 2, 8).name("Width").step(0.1).onChange(rebuild);
-  openingFolder.add(params, "height", 2, 10).name("Height").step(0.1).onChange(rebuild);
-  openingFolder.open();
+  const shape = gui.addFolder("Opening");
+  // Every style here is the same code. `square` IS the rectangular window.
+  shape
+    .add(params, "arch", [
+      "square",
+      "segmental",
+      "semicircle",
+      "horseshoe",
+      "elliptical",
+      "pointed",
+      "ogee",
+    ])
+    .name("Arch")
+    .onChange(build);
+  shape.add(params, "width", 0.5, 2.2, 0.02).name("Width").onChange(build);
+  shape.add(params, "springing", 0.3, 2, 0.02).name("Springing").onChange(build);
+  shape.add(params, "archHeight", 0.1, 1.4, 0.02).name("Rise").onChange(build);
+  shape.add(params, "curveSegments", 4, 48, 1).name("Curve Segments").onChange(build);
+  shape.open();
 
-  const latticeFolder = gui.addFolder("Lattice Grid");
-  latticeFolder.add(params, "cellsX", 1, 24).name("Cells X (width)").step(1).onChange(rebuild);
-  latticeFolder.add(params, "cellsY", 1, 24).name("Cells Y (height)").step(1).onChange(rebuild);
-  const halfAController = latticeFolder.add(params, "halfDiagonalA").name("Half-diag A (E–W)").disable();
-  const halfBController = latticeFolder.add(params, "halfDiagonalB").name("Half-diag B (N–S)").disable();
-  const angleController = latticeFolder.add(params, "cameAngleDeg").name("Came angle °").disable();
-  latticeFolder.add(params, "leadThickness", 0.02, 0.12).name("Lead Thickness").step(0.005).onChange(rebuild);
-  latticeFolder.add(params, "leadDepth", 0.04, 0.2).name("Lead Depth").step(0.01).onChange(rebuild);
-  latticeFolder.add(params, "glass").name("Glass Pane").onChange(rebuild);
+  const leading = gui.addFolder("Leading");
+  // Counts, not an angle — this is what makes the diamonds land on the jambs and the sill.
+  leading.add(params, "cellsX", 1, 10, 1).name("Cells Across").onChange(build);
+  leading.add(params, "cellsY", 1, 10, 1).name("Cells Up").onChange(build);
+  // Sizes the frame as well, which is why the assembly owns it.
+  leading.add(params, "cameWidth", 0.008, 0.06, 0.001).name("Came Width").onChange(build);
+  leading.add(params, "cameDepth", 0.008, 0.1, 0.001).name("Came Depth").onChange(build);
+  leading.open();
+
+  const parts = gui.addFolder("Parts");
+  parts.add(params, "frame").name("Frame").onChange(build);
+  parts.add(params, "glass").name("Glass").onChange(build);
+  parts.add(params, "frameOutset", 0.005, 0.12, 0.001).name("Frame Outset").onChange(build);
+  parts.open();
+
+  const readout = gui.addFolder("Readout");
+  readout.add(params, "readout").name("Fitted").listen().disable();
+  readout.open();
 
   return () => {
     gui.destroy();
-    scene.remove(window);
-    disposeWindow(window);
-    floor.geometry.dispose();
-    (floor.material as MeshStandardMaterial).dispose();
+    light?.dispose();
+    backdrop.dispose();
+    floor.dispose();
     dispose();
   };
 }

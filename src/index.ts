@@ -116,6 +116,7 @@ export {
   DiamondLatticeGeometry,
   type DiamondLatticeGeometryOptions,
 } from "./geometry/architecture/DiamondLatticeGeometry";
+export { PaneGeometry, type PaneGeometryOptions } from "./geometry/architecture/PaneGeometry";
 export {
   MoldingGeometry,
   type MoldingGeometryOptions,
