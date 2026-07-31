@@ -113,6 +113,10 @@ export * from "./factory/WindowFactory";
 // Architecture
 export { ArchGeometry, type ArchGeometryOptions } from "./geometry/architecture/ArchGeometry";
 export {
+  PanelDoorGeometry,
+  type PanelDoorGeometryOptions,
+} from "./geometry/architecture/PanelDoorGeometry";
+export {
   WindowFrameGeometry,
   type WindowFrameGeometryOptions,
 } from "./geometry/architecture/WindowFrameGeometry";
