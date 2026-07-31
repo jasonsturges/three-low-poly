@@ -59,6 +59,7 @@ export default function (container: HTMLElement) {
     jut: 0.09,
     sillThickness: 0.04,
     horn: 0.05,
+    sillRise: 0.03,
 
     jamb: true,
     jambWidth: 0.05,
@@ -112,7 +113,14 @@ export default function (container: HTMLElement) {
       inset: params.inset,
       outset: params.outset,
       depth: params.depth,
-      sill: params.sill ? { jut: params.jut, thickness: params.sillThickness, horn: params.horn } : false,
+      sill: params.sill
+        ? {
+            jut: params.jut,
+            thickness: params.sillThickness,
+            horn: params.horn,
+            rise: params.sillRise,
+          }
+        : false,
       // The jamb lines the reveal and runs the wall's full depth, so it needs to know that depth.
       jamb: params.jamb ? { width: params.jambWidth } : false,
       wallThickness: params.thickness,
@@ -128,11 +136,9 @@ export default function (container: HTMLElement) {
     wall.geometry.dispose();
 
     scene.remove(window);
-    for (const part of [window.frame, window.jamb, window.glass, window.sill]) {
-      if (!part) continue;
-      part.geometry.dispose();
-      (part.material as MeshStandardMaterial).dispose();
-    }
+    // The factory owns disposal. Doing it part by part here released the SHARED timber three times —
+    // the frame, jamb and sill are one material by default.
+    window.dispose();
   };
 
   const rebuild = () => {
@@ -169,6 +175,10 @@ export default function (container: HTMLElement) {
   sill.add(params, "jut", 0.02, 0.3, 0.01).name("Jut").onChange(rebuild);
   sill.add(params, "sillThickness", 0.02, 0.25, 0.005).name("Thickness").onChange(rebuild);
   sill.add(params, "horn", 0, 0.2, 0.01).name("Horns").onChange(rebuild);
+  // The frame's inner edge bites `inset` INTO the aperture, so a sill pinned to the opening's own sill
+  // line reads as sunk. Match this to Frame Inset and the two come flush — which is also what a real
+  // sill does, since the glass sits in a rebate cut into it rather than balancing on its surface.
+  sill.add(params, "sillRise", 0, 0.12, 0.005).name("Rise").onChange(rebuild);
   sill.open();
 
   const jamb = gui.addFolder("Jamb (reveal lining)");

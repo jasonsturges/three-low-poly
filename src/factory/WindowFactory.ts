@@ -7,15 +7,13 @@ import {
   Material,
   Mesh,
   MeshStandardMaterial,
-  Shape,
-  ShapeGeometry,
 } from "three";
+import { PaneGeometry } from "../geometry/architecture/PaneGeometry";
 import {
   WindowFrameGeometry,
   type WindowFrameGeometryOptions,
 } from "../geometry/architecture/WindowFrameGeometry";
-import { openingOutline, wallOpeningTop, type WallOpeningOptions } from "../shapes/WallShape";
-import { offsetLoop } from "../utils/OffsetLoop";
+import { wallOpeningTop, type WallOpeningOptions } from "../shapes/WallShape";
 
 /** Match the jamb's inner edge (WindowFrameGeometry's INNER_MITER) so the glass fits it exactly. */
 const JAMB_INNER_MITER = 2;
@@ -36,6 +34,15 @@ export interface WindowSillOptions {
    * than built in.
    */
   horn?: number;
+  /**
+   * How far the sill's top face sits ABOVE the opening's sill line. Defaults to `0`.
+   *
+   * At `0` the top face lands exactly on the sill line, which is where the glass starts — so the frame's
+   * inner edge, which bites `inset` into the aperture, stands proud of it and the sill reads as sunk.
+   * Setting this to the same value as `inset` brings the two flush, and it is what a real sill does
+   * anyway: the glass sits in a rebate cut into the sill rather than balancing on its surface.
+   */
+  rise?: number;
 }
 
 export interface WindowJambOptions {
@@ -94,6 +101,13 @@ export interface WindowAssembly extends Group {
   jamb?: Mesh;
   /** The slab under it. */
   sill?: Mesh;
+  /**
+   * Release every geometry and material this window owns.
+   *
+   * Materials may be SHARED — the frame, jamb and sill are one timber by default — so each is disposed
+   * once rather than once per part.
+   */
+  dispose(): void;
 }
 
 /**
@@ -183,16 +197,20 @@ export function createWindow({
   }
 
   if (glass) {
-    // With a jamb the glass fits the jamb's inner opening (the outline pulled in by the board width) and
-    // centers in the wall; without one it fills the bare hole and clings to the frame's face.
-    const glassShape = jamb
-      ? new Shape(offsetLoop(openingOutline(centered).getPoints(curveSegments), -jambWidth, JAMB_INNER_MITER))
-      : openingOutline(centered);
-
+    // With a jamb the glass fits the jamb's inner opening — the outline pulled in by the board width —
+    // and centers in the wall; without one it fills the bare hole and clings to the frame's face. That
+    // pull-in is a REBATE, which is what `PaneGeometry` is for, and it must be offset with the same miter
+    // limit the lining used or the glass could spike where the lining blunts.
+    //
     // Flat, and DOUBLE-SIDED. A single-sided pane simply vanishes when the camera swings behind the
     // wall — the glass is still there, you are just looking at the back of a face that was never drawn.
     window.glass = new Mesh(
-      new ShapeGeometry(glassShape, curveSegments),
+      new PaneGeometry({
+        opening: centered,
+        rebate: jamb ? -jambWidth : 0,
+        curveSegments,
+        miterLimit: JAMB_INNER_MITER,
+      }),
       glassMaterial ??
         new MeshStandardMaterial({
           color: new Color(glassColor),
@@ -209,18 +227,29 @@ export function createWindow({
   }
 
   if (sill) {
-    const { jut = 0.09, thickness = 0.04, horn = 0.05 } = sill === true ? {} : sill;
+    const { jut = 0.09, thickness = 0.04, horn = 0.05, rise = 0 } = sill === true ? {} : sill;
 
     // As wide as the frame it sits under, plus its horns.
     const half = (opening.width ?? 1.2) / 2 + outset + horn;
 
     window.sill = new Mesh(new BoxGeometry(half * 2, thickness, jut), timber);
-    // Its top face meets the sill line of the opening, and it juts forward out of the wall.
-    window.sill.position.set(0, -thickness / 2, jut / 2);
+    // Its top face meets the sill line of the opening — or `rise` above it, to come flush with the
+    // frame's inner edge — and it juts forward out of the wall.
+    window.sill.position.set(0, rise - thickness / 2, jut / 2);
     window.sill.castShadow = true;
     window.sill.receiveShadow = true;
     window.add(window.sill);
   }
+
+  window.dispose = () => {
+    const materials = new Set<Material>();
+    for (const part of [window.glass, window.frame, window.jamb, window.sill]) {
+      if (!part) continue;
+      part.geometry.dispose();
+      materials.add(part.material as Material);
+    }
+    materials.forEach((material) => material.dispose());
+  };
 
   return window;
 }
