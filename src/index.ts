@@ -251,6 +251,13 @@ export {
 } from "./geometry/lighting/WallSconceGeometry";
 
 // Primitives
+export {
+  EdgedBoxGeometry,
+  type EdgedBoxGeometryOptions,
+  type EdgeAxis,
+  type EdgeEnds,
+  type EdgeStyle,
+} from "./geometry/primitives/EdgedBoxGeometry";
 
 // Rocks
 export { BoulderGeometry, type BoulderGeometryOptions } from "./geometry/rocks/BoulderGeometry";
