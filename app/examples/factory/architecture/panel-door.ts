@@ -8,7 +8,7 @@ export const meta = {
   description:
     "A four-panel door in frame-and-panel construction: two stiles running the full height, three rails " +
     "and two muntins butting into them, and four raised panels floating in the frame's grooves. Turn on " +
-    "Moulding for a mitered ovolo around each opening. The knob sits on `lockRailY`, which the geometry " +
+    "Molding for a mitered ovolo around each opening. The knob sits on `lockRailY`, which the geometry " +
     "reports rather than the scene assuming.",
 };
 
@@ -39,10 +39,10 @@ export default function (container: HTMLElement) {
     bevelWidth: 0.055,
     tongueThickness: 0.008,
     grooveDepth: 0.012,
-    moulding: true,
-    mouldingWidth: 0.022,
-    mouldingHeight: 0.012,
-    mouldingSegments: 4,
+    molding: true,
+    moldingWidth: 0.022,
+    moldingHeight: 0.012,
+    moldingSegments: 4,
   };
 
   // Flat shading, because a raised panel is nothing but planes meeting at angles — smooth normals would
@@ -102,13 +102,13 @@ export default function (container: HTMLElement) {
   panel.add(params, "grooveDepth", 0, 0.03, 0.001).name("Groove Depth").onChange(rebuild);
   panel.open();
 
-  const mould = gui.addFolder("Moulding");
-  mould.add(params, "moulding").name("Planted Moulding").onChange(rebuild);
-  mould.add(params, "mouldingWidth", 0.008, 0.05, 0.001).name("Width").onChange(rebuild);
-  mould.add(params, "mouldingHeight", 0.004, 0.03, 0.001).name("Height").onChange(rebuild);
+  const molding = gui.addFolder("Molding");
+  molding.add(params, "molding").name("Planted Molding").onChange(rebuild);
+  molding.add(params, "moldingWidth", 0.008, 0.05, 0.001).name("Width").onChange(rebuild);
+  molding.add(params, "moldingHeight", 0.004, 0.03, 0.001).name("Height").onChange(rebuild);
   // The low-poly knob on the section, exactly as `segments` is on a curve: 1 is a chamfer, 12 is turned.
-  mould.add(params, "mouldingSegments", 1, 12, 1).name("Segments").onChange(rebuild);
-  mould.open();
+  molding.add(params, "moldingSegments", 1, 12, 1).name("Segments").onChange(rebuild);
+  molding.open();
 
   return () => {
     gui.destroy();

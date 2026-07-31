@@ -78,18 +78,18 @@ export interface PanelDoorGeometryOptions {
    * oversize and held in a groove, loose, so it can move with the season without splitting the frame.
    */
   grooveDepth?: number;
-  /** Add planted moulding around each panel, on both faces. Defaults to `false`. */
-  moulding?: boolean;
-  /** How far the moulding lies across the frame, measured out from the opening's edge. Defaults to `0.022`. */
-  mouldingWidth?: number;
-  /** How far the moulding stands proud of the door's face. Defaults to `0.012`. */
-  mouldingHeight?: number;
+  /** Add planted molding around each panel, on both faces. Defaults to `false`. */
+  molding?: boolean;
+  /** How far the molding lies across the frame, measured out from the opening's edge. Defaults to `0.022`. */
+  moldingWidth?: number;
+  /** How far the molding stands proud of the door's face. Defaults to `0.012`. */
+  moldingHeight?: number;
   /**
-   * How finely the moulding's quarter-round is cut — the low-poly knob. Defaults to `4`.
+   * How finely the molding's quarter-round is cut — the low-poly knob. Defaults to `4`.
    *
    * `1` is a plain chamfer, `12` reads as turned.
    */
-  mouldingSegments?: number;
+  moldingSegments?: number;
 }
 
 /**
@@ -108,7 +108,7 @@ export interface PanelDoorGeometryOptions {
  * a bevel sloping down to a thin tongue — and its four bevels meet at the corners in a 45° hip, which
  * comes free because the surface is lofted between two loops rather than swept along one.
  *
- * With `moulding` on, an ovolo section wraps each opening as one closed **mitered** loop. That is the
+ * With `molding` on, an ovolo section wraps each opening as one closed **mitered** loop. That is the
  * only miter on the door, and it is the one a joiner cuts too.
  *
  * Stands on the `y = 0` plane, centred on X, with its faces at `±thickness / 2`. To hang it, move the
@@ -120,7 +120,7 @@ export interface PanelDoorGeometryOptions {
  *
  * @example
  * ```ts
- * const door = new Mesh(new PanelDoorGeometry({ moulding: true }), paint);
+ * const door = new Mesh(new PanelDoorGeometry({ molding: true }), paint);
  * ```
  */
 export class PanelDoorGeometry extends BufferGeometry {
@@ -146,10 +146,10 @@ export class PanelDoorGeometry extends BufferGeometry {
     bevelWidth = 0.055,
     tongueThickness = 0.008,
     grooveDepth = 0.012,
-    moulding = false,
-    mouldingWidth = 0.022,
-    mouldingHeight = 0.012,
-    mouldingSegments = 4,
+    molding = false,
+    moldingWidth = 0.022,
+    moldingHeight = 0.012,
+    moldingSegments = 4,
   }: PanelDoorGeometryOptions = {}) {
     super();
 
@@ -192,13 +192,13 @@ export class PanelDoorGeometry extends BufferGeometry {
         buildPanel(opening, { panel, panelThickness, bevelWidth, tongueThickness, grooveDepth }),
       );
 
-      if (moulding) {
+      if (molding) {
         parts.push(
-          ...buildMoulding(opening, {
+          ...buildMolding(opening, {
             thickness,
-            mouldingWidth,
-            mouldingHeight,
-            mouldingSegments,
+            moldingWidth,
+            moldingHeight,
+            moldingSegments,
           }),
         );
       }
@@ -333,22 +333,22 @@ function ovoloProfile(width: number, height: number, segments: number): Vec2[] {
 }
 
 /**
- * Planted moulding around one opening, on both faces — a closed mitered loop each.
+ * Planted molding around one opening, on both faces — a closed mitered loop each.
  *
  * The section never has to know about the corners: the miter is a property of the PATH, so an arbitrary
  * routed profile wraps the opening exactly as a plain bar would. The back face runs the loop reversed
  * against a `-Z` reference, which lands the same section proud of the back and still facing outward.
  */
-function buildMoulding(
+function buildMolding(
   opening: Opening,
   {
     thickness,
-    mouldingWidth,
-    mouldingHeight,
-    mouldingSegments,
-  }: Required<Pick<PanelDoorGeometryOptions, "thickness" | "mouldingWidth" | "mouldingHeight" | "mouldingSegments">>,
+    moldingWidth,
+    moldingHeight,
+    moldingSegments,
+  }: Required<Pick<PanelDoorGeometryOptions, "thickness" | "moldingWidth" | "moldingHeight" | "moldingSegments">>,
 ): BufferGeometry[] {
-  const profile = ovoloProfile(mouldingWidth, mouldingHeight, Math.max(1, Math.round(mouldingSegments)));
+  const profile = ovoloProfile(moldingWidth, moldingHeight, Math.max(1, Math.round(moldingSegments)));
   const front = thickness / 2;
 
   return [1, -1].map((side) => {
