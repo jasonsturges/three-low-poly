@@ -16,7 +16,7 @@ import {
   WireframeGeometry,
 } from "three";
 import { circleProfile, linePath, miterFrames, sweep, transportFrames } from "three-low-poly";
-import { createScene } from "../../framework/createScene";
+import { createScene } from "../../../framework/createScene";
 
 export const meta = {
   title: "Mitered Corner",

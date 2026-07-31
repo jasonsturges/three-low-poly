@@ -1,8 +1,8 @@
 import GUI from "lil-gui";
 import { Color, Group, Matrix4, Mesh, MeshStandardMaterial, Vector3 } from "three";
 import { BevelGearGeometry, GearGeometry } from "three-low-poly";
-import { createScene } from "../../framework/createScene";
-import { frameObject } from "../../framework/frameObject";
+import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Bevel and Spur",

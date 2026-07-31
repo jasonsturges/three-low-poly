@@ -1,8 +1,8 @@
 import GUI from "lil-gui";
 import { Color, Group, Mesh, MeshStandardMaterial } from "three";
 import { BevelGearGeometry } from "three-low-poly";
-import { createScene } from "../../framework/createScene";
-import { frameObject } from "../../framework/frameObject";
+import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Bevel Gear Pair",
