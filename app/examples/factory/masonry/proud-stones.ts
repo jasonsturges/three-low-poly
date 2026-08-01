@@ -14,13 +14,13 @@ import {
   WireframeGeometry,
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { mulberry32 } from "three-low-poly";
+import { mulberry32, scatterProudStones } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
   title: "Proud Stones",
   description:
-    "STUDY — the thing that turns a flat face into masonry, and it is a SURFACE operation: it needs a " +
+    "The thing that turns a flat face into masonry, and it is a SURFACE operation: it needs a " +
     "rectangle and a course grid, and never needs to know it is a wall. The move that makes it work is " +
     "that a proud stone is a HALF-EMBEDDED block, not a block sitting on the face — it is sunk further " +
     "into the surface than it stands out of it, so nothing floats, no two faces are coplanar, and it " +
@@ -45,111 +45,6 @@ export const meta = {
 //  BOSS         a projecting stone left for a carver to work later, sometimes never carved. The reason a
 //               real wall has these at all.
 //  BATTER       a wall's backward lean. Not modelled; would tilt the whole surface, not the stones.
-
-interface Proud {
-  /** Centre on the surface, from its lower-left corner. */
-  x: number;
-  y: number;
-  /** Along the course — the stretcher face. */
-  length: number;
-  /** Up — the course. */
-  height: number;
-  /** How far it stands out of the surface. */
-  depth: number;
-  /** A whisper of roll, radians. */
-  tilt: number;
-}
-
-interface ScatterOptions {
-  width: number;
-  height: number;
-  course: number;
-  aspect: number;
-  bondOffset: number;
-  /** Chance a cell carries a proud stone. Density, not a count. */
-  density: number;
-  /** Length range, as multiples of the nominal stone. Equal values give brick. */
-  lengthMin: number;
-  lengthMax: number;
-  /** Height range, as multiples of the course. */
-  heightMin: number;
-  heightMax: number;
-  /** Projection range, in world units. */
-  depthMin: number;
-  depthMax: number;
-  /** Max roll, radians. */
-  tilt: number;
-  seed: number;
-}
-
-/**
- * Where stones stand proud of a rectangle.
- *
- * **Takes a surface, not a wall.** A width, a height, and a course grid is everything it needs, which is
- * why the same call decorates a wall, a pier, a chimney or a plinth. Returns placements rather than
- * geometry, so the caller decides how deep each block runs and what it is made of.
- *
- * Length and height are MULTIPLIERS on the course, never absolutes, so one set of numbers reads the same on
- * a garden wall and a bell tower. Their ranges are what separate the two looks: collapse them and every
- * proud stone is the same unit that has popped, which is a brick wall; open them and each was its own
- * mould, which is stone.
- */
-const scatterProud = ({
-  width,
-  height,
-  course,
-  aspect,
-  bondOffset,
-  density,
-  lengthMin,
-  lengthMax,
-  heightMin,
-  heightMax,
-  depthMin,
-  depthMax,
-  tilt,
-  seed,
-}: ScatterOptions): { placements: Proud[]; candidates: number } => {
-  const random = mulberry32(seed);
-  const signed = (amount: number) => (random() - 0.5) * 2 * amount;
-  // Ranges given either way round, because a slider pair will cross sooner or later.
-  const between = (min: number, max: number) =>
-    Math.min(min, max) + random() * Math.abs(max - min);
-
-  const courses = Math.max(1, Math.round(height / course));
-  const step = height / courses;
-  const nominal = step * aspect;
-
-  const placements: Proud[] = [];
-  let candidates = 0;
-
-  for (let c = 0; c < courses; c++) {
-    const y = (c + 0.5) * step;
-    // The same running bond the wall itself uses, so a proud stone lands ON a stone rather than across a
-    // perpend. This is the whole reason it must know the course grid and not merely the rectangle.
-    const offset = (c % 2) * nominal * bondOffset;
-
-    for (let s = 0; ; s++) {
-      const x = offset + s * nominal;
-      if (x + nominal > width) break;
-      candidates++;
-      // Density is a CHANCE per cell, not a count. The grid stays regular; the result does not, and it
-      // does not clump the way sampling positions at random would.
-      if (random() > density) continue;
-
-      placements.push({
-        x: x + nominal / 2,
-        y: y + signed(step * 0.03),
-        length: nominal * between(lengthMin, lengthMax),
-        height: step * between(heightMin, heightMax),
-        depth: between(depthMin, depthMax),
-        tilt: signed(tilt),
-      });
-    }
-  }
-
-  return { placements, candidates };
-};
 
 export default function (container: HTMLElement) {
   const { scene, controls, dispose } = createScene(container, {
@@ -199,6 +94,7 @@ export default function (container: HTMLElement) {
     colorVariance: 0.09,
     seed: 0x2c1a,
     showSurface: true,
+    window: false,
     wireframe: false,
     readout: "",
     clampOut: "",
@@ -219,11 +115,11 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     clear();
 
-    const { placements, candidates } = scatterProud({
+    const { placements, candidates, excluded } = scatterProudStones({
       width: params.width,
       height: params.height,
-      course: params.courseHeight,
-      aspect: params.stoneAspect,
+      courseHeight: params.courseHeight,
+      stoneAspect: params.stoneAspect,
       bondOffset: params.bondOffset,
       density: params.density,
       lengthMin: params.lengthMin,
@@ -234,6 +130,8 @@ export default function (container: HTMLElement) {
       depthMax: params.depthMax,
       tilt: params.tilt,
       seed: params.seed,
+      // Composition, handed in rather than known about — a window the stones must keep off.
+      exclusions: params.window ? [{ x: params.width * 0.34, y: params.height * 0.3, width: params.width * 0.28, height: params.height * 0.42 }] : [],
     });
 
     const random = mulberry32(params.seed ^ 0x9e3779b9);
@@ -304,7 +202,7 @@ export default function (container: HTMLElement) {
 
     const faces = params.bothSides ? 2 : 1;
     const tris = merged.getAttribute("position").count / 3;
-    params.readout = `${placements.length} of ${candidates} cells (${((placements.length / Math.max(1, candidates)) * 100).toFixed(0)}%) × ${faces} face${faces > 1 ? "s" : ""} · ${tris.toLocaleString()} tris · 1 draw call`;
+    params.readout = `${placements.length} of ${candidates} cells (${excluded} excluded) (${((placements.length / Math.max(1, candidates)) * 100).toFixed(0)}%) × ${faces} face${faces > 1 ? "s" : ""} · ${tris.toLocaleString()} tris · 1 draw call`;
     params.clampOut =
       clamped === 0
         ? "none — every stone got the width asked for"
@@ -320,6 +218,9 @@ export default function (container: HTMLElement) {
   surface.add(params, "height", 0.5, 8, 0.1).name("Height").onChange(rebuild);
   surface.add(params, "surfaceThickness", 0.06, 1, 0.02).name("Surface Thickness").onChange(rebuild);
   surface.add(params, "showSurface").name("Show Surface").onChange(rebuild);
+  // EXCLUSIONS are what keep this a surface operation. The scatter never learns what a window is; it is
+  // handed a rectangle to stay off, and composes with anything the same way.
+  surface.add(params, "window").name("Window (exclusion)").onChange(rebuild);
   surface.open();
 
   const grid = gui.addFolder("Course Grid");

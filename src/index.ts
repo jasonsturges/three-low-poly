@@ -102,6 +102,7 @@ export * from "./factory/FlagstoneFloor";
 export * from "./factory/HardwoodFloor";
 export * from "./factory/PlankFloor";
 export * from "./factory/PlankFloorLayout";
+export * from "./factory/ProudStones";
 export * from "./factory/PumpkinPatch";
 export * from "./factory/RusticFence";
 export * from "./factory/VotiveRack";
