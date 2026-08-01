@@ -22,9 +22,14 @@ import type { Vec2 } from "../utils/GeometryBuffers";
  * - `step` — a corbelled two-step block, oversailing as it rises. Stone and brick rather than plaster or
  *   timber, and the lowest-poly section here.
  *
- * **These are CORNER sections**, every one — they bridge two surfaces. Beads, astragals, chair rails, and
- * picture rails sit on a SINGLE face instead, which is a different convention; supply those as a custom
- * `profile` to {@link MoldingGeometry}.
+ * **These are CORNER sections**, every one — they bridge two surfaces. Beads, astragals and the sections a
+ * chair rail is run from sit on a SINGLE face instead, and are {@link surfaceProfile}.
+ *
+ * The two families share the classical ELEMENT names — `ovolo`, `ogee` and `fillet` appear in both — and
+ * that is not a collision. Those words name a CURVE, and a curve does not care what it is attached to: a
+ * surface `ovolo` is the same convex quarter as this one, finished against one wall instead of two. What
+ * cannot be shared is the SECTION, because the closure differs, which is why there are two unions and two
+ * functions rather than one of each.
  */
 export type MoldingStyle = "cove" | "ovolo" | "chamfer" | "ogee" | "cyma" | "scotia" | "fillet" | "step";
 

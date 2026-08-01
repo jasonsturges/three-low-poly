@@ -392,6 +392,11 @@ export {
   type MoldingStyle,
 } from "./sweep/MoldingProfiles";
 export { circleProfile, rectProfile } from "./sweep/Profiles";
+export {
+  surfaceProfile,
+  type SurfaceProfileOptions,
+  type SurfaceStyle,
+} from "./sweep/SurfaceProfiles";
 export { sweep, transportFrames, type Station, type SweepOptions } from "./sweep/Sweep";
 
 //------------------------------
