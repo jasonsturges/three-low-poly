@@ -4,9 +4,9 @@ import { MoldingGeometry, type MoldingStyle } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
-  title: "Crown Molding",
+  title: "Molding Run",
   description:
-    "Molding run along a wall line: crown at the ceiling, base at the floor, from the same section flipped. " +
+    "A molding run along a wall line — CROWN at the ceiling and BASE at the floor are the same geometry, " +
     "The corner is the point — every wall junction is cut on the plane bisecting it, so the run closes " +
     "exactly whatever the section, and a carpenter's compound miter is not needed because in world space " +
     "the cut is one plain vertical plane. Switch Walls to Room for a closed run with four inside corners " +
@@ -155,7 +155,7 @@ export default function (container: HTMLElement) {
   rebuild();
 
   const gui = new GUI();
-  gui.title("Crown Molding");
+  gui.title("Molding Run");
 
   const section = gui.addFolder("Section");
   section
