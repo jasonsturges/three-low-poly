@@ -74,6 +74,13 @@ export interface MoldingGeometryOptions {
  * against the fence. That is an artifact of cutting flat: in world space the corner is a single vertical
  * plane through the bisector, which is what this builds and why nothing extra is needed for it.
  *
+ * **A short run between two CONCAVE corners has a floor.** Both miters carry material inward along the
+ * segment between them, so a face narrower than `2 · projection · tan(turn / 2)` — 2× the projection at
+ * right angles — has its two ends overlapping. Nothing is wrong when that happens: both miters are exact,
+ * and the request simply does not fit, the way molding too deep for a narrow alcove does not fit on a real
+ * wall. A CONVEX pair has no such limit, because there the miters spread apart instead — molding wraps a
+ * chimney breast at any width.
+ *
  * An open run gets a square cut at each end, which is a length dying into a doorway. A closed run has no
  * ends at all, and no caps.
  *
