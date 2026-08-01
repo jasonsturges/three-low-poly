@@ -3,7 +3,16 @@ import GUI from "lil-gui";
 import { createHexagonalTilesByCount } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
-export const meta = { title: "Hexagonal Tiles (Instance Colors)" };
+export const meta = {
+  title: "Tile Color Intervals",
+  description:
+    "STUDY — PATTERN out of arithmetic. Every Nth tile takes the highlight colour and the rest take the " +
+    "base, so the only input is an integer — and because a hexagonal packing runs its index along rows " +
+    "that do not align with the grid, the interval interferes with the row length and throws out spirals, " +
+    "stripes and lattices that nobody authored. Drag Interval slowly: the pattern is a function of how the " +
+    "interval and the row width divide each other, so nearby values look nothing alike. Same capability as " +
+    "the analogous palette study — a white material and `setColorAt` — used for rhythm instead of variance.",
+};
 
 export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container, { cameraPosition: [0, 5, 5] });
