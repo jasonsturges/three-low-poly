@@ -108,6 +108,7 @@ export * from "./factory/RusticFence";
 export * from "./factory/VotiveRack";
 export * from "./factory/RockFactory";
 export * from "./factory/StaircaseFactory";
+export * from "./factory/StoneWall";
 export * from "./factory/WindowFactory";
 
 //------------------------------
