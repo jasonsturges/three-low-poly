@@ -230,18 +230,37 @@ export default function (container: HTMLElement) {
       segments: params.segments,
     });
     // The profile's `x` runs along the wall away from the corner line, so DOWN hangs a crown and UP
-    // stands a base. With the run heading +x this puts the section's projection on +z, into the room.
-    const reference = new Vector3(0, params.run === "crown" ? -1 : 1, 0);
+    // stands a base.
+    const crown = params.run === "crown";
+    const reference = new Vector3(0, crown ? -1 : 1, 0);
     // The plane the end is cut on. The leg only has to name a DIRECTION for the bisector to exist — its
     // length never enters, which is why the loft construction ignores Leg Length entirely.
     const cuts = miterCuts([from, corner, legEnd]);
-    const stations = miterFrames(linePath(from, corner, 1), {
+    const cut = cuts[1]!;
+
+    // TRAVERSAL DECIDES WHICH SIDE THE SECTION LANDS ON. `miterFrames` builds its binormal as
+    // `cut × normal`, so heading +x with a crown's DOWN reference puts the projection on −z — inside the
+    // wall. `MoldingGeometry` solves this by walking a crown BACKWARDS, and a run built by hand has to do
+    // the same. Reversing turns the frame 180° about its normal, a rotation rather than a reflection, so
+    // the winding survives; what changes is that the end under study becomes the run's START.
+    const stations = miterFrames(crown ? linePath(corner, from, 1) : linePath(from, corner, 1), {
       reference,
-      endCut: cuts[1],
+      ...(crown ? { startCut: cut } : { endCut: cut }),
       widenSeatCuts: true,
     });
 
-    return { profile, reference, cuts, stations, corner, legEnd };
+    return {
+      profile,
+      reference,
+      cut,
+      cuts,
+      stations,
+      /** The station ON the corner, whichever end of the traversal that turned out to be. */
+      endStation: stations[crown ? 0 : stations.length - 1]!,
+      corner,
+      legEnd,
+      crown,
+    };
   };
 
   const rebuild = () => {
@@ -287,23 +306,25 @@ export default function (container: HTMLElement) {
       body = new MoldingGeometry({ points: [from, corner, legEnd], ...section });
       add(body, plaster);
     } else {
-      const { profile, reference, cuts, stations } = mitredRun(y, legEnd);
+      const { profile, reference, cut, stations, endStation, crown } = mitredRun(y, legEnd);
       body = sweep(profile, stations);
       add(body, plaster);
 
       leg =
         params.end === "twoPiece"
-          ? // A second LENGTH, swept along the leg — constant section, so it must end square.
+          ? // A second LENGTH, swept along the leg — constant section, so it must end square. It needs the
+            // same reversal as the body for the same reason: with the leg heading +z, a crown's DOWN
+            // reference would put its projection on +x instead of −x, the side the run's end face is on.
             sweep(
               profile,
-              miterFrames(linePath(corner, legEnd, 1), {
+              miterFrames(crown ? linePath(legEnd, corner, 1) : linePath(corner, legEnd, 1), {
                 reference,
-                startCut: cuts[1],
+                ...(crown ? { endCut: cut } : { startCut: cut }),
                 widenSeatCuts: true,
               }),
             )
           : // The candidate: the run's own end ring, carried to the wall.
-            loftToWall(stations[1]!, profile, 0);
+            loftToWall(endStation, profile, 0);
       add(leg, legPaint);
     }
 
