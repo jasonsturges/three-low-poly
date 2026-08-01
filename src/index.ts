@@ -98,6 +98,8 @@ export * from "./factory/HeadstoneFactory";
 export * from "./factory/HexagonalTileFactory";
 export * from "./factory/AppleTree";
 export * from "./factory/AutumnTree";
+export * from "./factory/PlankFloor";
+export * from "./factory/PlankFloorLayout";
 export * from "./factory/PumpkinPatch";
 export * from "./factory/RusticFence";
 export * from "./factory/VotiveRack";
