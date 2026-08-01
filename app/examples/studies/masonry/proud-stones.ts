@@ -27,7 +27,11 @@ export const meta = {
     "inherits the bond for free. Turn Sink to zero and watch it become a sticker: the silhouette is the " +
     "same but the shadow at its foot goes wrong. Everything else is variance around a nominal — length, " +
     "height, depth and a whisper of tilt, each a multiplier rather than an absolute, so one setting works " +
-    "at any scale. Density is a CHANCE per cell, so the grid stays regular while the result does not.",
+    "at any scale. Density is a CHANCE per cell, so the grid stays regular while the result does not. " +
+    "This is ACCENT, not a brick simulation — a hand-drawn wall never draws every stone, it draws a few " +
+    "proud ones and lets you infer the rest. Tight Length and Height ranges give you BRICK, where every " +
+    "unit is the same and one has simply popped; wide ranges give you moulded STONE. The two presets set " +
+    "nothing but those ranges.",
 };
 
 //------------------------------
@@ -46,7 +50,9 @@ interface Proud {
   /** Centre on the surface, from its lower-left corner. */
   x: number;
   y: number;
+  /** Along the course — the stretcher face. */
   length: number;
+  /** Up — the course. */
   height: number;
   /** How far it stands out of the surface. */
   depth: number;
@@ -54,29 +60,61 @@ interface Proud {
   tilt: number;
 }
 
+interface ScatterOptions {
+  width: number;
+  height: number;
+  course: number;
+  aspect: number;
+  bond: number;
+  /** Chance a cell carries a proud stone. Density, not a count. */
+  chance: number;
+  /** Length range, as multiples of the nominal stone. Equal values give brick. */
+  lengthMin: number;
+  lengthMax: number;
+  /** Height range, as multiples of the course. */
+  heightMin: number;
+  heightMax: number;
+  /** Projection range, in world units. */
+  depthMin: number;
+  depthMax: number;
+  /** Max roll, radians. */
+  tilt: number;
+  seed: number;
+}
+
 /**
  * Where stones stand proud of a rectangle.
  *
  * **Takes a surface, not a wall.** A width, a height, and a course grid is everything it needs, which is
  * why the same call decorates a wall, a pier, a chimney or a plinth. Returns placements rather than
- * geometry, so the caller decides how far each one sinks and what it is made of.
+ * geometry, so the caller decides how deep each block runs and what it is made of.
  *
- * Every dimension is a MULTIPLIER on the course, never an absolute, so a single set of numbers reads the
- * same on a garden wall and on a bell tower.
+ * Length and height are MULTIPLIERS on the course, never absolutes, so one set of numbers reads the same on
+ * a garden wall and a bell tower. Their ranges are what separate the two looks: collapse them and every
+ * proud stone is the same unit that has popped, which is a brick wall; open them and each was its own
+ * mould, which is stone.
  */
-const scatterProud = (
-  width: number,
-  height: number,
-  course: number,
-  aspect: number,
-  bond: number,
-  chance: number,
-  depth: number,
-  tilt: number,
-  seed: number,
-): { placements: Proud[]; candidates: number } => {
+const scatterProud = ({
+  width,
+  height,
+  course,
+  aspect,
+  bond,
+  chance,
+  lengthMin,
+  lengthMax,
+  heightMin,
+  heightMax,
+  depthMin,
+  depthMax,
+  tilt,
+  seed,
+}: ScatterOptions): { placements: Proud[]; candidates: number } => {
   const random = mulberry32(seed);
   const signed = (amount: number) => (random() - 0.5) * 2 * amount;
+  // Ranges given either way round, because a slider pair will cross sooner or later.
+  const between = (min: number, max: number) =>
+    Math.min(min, max) + random() * Math.abs(max - min);
 
   const courses = Math.max(1, Math.round(height / course));
   const step = height / courses;
@@ -102,9 +140,9 @@ const scatterProud = (
       placements.push({
         x: x + nominal / 2,
         y: y + signed(step * 0.03),
-        length: nominal * (0.72 + random() * 0.4),
-        height: step * (0.8 + random() * 0.12),
-        depth: depth * (0.7 + random() * 0.9),
+        length: nominal * between(lengthMin, lengthMax),
+        height: step * between(heightMin, heightMax),
+        depth: between(depthMin, depthMax),
         tilt: signed(tilt),
       });
     }
@@ -148,8 +186,13 @@ export default function (container: HTMLElement) {
     stoneAspect: 2.2,
     bond: 0.5,
     chance: 0.14,
-    depth: 0.035,
-    sink: 2.6,
+    lengthMin: 0.72,
+    lengthMax: 1.12,
+    heightMin: 0.8,
+    heightMax: 0.92,
+    depthMin: 0.024,
+    depthMax: 0.056,
+    stoneWidth: 0.17,
     tilt: 0.025,
     bothSides: true,
     color: "#6a6560",
@@ -176,17 +219,22 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     clear();
 
-    const { placements, candidates } = scatterProud(
-      params.width,
-      params.height,
-      params.courseHeight,
-      params.stoneAspect,
-      params.bond,
-      params.chance,
-      params.depth,
-      params.tilt,
-      params.seed,
-    );
+    const { placements, candidates } = scatterProud({
+      width: params.width,
+      height: params.height,
+      course: params.courseHeight,
+      aspect: params.stoneAspect,
+      bond: params.bond,
+      chance: params.chance,
+      lengthMin: params.lengthMin,
+      lengthMax: params.lengthMax,
+      heightMin: params.heightMin,
+      heightMax: params.heightMax,
+      depthMin: params.depthMin,
+      depthMax: params.depthMax,
+      tilt: params.tilt,
+      seed: params.seed,
+    });
 
     const random = mulberry32(params.seed ^ 0x9e3779b9);
     const signed = (amount: number) => (random() - 0.5) * 2 * amount;
@@ -220,21 +268,21 @@ export default function (container: HTMLElement) {
     const half = params.surfaceThickness / 2;
     let clamped = 0;
     for (const { x, y, length, height, depth, tilt } of placements) {
-      // THE MOVE. The block is `depth * sink` deep and sits so that exactly `depth` of it clears the face —
-      // the rest is buried. Sunk deeper than it stands out, so the join at its foot is inside solid
-      // material rather than on it.
+      // THE MOVE. The block runs `stoneWidth` INTO the surface and sits so that exactly `depth` of it
+      // clears the face — the rest is buried. Sunk further than it stands out, so the join at its foot is
+      // inside solid material rather than on it.
       //
-      // Both ends need a guard, and neither is optional:
+      // Width is given, not derived. The original took `wallThickness * 0.5`, which is self-limiting —
+      // half a wall can never reach the other half — but a surface operation does not know the wall, so
+      // the caller states it and both ends are guarded instead:
       //
-      //   TOO SHALLOW — as the block's depth approaches `depth`, its inner face rises to meet the
-      //     surface's OUTER face and the two land coplanar, which fights.
-      //   TOO DEEP — a block from one face grows past the midplane and meets the block on the other,
-      //     two differently-tinted solids sharing space. That is the colour shimmer, and it is why the
-      //     original expressed this as a fixed fraction of the wall (`thickness * 0.5`) rather than a
-      //     multiple of the projection: half a wall can never reach the other half.
+      //   TOO THIN — the block's back face rises to meet the surface's FRONT face, and two coplanar
+      //     surfaces fight.
+      //   TOO THICK — with both faces built, a block from one side grows past the midplane and meets its
+      //     opposite number, two differently-tinted solids sharing space. That is the colour shimmer.
       const floor = depth + params.surfaceThickness * 0.12;
       const ceiling = Math.max(floor, half + depth - params.surfaceThickness * 0.08);
-      const wanted = depth * params.sink;
+      const wanted = params.stoneWidth;
       const solid = Math.min(Math.max(wanted, floor), ceiling);
       if (Math.abs(solid - wanted) > 1e-9) clamped++;
 
@@ -259,8 +307,8 @@ export default function (container: HTMLElement) {
     params.readout = `${placements.length} of ${candidates} cells (${((placements.length / Math.max(1, candidates)) * 100).toFixed(0)}%) × ${faces} face${faces > 1 ? "s" : ""} · ${tris.toLocaleString()} tris · 1 draw call`;
     params.clampOut =
       clamped === 0
-        ? "none — every stone got the sink asked for"
-        : `${clamped} stones clamped: sink would breach the ${clamped && params.sink > 2 ? "midplane" : "face"}`;
+        ? "none — every stone got the width asked for"
+        : `${clamped} clamped — ${params.stoneWidth > half ? "would breach the midplane" : "would sit coplanar with the face"}`;
   };
   rebuild();
 
@@ -284,13 +332,56 @@ export default function (container: HTMLElement) {
   const proud = gui.addFolder("Proud");
   // A chance PER CELL, not a count — the grid stays regular and the result does not clump.
   proud.add(params, "chance", 0, 1, 0.01).name("Density (chance)").onChange(rebuild);
-  proud.add(params, "depth", 0.002, 0.15, 0.002).name("Depth").onChange(rebuild);
-  // How much deeper than it projects. 1 is flush-backed and starts to float; the default buries it well.
-  proud.add(params, "sink", 1, 8, 0.1).name("Sink (× depth)").onChange(rebuild);
+  // How far it stands out of the face. A RANGE: identical values give every stone the same relief.
+  proud.add(params, "depthMin", 0.002, 0.15, 0.002).name("Depth Min").onChange(rebuild);
+  proud.add(params, "depthMax", 0.002, 0.15, 0.002).name("Depth Max").onChange(rebuild);
+  // How far it runs INTO the surface. Given, not derived — see the note at the geometry.
+  proud.add(params, "stoneWidth", 0.01, 1, 0.005).name("Width (into wall)").onChange(rebuild);
   proud.add(params, "tilt", 0, 0.12, 0.002).name("Tilt").onChange(rebuild);
   // A facade shows both faces; a surface let into something only shows one.
   proud.add(params, "bothSides").name("Both Faces").onChange(rebuild);
   proud.open();
+
+  const size = gui.addFolder("Stone Size");
+  // THE brick/stone dial. Multiples of the nominal stone and of the course, so they hold at any scale.
+  // Collapse a range and every proud stone is the same unit; open it and each came from its own mould.
+  size.add(params, "lengthMin", 0.2, 2, 0.02).name("Length Min").onChange(rebuild);
+  size.add(params, "lengthMax", 0.2, 2, 0.02).name("Length Max").onChange(rebuild);
+  size.add(params, "heightMin", 0.2, 1.2, 0.02).name("Height Min").onChange(rebuild);
+  size.add(params, "heightMax", 0.2, 1.2, 0.02).name("Height Max").onChange(rebuild);
+  size
+    .add(
+      {
+        brick: () => {
+          // Every unit identical, one has simply popped. Shallow, square, and barely rolled.
+          Object.assign(params, {
+            lengthMin: 1, lengthMax: 1, heightMin: 0.94, heightMax: 0.94,
+            depthMin: 0.022, depthMax: 0.03, tilt: 0.004, chance: 0.09,
+          });
+          gui.controllersRecursive().forEach((c) => c.updateDisplay());
+          rebuild();
+        },
+      },
+      "brick",
+    )
+    .name("Preset: Brick");
+  size
+    .add(
+      {
+        stone: () => {
+          // Each from its own mould. Wide on every axis, and rolled enough to catch the light unevenly.
+          Object.assign(params, {
+            lengthMin: 0.55, lengthMax: 1.35, heightMin: 0.68, heightMax: 0.98,
+            depthMin: 0.018, depthMax: 0.07, tilt: 0.03, chance: 0.16,
+          });
+          gui.controllersRecursive().forEach((c) => c.updateDisplay());
+          rebuild();
+        },
+      },
+      "stone",
+    )
+    .name("Preset: Stone");
+  size.open();
 
   const colour = gui.addFolder("Colour");
   colour.addColor(params, "color").name("Stone").onChange(rebuild);
