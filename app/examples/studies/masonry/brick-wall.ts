@@ -77,6 +77,9 @@ export default function (container: HTMLElement) {
     brickDepth: 0.2,
     mortarGap: 0.018,
     mortar: "adds" as Mortar,
+    mortarCore: true,
+    mortarRecess: 0.01,
+    mortarColor: "#a8a094",
     bondOffset: 0.5,
     courseEnds: "closers" as Ends,
     minBat: 0.25,
@@ -203,6 +206,31 @@ export default function (container: HTMLElement) {
       }
     }
 
+    // THE MORTAR CORE, borrowed from the stone wall. One box behind everything, recessed from both faces.
+    //
+    // Brick needs it for a different reason than stone did. Stone's joints were holes because the joint is
+    // SUBTRACTED from the unit; brick's joint is ADDED, so the gap between bricks is wider still — the
+    // whole `mortarGap` rather than nothing. Without a core a brick wall is a grid of see-through slots.
+    //
+    // It is one Mesh rather than an InstancedMesh, so it costs one extra draw call. Worth naming, because
+    // this study exists to count them.
+    if (params.mortarCore) {
+      const core = new BoxGeometry(
+        params.width,
+        courses * gauge,
+        Math.max(params.brickDepth * 0.15, params.brickDepth - params.mortarRecess * 2),
+      );
+      core.translate(0, (courses * gauge) / 2, 0);
+      const mesh = new InstancedMesh(core, clay, 1);
+      const m = new Matrix4();
+      mesh.setMatrixAt(0, m);
+      mesh.setColorAt(0, new Color(params.mortarColor));
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      mesh.receiveShadow = true;
+      stage.add(mesh);
+    }
+
     let drawCalls = 0;
     let tris = 0;
     for (const { length, matrices, tints } of byLength.values()) {
@@ -220,7 +248,7 @@ export default function (container: HTMLElement) {
 
     const total = whole + bats;
     params.laid = `${total} bricks · ${courses} courses · ${whole} whole, ${bats} cut`;
-    params.cost = `${byLength.size} distinct geometr${byLength.size === 1 ? "y" : "ies"} · ${drawCalls} draw call${drawCalls === 1 ? "" : "s"} · ${tris} tris resident`;
+    params.cost = `${params.mortarCore ? "+1 core · " : ""}${byLength.size} distinct geometr${byLength.size === 1 ? "y" : "ies"} · ${drawCalls} draw call${drawCalls === 1 ? "" : "s"} · ${tris} tris resident`;
     // The wall the numbers actually built, against the one asked for.
     params.gauge = `gauge ${gauge.toFixed(4)} · pitch ${pitch.toFixed(4)} · built ${(courses * gauge).toFixed(3)} tall of ${params.height} asked`;
   };
@@ -240,6 +268,14 @@ export default function (container: HTMLElement) {
   brick.add(params, "brickHeight", 0.04, 0.4, 0.005).name("Height").onChange(rebuild);
   brick.add(params, "brickDepth", 0.05, 0.6, 0.01).name("Depth (bed)").onChange(rebuild);
   brick.open();
+
+  const core = gui.addFolder("Mortar Core");
+  // Borrowed from the stone wall, and brick needs it MORE: its joint is added rather than subtracted, so
+  // the gap between bricks is the whole mortar gap. Without a core the wall is a grid of slots.
+  core.add(params, "mortarCore").name("Mortar Core").onChange(rebuild);
+  core.add(params, "mortarRecess", 0, 0.06, 0.002).name("Mortar Recess").onChange(rebuild);
+  core.addColor(params, "mortarColor").name("Mortar Color").onChange(rebuild);
+  core.open();
 
   const joint = gui.addFolder("Mortar — finding one");
   joint.add(params, "mortarGap", 0, 0.08, 0.002).name("Mortar Gap").onChange(rebuild);
