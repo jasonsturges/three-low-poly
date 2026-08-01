@@ -65,9 +65,9 @@ interface ScatterOptions {
   height: number;
   course: number;
   aspect: number;
-  bond: number;
+  bondOffset: number;
   /** Chance a cell carries a proud stone. Density, not a count. */
-  chance: number;
+  density: number;
   /** Length range, as multiples of the nominal stone. Equal values give brick. */
   lengthMin: number;
   lengthMax: number;
@@ -99,8 +99,8 @@ const scatterProud = ({
   height,
   course,
   aspect,
-  bond,
-  chance,
+  bondOffset,
+  density,
   lengthMin,
   lengthMax,
   heightMin,
@@ -127,7 +127,7 @@ const scatterProud = ({
     const y = (c + 0.5) * step;
     // The same running bond the wall itself uses, so a proud stone lands ON a stone rather than across a
     // perpend. This is the whole reason it must know the course grid and not merely the rectangle.
-    const offset = (c % 2) * nominal * bond;
+    const offset = (c % 2) * nominal * bondOffset;
 
     for (let s = 0; ; s++) {
       const x = offset + s * nominal;
@@ -135,7 +135,7 @@ const scatterProud = ({
       candidates++;
       // Density is a CHANCE per cell, not a count. The grid stays regular; the result does not, and it
       // does not clump the way sampling positions at random would.
-      if (random() > chance) continue;
+      if (random() > density) continue;
 
       placements.push({
         x: x + nominal / 2,
@@ -184,8 +184,8 @@ export default function (container: HTMLElement) {
     surfaceThickness: 0.34,
     courseHeight: 0.26,
     stoneAspect: 2.2,
-    bond: 0.5,
-    chance: 0.14,
+    bondOffset: 0.5,
+    density: 0.14,
     lengthMin: 0.72,
     lengthMax: 1.12,
     heightMin: 0.8,
@@ -195,7 +195,7 @@ export default function (container: HTMLElement) {
     stoneWidth: 0.17,
     tilt: 0.025,
     bothSides: true,
-    color: "#6a6560",
+    stoneColor: "#6a6560",
     colorVariance: 0.09,
     seed: 0x2c1a,
     showSurface: true,
@@ -224,8 +224,8 @@ export default function (container: HTMLElement) {
       height: params.height,
       course: params.courseHeight,
       aspect: params.stoneAspect,
-      bond: params.bond,
-      chance: params.chance,
+      bondOffset: params.bondOffset,
+      density: params.density,
       lengthMin: params.lengthMin,
       lengthMax: params.lengthMax,
       heightMin: params.heightMin,
@@ -238,7 +238,7 @@ export default function (container: HTMLElement) {
 
     const random = mulberry32(params.seed ^ 0x9e3779b9);
     const signed = (amount: number) => (random() - 0.5) * 2 * amount;
-    const base = new Color(params.color);
+    const base = new Color(params.stoneColor);
     const tint = new Color();
 
     const parts: BufferGeometry[] = [];
@@ -318,7 +318,7 @@ export default function (container: HTMLElement) {
   const surface = gui.addFolder("Surface");
   surface.add(params, "width", 1, 8, 0.1).name("Width").onChange(rebuild);
   surface.add(params, "height", 0.5, 8, 0.1).name("Height").onChange(rebuild);
-  surface.add(params, "surfaceThickness", 0.06, 1, 0.02).name("Thickness").onChange(rebuild);
+  surface.add(params, "surfaceThickness", 0.06, 1, 0.02).name("Surface Thickness").onChange(rebuild);
   surface.add(params, "showSurface").name("Show Surface").onChange(rebuild);
   surface.open();
 
@@ -326,20 +326,20 @@ export default function (container: HTMLElement) {
   // The stones need the grid the WALL is built on, or they land across joints instead of on stones.
   grid.add(params, "courseHeight", 0.08, 0.8, 0.01).name("Course Height").onChange(rebuild);
   grid.add(params, "stoneAspect", 0.6, 5, 0.1).name("Stone Aspect").onChange(rebuild);
-  grid.add(params, "bond", 0, 1, 0.05).name("Bond Offset").onChange(rebuild);
+  grid.add(params, "bondOffset", 0, 1, 0.05).name("Bond Offset").onChange(rebuild);
   grid.open();
 
   const proud = gui.addFolder("Proud");
   // A chance PER CELL, not a count — the grid stays regular and the result does not clump.
-  proud.add(params, "chance", 0, 1, 0.01).name("Density (chance)").onChange(rebuild);
+  proud.add(params, "density", 0, 1, 0.01).name("Density").onChange(rebuild);
   // How far it stands out of the face. A RANGE: identical values give every stone the same relief.
   proud.add(params, "depthMin", 0.002, 0.15, 0.002).name("Depth Min").onChange(rebuild);
   proud.add(params, "depthMax", 0.002, 0.15, 0.002).name("Depth Max").onChange(rebuild);
   // How far it runs INTO the surface. Given, not derived — see the note at the geometry.
-  proud.add(params, "stoneWidth", 0.01, 1, 0.005).name("Width (into wall)").onChange(rebuild);
+  proud.add(params, "stoneWidth", 0.01, 1, 0.005).name("Stone Width").onChange(rebuild);
   proud.add(params, "tilt", 0, 0.12, 0.002).name("Tilt").onChange(rebuild);
   // A facade shows both faces; a surface let into something only shows one.
-  proud.add(params, "bothSides").name("Both Faces").onChange(rebuild);
+  proud.add(params, "bothSides").name("Both Sides").onChange(rebuild);
   proud.open();
 
   const size = gui.addFolder("Stone Size");
@@ -356,7 +356,7 @@ export default function (container: HTMLElement) {
           // Every unit identical, one has simply popped. Shallow, square, and barely rolled.
           Object.assign(params, {
             lengthMin: 1, lengthMax: 1, heightMin: 0.94, heightMax: 0.94,
-            depthMin: 0.022, depthMax: 0.03, tilt: 0.004, chance: 0.09,
+            depthMin: 0.022, depthMax: 0.03, tilt: 0.004, density: 0.09,
           });
           gui.controllersRecursive().forEach((c) => c.updateDisplay());
           rebuild();
@@ -372,7 +372,7 @@ export default function (container: HTMLElement) {
           // Each from its own mould. Wide on every axis, and rolled enough to catch the light unevenly.
           Object.assign(params, {
             lengthMin: 0.55, lengthMax: 1.35, heightMin: 0.68, heightMax: 0.98,
-            depthMin: 0.018, depthMax: 0.07, tilt: 0.03, chance: 0.16,
+            depthMin: 0.018, depthMax: 0.07, tilt: 0.03, density: 0.16,
           });
           gui.controllersRecursive().forEach((c) => c.updateDisplay());
           rebuild();
@@ -384,16 +384,16 @@ export default function (container: HTMLElement) {
   size.open();
 
   const colour = gui.addFolder("Colour");
-  colour.addColor(params, "color").name("Stone").onChange(rebuild);
-  colour.add(params, "colorVariance", 0, 0.35, 0.005).name("Variance").onChange(rebuild);
+  colour.addColor(params, "stoneColor").name("Stone Color").onChange(rebuild);
+  colour.add(params, "colorVariance", 0, 0.35, 0.005).name("Color Variance").onChange(rebuild);
   colour.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
 
   const inspect = gui.addFolder("Inspect");
-  inspect.add(params, "wireframe").name("Wireframe Overlay").onChange(rebuild);
+  inspect.add(params, "wireframe").name("Wireframe").onChange(rebuild);
 
   const readout = gui.addFolder("Readout");
-  readout.add(params, "readout").name("Placed").listen().disable();
-  readout.add(params, "clampOut").name("Sink").listen().disable();
+  readout.add(params, "readout").name("Readout").listen().disable();
+  readout.add(params, "clampOut").name("Clamp").listen().disable();
   readout.open();
 
   return () => {
