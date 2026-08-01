@@ -1,4 +1,4 @@
-import { BufferGeometry, Quaternion, Vector3 } from "three";
+import { BufferGeometry, Quaternion, ShapeUtils, Vector2, Vector3 } from "three";
 import type { PathPoint } from "../paths/PathPoint";
 import {
   createGeometryBuffers,
@@ -94,7 +94,12 @@ export interface SweepOptions {
    * dissolving smoke trail all require.
    */
   scale?: (t: number) => number;
-  /** Cap the two ends. Only correct for a convex profile. Defaults to `true`. */
+  /**
+   * Cap the two ends. Defaults to `true`.
+   *
+   * Ear-clipped, so any simple profile caps correctly — concave sections included. Turn it off for a run
+   * that dies into a wall, where the cap is never seen and is two triangles per end you did not need.
+   */
   cap?: boolean;
   /**
    * Close the loop — stitch the last ring back to the first, and emit no caps.
@@ -178,15 +183,44 @@ export function sweep(
     }
   }
 
-  // Flat caps, fanned from the profile's first corner — correct for any convex section. A section that
-  // tapers to nothing needs no cap: it is already a point. Neither does a ring: it has no ends.
+  // Flat caps. A section that tapers to nothing needs no cap: it is already a point. Neither does a ring.
+  //
+  // **Ear-clipped, not fanned.** A fan from the profile's first corner tiles the section only when the
+  // section is star-shaped FROM THAT CORNER — so it survives every convex profile and, by luck rather
+  // than design, the corner sections as `moldingProfile` happens to order them. Move the first vertex and
+  // it spills: reversing a profile to flip a crown, or splicing in a chord to spring one, puts triangles
+  // outside the outline that read as a stray facet hanging off the end. Four shipped `surfaceProfile`
+  // sections are not star-shaped from any of their own corners at all.
   if (cap && !closed) {
     const first = rings[0]!;
     const end = rings[last]!;
 
-    for (let j = 1; j < sides - 1; j++) {
-      pushTriangle(buffers, [first[0]!, first[j + 1]!, first[j]!], undefined); // reversed: faces back
-      pushTriangle(buffers, [end[0]!, end[j]!, end[j + 1]!], undefined);
+    const contour = profile.map(([px, py]) => new Vector2(px, py));
+    const faces = ShapeUtils.triangulateShape(contour, []);
+
+    // `triangulateShape` always hands back counter-clockwise triangles, so a profile authored the other
+    // way round needs them flipped to keep its caps facing outward like the swept surface does.
+    let twice = 0;
+    for (let j = 0; j < sides; j++) {
+      const a = profile[j]!;
+      const b = profile[(j + 1) % sides]!;
+      twice += a[0] * b[1] - b[0] * a[1];
+    }
+    const flip = twice < 0;
+
+    if (faces.length > 0) {
+      for (const [a, b, c] of faces) {
+        const [i0, i1, i2] = flip ? [a!, c!, b!] : [a!, b!, c!];
+        pushTriangle(buffers, [first[i0]!, first[i2]!, first[i1]!], undefined); // reversed: faces back
+        pushTriangle(buffers, [end[i0]!, end[i1]!, end[i2]!], undefined);
+      }
+    } else {
+      // Ear clipping gives up on a degenerate outline. A fan is wrong for a concave one, but a missing
+      // cap is a hole — so fall back rather than leave the end open.
+      for (let j = 1; j < sides - 1; j++) {
+        pushTriangle(buffers, [first[0]!, first[j + 1]!, first[j]!], undefined);
+        pushTriangle(buffers, [end[0]!, end[j]!, end[j + 1]!], undefined);
+      }
     }
   }
 
