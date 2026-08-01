@@ -296,7 +296,9 @@ export default function (container: HTMLElement) {
   const corner = gui.addFolder("Corner");
   // 90 against 4 sides is the matched pair — the same turn on both sides of the study.
   corner.add(params, "cornerAngle", 30, 170, 1).name("Room Angle").onChange(rebuild);
-  corner.add(params, "sides", 3, 16, 1).name("Pier Sides").onChange(rebuild);
+  // Push this up and the pier becomes a round COLUMN — a circle is only a closed run with a lot of
+  // corners, and an outward run has no width limit, so it never stops working. See the Curved Runs study.
+  corner.add(params, "sides", 3, 48, 1).name("Pier Sides").onChange(rebuild);
   // The proof: put each run on the wrong side and watch the cornice bury itself in the wall.
   corner.add(params, "flipFacing").name("Flip Facing (bug)").onChange(rebuild);
   corner.open();
