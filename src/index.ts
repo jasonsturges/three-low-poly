@@ -391,7 +391,20 @@ export {
   type MoldingProfileOptions,
   type MoldingStyle,
 } from "./sweep/MoldingProfiles";
+export {
+  measurePath,
+  type MeasurePathOptions,
+  type PathMeasure,
+  pointAtDistance,
+  slicePath,
+} from "./sweep/PathMeasure";
 export { circleProfile, rectProfile } from "./sweep/Profiles";
+export {
+  type PathRepeat,
+  repeatAlongPath,
+  type RepeatAlongPathOptions,
+  type RepeatAnchor,
+} from "./sweep/RepeatAlongPath";
 export {
   surfaceProfile,
   type SurfaceProfileOptions,
