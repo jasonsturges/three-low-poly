@@ -35,12 +35,17 @@ export const meta = {
     "cornice carries BOTH repeat families at once: DENTILS are a notched band (the gap is a member, the " +
     "interdentil), and MODILLIONS are an applied repeat (their own construction, no gap member — which is " +
     "why they read as bolted on rather than cut from the run). Everything else is a plain swept course. " +
-    "The modillions are DERIVED from every Nth dentil rather than laid out independently, because two " +
-    "corner-anchored courses at a multiple pitch do not automatically agree — each rounds its own segment " +
-    "separately. Deriving one from the other is how a joiner does it, and it is the only way the two " +
-    "rhythms stay locked at every corner. This also surfaces the machinery's next gap: an applied repeat " +
-    "needs a FRAME, not a point, because a modillion has to face outward — and at a corner that frame is " +
-    "the bisector, which is exactly right.",
+    "You design with WIDTH and GAP; the pitch is what comes out. A dentil has a width and an interdentil " +
+    "has a gap, both real decisions with a proportion between them — set the pitch directly instead and " +
+    "the gap becomes whatever is left over, swinging from solid to gaping as anything else moves. Both " +
+    "courses are laid out INDEPENDENTLY from their own width and gap; they need not agree in the field, " +
+    "only at the corners, and corner anchoring gives that to each of them for free. Two more things the " +
+    "castle scale could not show. A section standing OFF its path must run `outer x tan(turn/2)` past a " +
+    "convex corner, so the corner dentil is genuinely bigger and reaches over its neighbours — which are " +
+    "dropped, and the block then CUT TO SUIT so its face sits exactly one gap from the first survivor, " +
+    "the way a joiner does it. And an applied repeat needs a FRAME, not a point: a bracket has a BACK, so " +
+    "unlike a baluster it cannot sit on the bisector without burying half of itself — a corner wants a " +
+    "PAIR flanking it, one flat on each face.",
 };
 
 //------------------------------
@@ -57,10 +62,14 @@ export const meta = {
 //               Doric version with no scroll. All family B: they have no gap member.
 //  CYMA         the S-curved crowning member. RECTA hollow-over-bulge, REVERSA the other way up.
 //
-//  Classical rule of thumb: modillions align with dentils, at a whole multiple of the dentil pitch. That
-//  alignment is the reason this study derives one course from the other.
+//  PITCH        center to center — an OUTPUT here, being width + gap. The number a course is laid out by,
+//               never the number it is designed with.
+//  BAY          the space between two modillions.
 
 const UP = new Vector3(0, 1, 0);
+
+/** How far the band behind the dentils stands off the wall — the face they are actually set out on. */
+const BAND_FACE = 0.026;
 
 /**
  * The wall line: an L by default, so there is an outside corner to inspect.
@@ -122,6 +131,56 @@ const classical = (
   const points = moldingProfile({ style, drop: height, projection, segments });
   if (flare === "bottom") return points.map(([px, py]) => [px, from + py] as Vec2);
   return points.map(([px, py]) => [height - px, from + py] as Vec2).reverse();
+};
+
+/**
+ * A horizontal polyline moved OUTWARD, mitered at every vertex.
+ *
+ * **Which line a course is swept along decides how far it must run past a corner.** Two outer faces, each
+ * parallel to its own wall at distance `r`, meet `r · tan(turn/2)` past the corner — there is nowhere else
+ * for them to go. Sweep every course along the WALL and each one inherits the whole stack-up beneath it,
+ * so a dentil 26mm deep sitting on a 26mm band reaches 52mm, and its corner block comes out twice the size
+ * it should be. Sweep it along the band's own FACE and the reach is its own depth, which is what a real
+ * corner dentil measures.
+ *
+ * The miter: at a vertex the two offset lines meet on the bisector of their outward normals, at
+ * `distance / cos(half-angle)` — so a sharper turn pushes the vertex further out, exactly as a miter does.
+ */
+const offsetPath = (points: Vector3[], distance: number, closed: boolean): Vector3[] => {
+  if (Math.abs(distance) < 1e-12) return points.map((p) => p.clone());
+  const count = points.length;
+  const segments = closed ? count : count - 1;
+  const middle = points
+    .reduce((sum, p) => sum.add(p.clone()), new Vector3())
+    .divideScalar(count)
+    .setY(0);
+
+  // One outward normal per SEGMENT, judged against the run's own middle — the same test everything else
+  // here uses, so a course cannot end up offset into the wall.
+  const normals: Vector3[] = [];
+  for (let i = 0; i < segments; i++) {
+    const a = points[i]!;
+    const b = points[(i + 1) % count]!;
+    const tangent = b.clone().sub(a).setY(0).normalize();
+    const normal = new Vector3(tangent.z, 0, -tangent.x);
+    const mid = a.clone().add(b).multiplyScalar(0.5).setY(0);
+    if (normal.dot(mid.sub(middle)) < 0) normal.negate();
+    normals.push(normal);
+  }
+
+  return points.map((p, i) => {
+    const incoming = closed ? normals[(i - 1 + segments) % segments]! : normals[i - 1];
+    const outgoing = closed ? normals[i % segments]! : normals[i];
+    // An open run's ends have only one segment to answer to.
+    if (!incoming) return p.clone().addScaledVector(outgoing!, distance);
+    if (!outgoing) return p.clone().addScaledVector(incoming, distance);
+
+    const bisector = incoming.clone().add(outgoing);
+    // A full reversal has no bisector; fall back rather than divide by zero.
+    if (bisector.lengthSq() < 1e-12) return p.clone().addScaledVector(incoming, distance);
+    bisector.normalize();
+    return p.clone().addScaledVector(bisector, distance / bisector.dot(incoming));
+  });
 };
 
 /** Sweep a section along a stretch of path, mitered at any corner it crosses. */
@@ -216,13 +275,14 @@ export default function (container: HTMLElement) {
     bedStyle: "cyma" as MoldingStyle,
 
     dentils: true,
-    dentilPitch: 0.055,
     dentilWidth: 0.028,
+    dentilGap: 0.024,
     dentilHeight: 0.05,
-    dentilProjection: 0.038,
+    dentilDepth: 0.026,
 
     modillions: true,
-    modillionEvery: 4,
+    modillionGap: 0.19,
+    cornerStyle: "pair" as "pair" | "bisector",
     modillionHeight: 0.075,
     modillionProjection: 0.07,
     modillionWidth: 0.032,
@@ -235,6 +295,7 @@ export default function (container: HTMLElement) {
     dentilOut: "",
     modillionOut: "",
     alignOut: "",
+    swallowOut: "",
   };
 
   const stage = new Group();
@@ -293,7 +354,7 @@ export default function (container: HTMLElement) {
     add(runAlong(at(bedTop), course(params.dentilHeight, 0.014, 0.026), params.closed), plaster);
     // Corona: the broad flat that oversails the dentils.
     add(
-      runAlong(at(dentilTop), course(coronaHeight, 0.014, params.dentilProjection + 0.014), params.closed),
+      runAlong(at(dentilTop), course(coronaHeight, 0.014, BAND_FACE + params.dentilDepth + 0.002), params.closed),
       plaster,
     );
     // Crown: flares UPWARD off the corona.
@@ -303,7 +364,7 @@ export default function (container: HTMLElement) {
         classical(
           params.crownStyle,
           params.crownHeight,
-          params.dentilProjection + 0.004,
+          BAND_FACE + params.dentilDepth + 0.006,
           params.crownProjection,
           params.segments,
           "top",
@@ -313,16 +374,83 @@ export default function (container: HTMLElement) {
       plaster,
     );
 
-    // ── A — DENTILS. The interval, swept. Corner blocks come back as L's for free. ────────────────────
-    const repeat = repeatAlongPath(path, { pitch: params.dentilPitch, anchor: "corners" });
+    // ── THE SETTING-OUT, ON THE FACE THE DENTILS ACTUALLY SIT ON. ───────────────────────────────────
+    //
+    // Width and GAP are the design decisions; the PITCH is their sum and comes out. And the run is the
+    // BAND'S FACE, not the wall — see `offsetPath`. Measuring arc length there is also how it is really
+    // done: you set dentils out on the face you can see, so the gap you draw is the gap you get, and the
+    // corner they land on is the visible corner rather than one buried 26mm behind it.
     const half = params.dentilWidth / 2;
+    const face = offsetPath(points, BAND_FACE, params.closed);
+    const facePath = measurePath(face, { closed: params.closed });
+    const laid = repeatAlongPath(facePath, {
+      pitch: params.dentilWidth + params.dentilGap,
+      anchor: "corners",
+    });
+    const gap = laid.pitch - params.dentilWidth;
+
+    // A section standing off its path still runs `depth · tan(turn/2)` past a convex corner — but that is
+    // now its OWN depth, so the corner block comes out a little over one dentil wide instead of two and a
+    // half, and nothing needs swallowing at sane proportions. The rule stays because extreme settings can
+    // still bury a neighbour, and a buried dentil is worse than a missing one.
+    const vertexIndices = params.closed
+      ? face.map((_, i) => i)
+      : face.map((_, i) => i).slice(1, -1); // an open run's ENDS are square cuts, not miters
+    const corners = vertexIndices.map((i) => {
+      const n = face.length;
+      const a = face[i]!.clone().sub(face[(i - 1 + n) % n]!).normalize();
+      const b = face[(i + 1) % n]!.clone().sub(face[i]!).normalize();
+      const turn = Math.acos(Math.min(1, Math.max(-1, a.dot(b))));
+      return { at: facePath.distances[i]!, reach: params.dentilDepth * Math.tan(turn / 2) };
+    });
+    const cornerAt = new Map(corners.map((c) => [c.at, c]));
+
+    const signedTo = (from: number, to: number) => {
+      let d = to - from;
+      if (!params.closed) return d;
+      if (d > facePath.length / 2) d -= facePath.length;
+      if (d < -facePath.length / 2) d += facePath.length;
+      return d;
+    };
+
+    const dropped = new Set<number>();
+    // Per corner, per side.
+    //
+    // A neighbour only has to GO if it is actually inside the block — `near edge < reach`. Demanding a
+    // full nominal gap as well drops a dentil that fits perfectly well, and trades a slightly tight gap
+    // for a conspicuously large one. The photograph settles it: real courses run up to the corner block
+    // with a tighter interdentil, they do not leave a hole.
+    //
+    // The block is only CUT TO SUIT when something did have to go, since then the survivor is a whole
+    // pitch away and the raw miter would leave a ragged space.
+    const extents = new Map<number, { back: number; forward: number }>();
+    for (const { at, reach } of corners) {
+      const side = (sign: 1 | -1) => {
+        const ordered = laid.centers
+          .filter((c) => c !== at)
+          .map((c) => ({ c, d: signedTo(at, c) * sign }))
+          .filter((x) => x.d > 1e-9)
+          .sort((a, b) => a.d - b.d);
+        let removed = false;
+        for (const { c, d } of ordered) {
+          if (d - half >= reach - 1e-9) return removed ? Math.max(half, d - half - gap) : half;
+          dropped.add(c);
+          removed = true;
+        }
+        return half;
+      };
+      extents.set(at, { forward: side(1), back: side(-1) });
+    }
 
     if (params.dentils) {
-      for (const center of repeat.centers) {
+      for (const center of laid.centers) {
+        if (dropped.has(center)) continue;
+        const extent = extents.get(center);
         add(
           runAlong(
-            slicePath(path, center - half, center + half).map((p) => p.clone().setY(bedTop)),
-            course(params.dentilHeight, 0.026, params.dentilProjection + 0.014),
+            slicePath(facePath, center - (extent ? extent.back : half), center + (extent ? extent.forward : half))
+              .map((p) => p.clone().setY(bedTop)),
+            course(params.dentilHeight, 0, params.dentilDepth),
           ),
           toothed,
         );
@@ -331,25 +459,27 @@ export default function (container: HTMLElement) {
 
     // ── B — MODILLIONS. Only the CENTER — plus a facing, which a point alone cannot give. ─────────────
     //
-    // DERIVED from the dentils, not laid out separately. Two corner-anchored courses at a multiple pitch
-    // each round their own segments independently, so they drift apart; taking every Nth dentil locks the
-    // rhythms together and puts a modillion on every corner, because a corner is always a dentil.
-    const every = Math.max(1, Math.round(params.modillionEvery));
-    const bySegment: number[][] = [];
-    let segment = 0;
-    for (const center of repeat.centers) {
-      while (segment + 1 < path.distances.length - 1 && center >= path.distances[segment + 1]! - 1e-9) {
-        segment++;
-      }
-      (bySegment[segment] ??= []).push(center);
-    }
-    const modillions = bySegment.flatMap((list) => list.filter((_, i) => i % every === 0));
-    // An open run's FAR END is a corner too, and it is the last dentil of the last segment rather than the
-    // first of a new one — so counting from each segment's start walks straight past it.
-    if (!params.closed) {
-      const last = repeat.centers[repeat.centers.length - 1]!;
-      if (!modillions.some((m) => Math.abs(m - last) < 1e-9)) modillions.push(last);
-    }
+    // A bracket HAS A BACK, and that changes what a corner means for it. A baluster or a newel is happy
+    // sitting ON a corner facing the bisector, because it is rotationally symmetric. A modillion's flat
+    // back has to lie against a wall, so on the bisector half of it is buried in the masonry. `pair`
+    // replaces the corner bracket with two flanking it, one on each face — which is what is actually
+    // built, and a distinction the castle study could never have surfaced.
+    const bays = repeatAlongPath(path, {
+      pitch: params.modillionWidth + params.modillionGap,
+      anchor: "corners",
+    });
+    // The corners as THIS run measures them. The dentils ride the band's offset face, whose arc lengths
+    // differ from the wall's at every corner — so the modillions need their own table, not the dentils'.
+    const modillionCorners = new Set(
+      (params.closed ? points.map((_, i) => i) : points.map((_, i) => i).slice(1, -1)).map(
+        (i) => path.distances[i]!,
+      ),
+    );
+    const flank = params.modillionWidth * 1.1;
+    const modillions =
+      params.cornerStyle === "bisector"
+        ? bays.centers
+        : bays.centers.flatMap((c) => (modillionCorners.has(c) ? [c - flank, c + flank] : [c]));
 
     if (params.modillions) {
       // One geometry, placed many times. Centered on its width, and grown from the wall in +x.
@@ -359,6 +489,9 @@ export default function (container: HTMLElement) {
       ).translate(0, 0, -params.modillionWidth / 2);
 
       for (const center of modillions) {
+        // Tucked UP UNDER the bed mold, overlaying it. The brackets reach further out than the bed mold
+        // does, so they read as let into it — which is the wanted look. The corner was the only real
+        // problem, and `cornerStyle: "pair"` is what fixes that.
         const position = pointAtDistance(path, center).setY(bedTop - params.modillionHeight - 0.004);
         const tangent = tangentAt(path, center);
         // Outward, in plan: the tangent turned 90°, flipped if it happens to point at the run's middle.
@@ -372,13 +505,14 @@ export default function (container: HTMLElement) {
       }
     }
 
-    params.dentilOut = `${repeat.centers.length} dentils · asked ${params.dentilPitch.toFixed(4)}, got ${repeat.pitch.toFixed(4)}`;
-    params.modillionOut = `${modillions.length} modillions · every ${every}th dentil`;
-    // Both courses must carry a member at every corner, or the assembly reads as mis-set-out.
-    const corners = path.distances.slice(0, params.closed ? points.length : points.length);
-    const missed = corners.filter((c) => !modillions.some((m) => Math.abs(m - c) < 1e-6)).length;
+    params.dentilOut = `${laid.centers.length - dropped.size} dentils · pitch ${laid.pitch.toFixed(4)} (${params.dentilWidth} + ${gap.toFixed(4)} gap)`;
+    params.modillionOut = `${modillions.length} modillions · pitch ${bays.pitch.toFixed(4)}`;
+    const grown = [...extents.values()].map((e) => e.forward).find((e) => e > half + 1e-9);
+    const blockFace = (corners[0]?.reach ?? 0) + half;
+    params.swallowOut = `${dropped.size} swallowed · corner block ${(blockFace / params.dentilWidth).toFixed(2)}× a field dentil${grown ? " (cut to suit)" : ""}`;
+    const missed = corners.filter(({ at }) => !laid.centers.some((d) => Math.abs(d - at) < 1e-6)).length;
     params.alignOut =
-      missed === 0 ? "locked — a modillion on every corner" : `${missed} corner(s) without a modillion`;
+      missed === 0 ? "locked — both courses land on every corner" : `${missed} corner(s) unset`;
   };
   rebuild();
 
@@ -399,16 +533,25 @@ export default function (container: HTMLElement) {
   const dentil = gui.addFolder("Dentils — notched band");
   dentil.add(params, "dentils").name("Show").onChange(rebuild);
   // Center to center. The gap — the interdentil — is what is left after the width, never a knob.
-  dentil.add(params, "dentilPitch", 0.02, 0.16, 0.002).name("Pitch").onChange(rebuild);
+  // Width and GAP are the design decisions; the pitch is their sum and is reported, not set.
+  dentil.add(params, "dentilGap", 0.004, 0.1, 0.002).name("Gap (interdentil)").onChange(rebuild);
   dentil.add(params, "dentilWidth", 0.008, 0.08, 0.002).name("Width").onChange(rebuild);
   dentil.add(params, "dentilHeight", 0.02, 0.12, 0.002).name("Height").onChange(rebuild);
-  dentil.add(params, "dentilProjection", 0.01, 0.1, 0.002).name("Projection").onChange(rebuild);
+  // Its OWN depth off the band, which is also what sets its reach past a corner — not its distance from
+  // the wall, which is what made the corner block twice the size it should have been.
+  dentil.add(params, "dentilDepth", 0.008, 0.08, 0.002).name("Depth").onChange(rebuild);
   dentil.open();
 
   const modillion = gui.addFolder("Modillions — applied repeat");
   modillion.add(params, "modillions").name("Show").onChange(rebuild);
   // The classical alignment rule, as one integer. Every corner stays locked whatever you choose.
-  modillion.add(params, "modillionEvery", 1, 10, 1).name("Every Nth Dentil").onChange(rebuild);
+  // Same model as the dentils, and laid out independently — the two courses only have to agree at the
+  // corners, which corner anchoring gives each of them on its own.
+  modillion.add(params, "modillionGap", 0.04, 0.5, 0.01).name("Gap Between").onChange(rebuild);
+  modillion
+    .add(params, "cornerStyle", { "Pair — flanking the corner": "pair", "Bisector — one on the corner": "bisector" })
+    .name("At A Corner")
+    .onChange(rebuild);
   modillion.add(params, "modillionHeight", 0.03, 0.18, 0.005).name("Height").onChange(rebuild);
   modillion.add(params, "modillionProjection", 0.02, 0.16, 0.005).name("Projection").onChange(rebuild);
   modillion.add(params, "modillionWidth", 0.01, 0.08, 0.002).name("Width").onChange(rebuild);
@@ -432,6 +575,7 @@ export default function (container: HTMLElement) {
   const readout = gui.addFolder("Readout");
   readout.add(params, "dentilOut").name("Dentils").listen().disable();
   readout.add(params, "modillionOut").name("Modillions").listen().disable();
+  readout.add(params, "swallowOut").name("Swallowed").listen().disable();
   readout.add(params, "alignOut").name("Corners").listen().disable();
   readout.open();
 
