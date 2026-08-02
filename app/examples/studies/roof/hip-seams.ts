@@ -16,6 +16,7 @@ import {
   WireframeGeometry,
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { createGeometryBuffers, pushQuad, pushTriangle, toBufferGeometry, type Vec3 } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -80,6 +81,19 @@ const MAX_HALF_ANGLE = (85 * Math.PI) / 180;
 
 /** A point in a joint's own cross-section: `across` the joint, and `out` along its bisector. */
 type Profile = [across: number, out: number][];
+
+/** A bounding plane for a cap's apex end. `normal` points into the region the cap may occupy. */
+interface Plane {
+  point: Vector3;
+  normal: Vector3;
+}
+
+/** How far along `axis` from `p` until the plane is met. `Infinity` when the axis runs parallel to it. */
+const hitDistance = (p: Vector3, axis: Vector3, plane: Plane): number => {
+  const denominator = axis.dot(plane.normal);
+  if (Math.abs(denominator) < 1e-9) return Infinity;
+  return plane.point.clone().sub(p).dot(plane.normal) / denominator;
+};
 
 /** One joint to cover: the edge it runs along, and the two planes that meet there. */
 interface Joint {
@@ -228,6 +242,7 @@ const extrude = (
   across: Vector3,
   out: Vector3,
   section: Profile,
+  bounds: [Plane, Plane],
 ): BufferGeometry => {
   const signed =
     section.reduce((sum, [u, v], i) => {
@@ -236,29 +251,81 @@ const extrude = (
     }, 0) / 2;
   const points = signed < 0 ? [...section].reverse() : section;
 
-  const at = (origin: Vector3, [u, v]: [number, number]) =>
-    origin.clone().addScaledVector(across, u).addScaledVector(out, v);
-  const start = points.map((p) => at(from, p));
-  const end = points.map((p) => at(to, p));
-
-  const triangles: Vector3[][] = [];
-  for (let i = 0; i < points.length; i++) {
-    const j = (i + 1) % points.length;
-    triangles.push([start[i]!, end[i]!, end[j]!], [start[i]!, end[j]!, start[j]!]);
-  }
-  for (let i = 1; i < points.length - 1; i++) {
-    triangles.push([start[0]!, start[i]!, start[i + 1]!]);
-    triangles.push([end[0]!, end[i + 1]!, end[i]!]);
-  }
-
-  const positions = new Float32Array(triangles.length * 9);
-  triangles.forEach((triangle, i) =>
-    triangle.forEach((p, v) => positions.set([p.x, p.y, p.z], i * 9 + v * 3)),
+  const forward = new Vector3().subVectors(to, from).normalize();
+  const ring = points.map(([u, v]) =>
+    from.clone().addScaledVector(across, u).addScaledVector(out, v),
   );
-  const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new BufferAttribute(positions, 3));
-  geometry.computeVertexNormals();
-  return geometry;
+
+  // Every ring point runs up the hip and stops at whichever bounding plane it meets FIRST — the hip-end
+  // construction from `studies/miter/hip-end`, by way of `studies/miter/junction`. With both bounds set to
+  // the plane square across the hip this degenerates to a plain prism, which is the un-mitered case.
+  const distances = ring.map((p) => [hitDistance(p, forward, bounds[0]), hitDistance(p, forward, bounds[1])]);
+  const pick = (t: number[]) => (t[0]! <= t[1]! ? 0 : 1);
+
+  const ends: { start: Vector3; end: Vector3; owner: number }[] = [];
+  for (let i = 0; i < ring.length; i++) {
+    const j = (i + 1) % ring.length;
+    const here = pick(distances[i]!);
+    ends.push({
+      start: ring[i]!.clone(),
+      end: ring[i]!.clone().addScaledVector(forward, distances[i]![here]!),
+      owner: here,
+    });
+    if (here === pick(distances[j]!)) continue;
+
+    // The crossing is exact rather than searched for: with the axis fixed each `t` is linear in position,
+    // so `t0 - t1` is linear along a ring edge and its root is one division. Without this split the band
+    // spanning the disagreement is a single quad straddling both planes, and the arrowhead rounds off.
+    const f0 = distances[i]![0]! - distances[i]![1]!;
+    const f1 = distances[j]![0]! - distances[j]![1]!;
+    const s = f0 / (f0 - f1);
+    if (!Number.isFinite(s) || s <= 0 || s >= 1) continue;
+    const crossing = ring[i]!.clone().lerp(ring[j]!, s);
+    ends.push({
+      start: crossing,
+      end: crossing.clone().addScaledVector(forward, hitDistance(crossing, forward, bounds[0])),
+      owner: -1,
+    });
+  }
+
+  const buffers = createGeometryBuffers();
+  const at = (p: Vector3): Vec3 => [p.x, p.y, p.z];
+  const count = ends.length;
+
+  // Sides. Each band is planar by construction: both of its ends travel along the SAME axis.
+  for (let i = 0; i < count; i++) {
+    const j = (i + 1) % count;
+    pushQuad(buffers, [at(ends[j]!.start), at(ends[i]!.start), at(ends[i]!.end), at(ends[j]!.end)], undefined);
+  }
+  // The eave end, square across the hip. Still an open question — see the note in the study.
+  const eaveNormal = forward.clone().negate();
+  for (let i = 1; i < count - 1; i++) {
+    pushTriangle(buffers, [at(ends[0]!.start), at(ends[i]!.start), at(ends[i + 1]!.start)], at(eaveNormal));
+  }
+  // The apex end, ONE FAN PER FACET — fanning the whole loop would span both planes and give non-planar
+  // triangles, since the ridge between the facets is exactly where the cap must be cut in two.
+  const ridges = ends.map((p, i) => (p.owner === -1 ? i : -1)).filter((i) => i >= 0);
+  if (ridges.length === 2) {
+    for (const [start, finish] of [
+      [ridges[0]!, ridges[1]!],
+      [ridges[1]!, ridges[0]!],
+    ]) {
+      const arc: Vector3[] = [];
+      for (let i = start; ; i = (i + 1) % count) {
+        arc.push(ends[i]!.end);
+        if (i === finish) break;
+      }
+      for (let i = 1; i < arc.length - 1; i++) {
+        pushTriangle(buffers, [at(arc[0]!), at(arc[i]!), at(arc[i + 1]!)], undefined);
+      }
+    }
+  } else {
+    for (let i = 1; i < count - 1; i++) {
+      pushTriangle(buffers, [at(ends[0]!.end), at(ends[i]!.end), at(ends[i + 1]!.end)], undefined);
+    }
+  }
+
+  return toBufferGeometry(buffers);
 };
 
 export default function (container: HTMLElement) {
@@ -304,6 +371,7 @@ export default function (container: HTMLElement) {
     overhang: 0.16,
 
     seams: true,
+    miter: true,
     seamWidth: 0.14,
     seamRise: 0.05,
     section: "cap" as Section,
@@ -357,12 +425,16 @@ export default function (container: HTMLElement) {
       const parts: BufferGeometry[] = [];
       const direction = new Vector3();
 
-      for (const joint of roof.joints) {
+      // Each cap's apex end is cut against its two NEIGHBOURS around the apex — the construction proved
+      // in `studies/miter/junction`. Corner `i`'s neighbours are simply corners `i - 1` and `i + 1`.
+      const awayFrom = (joint: Joint) => new Vector3().subVectors(joint.from, joint.to).normalize();
+
+      roof.joints.forEach((joint, index) => {
         // From the eave corner up to the apex. Its LENGTH is the seam's length, which is why the seam
         // never has to be told how long it is.
         direction.subVectors(joint.to, joint.from);
         const length = direction.length();
-        if (length < 1e-6) continue;
+        if (length < 1e-6) return;
         direction.divideScalar(length);
 
         // The frame the chosen construction gives: +X across the joint, +Z out along its bisector.
@@ -376,7 +448,24 @@ export default function (container: HTMLElement) {
 
         const from = joint.from.clone().setY(joint.from.y + base);
         const to = joint.to.clone().setY(joint.to.y + base);
-        parts.push(extrude(from, to, across, out, section));
+
+        // The miter plane against a neighbour: through the apex, normal `normalize(a_i - a_j)` with both
+        // axes pointing AWAY down their own hip. The neighbour is handed the same plane from the other
+        // side, so adjacent caps abut with no gap by construction rather than by tuning.
+        const count = roof.joints.length;
+        const mine = awayFrom(joint);
+        const against = (other: Joint): Plane => ({
+          point: to.clone(),
+          normal: mine.clone().sub(awayFrom(other)).normalize(),
+        });
+        // Un-mitered leaves the end square across the hip — every cap through the apex, slicing through
+        // its neighbours. That is the pile-up the miter exists to resolve.
+        const square: Plane = { point: to.clone(), normal: new Vector3().subVectors(from, to).normalize() };
+        const bounds: [Plane, Plane] = params.miter
+          ? [against(roof.joints[(index + count - 1) % count]!), against(roof.joints[(index + 1) % count]!)]
+          : [square, square];
+
+        parts.push(extrude(from, to, across, out, section, bounds));
 
         // How far the seating has drifted from the bisector it should sit on. A CORRECTNESS measure —
         // unlike agreement between the four caps, which they can have while all being wrong together.
@@ -395,7 +484,7 @@ export default function (container: HTMLElement) {
             .addScaledVector(out, -drop);
           contacts.push(Math.max(corner.dot(joint.planes[0]), corner.dot(joint.planes[1])));
         }
-      }
+      });
 
       const merged = mergeGeometries(parts, false);
       parts.forEach((part) => part.dispose());
@@ -450,6 +539,9 @@ export default function (container: HTMLElement) {
   const seam = gui.addFolder("Seams");
   // The whole point of the study. Off, it is a tent; on, it is a roof.
   seam.add(params, "seams").name("Show Seams").onChange(rebuild);
+  // Each cap's apex end cut against its two neighbours. Off, every end is square across its own hip and
+  // all four pass through the apex, slicing through each other — the pile-up this resolves.
+  seam.add(params, "miter").name("Miter Apex").onChange(rebuild);
   // The two dials that are left, and they no longer fight: across, and out. Thickness is derived from
   // width and the joint's own dihedral, so every setting of these two still rests on the roof.
   seam.add(params, "seamWidth", 0.02, 0.6, 0.005).name("Seam Width").onChange(rebuild);
