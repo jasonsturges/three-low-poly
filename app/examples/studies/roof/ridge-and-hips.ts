@@ -322,6 +322,8 @@ export default function (container: HTMLElement) {
     roughness: 0.45,
     metalness: 0.5,
     flatShading: true,
+    // So that turning Seam Opacity down reveals the far side of the prism, not just its near shell.
+    side: DoubleSide,
   });
   const masonry = new MeshStandardMaterial({ color: 0x5f5a54, roughness: 1, flatShading: true });
   const wire = new LineBasicMaterial({ color: 0x00e5ff });
@@ -342,6 +344,7 @@ export default function (container: HTMLElement) {
     wall: true,
     wallHeight: 2.2,
     wireframe: false,
+    seamOpacity: 1,
 
     ridge: "",
     pitch: "",
@@ -548,6 +551,19 @@ export default function (container: HTMLElement) {
   inspect.add(params, "wall").name("Wall").onChange(rebuild);
   inspect.add(params, "wallHeight", 0.5, 5, 0.1).name("Wall Height").onChange(rebuild);
   inspect.add(params, "wireframe").name("Seam Wireframe").onChange(rebuild);
+  // A diagnostic, not a look. Much of a cap is buried by design — it drops below the joint line to reach
+  // the roof — so seeing where it actually sits, and how it runs out at the eave, means seeing through it.
+  inspect
+    .add(params, "seamOpacity", 0.15, 1, 0.05)
+    .name("Seam Opacity")
+    .onChange((value: number) => {
+      seaming.transparent = value < 1;
+      seaming.opacity = value;
+      // Overlapping caps should ALL show through rather than the nearest one winning, which is the whole
+      // reason to turn this down at a junction.
+      seaming.depthWrite = value >= 1;
+      seaming.needsUpdate = true;
+    });
 
   const readout = gui.addFolder("Readout");
   readout.add(params, "ridge").name("Ridge").listen().disable();
