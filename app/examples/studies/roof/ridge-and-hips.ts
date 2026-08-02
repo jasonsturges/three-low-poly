@@ -39,6 +39,13 @@ export const meta = {
     "ridge length; the corner's outward direction is 18.7° out at the default and worse as the plan " +
     "stretches. The RIDGE is the reassuring case: its two planes are mirror images, so their bisector is " +
     "exactly UP, and it was the one joint that always looked correct. " +
+    "Every joint here has a DIFFERENT dihedral — four hips joining unequal pitches, one ridge joining " +
+    "equal ones — so this is where deriving the cap pays for itself. Thickness is not a parameter: a cap " +
+    "is a folded sheet, its widest points have to come to rest on the planes, and the drop that puts them " +
+    "there is `(width / 2) * tan(alpha)`. One Seam Width therefore produces FIVE different thicknesses, " +
+    "each sized by the joint it covers, and the Fit readout prints the range. What is left is two dials " +
+    "that do not fight: width across, rise out. Rise is measured from the joint line, so 0 is the roof " +
+    "planed flat and anything above it is sheet standing proud. " +
     "The junctions have not been solved, only divided: the pyramid's single 4-way apex has become two " +
     "3-way junctions, one at each end of the ridge, still uncovered and still waiting on a terminator.",
 };
@@ -66,8 +73,14 @@ export const meta = {
 //  argument for them, not the place to solve them.
 
 type Construction = "bisector" | "outward" | "minimal";
+type Section = "cap" | "crest";
 
 const UP = new Vector3(0, 1, 0);
+/** Past this the joint has folded back on itself and the drop runs away. Nothing on a roof reaches it. */
+const MAX_HALF_ANGLE = (85 * Math.PI) / 180;
+
+/** A point in a joint's own cross-section: `across` the joint, and `out` along its bisector. */
+type Profile = [across: number, out: number][];
 
 /** One joint to cover: the edge it runs along, and the two planes that meet there. */
 interface Joint {
@@ -177,6 +190,88 @@ const buildRoof = (halfWidth: number, halfDepth: number, rise: number, ridge: nu
  */
 const seating = (planes: [Vector3, Vector3]): Vector3 => planes[0].clone().add(planes[1]).normalize();
 
+/** The joint's HALF-ANGLE: bisector to either face normal. This is what sizes the cap. */
+const halfAngle = (planes: [Vector3, Vector3]): number =>
+  Math.acos(Math.max(-1, Math.min(1, planes[0].dot(seating(planes)))));
+
+/**
+ * The section of a cap riding a joint whose half-angle is `alpha`, sized to SIT ON the roof.
+ *
+ * Thickness is not an input. A cap is a folded sheet laid over the joint, so its widest points have to
+ * come to rest on the two planes — and the roof falls away from the joint at a rate the dihedral already
+ * fixes. Put the widest points at `+/- width / 2` and they must drop exactly `(width / 2) * tan(alpha)`
+ * below the joint line to make contact.
+ *
+ * On this roof that matters more than on a pyramid, because **every joint has a different dihedral**: the
+ * four hips join a long slope to a hip end at two unequal pitches, and the ridge joins two equal ones. So
+ * five caps of the same width come out five different thicknesses, each sized by the joint it covers.
+ *
+ * - `rise` is the only outward input, measured from the JOINT LINE to the top of the cap
+ * - `rise = 0` puts the top flush with the joint line — the roof PLANED off. A solid section cannot be
+ *   both flush and proud, so those two readings are one dial at different values, not rival ideas
+ */
+const profile = (width: number, rise: number, alpha: number, section: Section): Profile => {
+  const half = width / 2;
+  const drop = half * Math.tan(Math.min(alpha, MAX_HALF_ANGLE));
+  return section === "cap"
+    ? [
+        [-half, -drop],
+        [half, -drop],
+        [half, rise],
+        [-half, rise],
+      ]
+    : [
+        [-half, -drop],
+        [half, -drop],
+        [0, rise],
+      ];
+};
+
+/**
+ * Extrude a section along a joint, as a closed prism.
+ *
+ * Non-indexed, so every facet keeps its own normal and shades flat. The section is wound counter-clockwise
+ * if it is not already, so sides come out facing away from the joint whichever way a caller wrote it.
+ */
+const extrude = (
+  from: Vector3,
+  to: Vector3,
+  across: Vector3,
+  out: Vector3,
+  section: Profile,
+): BufferGeometry => {
+  const signed =
+    section.reduce((sum, [u, v], i) => {
+      const [u2, v2] = section[(i + 1) % section.length]!;
+      return sum + (u * v2 - u2 * v);
+    }, 0) / 2;
+  const points = signed < 0 ? [...section].reverse() : section;
+
+  const at = (origin: Vector3, [u, v]: [number, number]) =>
+    origin.clone().addScaledVector(across, u).addScaledVector(out, v);
+  const start = points.map((p) => at(from, p));
+  const end = points.map((p) => at(to, p));
+
+  const triangles: Vector3[][] = [];
+  for (let i = 0; i < points.length; i++) {
+    const j = (i + 1) % points.length;
+    triangles.push([start[i]!, end[i]!, end[j]!], [start[i]!, end[j]!, start[j]!]);
+  }
+  for (let i = 1; i < points.length - 1; i++) {
+    triangles.push([start[0]!, start[i]!, start[i + 1]!]);
+    triangles.push([end[0]!, end[i + 1]!, end[i]!]);
+  }
+
+  const positions = new Float32Array(triangles.length * 9);
+  triangles.forEach((triangle, i) =>
+    triangle.forEach((p, v) => positions.set([p.x, p.y, p.z], i * 9 + v * 3)),
+  );
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new BufferAttribute(positions, 3));
+  geometry.computeVertexNormals();
+  return geometry;
+};
+
 /**
  * The frame for a seam riding one joint, by each of the three constructions.
  *
@@ -238,9 +333,9 @@ export default function (container: HTMLElement) {
     ridgeLength: 1.8,
 
     showSeams: true,
-    seamWidth: 0.11,
-    seamThickness: 0.075,
-    rollOffset: 0,
+    seamWidth: 0.14,
+    seamRise: 0.05,
+    section: "cap" as Section,
     construction: "bisector" as Construction,
 
     wall: true,
@@ -251,6 +346,7 @@ export default function (container: HTMLElement) {
     pitch: "",
     hip: "",
     seat: "",
+    fit: "",
   };
 
   const stage = new Group();
@@ -288,13 +384,12 @@ export default function (container: HTMLElement) {
     stage.add(new Mesh(roof.geometry, roofing));
 
     const errors: number[] = [];
+    const contacts: number[] = [];
+    const thicknesses: number[] = [];
+
     if (params.showSeams) {
       const parts: BufferGeometry[] = [];
       const direction = new Vector3();
-      const position = new Vector3();
-      const scale = new Vector3();
-      const roll = new Quaternion();
-      const matrix = new Matrix4();
 
       for (const joint of roof.joints) {
         direction.subVectors(joint.to, joint.from);
@@ -302,26 +397,34 @@ export default function (container: HTMLElement) {
         if (length < 1e-6) continue;
         direction.divideScalar(length);
 
-        const seated = seamFrame(direction, joint, params.construction);
-        const orientation = seated.clone();
-        // An OFFSET from the seated angle. At 0 the cap sits square on the joint; the dial turns it away
-        // from that, and does not decide it.
-        roll.setFromAxisAngle(direction, (params.rollOffset * Math.PI) / 180);
-        orientation.premultiply(roll);
+        // The frame the chosen construction gives: +X across the joint, +Z out along its bisector.
+        const orientation = seamFrame(direction, joint, params.construction);
+        const across = new Vector3(1, 0, 0).applyQuaternion(orientation);
+        const out = new Vector3(0, 0, 1).applyQuaternion(orientation);
 
-        position.addVectors(joint.from, joint.to).multiplyScalar(0.5);
-        position.y += base;
-        scale.set(params.seamWidth, length, params.seamThickness);
+        const alpha = halfAngle(joint.planes);
+        const drop = (params.seamWidth / 2) * Math.tan(Math.min(alpha, MAX_HALF_ANGLE));
+        thicknesses.push(params.seamRise + drop);
 
-        const seam = new BoxGeometry(1, 1, 1);
-        seam.applyMatrix4(matrix.compose(position, orientation, scale));
-        parts.push(seam);
+        const from = joint.from.clone().setY(joint.from.y + base);
+        const to = joint.to.clone().setY(joint.to.y + base);
+        parts.push(
+          extrude(from, to, across, out, profile(params.seamWidth, params.seamRise, alpha, params.section)),
+        );
 
-        // How far the cap's face ends up from the bisector it should be seated on — a CORRECTNESS measure,
-        // taken before the offset, since the offset is a deliberate departure rather than an error.
-        const face = new Vector3(0, 0, 1).applyQuaternion(seated);
+        // How far the seating has drifted from the bisector it should sit on — a CORRECTNESS measure,
+        // unlike agreement between the caps, which they can have while all being wrong together.
         const truth = seating(joint.planes);
-        errors.push((Math.acos(Math.min(1, Math.abs(face.dot(truth)))) * 180) / Math.PI);
+        errors.push((Math.acos(Math.min(1, Math.abs(out.dot(truth)))) * 180) / Math.PI);
+
+        // And what that costs physically: where the widest points actually END UP relative to the roof.
+        // Positive floats above it, negative buries into it, zero rests on it.
+        for (const side of [-1, 1]) {
+          const corner = new Vector3()
+            .addScaledVector(across, (side * params.seamWidth) / 2)
+            .addScaledVector(out, -drop);
+          contacts.push(Math.min(corner.dot(joint.planes[0]), corner.dot(joint.planes[1])));
+        }
       }
 
       const merged = mergeGeometries(parts, false);
@@ -357,12 +460,27 @@ export default function (container: HTMLElement) {
 
     if (errors.length === 0) {
       params.seat = "no seams";
+      params.fit = "no seams";
     } else {
       const worst = Math.max(...errors);
       params.seat =
         worst < 0.005
           ? `seated — 0.00° off the bisector on all ${errors.length} seams`
           : `${worst.toFixed(2)}° OFF the bisector — the caps are tipped`;
+
+      const low = Math.min(...contacts);
+      const high = Math.max(...contacts);
+      // Five joints, five dihedrals, five thicknesses from one width — the range is the point.
+      const thinnest = Math.min(...thicknesses);
+      const thickest = Math.max(...thicknesses);
+      const span =
+        Math.abs(thickest - thinnest) < 5e-4
+          ? thickest.toFixed(3)
+          : `${thinnest.toFixed(3)}–${thickest.toFixed(3)}`;
+      params.fit =
+        Math.max(Math.abs(low), Math.abs(high)) < 1e-6
+          ? `resting on the roof · thickness ${span} (derived)`
+          : `${high > 1e-6 ? `floats ${high.toFixed(3)} ` : ""}${low < -1e-6 ? `buries ${(-low).toFixed(3)}` : ""} · thickness ${span}`;
     }
   };
   rebuild();
@@ -400,10 +518,13 @@ export default function (container: HTMLElement) {
 
   const seam = gui.addFolder("Seams");
   seam.add(params, "showSeams").name("Show Seams").onChange(rebuild);
-  seam.add(params, "seamWidth", 0.02, 0.4, 0.005).name("Seam Width").onChange(rebuild);
-  seam.add(params, "seamThickness", 0.02, 0.3, 0.005).name("Seam Thickness").onChange(rebuild);
-  // An OFFSET from the seated angle, which is derived. 0 sits square on the joint.
-  seam.add(params, "rollOffset", -90, 90, 1).name("Roll Offset").onChange(rebuild);
+  // Across, and out. Thickness is derived per joint from the width and that joint's own dihedral, so
+  // every setting of these two still rests on the roof — and the five caps come out five thicknesses.
+  seam.add(params, "seamWidth", 0.02, 0.6, 0.005).name("Seam Width").onChange(rebuild);
+  // Measured from the JOINT LINE. 0 is flush — the roof planed off — and up from there it stands proud.
+  seam.add(params, "seamRise", 0, 0.4, 0.005).name("Seam Rise").onChange(rebuild);
+  // Flat-topped, or brought to a sharp edge over the joint. Both rest on the same two contact points.
+  seam.add(params, "section", { Cap: "cap", Crest: "crest" }).name("Section").onChange(rebuild);
   seam.open();
 
   const construction = gui.addFolder("Seating");
@@ -429,6 +550,7 @@ export default function (container: HTMLElement) {
   readout.add(params, "pitch").name("Pitch").listen().disable();
   readout.add(params, "hip").name("Hip").listen().disable();
   readout.add(params, "seat").name("Seat").listen().disable();
+  readout.add(params, "fit").name("Fit").listen().disable();
   readout.open();
 
   return () => {

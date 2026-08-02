@@ -23,22 +23,28 @@ export const meta = {
   description:
     "STUDY — a pyramid roof is a tent until its joints are covered. Four planes meeting at an apex leave " +
     "four HIPS, and on a real roof every one is a seam that has to be capped or the water gets in. " +
-    "Modelling that cap — a raised member riding each hip — is what turns a cone into a built object, and " +
-    "it costs four boxes. The roof is the port; the SEAM is the subject. " +
-    "The whole difficulty is which way a cap FACES, and the answer is that it is not a choice. A seam is " +
-    "defined by the two planes it covers, and it seats on the bisector of the angle between them — " +
-    "`normalize(n1 + n2)`, taken from the roof's own face normals so the cap cannot disagree with the roof " +
-    "it sits on. Nothing else in the scene gets a vote. Roll is therefore DERIVED, and the Roll Offset " +
-    "dial turns the cap away from its seated angle rather than setting it. " +
-    "Two wrong answers are kept alongside it, because both are easy to reach for and one is genuinely " +
-    "hard to catch. MINIMAL ROTATION — the shortest turn from UP onto the hip — is underdetermined, and " +
-    "resolves its leftover roll against a world axis that has never heard of the roof; it lands 45° to " +
-    "135° out. CORNER OUTWARD borrows the corner's horizontal direction, and is the interesting failure: " +
-    "on a SQUARE plan that direction lies in a genuine mirror plane of the roof, so it is exactly right " +
-    "and looks authoritative. Take the plan off square and the two planes at each hip no longer have equal " +
-    "pitch, the mirror is gone, and it drifts — 1.4° at 3.4 x 3.6, 12.6° at 4.4 x 2.6, 27.7° at 6 x 1.5. " +
-    "Seat reports the error against the true bisector, which is the measurement that matters: four seams " +
-    "can agree with each other perfectly and still all be wrong together. " +
+    "Modelling that cap is what turns a cone into a built object. The roof is the port; the SEAM is the " +
+    "subject. " +
+    "A cap is not a box you place, it is a folded sheet laid over the joint, and almost everything about " +
+    "it is therefore DERIVED. It seats on the bisector of the two planes it covers — `normalize(n1 + n2)`, " +
+    "taken from the roof's own face normals so it cannot disagree with the roof it sits on. Its widest " +
+    "points must come to rest on those planes, and since the roof falls away from the joint at a rate the " +
+    "dihedral already fixes, they have to drop exactly `(width / 2) * tan(alpha)` to make contact. So " +
+    "THICKNESS IS NOT AN INPUT: it comes out as `rise + drop`, and differs from joint to joint because " +
+    "each joint has its own dihedral. Two dials are left, and they are independent — Seam Width across, " +
+    "Seam Rise out. " +
+    "Rise is measured from the JOINT LINE, which makes the two ways of reading a seam into one dial. At " +
+    "rise 0 the top is flush with the joint and you have the roof PLANED off, a lathe run down the corner; " +
+    "wind it up and the sheet stands proud and folded. A solid section cannot be both, so these are not " +
+    "rival interpretations, they are values. " +
+    "The seating is worth the study on its own, because the wrong constructions are easy to reach for and " +
+    "one is genuinely hard to catch. MINIMAL ROTATION — the shortest turn from UP onto the hip — is " +
+    "underdetermined, and resolves its leftover roll against a world axis that has never heard of the " +
+    "roof. CORNER OUTWARD borrows the corner's horizontal direction, and is the interesting failure: on a " +
+    "SQUARE plan that direction lies in a genuine mirror plane of the roof, so it is exactly right and " +
+    "looks authoritative. Take the plan off square and the two planes at each hip no longer share a pitch, " +
+    "the mirror is gone, and it drifts — 1.4° at 3.4 x 3.6, 12.6° at 4.4 x 2.6, 27.7° at 6 x 1.5. Both " +
+    "wrong seatings now fail VISIBLY as well as numerically, because a tipped cap stops touching the roof. " +
     "The apex is left as it falls. Four caps converging on one point interpenetrate, and that overlap is " +
     "precisely the hole a FINIAL exists to fill — a finial is a joint cover, not ornament, the same thing " +
     "the quoin turned out to be at a wall corner.",
@@ -51,14 +57,12 @@ export const meta = {
 //  HIP        the sloping joint where two roof planes meet, running from eave up to the apex or ridge.
 //             Always SHALLOWER than the planes it joins, because it travels the diagonal — which is why a
 //             hipped roof reads longer and lazier than its own pitch suggests. Both are in the readout.
-//  RIDGE      the HORIZONTAL joint at the top, where two planes meet each other rather than converge.
-//             A square-plan pyramid has none: its ridge has shrunk to a point.
 //  EAVE       the lower edge, oversailing the wall so water is thrown clear of it rather than running
 //             down the masonry. The OVERHANG is that oversail.
 //  APEX       where a pyramid's hips converge. Four seams arriving at one point is a JOIN, and it is
 //             unresolved here on purpose.
-//  DIHEDRAL   the angle between two planes at their shared edge. A seam's seating is its BISECTOR, and
-//             that is the entire orientation problem, correctly stated.
+//  DIHEDRAL   the angle between two planes at their shared edge. A seam seats on its BISECTOR, and the
+//             HALF-ANGLE from that bisector to either face is what sizes the cap.
 //  PITCH      the slope. Quoted as an angle here; a roofer would quote a rise over a run.
 //  HIP CAP /  the member covering a hip. In metalwork a standing seam, in tile a hip roll, in lead a
 //  HIP ROLL   roll proper. All the same move: bridge the joint with something raised.
@@ -68,8 +72,14 @@ export const meta = {
 //  question, which wants its own study. The roof had to be isolated first.
 
 type Construction = "bisector" | "outward" | "minimal";
+type Section = "cap" | "crest";
 
 const UP = new Vector3(0, 1, 0);
+/** Past this the joint has folded back on itself and the drop runs away. Nothing on a roof reaches it. */
+const MAX_HALF_ANGLE = (85 * Math.PI) / 180;
+
+/** A point in a joint's own cross-section: `across` the joint, and `out` along its bisector. */
+type Profile = [across: number, out: number][];
 
 /** One joint to cover: the edge it runs along, and the two planes that meet there. */
 interface Joint {
@@ -97,8 +107,6 @@ interface Roof {
  * Built by hand rather than from a four-sided `ConeGeometry`, which is what the original belfry used. A
  * cone's base is a REGULAR polygon, so it can only ever be square in plan — and a square plan is exactly
  * the case that hides the seating error below.
- *
- * Non-indexed, so every plane keeps its own normals and shades flat.
  */
 const buildRoof = (halfWidth: number, halfDepth: number, rise: number): Roof => {
   const corners: Vector3[] = [
@@ -146,8 +154,11 @@ const buildRoof = (halfWidth: number, halfDepth: number, rise: number): Roof => 
  * lies in both planes and is therefore perpendicular to both normals, so it can serve directly as a frame
  * axis without being re-orthogonalized against anything.
  */
-const seating = (planes: [Vector3, Vector3]): Vector3 =>
-  planes[0].clone().add(planes[1]).normalize();
+const seating = (planes: [Vector3, Vector3]): Vector3 => planes[0].clone().add(planes[1]).normalize();
+
+/** The joint's HALF-ANGLE: bisector to either face normal. This is what sizes the cap. */
+const halfAngle = (planes: [Vector3, Vector3]): number =>
+  Math.acos(Math.max(-1, Math.min(1, planes[0].dot(seating(planes)))));
 
 /**
  * The frame for a seam riding one joint, by each of the three constructions.
@@ -157,7 +168,7 @@ const seating = (planes: [Vector3, Vector3]): Vector3 =>
  * `outward` borrows the corner's HORIZONTAL direction and projects it perpendicular to the hip. On a
  * square plan that direction lies in a real mirror plane of the roof and the projection lands exactly on
  * the bisector — which is why it looks authoritative and why the error is easy to ship. Off square, the
- * two planes at a hip have different pitches, the mirror is gone, and the cap tips.
+ * two planes at a hip have different pitches, the mirror is gone, and the cap tips off the roof.
  *
  * `minimal` takes the shortest rotation carrying UP onto the hip. Infinitely many rotations do that, and
  * `setFromUnitVectors` resolves the ambiguity against a world axis. Nothing in that decision has heard of
@@ -170,6 +181,84 @@ const seamFrame = (direction: Vector3, joint: Joint, construction: Construction)
   const x = new Vector3().crossVectors(direction, reference).normalize();
   const z = new Vector3().crossVectors(x, direction);
   return new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(x, direction, z));
+};
+
+/**
+ * The section of a cap riding a joint whose half-angle is `alpha`, sized to SIT ON the roof.
+ *
+ * Thickness is not an input. A cap is a folded sheet laid over the joint, so its widest points have to
+ * come to rest on the two planes — and the roof falls away from the joint at a rate the dihedral already
+ * fixes. Put the widest points at `+/- width / 2` and they must drop exactly `(width / 2) * tan(alpha)`
+ * below the joint line to make contact. Everything else follows:
+ *
+ * - `rise` is the only outward input, measured from the JOINT LINE to the top of the cap
+ * - thickness comes out as `rise + drop`, and differs per joint, because each joint has its own dihedral
+ * - `rise = 0` puts the top flush with the joint line — the roof PLANED off. A solid section cannot be
+ *   both flush and proud, so those two readings are one dial at different values, not rival ideas
+ *
+ * The same contact rule sizes both sections, which is why they can share a `rise`: CAP is flat-topped with
+ * two contact corners; CREST comes to a sharp edge over the joint, with the same two contact corners.
+ */
+const profile = (width: number, rise: number, alpha: number, section: Section): Profile => {
+  const half = width / 2;
+  const drop = half * Math.tan(Math.min(alpha, MAX_HALF_ANGLE));
+  return section === "cap"
+    ? [
+        [-half, -drop],
+        [half, -drop],
+        [half, rise],
+        [-half, rise],
+      ]
+    : [
+        [-half, -drop],
+        [half, -drop],
+        [0, rise],
+      ];
+};
+
+/**
+ * Extrude a section along a joint, as a closed prism.
+ *
+ * Non-indexed, so every facet keeps its own normal and shades flat. The section is wound counter-clockwise
+ * if it is not already, so sides come out facing away from the joint whichever way a caller wrote it.
+ */
+const extrude = (
+  from: Vector3,
+  to: Vector3,
+  across: Vector3,
+  out: Vector3,
+  section: Profile,
+): BufferGeometry => {
+  const signed =
+    section.reduce((sum, [u, v], i) => {
+      const [u2, v2] = section[(i + 1) % section.length]!;
+      return sum + (u * v2 - u2 * v);
+    }, 0) / 2;
+  const points = signed < 0 ? [...section].reverse() : section;
+
+  const at = (origin: Vector3, [u, v]: [number, number]) =>
+    origin.clone().addScaledVector(across, u).addScaledVector(out, v);
+  const start = points.map((p) => at(from, p));
+  const end = points.map((p) => at(to, p));
+
+  const triangles: Vector3[][] = [];
+  for (let i = 0; i < points.length; i++) {
+    const j = (i + 1) % points.length;
+    triangles.push([start[i]!, end[i]!, end[j]!], [start[i]!, end[j]!, start[j]!]);
+  }
+  for (let i = 1; i < points.length - 1; i++) {
+    triangles.push([start[0]!, start[i]!, start[i + 1]!]);
+    triangles.push([end[0]!, end[i + 1]!, end[i]!]);
+  }
+
+  const positions = new Float32Array(triangles.length * 9);
+  triangles.forEach((triangle, i) =>
+    triangle.forEach((p, v) => positions.set([p.x, p.y, p.z], i * 9 + v * 3)),
+  );
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new BufferAttribute(positions, 3));
+  geometry.computeVertexNormals();
+  return geometry;
 };
 
 export default function (container: HTMLElement) {
@@ -213,9 +302,9 @@ export default function (container: HTMLElement) {
     overhang: 0.16,
 
     seams: true,
-    seamWidth: 0.11,
-    seamThickness: 0.075,
-    rollOffset: 0,
+    seamWidth: 0.14,
+    seamRise: 0.05,
+    section: "cap" as Section,
     construction: "bisector" as Construction,
 
     wall: true,
@@ -225,6 +314,7 @@ export default function (container: HTMLElement) {
     pitch: "",
     hip: "",
     seat: "",
+    fit: "",
   };
 
   const stage = new Group();
@@ -257,13 +347,12 @@ export default function (container: HTMLElement) {
     stage.add(new Mesh(roof.geometry, roofing));
 
     const errors: number[] = [];
+    const contacts: number[] = [];
+    const thicknesses: number[] = [];
+
     if (params.seams) {
       const parts: BufferGeometry[] = [];
       const direction = new Vector3();
-      const position = new Vector3();
-      const scale = new Vector3();
-      const roll = new Quaternion();
-      const matrix = new Matrix4();
 
       for (const joint of roof.joints) {
         // From the eave corner up to the apex. Its LENGTH is the seam's length, which is why the seam
@@ -273,27 +362,33 @@ export default function (container: HTMLElement) {
         if (length < 1e-6) continue;
         direction.divideScalar(length);
 
+        // The frame the chosen construction gives: +X across the joint, +Z out along its bisector.
         const orientation = seamFrame(direction, joint, params.construction);
-        // An OFFSET from the seated angle, applied after the frame is chosen. At 0 the cap sits square on
-        // the joint; the dial turns it away from that, and does not decide it.
-        roll.setFromAxisAngle(direction, (params.rollOffset * Math.PI) / 180);
-        orientation.premultiply(roll);
+        const across = new Vector3(1, 0, 0).applyQuaternion(orientation);
+        const out = new Vector3(0, 0, 1).applyQuaternion(orientation);
 
-        position.addVectors(joint.from, joint.to).multiplyScalar(0.5);
-        position.y += base;
-        scale.set(params.seamWidth, length, params.seamThickness);
+        const alpha = halfAngle(joint.planes);
+        const section = profile(params.seamWidth, params.seamRise, alpha, params.section);
+        thicknesses.push(params.seamRise + (params.seamWidth / 2) * Math.tan(Math.min(alpha, MAX_HALF_ANGLE)));
 
-        const seam = new BoxGeometry(1, 1, 1);
-        seam.applyMatrix4(matrix.compose(position, orientation, scale));
-        parts.push(seam);
+        const from = joint.from.clone().setY(joint.from.y + base);
+        const to = joint.to.clone().setY(joint.to.y + base);
+        parts.push(extrude(from, to, across, out, section));
 
-        // How far the cap's face has ended up from the bisector it should be seated on. This is a
-        // CORRECTNESS measure, unlike agreement between the four seams — they can agree and all be wrong.
-        // Measured before the offset, since the offset is a deliberate departure rather than an error.
-        const seated = seamFrame(direction, joint, params.construction);
-        const face = new Vector3(0, 0, 1).applyQuaternion(seated);
+        // How far the seating has drifted from the bisector it should sit on. A CORRECTNESS measure —
+        // unlike agreement between the four caps, which they can have while all being wrong together.
         const truth = seating(joint.planes);
-        errors.push((Math.acos(Math.min(1, Math.abs(face.dot(truth)))) * 180) / Math.PI);
+        errors.push((Math.acos(Math.min(1, Math.abs(out.dot(truth)))) * 180) / Math.PI);
+
+        // And what that costs physically: where the widest points actually END UP relative to the roof.
+        // Positive floats above it, negative buries into it, zero rests on it.
+        const drop = (params.seamWidth / 2) * Math.tan(Math.min(alpha, MAX_HALF_ANGLE));
+        for (const side of [-1, 1]) {
+          const corner = new Vector3()
+            .addScaledVector(across, (side * params.seamWidth) / 2)
+            .addScaledVector(out, -drop);
+          contacts.push(Math.min(corner.dot(joint.planes[0]), corner.dot(joint.planes[1])));
+        }
       }
 
       const merged = mergeGeometries(parts, false);
@@ -310,22 +405,35 @@ export default function (container: HTMLElement) {
     const acrossDepth = (Math.atan2(R, halfDepth) * 180) / Math.PI;
     // The HIP's own pitch, up the diagonal. Always the shallowest line on the roof.
     const hipPitch = (Math.atan2(R, Math.hypot(halfWidth, halfDepth)) * 180) / Math.PI;
-    const hipLength = Math.hypot(halfWidth, halfDepth, R);
 
     params.pitch =
       Math.abs(acrossWidth - acrossDepth) < 0.05
         ? `${acrossWidth.toFixed(1)}° all round`
         : `${acrossDepth.toFixed(1)}° across width · ${acrossWidth.toFixed(1)}° across depth`;
-    params.hip = `${hipPitch.toFixed(1)}° · ${hipLength.toFixed(2)} long — shallower than either plane`;
+    params.hip = `${hipPitch.toFixed(1)}° · ${Math.hypot(halfWidth, halfDepth, R).toFixed(2)} long — shallower than either plane`;
 
     if (errors.length === 0) {
       params.seat = "no seams";
+      params.fit = "no seams";
     } else {
       const worst = Math.max(...errors);
       params.seat =
         worst < 0.005
           ? `seated — 0.00° off the bisector on all ${errors.length} hips`
           : `${worst.toFixed(2)}° OFF the bisector — the caps are tipped`;
+
+      const low = Math.min(...contacts);
+      const high = Math.max(...contacts);
+      const thickest = Math.max(...thicknesses);
+      const thinnest = Math.min(...thicknesses);
+      const span =
+        Math.abs(thickest - thinnest) < 5e-4
+          ? thickest.toFixed(3)
+          : `${thinnest.toFixed(3)}–${thickest.toFixed(3)}`;
+      params.fit =
+        Math.max(Math.abs(low), Math.abs(high)) < 1e-6
+          ? `resting on the roof · thickness ${span} (derived)`
+          : `${high > 1e-6 ? `floats ${high.toFixed(3)} ` : ""}${low < -1e-6 ? `buries ${(-low).toFixed(3)}` : ""} · thickness ${span}`;
     }
   };
   rebuild();
@@ -336,11 +444,13 @@ export default function (container: HTMLElement) {
   const seam = gui.addFolder("Seams");
   // The whole point of the study. Off, it is a tent; on, it is a roof.
   seam.add(params, "seams").name("Show Seams").onChange(rebuild);
-  seam.add(params, "seamWidth", 0.02, 0.4, 0.005).name("Seam Width").onChange(rebuild);
-  seam.add(params, "seamThickness", 0.02, 0.3, 0.005).name("Seam Thickness").onChange(rebuild);
-  // An OFFSET, not the roll itself: the seated angle is derived from the joint, and this turns the cap
-  // away from it. 0 sits square on the hip; 45 stands it on edge as a crest.
-  seam.add(params, "rollOffset", -90, 90, 1).name("Roll Offset").onChange(rebuild);
+  // The two dials that are left, and they no longer fight: across, and out. Thickness is derived from
+  // width and the joint's own dihedral, so every setting of these two still rests on the roof.
+  seam.add(params, "seamWidth", 0.02, 0.6, 0.005).name("Seam Width").onChange(rebuild);
+  // Measured from the JOINT LINE. 0 is flush — the roof planed off — and up from there it stands proud.
+  seam.add(params, "seamRise", 0, 0.4, 0.005).name("Seam Rise").onChange(rebuild);
+  // Flat-topped, or brought to a sharp edge over the joint. Both rest on the same two contact points.
+  seam.add(params, "section", { Cap: "cap", Crest: "crest" }).name("Section").onChange(rebuild);
   seam.open();
 
   const construction = gui.addFolder("Seating");
@@ -371,6 +481,7 @@ export default function (container: HTMLElement) {
   readout.add(params, "pitch").name("Pitch").listen().disable();
   readout.add(params, "hip").name("Hip").listen().disable();
   readout.add(params, "seat").name("Seat").listen().disable();
+  readout.add(params, "fit").name("Fit").listen().disable();
   readout.open();
 
   return () => {
