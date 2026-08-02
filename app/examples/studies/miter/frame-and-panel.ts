@@ -410,13 +410,17 @@ function buildDoor(params: Params): { geometry: BufferGeometry; parts: number } 
 export default function (container: HTMLElement) {
   const { scene, camera, controls, dispose } = createScene(container, {
     background: 0x14171d,
-    cameraPosition: [1.9, 2.4, 4.4],
+    // A 2.03m door on a 24 degree lens needs the distance. The previous [1.9, 2.4, 4.4] framed 2.12 of
+    // vertical against a 2.03 door — it fitted with 4% to spare, and Explode pushes parts further out
+    // still, so anything but the assembled state ran off the frame.
+    cameraPosition: [2.4, 2.75, 5.5],
   });
 
   camera.fov = 24;
   camera.near = 0.01;
   camera.updateProjectionMatrix();
-  controls.target.set(0, 1.0, 0);
+  // The door's own middle, so it sits centred rather than riding low.
+  controls.target.set(0, 1.02, 0);
   controls.update();
 
   const key = new DirectionalLight(0xffffff, 1.2);
