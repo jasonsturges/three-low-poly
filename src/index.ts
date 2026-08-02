@@ -219,6 +219,13 @@ export {
 export { BookshelfGeometry, type BookshelfGeometryOptions } from "./geometry/furniture/BookshelfGeometry";
 export { DeskGeometry } from "./geometry/furniture/DeskGeometry";
 
+// Masonry
+export {
+  QuoinStackGeometry,
+  type QuoinPattern,
+  type QuoinStackGeometryOptions,
+} from "./geometry/masonry/QuoinStackGeometry";
+
 // Leafs
 export { EllipticLeafGeometry } from "./geometry/foliage/EllipticLeafGeometry";
 export { LeafGeometry, type LeafGeometryOptions } from "./geometry/foliage/LeafGeometry";
