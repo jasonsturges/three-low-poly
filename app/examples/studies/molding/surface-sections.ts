@@ -60,13 +60,17 @@ const STYLES: SurfaceStyle[] = ["fillet", "bead", "astragal", "reed", "ovolo", "
 export default function (container: HTMLElement) {
   const { scene, camera, controls, dispose } = createScene(container, {
     background: 0x14171d,
-    cameraPosition: [1.1, 0.9, 1.9],
+    // Framed to hold the whole lineup AND its labels. The previous [1.1, 0.9, 1.9] on a 26 degree lens
+    // showed about 1.0 of vertical against a 1.3 wall, so the top sections ran off the frame — and the
+    // labels sit further left than the wall does, which is what sets the horizontal reach.
+    cameraPosition: [1.3, 1.15, 3.2],
   });
 
-  camera.fov = 26;
+  camera.fov = 28;
   camera.near = 0.005;
   camera.updateProjectionMatrix();
-  controls.target.set(0, 0.55, 0.02);
+  // On the lineup's own middle rather than the wall's — the sections run from 0.16 to about 1.19.
+  controls.target.set(0, 0.65, 0.02);
   controls.update();
 
   const key = new DirectionalLight(0xffffff, 1.2);
