@@ -331,6 +331,7 @@ export { WineBottleGeometry, type WineBottleGeometryOptions } from "./geometry/v
 //  Helpers
 //------------------------------
 
+export { Cyclorama, type CycloramaOptions } from "./helpers/Cyclorama";
 export { GroundGrid, type GroundGridOptions } from "./helpers/GroundGrid";
 
 //------------------------------
