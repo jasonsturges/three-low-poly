@@ -286,10 +286,15 @@ function openingBoundary(
 export default function (container: HTMLElement) {
   const { scene, camera, controls, dispose } = createScene(container, {
     background: 0x141a22,
-    cameraPosition: [0.7, 1.5, 3.1],
+    // Framed to hold the whole opening with room to spare. At the defaults the window is 1.24 x 1.93, and
+    // the previous [0.7, 1.5, 3.1] on a 26 degree lens showed only 1.49 of vertical — the head ran off the
+    // top of the frame before you had touched anything.
+    cameraPosition: [1.1, 1.8, 4.8],
   });
 
-  camera.fov = 26;
+  // A longer-than-normal lens still, because judging whether cames MEET is exactly what perspective
+  // ruins — just not so long that the subject cannot fit inside it.
+  camera.fov = 32;
   camera.near = 0.005;
   camera.updateProjectionMatrix();
   controls.target.set(0, 0.95, 0);
