@@ -263,13 +263,17 @@ function openingBoundary(
 export default function (container: HTMLElement) {
   const { scene, camera, controls, dispose, onFrame } = createScene(container, {
     background: 0x14171d,
-    cameraPosition: [0.5, 1.5, 3.2],
+    // The arch reaches 1.8 tall — springing 1.1 plus a 0.7 rise — and the previous [0.5, 1.5, 3.2] framed
+    // only 1.48 of vertical. The member also SPINS, sweeping every direction from its centre, so the frame
+    // has to hold the whole boundary rather than whichever part of it the member happens to be crossing.
+    cameraPosition: [1.0, 1.9, 4.6],
   });
 
   camera.fov = 26;
   camera.near = 0.005;
   camera.updateProjectionMatrix();
-  controls.target.set(0, 0.85, 0);
+  // Mid-height of the whole arch, not of the springing line.
+  controls.target.set(0, 0.9, 0);
   controls.update();
 
   const key = new DirectionalLight(0xffffff, 1.25);
