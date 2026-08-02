@@ -215,10 +215,14 @@ export default function (container: HTMLElement) {
     // It is one Mesh rather than an InstancedMesh, so it costs one extra draw call. Worth naming, because
     // this study exists to count them.
     if (params.mortarCore) {
+      // Recessed on ALL THREE axes. Brick's joint is ADDED rather than subtracted, so its bricks stop a
+      // whole `mortarGap` short of the run — a core built to full size stands proud at the ends and rings
+      // the wall with a pale edge, which is the opposite of what a core is for.
+      const inset = (extent: number) => Math.max(extent * 0.15, extent - params.mortarRecess * 2);
       const core = new BoxGeometry(
-        params.width,
-        courses * gauge,
-        Math.max(params.brickDepth * 0.15, params.brickDepth - params.mortarRecess * 2),
+        inset(params.width),
+        inset(courses * gauge),
+        inset(params.brickDepth),
       );
       core.translate(0, (courses * gauge) / 2, 0);
       const mesh = new InstancedMesh(core, clay, 1);

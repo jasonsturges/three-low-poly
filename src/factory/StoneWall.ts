@@ -69,10 +69,12 @@ export interface StoneWallOptions {
    */
   mortar?: boolean;
   /**
-   * How far the core sits BEHIND the stone faces. Defaults to `0.014`.
+   * How far the core sits BEHIND the stonework, on EVERY axis. Defaults to `0.014`.
    *
    * Recessed rather than flush: a joint filled level with the face has no shadow and reads as a painted
-   * line. Raked back, it reads as a joint.
+   * line. Raked back, it reads as a joint. It insets from the wall's ends and head as well as its faces,
+   * because the stones themselves stop `joint / 2` short of the nominal extent — a core built to full size
+   * would stand proud of the stonework there and ring the wall with a pale edge.
    */
   mortarRecess?: number;
   /** Mortar tint. Defaults to `#b8b2a6`. */
@@ -282,14 +284,17 @@ export class StoneWall extends Group {
       }
     }
 
-    // The mortar core: one box behind everything, recessed from both faces so each joint reads as a joint
+    // The mortar core: one box behind everything, recessed from EVERY face so each joint reads as a joint
     // rather than a hole. Painted with the same vertex colours, so the wall is still one draw call.
+    //
+    // Recessed on all three axes, not just the thickness. The stones do not reach the wall's nominal
+    // extent — each is `length - joint` wide and `course - joint` tall, so the stonework stops `joint / 2`
+    // short at every edge. A core built to the full width and height therefore stands PROUD of the
+    // stonework at the ends and at the head, and its pale edge reads as a band round the wall. Which is
+    // exactly wrong: the core is meant to be the thing you glimpse BEHIND the stones, never past them.
     if (mortar) {
-      const core = new BoxGeometry(
-        width,
-        height,
-        Math.max(thickness * 0.15, thickness - mortarRecess * 2),
-      );
+      const inset = (extent: number) => Math.max(extent * 0.15, extent - mortarRecess * 2);
+      const core = new BoxGeometry(inset(width), inset(height), inset(thickness));
       core.translate(width / 2, height / 2, 0);
       paint(core, new Color(mortarColor));
     }
