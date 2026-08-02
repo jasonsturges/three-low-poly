@@ -46,11 +46,13 @@ export default function (container: HTMLElement) {
     lattice: "diamond" as "diamond" | "gregorian",
     openingWidth: 1.2,
     openingHeight: 1.4,
+    archHeight: 0.6,
     sill: 1,
     wallWidth: 5,
     wallHeight: 4,
     wallThickness: 0.25,
     showWall: true,
+    riseOut: "",
   };
 
   let disposeLast: (() => void) | null = null;
@@ -64,6 +66,7 @@ export default function (container: HTMLElement) {
       width: params.openingWidth,
       height: params.openingHeight,
       arch: params.arch,
+      archHeight: params.archHeight,
       x: 0,
       y: params.sill,
     };
@@ -73,7 +76,19 @@ export default function (container: HTMLElement) {
     // instead. So the wall is never allowed to be shorter than the opening needs. `archRise` reports what
     // the head will actually add, which is not `width / 2` for every style.
     // `y` is the springing line and `archRise` does not read it, but the type asks for it.
-    const rise = archRise({ style: params.arch, halfSpan: params.openingWidth / 2, y: 0 });
+    const rise = archRise({
+      style: params.arch,
+      halfSpan: params.openingWidth / 2,
+      rise: params.archHeight,
+      y: 0,
+    });
+    // What the style will ACTUALLY do with the height asked for. Several clamp: `square` ignores it
+    // outright, `semicircle` is always its half-span, `segmental` cannot exceed one and `horseshoe` and
+    // `pointed` cannot fall below one. Only `elliptical` and `ogee` take the number as given.
+    params.riseOut =
+      Math.abs(rise - params.archHeight) < 1e-6
+        ? `${rise.toFixed(3)} — as asked`
+        : `${rise.toFixed(3)} — ${params.arch} clamped ${params.archHeight.toFixed(3)}`;
     const headroom = params.sill + params.openingHeight + rise;
     params.wallHeight = Math.max(params.wallHeight, headroom + MARGIN);
 
@@ -134,8 +149,15 @@ export default function (container: HTMLElement) {
     .onChange(rebuild);
   opening.add(params, "openingWidth", 0.6, 2.4, 0.02).name("Width").onChange(rebuild);
   opening.add(params, "openingHeight", 0.4, 2.2, 0.02).name("Springing").onChange(rebuild);
+  // How far the head rises above the springing. Each style treats it differently and some ignore it —
+  // the Readout reports what was actually used, which is the only way to see the clamping happen.
+  opening.add(params, "archHeight", 0.05, 2, 0.02).name("Rise").onChange(rebuild);
   opening.add(params, "sill", 0.2, 1.8, 0.02).name("Sill Height").onChange(rebuild);
   opening.open();
+
+  const readout = gui.addFolder("Readout");
+  readout.add(params, "riseOut").name("Rise").listen().disable();
+  readout.open();
 
   const fill = gui.addFolder("Window");
   // Both factories take the same `opening`, so they are interchangeable at the call site.
