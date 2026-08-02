@@ -381,13 +381,16 @@ export default function (container: HTMLElement) {
         errors.push((Math.acos(Math.min(1, Math.abs(out.dot(truth)))) * 180) / Math.PI);
 
         // And what that costs physically: where the widest points actually END UP relative to the roof.
-        // Positive floats above it, negative buries into it, zero rests on it.
+        // The roof solid near a joint is where BOTH signed distances are negative, so `max` is the distance
+        // OUT of it: zero rests on the surface, positive floats above, negative is strictly buried. Taking
+        // `min` instead calls a healthy cap buried, because a corner resting on one plane sits behind the
+        // other plane.'.s infinite extension.
         const drop = (params.seamWidth / 2) * Math.tan(Math.min(alpha, MAX_HALF_ANGLE));
         for (const side of [-1, 1]) {
           const corner = new Vector3()
             .addScaledVector(across, (side * params.seamWidth) / 2)
             .addScaledVector(out, -drop);
-          contacts.push(Math.min(corner.dot(joint.planes[0]), corner.dot(joint.planes[1])));
+          contacts.push(Math.max(corner.dot(joint.planes[0]), corner.dot(joint.planes[1])));
         }
       }
 

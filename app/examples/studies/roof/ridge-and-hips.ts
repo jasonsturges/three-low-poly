@@ -39,11 +39,12 @@ export const meta = {
     "ridge length; the corner's outward direction is 18.7° out at the default and worse as the plan " +
     "stretches. The RIDGE is the reassuring case: its two planes are mirror images, so their bisector is " +
     "exactly UP, and it was the one joint that always looked correct. " +
-    "Every joint here has a DIFFERENT dihedral — four hips joining unequal pitches, one ridge joining " +
-    "equal ones — so this is where deriving the cap pays for itself. Thickness is not a parameter: a cap " +
-    "is a folded sheet, its widest points have to come to rest on the planes, and the drop that puts them " +
-    "there is `(width / 2) * tan(alpha)`. One Seam Width therefore produces FIVE different thicknesses, " +
-    "each sized by the joint it covers, and the Fit readout prints the range. What is left is two dials " +
+    "This is also where deriving the cap pays for itself, because the joints here do NOT share a dihedral. " +
+    "Thickness is not a parameter: a cap is a folded sheet, its widest points have to come to rest on the " +
+    "planes, and the drop that puts them there is `(width / 2) * tan(alpha)`. At the default the four " +
+    "hips are congruent to each other — mirror images, so one half-angle of 34.8° — but the ridge is a " +
+    "different joint entirely at 53.9°, so one Seam Width produces two thicknesses, 0.099 and 0.146, each " +
+    "sized by what it covers. Stretch the plan and they part further. What is left is two dials " +
     "that do not fight: width across, rise out. Rise is measured from the joint line, so 0 is the roof " +
     "planed flat and anything above it is sheet standing proud. " +
     "The junctions have not been solved, only divided: the pyramid's single 4-way apex has become two " +
@@ -418,12 +419,15 @@ export default function (container: HTMLElement) {
         errors.push((Math.acos(Math.min(1, Math.abs(out.dot(truth)))) * 180) / Math.PI);
 
         // And what that costs physically: where the widest points actually END UP relative to the roof.
-        // Positive floats above it, negative buries into it, zero rests on it.
+        // The roof solid near a joint is where BOTH signed distances are negative, so `max` is the distance
+        // OUT of it: zero rests on the surface, positive floats above, negative is strictly buried. Taking
+        // `min` instead calls a healthy cap buried, because a corner resting on one plane sits behind the
+        // other plane.'.s infinite extension.
         for (const side of [-1, 1]) {
           const corner = new Vector3()
             .addScaledVector(across, (side * params.seamWidth) / 2)
             .addScaledVector(out, -drop);
-          contacts.push(Math.min(corner.dot(joint.planes[0]), corner.dot(joint.planes[1])));
+          contacts.push(Math.max(corner.dot(joint.planes[0]), corner.dot(joint.planes[1])));
         }
       }
 
