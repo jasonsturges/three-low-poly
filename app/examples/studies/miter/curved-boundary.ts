@@ -295,13 +295,17 @@ function openingBoundary(
 export default function (container: HTMLElement) {
   const { scene, camera, controls, dispose } = createScene(container, {
     background: 0x14171d,
-    cameraPosition: [0.9, 1.9, 2.6],
+    // The arch reaches 1.8 tall at the defaults — springing 1.1 plus a 0.7 rise — and the previous
+    // [0.9, 1.9, 2.6] framed only 1.23 of vertical, so the head was outside the view before you touched
+    // anything. Raising the arch height pushes it further still.
+    cameraPosition: [1.7, 2.5, 5.0],
   });
 
   camera.fov = 24;
   camera.near = 0.005;
   camera.updateProjectionMatrix();
-  controls.target.set(0, 1.0, 0);
+  // Mid-height of the whole arch rather than of the springing line.
+  controls.target.set(0, 0.9, 0);
   controls.update();
 
   const key = new DirectionalLight(0xffffff, 1.25);
