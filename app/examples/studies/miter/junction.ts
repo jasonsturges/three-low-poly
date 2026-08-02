@@ -265,7 +265,6 @@ export default function (container: HTMLElement) {
   };
 
   const params = {
-    rig: "ngon" as "ngon" | "ridge",
     sides: 4,
     pitch: 48,
 
@@ -314,61 +313,28 @@ export default function (container: HTMLElement) {
   const members = (): Member[] => {
     const base = { length: 0.85, width: params.width, thickness: params.thickness, offset: params.offset };
 
-    if (params.rig === "ngon") {
-      // A regular n-gon PYRAMID with its apex at the origin. Hip `i` is the joint between face `i - 1`
-      // and face `i`, so its seating is the bisector of those two — the same rule the roof studies use.
-      const n = Math.max(3, Math.round(params.sides));
-      const apex = new Vector3(0, 0, 0);
-      const drop = -Math.tan((params.pitch * Math.PI) / 180);
-      const corner = (i: number) => {
-        const a = ((i % n) / n) * Math.PI * 2;
-        // Skew tilts alternate corners off the cone, which is the one thing that can stop the cuts sharing
-        // an axis. It has to move the ROOF, so the bisectors move with it.
-        const lift = drop * (1 + (i % 2 === 0 ? params.skew : -params.skew));
-        return new Vector3(Math.cos(a), lift, Math.sin(a));
-      };
-      const normals = Array.from({ length: n }, (_, i) => faceNormal(corner(i), apex, corner(i + 1)));
+    // A regular n-gon PYRAMID with its apex at the origin, built as a REAL roof so that every member is
+    // seated on a genuine dihedral bisector taken from two faces. Hip `i` is the joint between face
+    // `i - 1` and face `i`, which is the same rule the roof studies use.
+    const n = Math.max(3, Math.round(params.sides));
+    const apex = new Vector3(0, 0, 0);
+    const drop = -Math.tan((params.pitch * Math.PI) / 180);
+    const corner = (i: number) => {
+      const a = ((i % n) / n) * Math.PI * 2;
+      // Skew tilts alternate corners off the cone — the one thing that can stop the cuts sharing an axis.
+      // It has to move the ROOF, so the bisectors move with it.
+      const lift = drop * (1 + (i % 2 === 0 ? params.skew : -params.skew));
+      return new Vector3(Math.cos(a), lift, Math.sin(a));
+    };
+    const normals = Array.from({ length: n }, (_, i) => faceNormal(corner(i), apex, corner(i + 1)));
 
-      return Array.from({ length: n }, (_, i) => ({
-        ...base,
-        away: corner(i).clone().normalize(),
-        up: normals[(i + n - 1) % n]!.clone().add(normals[i]!).normalize(),
-        width: params.width * (1 + (i % 2 === 0 ? params.unequal : 0)),
-        color: PALETTE[i % PALETTE.length]!,
-      }));
-    }
-
-    // The roof's own RIDGE END, taken from `studies/roof/ridge-and-hips` at its defaults and shifted so
-    // the junction sits at the origin: two hips arriving from below, and the ridge running level away.
-    const halfWidth = 4.4 / 2 + 0.16;
-    const halfDepth = 2.6 / 2 + 0.16;
-    const rise = 2.0;
-    const ridge = 1.8;
-    const endRun = halfWidth - ridge / 2;
-
-    const end = new Vector3(ridge / 2, rise, 0);
-    const negZ = faceNormal(
-      new Vector3(-halfWidth, 0, -halfDepth),
-      new Vector3(-ridge / 2, rise, 0),
-      new Vector3(halfWidth, 0, -halfDepth),
-    );
-    const posZ = new Vector3(negZ.x, negZ.y, -negZ.z);
-    const posX = new Vector3(rise, endRun, 0).normalize();
-
-    const at = (target: Vector3, planes: [Vector3, Vector3], width: number, color: number): Member => ({
+    return Array.from({ length: n }, (_, i) => ({
       ...base,
-      away: target.clone().sub(end).normalize(),
-      up: planes[0].clone().add(planes[1]).normalize(),
-      width,
-      color,
-    });
-
-    return [
-      at(new Vector3(halfWidth, 0, -halfDepth), [negZ, posX], params.width, PALETTE[0]!),
-      at(new Vector3(halfWidth, 0, halfDepth), [posZ, posX], params.width, PALETTE[1]!),
-      // The ridge: two mirror-image slopes, so its bisector comes out exactly UP.
-      at(new Vector3(-ridge / 2, rise, 0), [negZ, posZ], params.width * (1 + params.unequal), PALETTE[2]!),
-    ];
+      away: corner(i).clone().normalize(),
+      up: normals[(i + n - 1) % n]!.clone().add(normals[i]!).normalize(),
+      width: params.width * (1 + (i % 2 === 0 ? params.unequal : 0)),
+      color: PALETTE[i % PALETTE.length]!,
+    }));
   };
 
   const rebuild = () => {
@@ -466,7 +432,6 @@ export default function (container: HTMLElement) {
   gui.title("Junction");
 
   const rig = gui.addFolder("Junction");
-  rig.add(params, "rig", { "Regular n-gon": "ngon", "Ridge End": "ridge" }).name("Rig").onChange(rebuild);
   // Member count never changes the CUT count — two neighbours whatever n is. That is the whole point.
   rig.add(params, "sides", 3, 12, 1).name("Sides").onChange(rebuild);
   rig.add(params, "pitch", 5, 80, 1).name("Pitch").onChange(rebuild);
