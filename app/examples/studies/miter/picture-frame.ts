@@ -37,11 +37,15 @@ export const meta = {
     "corner points and nothing else; `miterFrames(corners, { closed: true })` puts a ring on every corner's " +
     "bisector and `sweep(..., { closed: true })` wraps the last ring back onto the first, so there are no " +
     "end caps anywhere in the model. Switch to FOUR PIECES to build the same frame as four sticks, each " +
-    "seat cut at both ends, and Explode to pull them apart. Then move Stile Stock: unequal stock is not " +
-    "merely ugly, it makes the outer corner STEP, and the control is unavailable in One Loop mode because " +
-    "consecutive segments there SHARE a ring — one ring is one cross-section, so unequal stock is " +
-    "inexpressible, not just discouraged. Sides proves the joint is angle-agnostic: a hexagon miters at " +
-    "60° exactly as a rectangle does at 90°.",
+    "seat cut at both ends, and Explode to pull them apart. Then move Stile Stock: cut at 45°, unequal " +
+    "stock makes the outer corner STEP — and the control is unavailable in One Loop mode at all, because " +
+    "consecutive segments there SHARE a ring, and one ring is one cross-section, so unequal stock is " +
+    "inexpressible rather than merely discouraged. " +
+    "Both of those are limits of the SWEEP, not of the miter. A miter cut by a PLANE joins unequal stock " +
+    "exactly — the cut simply stops being 45° and runs from the joint's outer corner to its inner corner " +
+    "instead. `studies/miter/unequal-stock` measures it. What this study shows is what a shared ring can " +
+    "and cannot express, which is a different and narrower claim. " +
+    "Sides proves the joint is angle-agnostic: a hexagon miters at 60° exactly as a rectangle does at 90°.",
 };
 
 type Profile = ReturnType<typeof rectProfile>;

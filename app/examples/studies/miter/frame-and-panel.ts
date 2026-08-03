@@ -39,7 +39,11 @@ export const meta = {
     "the stile and a continuous member is what carries it — taxonomy (4), the T-junction. The muntin " +
     "between the panels butts into the rails the same way. Switch Frame Joint to MITER for the other real " +
     "style, the mitered cabinet door, built as four separate sticks off `miterCuts` — and note the rail " +
-    "widths lock to the stile's, because a miter cannot join unequal stock. What DOES miter on a door is " +
+    "widths lock to the stile's. That is a limit of THIS construction, not of mitering: `miterCuts` puts " +
+    "one ring on the corner's bisector, and one ring is one cross-section, so the width cannot change " +
+    "across the joint. A miter cut by a PLANE has no such constraint — run it from the joint's outer " +
+    "corner to its inner corner and unequal stock closes exactly, which is what lets a real door carry a " +
+    "deep bottom rail. See `studies/miter/unequal-stock`. What DOES miter on a door is " +
     "the applied panel molding: turn it on and an arbitrary routed profile wraps each opening as one " +
     "closed mitered loop. Panels are RAISED — a field, a bevel, and a tongue that floats in the frame's " +
     "groove — and their four bevels meet at the corners in a 45° hip, which is the same joint the taxonomy " +
