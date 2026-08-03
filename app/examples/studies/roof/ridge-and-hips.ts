@@ -16,7 +16,7 @@ import {
   WireframeGeometry,
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { createGeometryBuffers, pushQuad, pushTriangle, toBufferGeometry, type Vec3 } from "three-low-poly";
+import { cutSegment, miterPlane, type CutPlane } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -93,19 +93,6 @@ const MAX_HALF_ANGLE = (85 * Math.PI) / 180;
 
 /** A point in a joint's own cross-section: `across` the joint, and `out` along its bisector. */
 type Profile = [across: number, out: number][];
-
-/** A bounding plane for one end of a cap. `normal` points into the region the cap may occupy. */
-interface Plane {
-  point: Vector3;
-  normal: Vector3;
-}
-
-/** How far along `axis` from `p` until the plane is met. `Infinity` when the axis runs parallel to it. */
-const hitDistance = (p: Vector3, axis: Vector3, plane: Plane): number => {
-  const denominator = axis.dot(plane.normal);
-  if (Math.abs(denominator) < 1e-9) return Infinity;
-  return plane.point.clone().sub(p).dot(plane.normal) / denominator;
-};
 
 /** One joint to cover: the edge it runs along, and the two planes that meet there. */
 interface Joint {
@@ -275,113 +262,38 @@ const seamFrame = (direction: Vector3, joint: Joint, construction: Construction)
   return new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(x, direction, z));
 };
 
+/**
+ * Lay a cap's section on its joint and cut BOTH ends against their bounding planes.
+ *
+ * `cutSegment` from the library, promoted out of these studies. It is the two-ended form because this roof
+ * needs it: the RIDGE has a junction at each end, and the two ends generally split the ring at different
+ * places — so cutting one end and squaring the other is not a substitute.
+ *
+ * The section is wound counter-clockwise if it is not already, so the sides face away from the joint
+ * whichever way a caller wrote it. The ring is seeded at the run's midpoint and lofted both ways.
+ */
 const extrude = (
   from: Vector3,
   to: Vector3,
   across: Vector3,
   out: Vector3,
   section: Profile,
-  startBounds: [Plane, Plane],
-  endBounds: [Plane, Plane],
+  startBounds: [CutPlane, CutPlane],
+  endBounds: [CutPlane, CutPlane],
 ): BufferGeometry => {
   const signed =
     section.reduce((sum, [u, v], i) => {
       const [u2, v2] = section[(i + 1) % section.length]!;
       return sum + (u * v2 - u2 * v);
     }, 0) / 2;
-  const corners = signed < 0 ? [...section].reverse() : section;
+  const points = signed < 0 ? [...section].reverse() : section;
 
-  const forward = new Vector3().subVectors(to, from).normalize();
-  const backward = forward.clone().negate();
   const seed = from.clone().lerp(to, 0.5);
-  const pointAt = ([u, v]: [number, number]) =>
-    seed.clone().addScaledVector(across, u).addScaledVector(out, v);
-
-  const winner = (p: Vector3, axis: Vector3, bounds: [Plane, Plane]) => {
-    const t = [hitDistance(p, axis, bounds[0]), hitDistance(p, axis, bounds[1])];
-    return { t, pick: t[0]! <= t[1]! ? 0 : 1 };
-  };
-
-  // The two ends can disagree at DIFFERENT places around the ring, so collect every crossing from both and
-  // evaluate the whole ring at all of them. Splitting only for one end would leave the other's ridge
-  // straddling a quad, which is what rounds an arrowhead off.
-  const stations: [number, number][] = [];
-  for (let i = 0; i < corners.length; i++) {
-    const j = (i + 1) % corners.length;
-    stations.push([i, 0]);
-    const a = pointAt(corners[i]!);
-    const b = pointAt(corners[j]!);
-    for (const [axis, bounds] of [
-      [forward, endBounds],
-      [backward, startBounds],
-    ] as const) {
-      const wa = winner(a, axis, bounds);
-      const wb = winner(b, axis, bounds);
-      if (wa.pick === wb.pick) continue;
-      const f0 = wa.t[0]! - wa.t[1]!;
-      const f1 = wb.t[0]! - wb.t[1]!;
-      const s = f0 / (f0 - f1);
-      if (Number.isFinite(s) && s > 1e-9 && s < 1 - 1e-9) stations.push([i, s]);
-    }
-  }
-  stations.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-
-  const ring = stations.map(([i, s]) => {
-    const a = corners[i]!;
-    const b = corners[(i + 1) % corners.length]!;
-    return pointAt([a[0] + (b[0] - a[0]) * s, a[1] + (b[1] - a[1]) * s]);
+  const ring = points.map(([u, v]) => seed.clone().addScaledVector(across, u).addScaledVector(out, v));
+  return cutSegment(ring, new Vector3().subVectors(to, from).normalize(), {
+    start: startBounds,
+    end: endBounds,
   });
-
-  const land = (p: Vector3, axis: Vector3, bounds: [Plane, Plane]) => {
-    const { t, pick } = winner(p, axis, bounds);
-    return { point: p.clone().addScaledVector(axis, t[pick]!), owner: pick };
-  };
-  const heads = ring.map((p) => land(p, forward, endBounds));
-  const tails = ring.map((p) => land(p, backward, startBounds));
-
-  const buffers = createGeometryBuffers();
-  const at = (p: Vector3): Vec3 => [p.x, p.y, p.z];
-  const count = ring.length;
-
-  for (let i = 0; i < count; i++) {
-    const j = (i + 1) % count;
-    pushQuad(
-      buffers,
-      [at(tails[j]!.point), at(tails[i]!.point), at(heads[i]!.point), at(heads[j]!.point)],
-      undefined,
-    );
-  }
-
-  // ONE FAN PER FACET at each end. Fanning a whole loop that spans two planes gives non-planar triangles,
-  // and the ridge between the facets is exactly where the cap has to be cut in two.
-  const fan = (points: { point: Vector3; owner: number }[], flip: boolean) => {
-    const ridges = points.map((p, i) => (i > 0 && p.owner !== points[i - 1]!.owner ? i : -1)).filter((i) => i >= 0);
-    const emit = (arc: Vector3[]) => {
-      for (let i = 1; i < arc.length - 1; i++) {
-        const tri = [arc[0]!, arc[i]!, arc[i + 1]!];
-        pushTriangle(buffers, (flip ? [tri[0]!, tri[2]!, tri[1]!] : tri).map(at) as [Vec3, Vec3, Vec3], undefined);
-      }
-    };
-    if (ridges.length !== 2) {
-      emit(points.map((p) => p.point));
-      return;
-    }
-    for (const [start, finish] of [
-      [ridges[0]!, ridges[1]!],
-      [ridges[1]!, ridges[0]!],
-    ]) {
-      const arc: Vector3[] = [];
-      for (let i = start; ; i = (i + 1) % count) {
-        arc.push(points[i]!.point);
-        if (i === finish) break;
-      }
-      emit(arc);
-    }
-  };
-  fan(heads, false);
-  fan(tails, true);
-
-  return toBufferGeometry(buffers);
 };
 
 export default function (container: HTMLElement) {
@@ -509,10 +421,10 @@ export default function (container: HTMLElement) {
           .filter((a) => a.away.lengthSq() > 0.5);
 
       /** The two cut planes bounding one END of a cap, or a square stop where nothing else arrives. */
-      const boundsAt = (point: Vector3, mine: Vector3, axis: Vector3, lift: number): [Plane, Plane] => {
+      const boundsAt = (point: Vector3, mine: Vector3, axis: Vector3, lift: number): [CutPlane, CutPlane] => {
         const at = point.clone();
         at.y += lift;
-        const square: Plane = { point: at, normal: axis.clone().negate() };
+        const square: CutPlane = { point: at, normal: axis.clone().negate() };
         const arrivals = arrivalsAt(point);
         if (!params.miter || arrivals.length < 3) return [square, square];
 
@@ -541,7 +453,7 @@ export default function (container: HTMLElement) {
         const index = ordered.findIndex((a) => a.away.distanceTo(mine) < 1e-9);
         if (index < 0) return [square, square];
 
-        const plane = (other: Vector3): Plane => ({ point: at, normal: mine.clone().sub(other).normalize() });
+        const plane = (other: Vector3): CutPlane => miterPlane(at, mine, other);
         return [
           plane(ordered[(index + ordered.length - 1) % ordered.length]!.away),
           plane(ordered[(index + 1) % ordered.length]!.away),
