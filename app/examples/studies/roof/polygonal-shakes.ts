@@ -62,6 +62,9 @@ interface Face {
   insets: number[];
 }
 
+/** The roof's own axis — the one direction every hip shares, and the only one their folds can meet on. */
+const AXIS = new Vector3(0, 1, 0);
+
 const area3 = (a: Vector3, b: Vector3, c: Vector3): number =>
   new Vector3().subVectors(b, a).cross(new Vector3().subVectors(c, a)).length();
 
@@ -199,6 +202,7 @@ export default function (container: HTMLElement) {
     thickness: 0.016,
     minStagger: 0.09,
     minSliver: 0.15,
+    capLap: 1.2,
     jitter: 0.35,
 
     color: "#8a6f52",
@@ -254,14 +258,16 @@ export default function (container: HTMLElement) {
     let whole = 0;
     let cut = 0;
     let dropped = 0;
+    let exposed = 0;
     let wings = 0;
 
-    for (const face of faces) {
+    faces.forEach((face, fi) => {
       const { interior, wings: border } = borderWings(face);
 
       // Sheathing behind, so a dropped sliver reads as a gap rather than as nothing.
       const backing: Vector3[][] = [];
-      for (let i = 1; i < interior.length - 1; i++) backing.push([interior[0]!, interior[i]!, interior[i + 1]!]);
+      for (let i = 1; i < face.points.length - 1; i++)
+        backing.push([face.points[0]!, face.points[i]!, face.points[i + 1]!]);
       {
         const positions = new Float32Array(backing.length * 9);
         backing.forEach((t, i) => t.forEach((p, v) => positions.set([p.x, p.y, p.z], i * 9 + v * 3)));
@@ -271,11 +277,42 @@ export default function (container: HTMLElement) {
         stage.add(new Mesh(g, sheathing));
       }
 
-      for (const quad of border) {
+      border.forEach((quad, edgeIndex) => {
         wings += 1;
+        // Lifted clear of the shake course beneath, so the cap LAPS OVER their cut ends rather than
+        // butting into them. A cap level with the field would show every bevel it exists to hide.
+        //
+        // BUT THE FOLD CANNOT BE LIFTED ALONG ONE FACE'S NORMAL. Do that and each half of the cap rises in
+        // a different direction and the crease splits open — a dark line straight down every hip. A lifted
+        // cap's fold is where the two OFFSET PLANES meet, which is up the BISECTOR by `lap / cos(alpha)`:
+        // that single point lies in both, since the bisector makes the same angle with either normal.
+        const lap = params.thickness * (1 + params.capLap);
+        const neighbour = faces[edgeIndex === 0 ? (fi + n - 1) % n : (fi + 1) % n]!;
+        const bisector = face.normal.clone().add(neighbour.normal).normalize();
+        const cosAlpha = Math.max(1e-6, bisector.dot(face.normal));
+
+        // AT THE APEX THE LIFT FOLLOWS THE ROOF'S AXIS, NOT THE HIP'S BISECTOR. Every hip has a different
+        // bisector, so lifting along them sends the folds off in different directions and they open into a
+        // ring above the peak. Tapering the lift to zero closes that ring but buries the cap under the
+        // shakes, which is worse. The axis is the one direction ALL the hips share, so a fold lifted along
+        // it lands on a single point — and the lift stays full, so nothing is buried.
+        //
+        // Both raises are sized to clear their own face by `lap`: divide by the cosine between the lift
+        // direction and the face normal, which is `cos(alpha)` for the bisector and `axis . n` for the axis.
+        const cosAxis = Math.max(1e-6, AXIS.dot(face.normal));
+        const raise = (p: Vector3) =>
+          p.distanceTo(apex) < 1e-9
+            ? p.clone().addScaledVector(AXIS, lap / cosAxis)
+            : p.clone().addScaledVector(bisector, lap / cosAlpha);
+        const over = [
+          raise(quad[0]!),
+          raise(quad[1]!),
+          quad[2]!.clone().addScaledVector(face.normal, lap),
+          quad[3]!.clone().addScaledVector(face.normal, lap),
+        ];
         const tris = [
-          [quad[0]!, quad[1]!, quad[2]!],
-          [quad[0]!, quad[2]!, quad[3]!],
+          [over[0]!, over[1]!, over[2]!],
+          [over[0]!, over[2]!, over[3]!],
         ];
         const positions = new Float32Array(tris.length * 9);
         tris.forEach((t, i) => t.forEach((p, v) => positions.set([p.x, p.y, p.z], i * 9 + v * 3)));
@@ -283,7 +320,7 @@ export default function (container: HTMLElement) {
         g.setAttribute("position", new BufferAttribute(positions, 3));
         g.computeVertexNormals();
         stage.add(new Mesh(g, capping));
-      }
+      });
 
       // The face's own 2-D frame: `u` along the eave, `v` up the slope. Courses stack in `v`.
       const eave = face.points[2]!.clone().sub(face.points[0]!);
@@ -298,14 +335,18 @@ export default function (container: HTMLElement) {
           .addScaledVector(v, p.y)
           .addScaledVector(face.normal, lift);
 
-      const region = interior.map(to2);
+      // THE SHAKES RUN UNDER THE CAPS. Clipping them to the INSET interior instead leaves a hole wherever
+      // one is dropped as a sliver — the cap only covers OUTSIDE that boundary, so a shake stopped short of
+      // it is stopped short of nothing. Clipped to the FULL face they run up to the hip and the cap laps
+      // over their cut ends, which is what the trade does: bevel them back, then cover the cut.
+      const region = face.points.map(to2);
       const xs = region.map((p) => p.x);
       const ys = region.map((p) => p.y);
       const x0 = Math.min(...xs);
       const y0 = Math.min(...ys);
       const spanX = Math.max(...xs) - x0;
       const spanY = Math.max(...ys) - y0;
-      if (spanX <= 0 || spanY <= 0) continue;
+      if (spanX <= 0 || spanY <= 0) return;
 
       // The SETTING-OUT IS NOT NEW: the wood floors' packer, with a course as a row.
       const layout = layPlankFloor({
@@ -337,9 +378,23 @@ export default function (container: HTMLElement) {
           continue;
         }
         const kept = area2(clipped);
-        // A shake cut below the sliver threshold is debris, not a shake.
+        // A shake cut below the sliver threshold is debris, not a shake. Dropping one only leaves a
+        // visible hole if it sat OUTSIDE the cap's reach, so that is what gets counted.
         if (kept < fullArea * params.minSliver) {
           dropped += 1;
+          let nearestEdge = Infinity;
+          for (const p of clipped) {
+            for (let e = 0; e < region.length; e++) {
+              const a = region[e]!;
+              const b = region[(e + 1) % region.length]!;
+              const ex = b.x - a.x;
+              const ey = b.y - a.y;
+              const len = Math.hypot(ex, ey);
+              if (len < 1e-9) continue;
+              nearestEdge = Math.min(nearestEdge, Math.abs(ex * (p.y - a.y) - ey * (p.x - a.x)) / len);
+            }
+          }
+          if (nearestEdge > params.wing) exposed += 1;
           continue;
         }
         if (kept < area2(quad) - 1e-9) cut += 1;
@@ -370,7 +425,7 @@ export default function (container: HTMLElement) {
           );
         while (colors.length < triangles.length) colors.push(tint.clone());
       }
-    }
+    });
 
     if (triangles.length > 0) {
       const positions = new Float32Array(triangles.length * 9);
@@ -390,7 +445,9 @@ export default function (container: HTMLElement) {
 
     const total = whole + cut + dropped;
     params.laid = `${whole + cut} shakes on ${n} faces · ${whole} whole, ${cut} cut back at a hip`;
-    params.waste = `${dropped} dropped as slivers — ${total ? ((100 * dropped) / total).toFixed(0) : "0"}% of everything the packer proposed`;
+    params.waste =
+      `${dropped} dropped as slivers — ${total ? ((100 * dropped) / total).toFixed(0) : "0"}% of what the packer proposed · ` +
+      (exposed === 0 ? "all of them under a cap" : `${exposed} would leave a HOLE — raise Min Sliver or Wing Width`);
     params.cost = `${triangles.length} triangles in 1 draw call · ${wings} cap wings, ${n} hips`;
   };
   rebuild();
@@ -409,6 +466,9 @@ export default function (container: HTMLElement) {
   // The wing covers the clip line, which is why the shakes may be cut roughly at the hip.
   cap.add(params, "caps").name("Caps").onChange(rebuild);
   cap.add(params, "wing", 0.03, 0.4, 0.005).name("Wing Width").onChange(rebuild);
+  // How far the cap rides above the field, in butt thicknesses. It has to clear the course beneath, or
+  // the bevelled ends it exists to hide show through it.
+  cap.add(params, "capLap", 0.2, 4, 0.1).name("Cap Lap").onChange(rebuild);
   cap.open();
 
   const shake = gui.addFolder("Shakes");
