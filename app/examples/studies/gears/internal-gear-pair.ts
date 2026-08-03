@@ -120,7 +120,6 @@ export default function (container: HTMLElement) {
     stats.centeredistance = centeredistance.toFixed(4);
     stats.ratio = `${(params.ringTeeth / pinionTeeth).toFixed(3)} : 1`;
 
-    frameObject(handle, train, { dolly: false });
   };
 
   rebuild();

@@ -135,7 +135,6 @@ export default function (container: HTMLElement) {
     stats.pinionPitch = ((Math.PI * 2 * pitchRadius) / params.pinionTeeth).toFixed(4);
     stats.outerRadius = outerRadius.toFixed(4);
 
-    frameObject(handle, assembly, { dolly: false });
   };
 
   rebuild();

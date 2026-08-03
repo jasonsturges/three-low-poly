@@ -63,7 +63,6 @@ export default function (container: HTMLElement) {
     staircase = makeStaircase();
     syncDerived(staircase.geometry);
     scene.add(staircase);
-    frameStaircase(staircase.geometry, controls);
     totalHeightController.updateDisplay();
     totalDepthController.updateDisplay();
   };

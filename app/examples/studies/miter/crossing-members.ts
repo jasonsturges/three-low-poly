@@ -410,7 +410,6 @@ export default function (container: HTMLElement) {
     const overlapHigh = Math.min(spanA[1], spanB[1]);
     const overlap = overlapHigh - overlapLow;
 
-
     const half = params.length / 2;
     const add = (geometry: BufferGeometry | null, color: number) => {
       if (!geometry) return;
@@ -525,11 +524,10 @@ export default function (container: HTMLElement) {
         ? "parallel — the notch would never end"
         : `${(params.widthB / sine).toFixed(3)} long for a ${params.widthB.toFixed(3)} bar — ${(1 / sine).toFixed(2)}x its width`;
 
-    frameObject(handle, stage, { dolly: false });
   };
   rebuild();
-  // Framed once here, then re-centered without dollying after every rebuild: these studies have dials that
-  // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
+  // FRAME ONCE, NEVER ON REBUILD. Re-framing on a dial change fights the viewer: `retarget` snaps the orbit
+  // point back to the model's center, which throws away a pan (shift-drag is what moves the target).
   frameObject(handle, stage, { fit: 1.45 });
 
   const gui = new GUI();

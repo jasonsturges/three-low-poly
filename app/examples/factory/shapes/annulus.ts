@@ -64,11 +64,10 @@ export default function (container: HTMLElement) {
     washer.geometry.dispose();
     washer.geometry = new AnnulusGeometry(params);
     refresh();
-    // Recenter without re-fitting — it rests on y=0, so Depth lifts its center. `dolly: false` is what
-    // keeps the viewer's zoom from snapping back on every change.
-    frameObject(handle, washer, { dolly: false });
   };
   refresh();
+  // FRAME ONCE, NEVER ON REBUILD. It rests on y=0 so Depth lifts its center, but following that is not
+  // worth fighting the viewer for: re-targeting throws away a pan on every change.
   frameObject(handle, washer, { fit: 1.5 });
 
   const gui = new GUI();

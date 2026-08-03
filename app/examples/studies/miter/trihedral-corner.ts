@@ -298,11 +298,10 @@ export default function (container: HTMLElement) {
         ? `CLOSES — faces coincide to ${worst.toExponential(1)}`
         : `STEP of ${worst.toFixed(4)} — the faces do not meet`;
 
-    frameObject(handle, stage, { dolly: false });
   };
   rebuild();
-  // Framed once here, then re-centered without dollying after every rebuild: these studies have dials that
-  // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
+  // FRAME ONCE, NEVER ON REBUILD. Re-framing on a dial change fights the viewer: `retarget` snaps the orbit
+  // point back to the model's center, which throws away a pan (shift-drag is what moves the target).
   frameObject(handle, stage, { fit: 1.45 });
 
   const gui = new GUI();

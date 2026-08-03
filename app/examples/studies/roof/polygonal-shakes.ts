@@ -448,12 +448,10 @@ export default function (container: HTMLElement) {
       `${dropped} dropped as slivers — ${total ? ((100 * dropped) / total).toFixed(0) : "0"}% of what the packer proposed · ` +
       (exposed === 0 ? "all of them under a cap" : `${exposed} would leave a HOLE — raise Min Sliver or Wing Width`);
     params.cost = `${triangles.length} triangles in 1 draw call · ${wings} cap wings, ${n} hips`;
-
-    frameObject(handle, stage, { dolly: false });
   };
   rebuild();
-  // Framed once here, then re-centered without dollying after every rebuild: these studies have dials that
-  // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
+  // FRAME ONCE, NEVER ON REBUILD. Re-framing on a dial change fights the viewer: `retarget` snaps the orbit
+  // point back to the model's center, which throws away a pan (shift-drag is what moves the target).
   frameObject(handle, stage, { fit: 1.45 });
 
   const gui = new GUI();

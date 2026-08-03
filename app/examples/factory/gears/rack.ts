@@ -70,7 +70,6 @@ export default function (container: HTMLElement) {
     refresh();
     // The bar's origin is its left end, so Length walks its center away from the camera. Recenter without
     // re-fitting: this keeps it framed as it grows and leaves the viewer's zoom alone.
-    frameObject(handle, rack, { dolly: false });
   };
   refresh();
   frameObject(handle, rack, { fit: 1.3 });

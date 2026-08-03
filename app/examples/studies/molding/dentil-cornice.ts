@@ -521,7 +521,6 @@ export default function (container: HTMLElement) {
     params.alignOut =
       missed === 0 ? "locked — both courses land on every corner" : `${missed} corner(s) unset`;
 
-    frameObject(handle, stage, { dolly: false });
   };
   rebuild();
   frameObject(handle, stage, { fit: 1.5 });

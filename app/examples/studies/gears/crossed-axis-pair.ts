@@ -146,7 +146,6 @@ export default function (container: HTMLElement) {
     // velocities come out collinear and equal, so the pitch point rolls cleanly at any angle.
     stats.slide = skew ? `${(2 * Math.sin(sigma / 2) * 100).toFixed(1)}%` : "0.0% (rolls)";
 
-    frameObject(handle, train, { dolly: false });
   };
 
   rebuild();

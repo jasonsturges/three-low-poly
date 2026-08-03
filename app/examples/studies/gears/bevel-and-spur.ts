@@ -148,7 +148,6 @@ export default function (container: HTMLElement) {
     // depends on nothing but how much of the cone the spur spans — not on the angle, the ratio, or the module.
     stats.slip = `±${((Math.min(params.spurThickness, faceWidth) / 2 / CONE_DISTANCE) * 100).toFixed(1)}%`;
 
-    frameObject(handle, train, { dolly: false });
   };
 
   rebuild();

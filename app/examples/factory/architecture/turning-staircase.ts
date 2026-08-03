@@ -53,10 +53,12 @@ export default function (container: HTMLElement) {
     stairs.receiveShadow = true;
 
     scene.add(stairs);
-    frame(stairs);
   };
 
   rebuild();
+  // FRAME ONCE, NEVER ON REBUILD. A staircase grows upward as Flights climb, so following its center is
+  // tempting — but re-targeting throws away the viewer's pan (shift-drag) on every dial change.
+  frame(stairs);
 
   const gui = new GUI();
   // 1 flight is the bare geometry; 2 is the L-shape; 5 quarter-turns wrap back above the first.

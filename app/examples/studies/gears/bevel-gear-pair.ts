@@ -134,7 +134,6 @@ export default function (container: HTMLElement) {
     // Both should read the same — the apexes landing together is the mesh.
     stats.apexCheck = `${(CONE_DISTANCE * Math.cos(coneA)).toFixed(3)} / ${(CONE_DISTANCE * Math.cos(coneB)).toFixed(3)}`;
 
-    frameObject(handle, train, { dolly: false });
   };
 
   rebuild();

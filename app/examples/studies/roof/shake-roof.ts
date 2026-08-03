@@ -238,12 +238,10 @@ export default function (container: HTMLElement) {
         ? `NO HEADLAP — exposure exceeds the shake, the roof is open`
         : `headlap ${headlap.toFixed(3)} · exposure is ${(ratio * 100).toFixed(0)}% of the shake — ${ratio > 0.34 ? "over a third, thin cover" : "under a third, three thicknesses everywhere"}`;
     params.cost = `${triangles.length} triangles · 1 draw call · stagger reached ${layout.closestJoint.toFixed(3)} of ${params.minStagger.toFixed(3)} asked`;
-
-    frameObject(handle, stage, { dolly: false });
   };
   rebuild();
-  // Framed once here, then re-centered without dollying after every rebuild: these studies have dials that
-  // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
+  // FRAME ONCE, NEVER ON REBUILD. Re-framing on a dial change fights the viewer: `retarget` snaps the orbit
+  // point back to the model's center, which throws away a pan (shift-drag is what moves the target).
   frameObject(handle, stage, { fit: 1.45 });
 
   const gui = new GUI();
