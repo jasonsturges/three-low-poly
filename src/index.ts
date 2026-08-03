@@ -412,6 +412,14 @@ export {
   pointAtDistance,
   slicePath,
 } from "./sweep/PathMeasure";
+export {
+  cutEnd,
+  cutEndGeometry,
+  miterPlane,
+  type CutPlane,
+  type CutPoint,
+  type CutEndOptions,
+} from "./sweep/EndCut";
 export { circleProfile, rectProfile } from "./sweep/Profiles";
 export {
   type PathRepeat,
