@@ -380,18 +380,22 @@ export default function (container: HTMLElement) {
             ? "TWO PIECE — shared cut plane"
             : "LOFT — end ring carried to the wall";
     const tint = params.end === "square" ? "#ff9d6b" : flipped ? "#ff6b6b" : "#7fe3a1";
-    stage.add(
-      createTextSprite(text, {
-        font: "ui-monospace, monospace",
-        weight: "bold",
-        size: 64,
-        color: tint,
-        scale: 0.05,
-        x: -0.25,
-        y: params.run === "crown" ? params.wallHeight + 0.16 : 0.34,
-        z: 0.1,
-      }),
-    );
+    const label = createTextSprite(text, {
+      font: "ui-monospace, monospace",
+      weight: "bold",
+      size: 64,
+      color: tint,
+      scale: 0.05,
+      x: -0.25,
+      y: params.run === "crown" ? params.wallHeight + 0.16 : 0.34,
+      z: 0.1,
+    });
+    // A billboard turns about its own CENTRE, so seen edge-on it sweeps half its own width in depth. Left
+    // at a fixed offset it cuts into the wall (face at z = 0) as soon as the camera comes round — and the
+    // offset that works depends on the string, since these labels differ in length. So it stands itself off
+    // by its own half-width instead of by a number that would need revisiting every time the text changed.
+    label.position.z = Math.max(label.position.z, label.scale.x / 2 + 0.04);
+    stage.add(label);
   };
   rebuild();
 

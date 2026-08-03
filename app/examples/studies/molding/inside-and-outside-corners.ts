@@ -2,7 +2,6 @@ import GUI from "lil-gui";
 import {
   BoxGeometry,
   BufferGeometry,
-  CanvasTexture,
   CylinderGeometry,
   DirectionalLight,
   DoubleSide,
@@ -13,13 +12,12 @@ import {
   Mesh,
   MeshStandardMaterial,
   Sprite,
-  SpriteMaterial,
-  SRGBColorSpace,
   Vector3,
   WireframeGeometry,
 } from "three";
 import { MoldingGeometry, type MoldingFacing, type MoldingStyle } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { createTextSprite } from "../../../framework/createTextSprite";
 
 export const meta = {
   title: "Inside And Outside Corners",
@@ -71,25 +69,6 @@ function slab(
   geometry.rotateY(-Math.atan2(direction.z, direction.x));
   geometry.translate(mid.x, height / 2, mid.z);
   return geometry;
-}
-
-/** A flat text label, so which side is which does not depend on remembering. */
-function createLabel(text: string, tint: string): Sprite {
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 128;
-  const context = canvas.getContext("2d")!;
-  context.font = "bold 60px ui-monospace, monospace";
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.fillStyle = tint;
-  context.fillText(text, canvas.width / 2, canvas.height / 2);
-
-  const map = new CanvasTexture(canvas);
-  map.colorSpace = SRGBColorSpace;
-  const sprite = new Sprite(new SpriteMaterial({ map, transparent: true }));
-  sprite.scale.set(1.1, 0.28, 1);
-  return sprite;
 }
 
 export default function (container: HTMLElement) {
@@ -151,8 +130,13 @@ export default function (container: HTMLElement) {
   const right = new Group();
   scene.add(left, right);
 
-  const insideLabel = createLabel("INSIDE — a room", "#7fe3a1");
-  const outsideLabel = createLabel("OUTSIDE — a pier", "#ffc46b");
+  // `createTextSprite` MEASURES the string and sizes its canvas to it. The local maker this replaced used
+  // a fixed 512px canvas, and both of these labels overrun it — 15 and 16 monospace characters at 60px are
+  // about 540 and 576 — so, being centre-aligned, each lost characters off BOTH ends.
+  const label = (text: string, color: string) =>
+    createTextSprite(text, { font: "ui-monospace, monospace", weight: "bold", size: 60, scale: 0.115, color });
+  const insideLabel = label("INSIDE — a room", "#7fe3a1");
+  const outsideLabel = label("OUTSIDE — a pier", "#ffc46b");
   left.add(insideLabel);
   right.add(outsideLabel);
 
