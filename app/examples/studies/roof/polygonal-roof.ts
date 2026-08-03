@@ -15,7 +15,7 @@ import {
   WireframeGeometry,
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { createGeometryBuffers, pushQuad, pushTriangle, toBufferGeometry, type Vec3 } from "three-low-poly";
+import { cutEnd, cutEndGeometry, miterPlane, type CutPlane } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -36,6 +36,12 @@ export const meta = {
     "IMAGES across the plane bisecting them, which is the condition for a miter to shut, so it closes to " +
     "1e-16 at every count. The cut planes come out exactly vertical and the wedges exactly 360/n. See " +
     "`studies/miter/junction`, where that is the subject rather than the consequence. " +
+    "There is deliberately no Seating control on this study. On a regular plan the vertical plane through " +
+    "any vertex is a mirror of the whole roof, so the two faces at every hip carry equal pitch and the " +
+    "corner's horizontal outward direction resolves to the true bisector EXACTLY — measured identical " +
+    "across every count from 3 to 12 at three different rises. A dial that cannot change anything is " +
+    "worse than no dial. The seating question is real, and it lives in `studies/roof/hip-seams`, where a " +
+    "rectangular plan breaks that mirror and the same shortcut lands 12.6 degrees out. " +
     "What still does not close is the PEAK. Each cap's top face sits `rise` out along its OWN bisector and " +
     "those bisectors splay, so adjacent top faces meet only once the width reaches " +
     "`2 * rise * |horizontal part of the bisector|`. Below that a dish opens at the centre; above it the " +
@@ -66,28 +72,13 @@ export const meta = {
 //  Deliberately NOT here: finials, pinnacles, cornice, and the broach. The dish this roof leaves at its
 //  peak is the argument for a finial, not the place to build one.
 
-type Construction = "bisector" | "outward" | "minimal";
 type Section = "cap" | "crest";
 
-const UP = new Vector3(0, 1, 0);
 /** Past this the joint has folded back on itself and the drop runs away. Nothing on a roof reaches it. */
 const MAX_HALF_ANGLE = (85 * Math.PI) / 180;
 
 /** A point in a joint's own cross-section: `across` the joint, and `out` along its bisector. */
 type Profile = [across: number, out: number][];
-
-/** A bounding plane for a cap's apex end. `normal` points into the region the cap may occupy. */
-interface Plane {
-  point: Vector3;
-  normal: Vector3;
-}
-
-/** How far along `axis` from `p` until the plane is met. `Infinity` when the axis runs parallel to it. */
-const hitDistance = (p: Vector3, axis: Vector3, plane: Plane): number => {
-  const denominator = axis.dot(plane.normal);
-  if (Math.abs(denominator) < 1e-9) return Infinity;
-  return plane.point.clone().sub(p).dot(plane.normal) / denominator;
-};
 
 /** One joint to cover: the edge it runs along, and the two planes that meet there. */
 interface Joint {
@@ -201,24 +192,17 @@ const halfAngle = (planes: [Vector3, Vector3]): number =>
   Math.acos(Math.max(-1, Math.min(1, planes[0].dot(seating(planes)))));
 
 /**
- * The frame for a seam riding one joint, by each of the three constructions.
+ * The frame for a cap riding one hip: +X across the joint, +Y along it, +Z out along its bisector.
  *
- * `bisector` seats the cap on the dihedral, from the roof's own normals. Correct at any plan.
- *
- * `outward` borrows the corner's HORIZONTAL direction and projects it perpendicular to the hip. On a
- * square plan that direction lies in a real mirror plane of the roof and the projection lands exactly on
- * the bisector — which is why it looks authoritative and why the error is easy to ship. Off square, the
- * two planes at a hip have different pitches, the mirror is gone, and the cap tips off the roof.
- *
- * `minimal` takes the shortest rotation carrying UP onto the hip. Infinitely many rotations do that, and
- * `setFromUnitVectors` resolves the ambiguity against a world axis. Nothing in that decision has heard of
- * the roof.
+ * There is no construction to choose here, and that is a property of a REGULAR plan rather than a
+ * simplification. The vertical plane through any vertex of a regular polygon is a mirror of the whole
+ * roof, so the two faces at every hip carry equal pitch and the corner's horizontal outward direction
+ * already lies in that mirror — it resolves to the bisector exactly, measured identical across n = 3..12
+ * at three different rises. The alternatives can only differ on an IRREGULAR plan, which is what
+ * `studies/roof/hip-seams` exists to show: 12.6 degrees out at 4.4 x 2.6, 27.7 at 6 x 1.5.
  */
-const seamFrame = (direction: Vector3, joint: Joint, construction: Construction): Quaternion => {
-  if (construction === "minimal") return new Quaternion().setFromUnitVectors(UP, direction);
-
-  const reference = construction === "bisector" ? seating(joint.planes) : joint.outward;
-  const x = new Vector3().crossVectors(direction, reference).normalize();
+const seamFrame = (direction: Vector3, joint: Joint): Quaternion => {
+  const x = new Vector3().crossVectors(direction, seating(joint.planes)).normalize();
   const z = new Vector3().crossVectors(x, direction);
   return new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(x, direction, z));
 };
@@ -262,13 +246,23 @@ const profile = (width: number, rise: number, alpha: number, section: Section): 
  * Non-indexed, so every facet keeps its own normal and shades flat. The section is wound counter-clockwise
  * if it is not already, so sides come out facing away from the joint whichever way a caller wrote it.
  */
+/**
+ * Lay a cap's section on its hip and cut its apex end against the two bounding planes.
+ *
+ * The cut itself is `cutEnd` from the library — promoted out of these studies once six of them had
+ * written it. What is left here is only what belongs to a roof: where the section sits, and which planes
+ * bound it.
+ *
+ * The section is wound counter-clockwise if it is not already, so the sides come out facing away from the
+ * joint whichever way a caller wrote it.
+ */
 const extrude = (
   from: Vector3,
   to: Vector3,
   across: Vector3,
   out: Vector3,
   section: Profile,
-  bounds: [Plane, Plane],
+  bounds: [CutPlane, CutPlane],
 ): BufferGeometry => {
   const signed =
     section.reduce((sum, [u, v], i) => {
@@ -281,77 +275,7 @@ const extrude = (
   const ring = points.map(([u, v]) =>
     from.clone().addScaledVector(across, u).addScaledVector(out, v),
   );
-
-  // Every ring point runs up the hip and stops at whichever bounding plane it meets FIRST — the hip-end
-  // construction from `studies/miter/hip-end`, by way of `studies/miter/junction`. With both bounds set to
-  // the plane square across the hip this degenerates to a plain prism, which is the un-mitered case.
-  const distances = ring.map((p) => [hitDistance(p, forward, bounds[0]), hitDistance(p, forward, bounds[1])]);
-  const pick = (t: number[]) => (t[0]! <= t[1]! ? 0 : 1);
-
-  const ends: { start: Vector3; end: Vector3; owner: number }[] = [];
-  for (let i = 0; i < ring.length; i++) {
-    const j = (i + 1) % ring.length;
-    const here = pick(distances[i]!);
-    ends.push({
-      start: ring[i]!.clone(),
-      end: ring[i]!.clone().addScaledVector(forward, distances[i]![here]!),
-      owner: here,
-    });
-    if (here === pick(distances[j]!)) continue;
-
-    // The crossing is exact rather than searched for: with the axis fixed each `t` is linear in position,
-    // so `t0 - t1` is linear along a ring edge and its root is one division. Without this split the band
-    // spanning the disagreement is a single quad straddling both planes, and the arrowhead rounds off.
-    const f0 = distances[i]![0]! - distances[i]![1]!;
-    const f1 = distances[j]![0]! - distances[j]![1]!;
-    const s = f0 / (f0 - f1);
-    if (!Number.isFinite(s) || s <= 0 || s >= 1) continue;
-    const crossing = ring[i]!.clone().lerp(ring[j]!, s);
-    ends.push({
-      start: crossing,
-      end: crossing.clone().addScaledVector(forward, hitDistance(crossing, forward, bounds[0])),
-      owner: -1,
-    });
-  }
-
-  const buffers = createGeometryBuffers();
-  const at = (p: Vector3): Vec3 => [p.x, p.y, p.z];
-  const count = ends.length;
-
-  // Sides. Each band is planar by construction: both of its ends travel along the SAME axis.
-  for (let i = 0; i < count; i++) {
-    const j = (i + 1) % count;
-    pushQuad(buffers, [at(ends[j]!.start), at(ends[i]!.start), at(ends[i]!.end), at(ends[j]!.end)], undefined);
-  }
-  // The eave end, square across the hip. Still an open question — see the note in the study.
-  const eaveNormal = forward.clone().negate();
-  for (let i = 1; i < count - 1; i++) {
-    pushTriangle(buffers, [at(ends[0]!.start), at(ends[i]!.start), at(ends[i + 1]!.start)], at(eaveNormal));
-  }
-  // The apex end, ONE FAN PER FACET — fanning the whole loop would span both planes and give non-planar
-  // triangles, since the ridge between the facets is exactly where the cap must be cut in two.
-  const ridges = ends.map((p, i) => (p.owner === -1 ? i : -1)).filter((i) => i >= 0);
-  if (ridges.length === 2) {
-    for (const [start, finish] of [
-      [ridges[0]!, ridges[1]!],
-      [ridges[1]!, ridges[0]!],
-    ]) {
-      const arc: Vector3[] = [];
-      for (let i = start; ; i = (i + 1) % count) {
-        arc.push(ends[i]!.end);
-        if (i === finish) break;
-      }
-      for (let i = 1; i < arc.length - 1; i++) {
-        pushTriangle(buffers, [at(arc[0]!), at(arc[i]!), at(arc[i + 1]!)], undefined);
-      }
-    }
-  } else {
-    for (let i = 1; i < count - 1; i++) {
-      pushTriangle(buffers, [at(ends[0]!.end), at(ends[i]!.end), at(ends[i + 1]!.end)], undefined);
-    }
-  }
-
-  return toBufferGeometry(buffers);
+  return cutEndGeometry(cutEnd(ring, forward, bounds), forward);
 };
 
 export default function (container: HTMLElement) {
@@ -401,7 +325,6 @@ export default function (container: HTMLElement) {
     seamWidth: 0.14,
     seamRise: 0.05,
     section: "cap" as Section,
-    construction: "bisector" as Construction,
 
     wall: true,
     wallHeight: 2.4,
@@ -461,7 +384,7 @@ export default function (container: HTMLElement) {
         direction.divideScalar(length);
 
         // The frame the chosen construction gives: +X across the joint, +Z out along its bisector.
-        const orientation = seamFrame(direction, joint, params.construction);
+        const orientation = seamFrame(direction, joint);
         const across = new Vector3(1, 0, 0).applyQuaternion(orientation);
         const out = new Vector3(0, 0, 1).applyQuaternion(orientation);
 
@@ -477,14 +400,11 @@ export default function (container: HTMLElement) {
         // side, so adjacent caps abut with no gap by construction rather than by tuning.
         const count = roof.joints.length;
         const mine = awayFrom(joint);
-        const against = (other: Joint): Plane => ({
-          point: to.clone(),
-          normal: mine.clone().sub(awayFrom(other)).normalize(),
-        });
+        const against = (other: Joint): CutPlane => miterPlane(to, mine, awayFrom(other));
         // Un-mitered leaves the end square across the hip — every cap through the apex, slicing through
         // its neighbours. That is the pile-up the miter exists to resolve.
-        const square: Plane = { point: to.clone(), normal: new Vector3().subVectors(from, to).normalize() };
-        const bounds: [Plane, Plane] = params.miter
+        const square: CutPlane = { point: to.clone(), normal: new Vector3().subVectors(from, to).normalize() };
+        const bounds: [CutPlane, CutPlane] = params.miter
           ? [against(roof.joints[(index + count - 1) % count]!), against(roof.joints[(index + 1) % count]!)]
           : [square, square];
 
@@ -574,18 +494,6 @@ export default function (container: HTMLElement) {
   // Flat-topped, or brought to a sharp edge over the joint. Both rest on the same two contact points.
   seam.add(params, "section", { Cap: "cap", Crest: "crest" }).name("Section").onChange(rebuild);
   seam.open();
-
-  const construction = gui.addFolder("Seating");
-  // Set the plan off square to tell these apart — at 3.6 x 3.6 the first two agree exactly.
-  construction
-    .add(params, "construction", {
-      "Dihedral Bisector": "bisector",
-      "Corner Outward": "outward",
-      "Minimal Rotation": "minimal",
-    })
-    .name("Construction")
-    .onChange(rebuild);
-  construction.open();
 
   const form = gui.addFolder("Roof");
   // The count never changes the CONSTRUCTION — two cut planes per cap whatever it is. It only changes

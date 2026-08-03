@@ -1,6 +1,5 @@
 import GUI from "lil-gui";
 import {
-  BufferGeometry,
   DirectionalLight,
   DoubleSide,
   Group,
@@ -11,7 +10,7 @@ import {
   Vector3,
   WireframeGeometry,
 } from "three";
-import { createGeometryBuffers, pushQuad, pushTriangle, toBufferGeometry, type Vec3 } from "three-low-poly";
+import { cutEnd, cutEndGeometry, miterPlane, type CutPlane } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -60,12 +59,6 @@ export const meta = {
 type Seating = "common" | "own";
 type Rig = "cube" | "ridge";
 
-/** A bounding plane. `normal` points into the region the member is allowed to occupy. */
-interface Plane {
-  point: Vector3;
-  normal: Vector3;
-}
-
 /** One member arriving at the corner. `away` points from the vertex back down the member. */
 interface Member {
   away: Vector3;
@@ -75,18 +68,6 @@ interface Member {
   thickness: number;
   color: number;
   name: string;
-}
-
-const hitDistance = (p: Vector3, axis: Vector3, plane: Plane): number => {
-  const denominator = axis.dot(plane.normal);
-  if (Math.abs(denominator) < 1e-9) return Infinity;
-  return plane.point.clone().sub(p).dot(plane.normal) / denominator;
-};
-
-interface EndPoint {
-  start: Vector3;
-  end: Vector3;
-  owner: number;
 }
 
 /**
@@ -106,92 +87,6 @@ const coneAxis = (list: Member[]): Vector3 => {
   const axis = new Vector3().crossVectors(differences[0]!, differences[1]!).normalize();
   if (axis.dot(base) > 0) axis.negate();
   return axis;
-};
-
-/**
- * The plane mitering member `i` against member `j`, through the vertex.
- *
- * `normalize(a_i - a_j)` with both axes pointing AWAY, which points into `i`'s territory since
- * `(a_i - a_j) . a_i = 1 - a_i . a_j`. Member `j` is handed the same plane with the arguments swapped, so
- * it receives exactly the opposite normal — one surface, two sides, no gap possible.
- *
- * This bisects the AXES. It coincides with the true surface seam exactly when the plane is a MIRROR of the
- * whole member — axis, roll and section — which is the condition the readout measures.
- */
-const cutPlane = (vertex: Vector3, i: Vector3, j: Vector3): Plane => ({
-  point: vertex.clone(),
-  normal: i.clone().sub(j).normalize(),
-});
-
-/** Run every ring point down the axis and let it stop at the FIRST plane met — the hip end, unchanged. */
-const cutEnd = (ring: Vector3[], axis: Vector3, planes: [Plane, Plane]): EndPoint[] => {
-  const distances = ring.map((p) => [hitDistance(p, axis, planes[0]), hitDistance(p, axis, planes[1])]);
-  const pick = (t: number[]) => (t[0]! <= t[1]! ? 0 : 1);
-
-  const out: EndPoint[] = [];
-  for (let i = 0; i < ring.length; i++) {
-    const j = (i + 1) % ring.length;
-    const here = pick(distances[i]!);
-    const next = pick(distances[j]!);
-
-    out.push({
-      start: ring[i]!.clone(),
-      end: ring[i]!.clone().addScaledVector(axis, distances[i]![here]!),
-      owner: here,
-    });
-    if (here === next) continue;
-
-    // The ridge crossing, exact: with the axis fixed each `t` is linear in position, so `t0 - t1` is
-    // linear along a ring edge and its root is one division. Without this split the band spanning the
-    // disagreement is one quad straddling both planes and the arrowhead comes out rounded off.
-    const f0 = distances[i]![0]! - distances[i]![1]!;
-    const f1 = distances[j]![0]! - distances[j]![1]!;
-    const s = f0 / (f0 - f1);
-    if (!Number.isFinite(s) || s <= 0 || s >= 1) continue;
-
-    const start = ring[i]!.clone().lerp(ring[j]!, s);
-    out.push({ start, end: start.clone().addScaledVector(axis, hitDistance(start, axis, planes[0])), owner: -1 });
-  }
-  return out;
-};
-
-const buildMember = (points: EndPoint[], axis: Vector3): BufferGeometry => {
-  const buffers = createGeometryBuffers();
-  const at = (p: Vector3): Vec3 => [p.x, p.y, p.z];
-  const count = points.length;
-
-  for (let i = 0; i < count; i++) {
-    const j = (i + 1) % count;
-    pushQuad(buffers, [at(points[j]!.start), at(points[i]!.start), at(points[i]!.end), at(points[j]!.end)], undefined);
-  }
-
-  const startNormal = axis.clone().negate();
-  for (let i = 1; i < count - 1; i++) {
-    pushTriangle(buffers, [at(points[0]!.start), at(points[i]!.start), at(points[i + 1]!.start)], at(startNormal));
-  }
-
-  // ONE FAN PER FACET. Fanning the whole loop would span both planes and give non-planar triangles.
-  const ridges = points.map((p, i) => (p.owner === -1 ? i : -1)).filter((i) => i >= 0);
-  if (ridges.length === 2) {
-    for (const [from, to] of [
-      [ridges[0]!, ridges[1]!],
-      [ridges[1]!, ridges[0]!],
-    ]) {
-      const arc: Vector3[] = [];
-      for (let i = from; ; i = (i + 1) % count) {
-        arc.push(points[i]!.end);
-        if (i === to) break;
-      }
-      for (let i = 1; i < arc.length - 1; i++) {
-        pushTriangle(buffers, [at(arc[0]!), at(arc[i]!), at(arc[i + 1]!)], undefined);
-      }
-    }
-  } else {
-    for (let i = 1; i < count - 1; i++) {
-      pushTriangle(buffers, [at(points[0]!.end), at(points[i]!.end), at(points[i + 1]!.end)], undefined);
-    }
-  }
-  return toBufferGeometry(buffers);
 };
 
 /** The outward normal of a roof face, wound so it comes out up and away from the mass. */
@@ -354,9 +249,9 @@ export default function (container: HTMLElement) {
       const up = rollOf(member);
       const across = new Vector3().crossVectors(forward, up).normalize();
 
-      const planes: [Plane, Plane] = [
-        cutPlane(vertex, member.away, previous.away),
-        cutPlane(vertex, member.away, next.away),
+      const planes: [CutPlane, CutPlane] = [
+        miterPlane(vertex, member.away, previous.away),
+        miterPlane(vertex, member.away, next.away),
       ];
       wedges.push(180 - (Math.acos(Math.max(-1, Math.min(1, planes[0].normal.dot(planes[1].normal)))) * 180) / Math.PI);
 
@@ -371,7 +266,7 @@ export default function (container: HTMLElement) {
         ] as [number, number][]
       ).map(([s, t]) => origin.clone().addScaledVector(across, s).addScaledVector(up, t));
 
-      const geometry = buildMember(cutEnd(ring, forward, planes), forward);
+      const geometry = cutEndGeometry(cutEnd(ring, forward, planes), forward);
       const material = materialFor(member.color);
       material.transparent = params.opacity < 1;
       material.opacity = params.opacity;

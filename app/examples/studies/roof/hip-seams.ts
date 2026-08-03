@@ -16,7 +16,7 @@ import {
   WireframeGeometry,
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { createGeometryBuffers, pushQuad, pushTriangle, toBufferGeometry, type Vec3 } from "three-low-poly";
+import { cutEnd, cutEndGeometry, miterPlane, type CutPlane } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -46,9 +46,21 @@ export const meta = {
     "looks authoritative. Take the plan off square and the two planes at each hip no longer share a pitch, " +
     "the mirror is gone, and it drifts — 1.4° at 3.4 x 3.6, 12.6° at 4.4 x 2.6, 27.7° at 6 x 1.5. Both " +
     "wrong seatings now fail VISIBLY as well as numerically, because a tipped cap stops touching the roof. " +
-    "The apex is left as it falls. Four caps converging on one point interpenetrate, and that overlap is " +
-    "precisely the hole a FINIAL exists to fill — a finial is a joint cover, not ornament, the same thing " +
-    "the quoin turned out to be at a wall corner.",
+    "The apex is now MITERED. Each cap's end is cut against its two neighbours around the apex — the plane " +
+    "through the apex with normal `normalize(a_i - a_j)`, both axes pointing away down their own hip, so " +
+    "adjacent caps are handed the same surface from opposite sides and abut with no gap by construction. " +
+    "Every cap ends in an arrowhead: two facets meeting at a ridge, which is a HIP END, so the cut is the " +
+    "one from `studies/miter/hip-end` by way of `studies/miter/junction`. It closes to 1e-16 at every plan " +
+    "aspect — square, 4.4 x 2.6, even 6.0 x 1.5 — because adjacent hips are MIRROR IMAGES across the plane " +
+    "bisecting them, which is the real condition for a miter to shut. Turn Miter Apex off to see what it " +
+    "replaced: four ends square across their own hips, all through the one point, slicing through each " +
+    "other. " +
+    "What the miter does NOT fix is the peak. A cap's top face sits `rise` out along its OWN bisector and " +
+    "those bisectors SPLAY, so adjacent top faces only meet when the width reaches `2 * rise * |horizontal " +
+    "part of the bisector|` — about 0.071 at the default rise. Below it a dish opens at the centre; above " +
+    "it they overlap. That is a COVERAGE problem rather than a cutting one, no cut can close it, and it is " +
+    "what a FINIAL is for — a joint cover, not ornament, the same thing the quoin turned out to be at a " +
+    "wall corner.",
 };
 
 //------------------------------
@@ -81,19 +93,6 @@ const MAX_HALF_ANGLE = (85 * Math.PI) / 180;
 
 /** A point in a joint's own cross-section: `across` the joint, and `out` along its bisector. */
 type Profile = [across: number, out: number][];
-
-/** A bounding plane for a cap's apex end. `normal` points into the region the cap may occupy. */
-interface Plane {
-  point: Vector3;
-  normal: Vector3;
-}
-
-/** How far along `axis` from `p` until the plane is met. `Infinity` when the axis runs parallel to it. */
-const hitDistance = (p: Vector3, axis: Vector3, plane: Plane): number => {
-  const denominator = axis.dot(plane.normal);
-  if (Math.abs(denominator) < 1e-9) return Infinity;
-  return plane.point.clone().sub(p).dot(plane.normal) / denominator;
-};
 
 /** One joint to cover: the edge it runs along, and the two planes that meet there. */
 interface Joint {
@@ -236,13 +235,22 @@ const profile = (width: number, rise: number, alpha: number, section: Section): 
  * Non-indexed, so every facet keeps its own normal and shades flat. The section is wound counter-clockwise
  * if it is not already, so sides come out facing away from the joint whichever way a caller wrote it.
  */
+/**
+ * Lay a cap's section on its hip and cut its apex end against the two bounding planes.
+ *
+ * The cut is `cutEnd` from the library — promoted out of these studies once six of them had written it.
+ * What stays here is only what belongs to a roof: where the section sits, and which planes bound it.
+ *
+ * The section is wound counter-clockwise if it is not already, so the sides come out facing away from the
+ * joint whichever way a caller wrote it.
+ */
 const extrude = (
   from: Vector3,
   to: Vector3,
   across: Vector3,
   out: Vector3,
   section: Profile,
-  bounds: [Plane, Plane],
+  bounds: [CutPlane, CutPlane],
 ): BufferGeometry => {
   const signed =
     section.reduce((sum, [u, v], i) => {
@@ -252,80 +260,8 @@ const extrude = (
   const points = signed < 0 ? [...section].reverse() : section;
 
   const forward = new Vector3().subVectors(to, from).normalize();
-  const ring = points.map(([u, v]) =>
-    from.clone().addScaledVector(across, u).addScaledVector(out, v),
-  );
-
-  // Every ring point runs up the hip and stops at whichever bounding plane it meets FIRST — the hip-end
-  // construction from `studies/miter/hip-end`, by way of `studies/miter/junction`. With both bounds set to
-  // the plane square across the hip this degenerates to a plain prism, which is the un-mitered case.
-  const distances = ring.map((p) => [hitDistance(p, forward, bounds[0]), hitDistance(p, forward, bounds[1])]);
-  const pick = (t: number[]) => (t[0]! <= t[1]! ? 0 : 1);
-
-  const ends: { start: Vector3; end: Vector3; owner: number }[] = [];
-  for (let i = 0; i < ring.length; i++) {
-    const j = (i + 1) % ring.length;
-    const here = pick(distances[i]!);
-    ends.push({
-      start: ring[i]!.clone(),
-      end: ring[i]!.clone().addScaledVector(forward, distances[i]![here]!),
-      owner: here,
-    });
-    if (here === pick(distances[j]!)) continue;
-
-    // The crossing is exact rather than searched for: with the axis fixed each `t` is linear in position,
-    // so `t0 - t1` is linear along a ring edge and its root is one division. Without this split the band
-    // spanning the disagreement is a single quad straddling both planes, and the arrowhead rounds off.
-    const f0 = distances[i]![0]! - distances[i]![1]!;
-    const f1 = distances[j]![0]! - distances[j]![1]!;
-    const s = f0 / (f0 - f1);
-    if (!Number.isFinite(s) || s <= 0 || s >= 1) continue;
-    const crossing = ring[i]!.clone().lerp(ring[j]!, s);
-    ends.push({
-      start: crossing,
-      end: crossing.clone().addScaledVector(forward, hitDistance(crossing, forward, bounds[0])),
-      owner: -1,
-    });
-  }
-
-  const buffers = createGeometryBuffers();
-  const at = (p: Vector3): Vec3 => [p.x, p.y, p.z];
-  const count = ends.length;
-
-  // Sides. Each band is planar by construction: both of its ends travel along the SAME axis.
-  for (let i = 0; i < count; i++) {
-    const j = (i + 1) % count;
-    pushQuad(buffers, [at(ends[j]!.start), at(ends[i]!.start), at(ends[i]!.end), at(ends[j]!.end)], undefined);
-  }
-  // The eave end, square across the hip. Still an open question — see the note in the study.
-  const eaveNormal = forward.clone().negate();
-  for (let i = 1; i < count - 1; i++) {
-    pushTriangle(buffers, [at(ends[0]!.start), at(ends[i]!.start), at(ends[i + 1]!.start)], at(eaveNormal));
-  }
-  // The apex end, ONE FAN PER FACET — fanning the whole loop would span both planes and give non-planar
-  // triangles, since the ridge between the facets is exactly where the cap must be cut in two.
-  const ridges = ends.map((p, i) => (p.owner === -1 ? i : -1)).filter((i) => i >= 0);
-  if (ridges.length === 2) {
-    for (const [start, finish] of [
-      [ridges[0]!, ridges[1]!],
-      [ridges[1]!, ridges[0]!],
-    ]) {
-      const arc: Vector3[] = [];
-      for (let i = start; ; i = (i + 1) % count) {
-        arc.push(ends[i]!.end);
-        if (i === finish) break;
-      }
-      for (let i = 1; i < arc.length - 1; i++) {
-        pushTriangle(buffers, [at(arc[0]!), at(arc[i]!), at(arc[i + 1]!)], undefined);
-      }
-    }
-  } else {
-    for (let i = 1; i < count - 1; i++) {
-      pushTriangle(buffers, [at(ends[0]!.end), at(ends[i]!.end), at(ends[i + 1]!.end)], undefined);
-    }
-  }
-
-  return toBufferGeometry(buffers);
+  const ring = points.map(([u, v]) => from.clone().addScaledVector(across, u).addScaledVector(out, v));
+  return cutEndGeometry(cutEnd(ring, forward, bounds), forward);
 };
 
 export default function (container: HTMLElement) {
@@ -454,14 +390,11 @@ export default function (container: HTMLElement) {
         // side, so adjacent caps abut with no gap by construction rather than by tuning.
         const count = roof.joints.length;
         const mine = awayFrom(joint);
-        const against = (other: Joint): Plane => ({
-          point: to.clone(),
-          normal: mine.clone().sub(awayFrom(other)).normalize(),
-        });
+        const against = (other: Joint): CutPlane => miterPlane(to, mine, awayFrom(other));
         // Un-mitered leaves the end square across the hip — every cap through the apex, slicing through
         // its neighbours. That is the pile-up the miter exists to resolve.
-        const square: Plane = { point: to.clone(), normal: new Vector3().subVectors(from, to).normalize() };
-        const bounds: [Plane, Plane] = params.miter
+        const square: CutPlane = { point: to.clone(), normal: new Vector3().subVectors(from, to).normalize() };
+        const bounds: [CutPlane, CutPlane] = params.miter
           ? [against(roof.joints[(index + count - 1) % count]!), against(roof.joints[(index + 1) % count]!)]
           : [square, square];
 

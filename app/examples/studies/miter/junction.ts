@@ -1,7 +1,5 @@
 import GUI from "lil-gui";
 import {
-  BufferGeometry,
-  Color,
   DirectionalLight,
   DoubleSide,
   Group,
@@ -12,7 +10,7 @@ import {
   Vector3,
   WireframeGeometry,
 } from "three";
-import { createGeometryBuffers, pushQuad, pushTriangle, toBufferGeometry, type Vec3 } from "three-low-poly";
+import { cutEnd, cutEndGeometry, miterPlane, type CutPlane } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -65,12 +63,6 @@ export const meta = {
 //  SPLIT       the exact division of a ring edge where its two ends choose different planes. Without it
 //              the quad straddles both and the ridge rounds off.
 
-/** A bounding plane. `normal` points into the region the member is allowed to occupy. */
-interface Plane {
-  point: Vector3;
-  normal: Vector3;
-}
-
 /** One member arriving at the junction. `away` points from the junction back down the member. */
 interface Member {
   away: Vector3;
@@ -90,33 +82,6 @@ interface Member {
   offset: number;
   color: number;
 }
-
-/** How far along `axis` from `p` until the plane is met. `Infinity` when the axis runs parallel to it. */
-const hitDistance = (p: Vector3, axis: Vector3, plane: Plane): number => {
-  const denominator = axis.dot(plane.normal);
-  if (Math.abs(denominator) < 1e-9) return Infinity;
-  return plane.point.clone().sub(p).dot(plane.normal) / denominator;
-};
-
-interface EndPoint {
-  start: Vector3;
-  end: Vector3;
-  /** Which plane it landed on: `0`, `1`, or `-1` for a point sitting exactly on the ridge between them. */
-  owner: number;
-}
-
-/**
- * THE CUT — the plane mitering member `i` against member `j`.
- *
- * Both axes point AWAY from the junction, so `normalize(a_i - a_j)` is the bisector's normal and it points
- * into `i`'s territory: `(a_i - a_j) . a_i = 1 - a_i . a_j`, positive for any two members that are not
- * parallel. Handing `j` the same plane with `a_i` and `a_j` swapped gives exactly the opposite normal, so
- * the two members are bounded by ONE surface from opposite sides and cannot leave a gap between them.
- */
-const cutPlane = (junction: Vector3, i: Vector3, j: Vector3): Plane => ({
-  point: junction.clone(),
-  normal: i.clone().sub(j).normalize(),
-});
 
 /**
  * THE AXIS every member makes the same angle with — the CONE axis — when one exists.
@@ -152,90 +117,6 @@ const coneAxis = (list: Member[]): { axis: Vector3; residual: number } | null =>
   // Point it OUT of the junction, against the members, so "up" is unambiguous.
   if (axis.dot(base) > 0) axis.negate();
   return { axis, residual };
-};
-
-/**
- * Run every ring point down the axis and let it choose a plane — the HIP END construction, unchanged.
- *
- * `"min"` stops at the FIRST plane met, which is what a junction wants: the member may advance until it
- * would cross into either neighbour, and its end comes to a point reaching into the joint.
- *
- * Where consecutive ring points disagree about which plane they meet, the edge between them is SPLIT
- * exactly on the crossing. The crossing is not searched for — with the axis fixed, each `t` is linear in
- * position, so `t0 - t1` is linear along a ring edge and its root is one division.
- */
-const cutEnd = (ring: Vector3[], axis: Vector3, planes: [Plane, Plane], mode: "min" | "max"): EndPoint[] => {
-  const distances = ring.map((p) => [hitDistance(p, axis, planes[0]), hitDistance(p, axis, planes[1])]);
-  const pick = (t: number[]) => (mode === "min" ? (t[0]! <= t[1]! ? 0 : 1) : t[0]! >= t[1]! ? 0 : 1);
-
-  const out: EndPoint[] = [];
-  for (let i = 0; i < ring.length; i++) {
-    const j = (i + 1) % ring.length;
-    const here = pick(distances[i]!);
-    const next = pick(distances[j]!);
-
-    out.push({
-      start: ring[i]!.clone(),
-      end: ring[i]!.clone().addScaledVector(axis, distances[i]![here]!),
-      owner: here,
-    });
-    if (here === next) continue;
-
-    const f0 = distances[i]![0]! - distances[i]![1]!;
-    const f1 = distances[j]![0]! - distances[j]![1]!;
-    const s = f0 / (f0 - f1);
-    if (!Number.isFinite(s) || s <= 0 || s >= 1) continue;
-
-    const start = ring[i]!.clone().lerp(ring[j]!, s);
-    out.push({
-      start,
-      end: start.clone().addScaledVector(axis, hitDistance(start, axis, planes[0])),
-      owner: -1,
-    });
-  }
-  return out;
-};
-
-/** The member: its own square start cap, its sides, and the mitered end — all from one list of points. */
-const buildMember = (points: EndPoint[], axis: Vector3): BufferGeometry => {
-  const buffers = createGeometryBuffers();
-  const at = (p: Vector3): Vec3 => [p.x, p.y, p.z];
-  const count = points.length;
-
-  // Each side band is planar by construction: both of its ends travel along the SAME axis.
-  for (let i = 0; i < count; i++) {
-    const j = (i + 1) % count;
-    pushQuad(buffers, [at(points[j]!.start), at(points[i]!.start), at(points[i]!.end), at(points[j]!.end)], undefined);
-  }
-
-  const startNormal = axis.clone().negate();
-  for (let i = 1; i < count - 1; i++) {
-    pushTriangle(buffers, [at(points[0]!.start), at(points[i]!.start), at(points[i + 1]!.start)], at(startNormal));
-  }
-
-  // The end, ONE FAN PER FACET. Fanning the whole loop would span both planes and give non-planar
-  // triangles — the ridge is exactly where the cap must be cut in two.
-  const ridges = points.map((p, i) => (p.owner === -1 ? i : -1)).filter((i) => i >= 0);
-  if (ridges.length === 2) {
-    for (const [from, to] of [
-      [ridges[0]!, ridges[1]!],
-      [ridges[1]!, ridges[0]!],
-    ]) {
-      const arc: Vector3[] = [];
-      for (let i = from; ; i = (i + 1) % count) {
-        arc.push(points[i]!.end);
-        if (i === to) break;
-      }
-      for (let i = 1; i < arc.length - 1; i++) {
-        pushTriangle(buffers, [at(arc[0]!), at(arc[i]!), at(arc[i + 1]!)], undefined);
-      }
-    }
-  } else {
-    for (let i = 1; i < count - 1; i++) {
-      pushTriangle(buffers, [at(points[0]!.end), at(points[i]!.end), at(points[i + 1]!.end)], undefined);
-    }
-  }
-  return toBufferGeometry(buffers);
 };
 
 export default function (container: HTMLElement) {
@@ -387,20 +268,20 @@ export default function (container: HTMLElement) {
         [-half, member.offset + member.thickness],
       ].map(([s, t]) => origin.clone().addScaledVector(across, s!).addScaledVector(up, t!));
 
-      const planes: [Plane, Plane] = [
-        cutPlane(junction, member.away, previous.away),
-        cutPlane(junction, member.away, next.away),
+      const planes: [CutPlane, CutPlane] = [
+        miterPlane(junction, member.away, previous.away),
+        miterPlane(junction, member.away, next.away),
       ];
       wedges.push(180 - (Math.acos(Math.max(-1, Math.min(1, planes[0].normal.dot(planes[1].normal)))) * 180) / Math.PI);
 
       // Miter off is the roof's old behaviour: an end square to the member, through the junction point.
-      const squareEnd: [Plane, Plane] = [
+      const squareEnd: [CutPlane, CutPlane] = [
         { point: junction.clone(), normal: forward.clone().negate() },
         { point: junction.clone(), normal: forward.clone().negate() },
       ];
-      const points = cutEnd(ring, forward, params.miter ? planes : squareEnd, params.mode);
+      const points = cutEnd(ring, forward, params.miter ? planes : squareEnd, { stopAt: params.mode === "min" ? "first" : "last" });
 
-      const geometry = buildMember(points, forward);
+      const geometry = cutEndGeometry(points, forward);
       const material = materialFor(member.color);
       material.transparent = params.opacity < 1;
       material.opacity = params.opacity;
