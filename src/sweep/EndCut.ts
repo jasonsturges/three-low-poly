@@ -196,3 +196,119 @@ export function cutEndGeometry(points: CutPoint[], axis: Vector3): BufferGeometr
 export function miterPlane(joint: Vector3, a: Vector3, b: Vector3): CutPlane {
   return { point: joint.clone(), normal: a.clone().sub(b).normalize() };
 }
+
+/** Which planes bound each end of a segment cut at both ends. */
+export interface SegmentBounds {
+  start: [CutPlane, CutPlane];
+  end: [CutPlane, CutPlane];
+}
+
+/**
+ * A member cut at BOTH ends — the general case {@link cutEnd} does not cover.
+ *
+ * Any member with a joint at each end needs this: a roof RIDGE running between two junctions, a rail
+ * between two posts, a lattice bar crossing two others. Cutting one end and squaring the other is not a
+ * substitute, because the two ends can disagree at DIFFERENT places around the ring.
+ *
+ * **That disagreement is the whole reason this cannot be two calls to {@link cutEnd}.** Each end splits
+ * the ring where its own bounding planes swap over, and those splits generally fall on different edges. A
+ * ring split for only one end leaves the other's crease straddling a quad, which rounds it off. So every
+ * crossing from BOTH ends is collected first, and the whole ring is evaluated at all of them.
+ *
+ * The ring is positioned wherever the caller put it; both ends are lofted from there, forward along
+ * `axis` and backward against it.
+ */
+export function cutSegment(
+  ring: Vector3[],
+  axis: Vector3,
+  { start, end }: SegmentBounds,
+  { stopAt = "first" }: CutEndOptions = {},
+): BufferGeometry {
+  const backward = axis.clone().negate();
+  const pick = (t: number[]) => (stopAt === "first" ? (t[0]! <= t[1]! ? 0 : 1) : t[0]! >= t[1]! ? 0 : 1);
+  const distances = (p: Vector3, along: Vector3, planes: [CutPlane, CutPlane]) => [
+    hitDistance(p, along, planes[0]),
+    hitDistance(p, along, planes[1]),
+  ];
+
+  // Every crossing from both ends, as (edge index, fraction along it).
+  const stations: [number, number][] = [];
+  for (let i = 0; i < ring.length; i++) {
+    const j = (i + 1) % ring.length;
+    stations.push([i, 0]);
+    for (const [along, planes] of [
+      [axis, end],
+      [backward, start],
+    ] as const) {
+      const a = distances(ring[i]!, along, planes);
+      const b = distances(ring[j]!, along, planes);
+      if (pick(a) === pick(b)) continue;
+      const f0 = a[0]! - a[1]!;
+      const f1 = b[0]! - b[1]!;
+      const s = f0 / (f0 - f1);
+      if (Number.isFinite(s) && s > 1e-9 && s < 1 - 1e-9) stations.push([i, s]);
+    }
+  }
+  stations.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+
+  const points = stations.map(([i, s]) => ring[i]!.clone().lerp(ring[(i + 1) % ring.length]!, s));
+  const land = (p: Vector3, along: Vector3, planes: [CutPlane, CutPlane]) => {
+    const t = distances(p, along, planes);
+    const owner = pick(t);
+    return { point: p.clone().addScaledVector(along, t[owner]!), owner };
+  };
+  const heads = points.map((p) => land(p, axis, end));
+  const tails = points.map((p) => land(p, backward, start));
+
+  const triangles: Vector3[][] = [];
+  const count = points.length;
+  for (let i = 0; i < count; i++) {
+    const j = (i + 1) % count;
+    triangles.push(
+      [tails[j]!.point, tails[i]!.point, heads[i]!.point],
+      [tails[j]!.point, heads[i]!.point, heads[j]!.point],
+    );
+  }
+
+  // Each end, ONE FAN PER FACET. A run that wraps past index 0 is one facet, not two, and each facet is
+  // closed by the crease ending the PREVIOUS run — that point lies on both planes, so it is the only
+  // vertex that can close the polygon without leaving its own plane.
+  const fan = (landings: { point: Vector3; owner: number }[], flip: boolean) => {
+    const runs: number[][] = [];
+    for (let i = 0; i < count; i++) {
+      const previous = landings[(i + count - 1) % count]!.owner;
+      if (runs.length > 0 && landings[i]!.owner === previous) runs[runs.length - 1]!.push(i);
+      else runs.push([i]);
+    }
+    if (runs.length > 1 && landings[runs[0]![0]!]!.owner === landings[runs[runs.length - 1]![0]!]!.owner) {
+      runs[0] = [...runs.pop()!, ...runs[0]!];
+    }
+    const emit = (arc: Vector3[]) => {
+      for (let i = 1; i < arc.length - 1; i++) {
+        const tri = [arc[0]!, arc[i]!, arc[i + 1]!];
+        triangles.push(flip ? [tri[0]!, tri[2]!, tri[1]!] : tri);
+      }
+    };
+    if (runs.length < 2) {
+      emit(landings.map((p) => p.point));
+      return;
+    }
+    runs.forEach((run, r) => {
+      const previous = runs[(r + runs.length - 1) % runs.length]!;
+      emit([landings[previous[previous.length - 1]!]!.point, ...run.map((i) => landings[i]!.point)]);
+    });
+  };
+  fan(heads, false);
+  fan(tails, true);
+
+  const solid = triangles.filter(
+    ([a, b, c]) => new Vector3().subVectors(b!, a!).cross(new Vector3().subVectors(c!, a!)).length() > 1e-12,
+  );
+  const positions = new Float32Array(solid.length * 9);
+  solid.forEach((triangle, i) => triangle.forEach((p, v) => positions.set([p.x, p.y, p.z], i * 9 + v * 3)));
+
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new BufferAttribute(positions, 3));
+  geometry.computeVertexNormals();
+  return geometry;
+}

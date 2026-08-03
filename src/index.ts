@@ -415,7 +415,9 @@ export {
 export {
   cutEnd,
   cutEndGeometry,
+  cutSegment,
   miterPlane,
+  type SegmentBounds,
   type CutPlane,
   type CutPoint,
   type CutEndOptions,
