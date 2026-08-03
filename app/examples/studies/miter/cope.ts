@@ -61,7 +61,7 @@ export const meta = {
 //  MISS        the member never enters its neighbour, so there is nothing to cope to. A real failure and
 //              reported as one.
 
-type Rig = "tee" | "ridge";
+type Rig = "tee";
 type Joint = "cope" | "miter";
 
 /** One face of a member's infinite prism. `normal` points OUT of the solid. */
@@ -190,7 +190,6 @@ export default function (container: HTMLElement) {
   };
 
   const params = {
-    rig: "tee" as Rig,
     joint: "cope" as Joint,
     angle: 55,
     width: 0.14,
@@ -222,7 +221,7 @@ export default function (container: HTMLElement) {
 
   /** The members: which cope into which is a DECISION, so it is stated rather than derived. */
   const rig = (): { members: Member[]; coper: number; into: number[] } => {
-    if (params.rig === "tee") {
+    {
       // The plainest case: one member running through, another arriving at an angle and coping onto it.
       // Deliberately mismatched in section and rolled off, because that is what a cope is for.
       const a = (params.angle * Math.PI) / 180;
@@ -236,7 +235,7 @@ export default function (container: HTMLElement) {
         length: 0.75,
         color: PALETTE[0]!,
       };
-      const mirrored: Member = { ...through, name: "through-", away: new Vector3(-1, 0, 0), color: PALETTE[0]! };
+
       const rolled = new Vector3(0, Math.cos((params.roll * Math.PI) / 180), Math.sin((params.roll * Math.PI) / 180));
       const arriving: Member = {
         name: "coped",
@@ -248,51 +247,9 @@ export default function (container: HTMLElement) {
         length: 0.8,
         color: PALETTE[2]!,
       };
-      return { members: [through, mirrored, arriving], coper: 2, into: [0, 1] };
+      return { members: [through, arriving], coper: 1, into: [0] };
     }
 
-    // The roof's RIDGE END. The two hips are mirror images of each other and MITER; the ridge cannot, so
-    // it copes into both. Directions and seatings are the real ones from `studies/roof/ridge-and-hips`.
-    const halfWidth = 4.4 / 2 + 0.16;
-    const halfDepth = 2.6 / 2 + 0.16;
-    const rise = 2.0;
-    const ridge = 1.8;
-    const end = new Vector3(ridge / 2, rise, 0);
-    const face = (a: Vector3, b: Vector3, c: Vector3) =>
-      new Vector3().subVectors(b, a).cross(new Vector3().subVectors(c, a)).normalize();
-    const negZ = face(
-      new Vector3(-halfWidth, 0, -halfDepth),
-      new Vector3(-ridge / 2, rise, 0),
-      new Vector3(halfWidth, 0, -halfDepth),
-    );
-    const posZ = new Vector3(negZ.x, negZ.y, -negZ.z);
-    const posX = new Vector3(rise, halfWidth - ridge / 2, 0).normalize();
-
-    const cap = (name: string, target: Vector3, planes: [Vector3, Vector3], color: number): Member => {
-      const up = planes[0].clone().add(planes[1]).normalize();
-      const alpha = Math.acos(Math.max(-1, Math.min(1, planes[0].dot(up))));
-      return {
-        name,
-        origin: new Vector3(0, 0, 0),
-        away: target.clone().sub(end).normalize(),
-        up,
-        width: params.width,
-        // The roof's derived thickness: `rise + (width / 2) * tan(alpha)`. It differs per joint, which is
-        // half of why these three cannot be mitered.
-        thickness: 0.05 + (params.width / 2) * Math.tan(alpha),
-        length: 0.8,
-        color,
-      };
-    };
-    return {
-      members: [
-        cap("hip -Z", new Vector3(halfWidth, 0, -halfDepth), [negZ, posX], PALETTE[0]!),
-        cap("hip +Z", new Vector3(halfWidth, 0, halfDepth), [posZ, posX], PALETTE[1]!),
-        cap("ridge", new Vector3(-ridge / 2, rise, 0), [negZ, posZ], PALETTE[2]!),
-      ],
-      coper: 2,
-      into: [0, 1],
-    };
   };
 
   const rebuild = () => {
@@ -315,10 +272,17 @@ export default function (container: HTMLElement) {
         [half, halfT],
         [-half, halfT],
       ];
+      // ONE bar, running clear through the joint. Building it as two prisms butted at the origin gives
+      // each its own end cap, and those two caps sit coincident in the middle of an apparently solid
+      // member — a plane through the middle of the beam, visible the moment anything is transparent.
       const near = section.map(([u, v]) =>
-        member.origin.clone().addScaledVector(across, u).addScaledVector(up, v),
+        member.origin
+          .clone()
+          .addScaledVector(member.away, -member.length)
+          .addScaledVector(across, u)
+          .addScaledVector(up, v),
       );
-      const far = near.map((p) => p.clone().addScaledVector(member.away, member.length));
+      const far = near.map((p) => p.clone().addScaledVector(member.away, member.length * 2));
       for (let i = 0; i < 4; i++) {
         const j = (i + 1) % 4;
         pushQuad(buffers, [at(near[j]!), at(near[i]!), at(far[i]!), at(far[j]!)], undefined);
@@ -521,7 +485,6 @@ export default function (container: HTMLElement) {
   gui.title("Cope");
 
   const setup = gui.addFolder("Joint");
-  setup.add(params, "rig", { "T-Joint": "tee", "Roof Ridge End": "ridge" }).name("Rig").onChange(rebuild);
   // Cope cuts to the neighbour's SURFACE; miter cuts both to one shared PLANE and needs them to match.
   setup.add(params, "joint", { Cope: "cope", "Miter (for contrast)": "miter" }).name("Joint").onChange(rebuild);
   setup.open();
