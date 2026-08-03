@@ -24,8 +24,8 @@ export const meta = {
     "nothing has to match: different width, different thickness, different roll, any angle. " +
     "So a cope CLOSES BY CONSTRUCTION. There is no condition to satisfy and no residual to tune — the " +
     "readout measures how far the cut end sits from the surface it was cut to, and the answer is zero " +
-    "because that is what the cut is. Switch Joint to Miter on the Ridge End rig and watch a real step " +
-    "appear between members that cannot be mitered; switch back and it is gone. " +
+    "because that is what the cut is. Switch Joint to Miter and watch a real step appear between members " +
+    "that cannot be mitered; switch back and it is gone. " +
     "The construction is the same loft used everywhere else, with a different stopping rule. A miter stops " +
     "a ring point at the nearer of two PLANES. A cope stops it where it would ENTER the neighbour's SOLID, " +
     "which is a ray against a convex prism: the entry time is the LAST of the times it crosses into each " +
@@ -36,11 +36,15 @@ export const meta = {
     "winner and a loser, and something outside the joint has to decide which is which. And it is not " +
     "universal: a member that would have to wrap around its neighbour cannot be coped, which the readout " +
     "reports as a MISS rather than quietly drawing nonsense. " +
-    "On the roof this is the answer at a ridge end. The two hips are mirror images of each other, so they " +
-    "MITER exactly; the ridge is 44.1 degrees off in seating and half again as thick, so it cannot, and it " +
-    "COPES into the pair instead. That is also what a carpenter does, and why the seat cut on the post in " +
-    "`studies/miter/mitered-corner` was already a cope before it had the name — against a plane there, " +
-    "against a solid here.",
+    "The coped member comes out as ONE closed shell — the sides, the square start, and the cut end, all " +
+    "from a single loft. That is worth saying because the alternative is tempting and worse: unioning a " +
+    "few prisms gets the same silhouette while leaving coincident interior faces and no manifold. The HOST " +
+    "is one bar too, run clear through the joint rather than built as two halves meeting at the origin — " +
+    "two halves would each carry an end cap, and those caps sit coincident in the middle of an apparently " +
+    "solid beam, showing as a plane through the middle the moment anything is transparent. " +
+    "Where a cope earns its keep: a carpenter reaches for it exactly when members do not match, and the " +
+    "seat cut on the post in `studies/miter/mitered-corner` was already a cope before it had the name — " +
+    "against a plane there, against a solid here.",
 };
 
 //------------------------------
@@ -61,7 +65,6 @@ export const meta = {
 //  MISS        the member never enters its neighbour, so there is nothing to cope to. A real failure and
 //              reported as one.
 
-type Rig = "tee";
 type Joint = "cope" | "miter";
 
 /** One face of a member's infinite prism. `normal` points OUT of the solid. */
