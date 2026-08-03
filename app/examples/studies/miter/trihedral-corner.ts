@@ -23,8 +23,13 @@ export const meta = {
     "The result is better than expected, and it is worth stating precisely because it contradicts the " +
     "obvious guess. ANGLE ASYMMETRY IS NOT WHAT BREAKS A TRIHEDRAL MITER. Three members at wholly " +
     "arbitrary directions close to 2e-16 — the wedges here run 107°/107°/146° and it still shuts — " +
-    "provided two conditions hold: every member carries the SAME SECTION, and every member is rolled off " +
-    "one shared axis rather than off its own. Break either and a step opens; break both and it doubles. " +
+    "provided the cut plane is a MIRROR of the whole member — axis, roll AND section together. " +
+    "That is the condition, and it is worth stating exactly, because the shorthands for it are wrong. " +
+    "\"Same section and one shared roll\" is sufficient but NOT necessary: a SQUARE section is invariant " +
+    "under a quarter turn, so it absorbs exactly that much roll disagreement and closes anyway. Set " +
+    "Thickness equal to Width and Seating stops mattering; make them differ and the same 90 degrees of " +
+    "disagreement reopens a 0.06 step. A symmetric section can swallow a roll difference matching its own " +
+    "symmetry, and nothing else can. " +
     "The shared axis is the CONE axis, the one every member makes the same angle with, found as the vector " +
     "perpendicular to every DIFFERENCE of member directions. Any three directions admit one, which is " +
     "exactly why a THREE-way junction is always solvable and a four-way generally is not — see the " +
@@ -51,6 +56,10 @@ export const meta = {
 //               member directions. Any three directions have one; four usually do not.
 //  SEAM         where two members' surfaces meet. For members related by a mirror it lies in the plane
 //               bisecting their axes, which is why that simpler construction works — when it works.
+//  SECTION      the cross-section, CENTRED on the member's axis here. Centring matters: a section offset
+//               to one side displaces each member along its own roll, so members rolled differently end up
+//               translated as well as turned, and the joint fails in a way that looks like bad placement
+//               rather than bad seating.
 //  HIP END      an end bounded by TWO planes rather than one. What every member here has.
 //  ARROWHEAD    the end shape from stopping at the FIRST bounding plane met.
 //  COPE         cutting a member to the SURFACE of its neighbour instead of to a plane. The fallback when
@@ -123,7 +132,7 @@ export default function (container: HTMLElement) {
     rig: "cube" as Rig,
     seating: "common" as Seating,
     width: 0.13,
-    thickness: 0.13,
+    thickness: 0.08,
     mismatch: 0,
     length: 0.8,
     opacity: 1,
@@ -202,10 +211,10 @@ export default function (container: HTMLElement) {
     const half = member.width / 2;
     return (
       [
-        [-half, 0],
-        [half, 0],
-        [half, member.thickness],
-        [-half, member.thickness],
+        [-half, -member.thickness / 2],
+        [half, -member.thickness / 2],
+        [half, member.thickness / 2],
+        [-half, member.thickness / 2],
       ] as [number, number][]
     ).map(([s, t]) => {
       const p = origin.clone().addScaledVector(across, s).addScaledVector(up, t);
@@ -259,10 +268,10 @@ export default function (container: HTMLElement) {
       const half = member.width / 2;
       const ring = (
         [
-          [-half, 0],
-          [half, 0],
-          [half, member.thickness],
-          [-half, member.thickness],
+          [-half, -member.thickness / 2],
+          [half, -member.thickness / 2],
+          [half, member.thickness / 2],
+          [-half, member.thickness / 2],
         ] as [number, number][]
       ).map(([s, t]) => origin.clone().addScaledVector(across, s).addScaledVector(up, t));
 
