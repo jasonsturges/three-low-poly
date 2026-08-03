@@ -12,6 +12,7 @@ import {
 } from "three";
 import { cutEnd, cutEndGeometry, miterPlane, type CutPlane } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Trihedral Corner",
@@ -103,13 +104,11 @@ const faceNormal = (a: Vector3, b: Vector3, c: Vector3) =>
   new Vector3().subVectors(b, a).cross(new Vector3().subVectors(c, a)).normalize();
 
 export default function (container: HTMLElement) {
-  const { scene, controls, dispose } = createScene(container, {
+  const handle = createScene(container, {
     background: 0x14171d,
     cameraPosition: [1.5, 1.15, 1.75],
   });
-
-  controls.target.set(0.1, 0.15, 0.1);
-  controls.update();
+  const { scene, dispose } = handle;
 
   const key = new DirectionalLight(0xfff4e6, 1.5);
   key.position.set(1.2, 1.8, 1.4);
@@ -298,8 +297,13 @@ export default function (container: HTMLElement) {
       worst < 1e-9
         ? `CLOSES — faces coincide to ${worst.toExponential(1)}`
         : `STEP of ${worst.toFixed(4)} — the faces do not meet`;
+
+    frameObject(handle, stage, { dolly: false });
   };
   rebuild();
+  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
+  frameObject(handle, stage, { fit: 1.45 });
 
   const gui = new GUI();
   gui.title("Trihedral Corner");

@@ -13,6 +13,7 @@ import {
 } from "three";
 import { createGeometryBuffers, pushQuad, pushTriangle, toBufferGeometry, type Vec3 } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Cope",
@@ -167,13 +168,11 @@ const stopAt = (p: Vector3, axis: Vector3, solids: Face[][], fallback: number): 
 };
 
 export default function (container: HTMLElement) {
-  const { scene, controls, dispose } = createScene(container, {
+  const handle = createScene(container, {
     background: 0x14171d,
     cameraPosition: [1.5, 1.05, 1.8],
   });
-
-  controls.target.set(0, 0.05, 0);
-  controls.update();
+  const { scene, dispose } = handle;
 
   const key = new DirectionalLight(0xfff4e6, 1.5);
   key.position.set(1.2, 1.8, 1.4);
@@ -481,8 +480,13 @@ export default function (container: HTMLElement) {
       params.joint === "cope"
         ? `${member.name} copes into ${into.map((i) => members[i]!.name).join(" + ")} — nothing has to match`
         : `${member.name} mitered — needs equal section and shared roll, and has neither`;
+
+    frameObject(handle, stage, { dolly: false });
   };
   rebuild();
+  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
+  frameObject(handle, stage, { fit: 1.45 });
 
   const gui = new GUI();
   gui.title("Cope");

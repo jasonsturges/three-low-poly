@@ -15,6 +15,7 @@ import {
   WireframeGeometry,
 } from "three";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Ridge and Hips",
@@ -152,13 +153,11 @@ const polygon = (points: Vector3[]): BufferGeometry | null => {
 };
 
 export default function (container: HTMLElement) {
-  const { scene, controls, dispose } = createScene(container, {
+  const handle = createScene(container, {
     background: 0x11141a,
     cameraPosition: [7.4, 4.6, 8.2],
   });
-
-  controls.target.set(0, 2.0, 0);
-  controls.update();
+  const { scene, dispose } = handle;
 
   const key = new DirectionalLight(0xfff4e6, 1.5);
   key.position.set(4, 6, 3.5);
@@ -335,8 +334,13 @@ export default function (container: HTMLElement) {
       : worstFold < 1e-9
         ? `folds closed to ${worstFold.toExponential(1)} — each cap's halves share their edge`
         : `folds SPLIT by ${worstFold.toFixed(4)} — relief lifts each half along a different normal`;
+
+    frameObject(handle, stage, { dolly: false });
   };
   rebuild();
+  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
+  frameObject(handle, stage, { fit: 1.45 });
 
   const gui = new GUI();
   gui.title("Ridge and Hips");

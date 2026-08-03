@@ -15,6 +15,7 @@ import {
 } from "three";
 import { layPlankFloor, mulberry32 } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Shake Roof",
@@ -63,13 +64,11 @@ export const meta = {
 //  RAKE        the slope's own length, eave to ridge. Courses are counted along it, not along the plan.
 
 export default function (container: HTMLElement) {
-  const { scene, controls, dispose } = createScene(container, {
+  const handle = createScene(container, {
     background: 0x14171d,
     cameraPosition: [3.4, 2.6, 4.2],
   });
-
-  controls.target.set(0, -0.5, 1.2);
-  controls.update();
+  const { scene, dispose } = handle;
 
   const key = new DirectionalLight(0xfff4e6, 1.55);
   // Low and raking up the slope, because the butt lines only exist as shadow.
@@ -239,8 +238,13 @@ export default function (container: HTMLElement) {
         ? `NO HEADLAP — exposure exceeds the shake, the roof is open`
         : `headlap ${headlap.toFixed(3)} · exposure is ${(ratio * 100).toFixed(0)}% of the shake — ${ratio > 0.34 ? "over a third, thin cover" : "under a third, three thicknesses everywhere"}`;
     params.cost = `${triangles.length} triangles · 1 draw call · stagger reached ${layout.closestJoint.toFixed(3)} of ${params.minStagger.toFixed(3)} asked`;
+
+    frameObject(handle, stage, { dolly: false });
   };
   rebuild();
+  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
+  frameObject(handle, stage, { fit: 1.45 });
 
   const gui = new GUI();
   gui.title("Shake Roof");

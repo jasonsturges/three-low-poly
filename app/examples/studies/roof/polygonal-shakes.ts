@@ -16,6 +16,7 @@ import {
 } from "three";
 import { layPlankFloor, mulberry32 } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Polygonal Shakes",
@@ -165,13 +166,11 @@ const area2 = (ring: Vector2[]): number =>
   );
 
 export default function (container: HTMLElement) {
-  const { scene, controls, dispose } = createScene(container, {
+  const handle = createScene(container, {
     background: 0x14171d,
     cameraPosition: [5.2, 3.6, 6.0],
   });
-
-  controls.target.set(0, 1.1, 0);
-  controls.update();
+  const { scene, dispose } = handle;
 
   const key = new DirectionalLight(0xfff4e6, 1.55);
   key.position.set(3.5, 5, 4);
@@ -449,8 +448,13 @@ export default function (container: HTMLElement) {
       `${dropped} dropped as slivers — ${total ? ((100 * dropped) / total).toFixed(0) : "0"}% of what the packer proposed · ` +
       (exposed === 0 ? "all of them under a cap" : `${exposed} would leave a HOLE — raise Min Sliver or Wing Width`);
     params.cost = `${triangles.length} triangles in 1 draw call · ${wings} cap wings, ${n} hips`;
+
+    frameObject(handle, stage, { dolly: false });
   };
   rebuild();
+  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
+  frameObject(handle, stage, { fit: 1.45 });
 
   const gui = new GUI();
   gui.title("Polygonal Shakes");

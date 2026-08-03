@@ -15,6 +15,7 @@ import {
 } from "three";
 import { ShapeUtils } from "three";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Crossing Members",
@@ -311,13 +312,11 @@ const notchedSolid = (
 };
 
 export default function (container: HTMLElement) {
-  const { scene, controls, dispose } = createScene(container, {
+  const handle = createScene(container, {
     background: 0x14171d,
     cameraPosition: [1.1, 0.95, 1.5],
   });
-
-  controls.target.set(0, 0, 0);
-  controls.update();
+  const { scene, dispose } = handle;
 
   const key = new DirectionalLight(0xfff4e6, 1.45);
   key.position.set(1, 1.6, 1.2);
@@ -525,8 +524,13 @@ export default function (container: HTMLElement) {
       sine < 1e-6
         ? "parallel — the notch would never end"
         : `${(params.widthB / sine).toFixed(3)} long for a ${params.widthB.toFixed(3)} bar — ${(1 / sine).toFixed(2)}x its width`;
+
+    frameObject(handle, stage, { dolly: false });
   };
   rebuild();
+  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
+  frameObject(handle, stage, { fit: 1.45 });
 
   const gui = new GUI();
   gui.title("Crossing Members");

@@ -17,6 +17,7 @@ import {
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { cutEnd, cutEndGeometry, miterPlane, type CutPlane } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Polygonal Roof",
@@ -279,13 +280,11 @@ const extrude = (
 };
 
 export default function (container: HTMLElement) {
-  const { scene, controls, dispose } = createScene(container, {
+  const handle = createScene(container, {
     background: 0x11141a,
     cameraPosition: [6.2, 4.4, 7.0],
   });
-
-  controls.target.set(0, 2.2, 0);
-  controls.update();
+  const { scene, dispose } = handle;
 
   const key = new DirectionalLight(0xfff4e6, 1.5);
   // High and to one side, so each seam throws a shadow down the plane it rides — without that the caps
@@ -474,8 +473,13 @@ export default function (container: HTMLElement) {
           ? `resting on the roof · thickness ${span} (derived)`
           : `${high > 1e-6 ? `floats ${high.toFixed(3)} ` : ""}${low < -1e-6 ? `buries ${(-low).toFixed(3)}` : ""} · thickness ${span}`;
     }
+
+    frameObject(handle, stage, { dolly: false });
   };
   rebuild();
+  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
+  frameObject(handle, stage, { fit: 1.45 });
 
   const gui = new GUI();
   gui.title("Polygonal Roof");

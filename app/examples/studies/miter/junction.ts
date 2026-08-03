@@ -12,6 +12,7 @@ import {
 } from "three";
 import { cutEnd, cutEndGeometry, miterPlane, type CutPlane } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Junction",
@@ -120,13 +121,11 @@ const coneAxis = (list: Member[]): { axis: Vector3; residual: number } | null =>
 };
 
 export default function (container: HTMLElement) {
-  const { scene, controls, dispose } = createScene(container, {
+  const handle = createScene(container, {
     background: 0x14171d,
     cameraPosition: [1.7, 1.35, 2.0],
   });
-
-  controls.target.set(0, 0.05, 0);
-  controls.update();
+  const { scene, dispose } = handle;
 
   const key = new DirectionalLight(0xfff4e6, 1.5);
   key.position.set(1.2, 1.8, 1.4);
@@ -306,8 +305,13 @@ export default function (container: HTMLElement) {
       Math.abs(total - 360) < 0.05
         ? `${total.toFixed(1)}° — the wedges tile the junction`
         : `${total.toFixed(1)}° — does NOT tile, the cut planes have no shared axis`;
+
+    frameObject(handle, stage, { dolly: false });
   };
   rebuild();
+  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
+  frameObject(handle, stage, { fit: 1.45 });
 
   const gui = new GUI();
   gui.title("Junction");
