@@ -334,14 +334,21 @@ export function miterFrames(
 // each verdict, in `docs/joining-swept-bars.md`.
 //
 //   1. PICTURE-FRAME MITER — two members of one path meeting at a corner. Cut plane DERIVED from the path
-//      (the bisector). SOLVED: `miterFrames(path, { closed: true })`. Requires equal stock, structurally —
-//      consecutive segments share one ring, so one profile. For the same joint built as SEPARATE members,
-//      `miterCuts` hands the shared planes to each member's `startCut` / `endCut`; that buys separate
-//      materials and transforms, but not unequal stock — the outer corner still steps.
+//      (the bisector). SOLVED: `miterFrames(path, { closed: true })`. Equal stock is required BY THIS
+//      CONSTRUCTION, not by mitering: consecutive segments share one ring, and one ring is one
+//      cross-section, so the width cannot change across the joint. `miterCuts` hands the shared planes to
+//      separate members, which buys separate materials and transforms but not unequal stock either — same
+//      bisector, same limitation.
+//      UNEQUAL STOCK IS NOT A LIMIT OF THE MITER. Cut by a PLANE run from the joint's OUTER corner to its
+//      INNER corner, it closes exactly at any pair of widths — the cut simply stops being 45°, and the
+//      members tile the frame band to the last digit. What IS required is a shared THICKNESS: faces at
+//      different depths cannot be levelled by any cut. See `app/examples/studies/miter/unequal-stock.ts`.
 //
 //   2. SEAT CUT — a member landing on a surface. Cut plane SUPPLIED by that surface. SOLVED:
-//      `{ startCut, endCut }`. Guard needed: never cut against a plane the member is nearly PARALLEL to, or
-//      the `1 / |d · n|` widening explodes (measured 50x at 88.85°, throwing a bar 0.25 units off).
+//      `{ startCut, endCut }`. GUARDED as of `miterLimit` (default 4, matching SVG's `stroke-miterlimit`):
+//      the `1 / |d · n|` widening is unbounded — measured 50x at 88.85°, throwing a bar 0.25 units off —
+//      and is now clamped. Past the limit a corner falls short of its point rather than overshooting it,
+//      which is the trade a bevel makes. `Infinity` restores the old behaviour.
 //
 //   3. HIP — two facets meeting where a member's end is bounded by TWO planes. Jason's sketch: an
 //      arrowhead, ">". Not expressible by FRAMING — one station is one ring is one plane — but SOLVED by
@@ -352,12 +359,27 @@ export function miterFrames(
 //      the legal side of both planes — a member already through a plane has no correct cut.
 //
 //   4. T-JUNCTION / X-CROSSING — a member butting into or crossing another. No bisector to share, so no
-//      miter applies. Deliberately NOT mitered: bury the end (partially, never flush — coplanar co-facing
-//      surfaces z-fight) or let them interpenetrate, which is what lead came and ironwork do anyway.
+//      miter applies — which does not mean nothing does. A crossing member never TERMINATES, so the cut is
+//      a NOTCH mid-run and the member survives on BOTH sides: it cannot be made by cutting an end at all.
+//      SOLVED in `app/examples/studies/miter/crossing-members.ts` — half lap (each loses half the overlap,
+//      outer faces stay flush), housed (one loses all of it), or PASS, which is free whenever the axes
+//      clear each other. Two axes generally do not meet at all; their separation along the common
+//      perpendicular `normalize(dA x dB)` is what decides whether there is a joint. Notch length along the
+//      host is `width / sin(angle)`. Interpenetration stays legitimate for lead came and ironwork, but it
+//      is now a choice rather than the only option.
 //
-//   5. THREE-WAY CORNER — two rails and a post sharing one corner, as in a cube frame. Each end wants a
-//      two-facet hip, so it inherits (3)'s limit. Sidestep it: have members SPAN between each other's
-//      surfaces, reading contact planes off `computeBoundingBox()` rather than predicting them.
+//   5. THREE-WAY CORNER — two rails and a post sharing one corner, as in a cube frame. Each end is a
+//      two-facet hip, so this is (3) applied twice and needs no sidestep. SOLVED by `cutEnd` with bounds
+//      from `miterPlane`, in `app/examples/studies/miter/trihedral-corner.ts` and `junction.ts` — the
+//      latter for N members, since a member has exactly TWO neighbours in the cyclic order however many
+//      arrive, so the count never changes the cut count.
+//      THE CLOSURE CONDITION, measured: a miter shuts exactly when the cut plane is a SYMMETRY of the whole
+//      member — axis, roll and section together, reflections included. Angle asymmetry is NOT what breaks
+//      it; three members at arbitrary directions close to 1e-16. A section's own symmetry can absorb a
+//      matching roll difference, which is why a SQUARE one closes across a 90° disagreement and a
+//      non-square one does not. Where the condition cannot be met — a roof's ridge cap is rolled 44° off
+//      its hips and derives a different thickness — the joint is not a miter at all, and the answer is a
+//      COPE (`cope.ts`) or a cover.
 //
 //   6. CURVED BOUNDARY — a member terminating on an ARC rather than a plane. SOLVED, in
 //      `app/examples/studies/miter/curved-boundary.ts`, and it needed no curve intersection at all:
