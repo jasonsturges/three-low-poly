@@ -8,292 +8,147 @@ import {
   Group,
   LineBasicMaterial,
   LineSegments,
-  Matrix4,
   Mesh,
   MeshStandardMaterial,
-  Quaternion,
+  Vector2,
   Vector3,
   WireframeGeometry,
 } from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { cutSegment, miterPlane, type CutPlane } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
   title: "Ridge and Hips",
   description:
-    "STUDY — the pyramid's apex, stretched into a line. Take a hipped roof off a square plan and the point " +
-    "where four planes met becomes a RIDGE where two planes meet each other and two more run up to its " +
-    "ends. That single length is the study. " +
-    "It is NOT a free parameter. If every plane is to carry the same pitch — which is what a roof wants, " +
-    "since one pitch is one detail repeated rather than four details reconciled — the ridge can only be " +
-    "`width - depth`. Nothing else is available. The overhang cancels out of that entirely, which is worth " +
-    "knowing: eaves change where the roof ENDS, never what it IS. Drag Ridge Length and the readout says " +
-    "what you have made, and Snap to Equal Pitch puts it back. " +
-    "Held loose, that one length walks the whole family: 0 is a PYRAMID, `width - depth` the equal-pitch " +
-    "HIP, and full length a GABLE — where the end plane does not vanish so much as stand up, going " +
-    "vertical and becoming the gable WALL. Three roof types are one number. " +
-    "This roof is also what proves the seam seating, because it is the case that breaks the shortcut. A " +
-    "cap seats on the bisector of the two planes it covers — and here a hip joins a long slope to a hip " +
-    "END, two planes at genuinely different pitches, so there is no mirror to borrow and no way to guess " +
-    "it from the corner. Taking `normalize(n1 + n2)` from the roof's own face normals is right at every " +
-    "ridge length; the corner's outward direction is 18.7° out at the default and worse as the plan " +
-    "stretches. The RIDGE is the reassuring case: its two planes are mirror images, so their bisector is " +
-    "exactly UP, and it was the one joint that always looked correct. " +
-    "This is also where deriving the cap pays for itself, because the joints here do NOT share a dihedral. " +
-    "Thickness is not a parameter: a cap is a folded sheet, its widest points have to come to rest on the " +
-    "planes, and the drop that puts them there is `(width / 2) * tan(alpha)`. At the default the four " +
-    "hips are congruent to each other — mirror images, so one half-angle of 34.8° — but the ridge is a " +
-    "different joint entirely at 53.9°, so one Seam Width produces two thicknesses, 0.099 and 0.146, each " +
-    "sized by what it covers. Stretch the plan and they part further. What is left is two dials " +
-    "that do not fight: width across, rise out. Rise is measured from the joint line, so 0 is the roof " +
-    "planed flat and anything above it is sheet standing proud. " +
-    "The junctions are where this roof parts company with the pyramid, and the Join readout is the point. " +
-    "Miter Junctions cuts every cap against its neighbours at each ridge end, and TWO OF THE THREE PAIRS " +
-    "CLOSE EXACTLY while the third does not. The two hips are mirror images across the plane bisecting " +
-    "them, so they shut to 0. The ridge is not a mirror of either: it seats on the bisector of ITS two " +
-    "planes, which is straight up and 44.1 degrees off the hips', and its thickness is derived from its own " +
-    "dihedral at 0.146 against their 0.099. A miter closes only when its plane is a mirror of the WHOLE " +
-    "member — axis, roll AND section — so hip-to-ridge steps by about 0.08 and cannot be tuned out. " +
-    "Neither offending property is adjustable: they are exactly what makes a cap rest on the roof along its " +
-    "length. `studies/miter/trihedral-corner` isolates this and shows the same three members closing to " +
-    "1e-16 the moment they are given a common roll and one section — so the ANGLES were never the problem. " +
-    "A hip-and-ridge junction is therefore not a miter at all, which is what the trades already say: a " +
-    "Y-ridge cap is a separate pressed piece, and a King Post intersection is a block.",
+    "STUDY — the pyramid's apex, stretched into a line, and every edge of the result CAPPED. " +
+    "The ridge length is not a free parameter. If every plane is to carry the same pitch — which is what a " +
+    "roof wants, since one pitch is one detail repeated rather than four reconciled — the ridge can only " +
+    "be `width - depth`. The overhang cancels out of that entirely: eaves change where a roof ENDS, never " +
+    "what it IS. Held loose, that one length walks the whole family — 0 is a PYRAMID, `width - depth` the " +
+    "equal-pitch HIP, and full length a GABLE, where the end plane does not vanish so much as stand up and " +
+    "become a wall. Three roof types are one number. " +
+    "THE CAPS REPLACE AN APPROACH THAT DID NOT WORK, and the failure is worth keeping. Covering each edge " +
+    "with a swept MEMBER — a bar seated on the dihedral and mitered against its neighbours — cannot close " +
+    "here. A ridge cap seats on ITS bisector, straight up; the hips seat 44.1° away on theirs. Their " +
+    "thicknesses derive from their own dihedrals, 0.146 against 0.099. A miter shuts only when its plane " +
+    "mirrors the whole member — axis, roll AND section — so hip-to-ridge stepped by 0.083 and no tuning " +
+    "moved it. " +
+    "A CAP is not a member. It is a folded sheet, profile `/\\`, whose FOLD LIES ON THE EDGE, with a WING " +
+    "flat on each adjacent face. That single difference dissolves all of it. Every fold line IS a roof " +
+    "edge, so all folds converge at a junction by definition — there is nothing left to make meet. And two " +
+    "wings lying on the SAME face close against each other as a flat, in-plane, equal-width miter, which " +
+    "is the one joint that always shuts. Measured across three to twelve sides and every proportion tried, " +
+    "the wings meet to 1e-16 and the apex needs no terminal piece at all. " +
+    "What broke the old approach was LIFT. Seating a cap out along the bisector is what made the tops " +
+    "splay and the seatings disagree, because every edge has a different bisector to be lifted along. A " +
+    "fold sitting on its own edge cannot splay; it has nowhere to go. RELIEF puts that failure on a dial — " +
+    "wind it up and watch the folds come apart, by a distance the readout prints. " +
+    "The faces are drawn INSET and the wings fill the border, so surface and cap TILE rather than overlap. " +
+    "That is why no lift is needed to stop them fighting, and it is the reason the whole thing can sit at " +
+    "zero. Five edges are capped: four hips and the ridge. Eaves are left bare, because a verge trim is a " +
+    "different piece with a different job.",
 };
 
 //------------------------------
 //  Vocabulary
 //------------------------------
 //
-//  RIDGE       the horizontal joint at the top, where two planes meet FACE TO FACE rather than converge on
-//              a point. A pyramid's ridge has length zero — the same roof with the number turned down.
-//  HIP         the sloping joint from an eave corner up to a ridge end. Four of them, and each one is
-//              shallower than both planes it joins, because it climbs the same rise along a diagonal run.
-//  HIP END     the triangular plane at the short end of the roof, between two hips. Its pitch is set by
-//              how far the ridge stops short of the eave, which is what makes ridge length a PITCH
-//              decision wearing a length's clothing.
-//  GABLE       what the hip end becomes when the ridge runs the full length: it stands vertical, and a
-//              vertical roof plane is a WALL. The roof loses a surface and the building gains one.
-//  EQUAL PITCH every plane at the same slope. The default a roofer wants — one flashing detail, one cut
-//              angle, one set of tiles — and the constraint that fixes the ridge at `width - depth`.
-//  DIHEDRAL    the angle between two planes at their shared edge. A seam seats on its BISECTOR.
-//  RIDGE CAP   the member covering the ridge, as a hip cap covers a hip. Same move, different joint.
-//  RUN / RISE  a roofer quotes pitch as rise over run. Angles here, because a study is read not built.
-//
-//  Still deliberately absent: finials, pinnacles, cornice. The two junctions this roof leaves open are the
-//  argument for them, not the place to solve them.
+//  RIDGE       the horizontal joint at the top. A pyramid's has length zero — the same roof, turned down.
+//  HIP         the sloping joint from an eave corner up to a ridge end. Shallower than both planes it
+//              joins, because it climbs the same rise along a diagonal run.
+//  HIP END     the triangular plane at the short end. Its pitch is set by how far the ridge stops short of
+//              the eave, which makes ridge length a PITCH decision wearing a length's clothing.
+//  GABLE       what the hip end becomes when the ridge runs full length: it stands vertical, and a
+//              vertical roof plane is a WALL.
+//  CAP         the folded sheet covering an edge. Profile `/\`; the FOLD lies on the edge, a WING lies on
+//              each adjacent face. NOT a member — a member has a section and a seating, and those are
+//              exactly what could not be reconciled here.
+//  WING        one half of a cap, flat on one face. Two wings on the same face miter to each other in the
+//              plane of that face, at equal width — the joint that always closes.
+//  FOLD        the cap's crease. On the edge, which is the entire reason this works.
+//  RELIEF      lifting a cap off its edge. What a real cap does physically, and what breaks convergence
+//              geometrically, since each edge lifts along a different normal.
+//  EAVE        left bare here. A verge or eave trim is a different piece and a different study.
 
-type Construction = "bisector" | "outward" | "minimal";
-type Section = "cap" | "crest";
-
-const UP = new Vector3(0, 1, 0);
-/** Past this the joint has folded back on itself and the drop runs away. Nothing on a roof reaches it. */
-const MAX_HALF_ANGLE = (85 * Math.PI) / 180;
-
-/** A point in a joint's own cross-section: `across` the joint, and `out` along its bisector. */
-type Profile = [across: number, out: number][];
-
-/** One joint to cover: the edge it runs along, and the two planes that meet there. */
-interface Joint {
-  from: Vector3;
-  to: Vector3;
-  /** The two faces' outward normals. Their bisector is the seam's seating, and there is no other input. */
-  planes: [Vector3, Vector3];
-  /** The corner's horizontal outward direction — only for the CORNER OUTWARD construction to be wrong with. */
-  outward: Vector3;
-  label: string;
-}
-
-interface Roof {
-  geometry: BufferGeometry;
-  joints: Joint[];
+interface Face {
+  points: Vector3[];
+  normal: Vector3;
+  /** Inset for the edge LEAVING each point — the wing width, or 0 where that edge is left bare. */
+  insets: number[];
 }
 
 const area = (a: Vector3, b: Vector3, c: Vector3): number =>
   new Vector3().subVectors(b, a).cross(new Vector3().subVectors(c, a)).length();
 
 /**
- * The roof planes and the joints between them, derived together.
+ * Split a face into its border WINGS and the interior left over.
  *
- * Two trapezoid slopes along the ridge and a triangular hip end at each short end, with every face's
- * normal taken from the drawn triangle and handed to the joints that border it. That is what makes the
- * seating trustworthy here: a hip on this roof joins two planes of genuinely DIFFERENT pitch, so its
- * bisector cannot be inferred from the plan — it has to come from the faces themselves.
+ * Each capped edge is inset by the wing width and each bare edge by nothing; where two edges meet, the
+ * interior's corner is where their two inset lines CROSS. Nothing here computes a miter as such — offsetting
+ * the edges and intersecting IS the miter, and it closes for the same reason a picture frame does: the two
+ * strips are the same width and the corner is their mirror.
  *
- * At ridge zero the triangles spanning the ridge have no area, and a zero-area triangle contributes a
- * zero-length normal, which lights as solid black rather than as nothing. They are dropped, leaving
- * exactly the four planes of a pyramid — which is what that roof is.
+ * Interior and wings tile the face exactly, which is why the caps need no lift to avoid fighting the
+ * surface they sit on.
  */
-const buildRoof = (halfWidth: number, halfDepth: number, rise: number, ridge: number): Roof => {
-  const c0 = new Vector3(-halfWidth, 0, -halfDepth);
-  const c1 = new Vector3(halfWidth, 0, -halfDepth);
-  const c2 = new Vector3(halfWidth, 0, halfDepth);
-  const c3 = new Vector3(-halfWidth, 0, halfDepth);
-  const r0 = new Vector3(-ridge / 2, rise, 0);
-  const r1 = new Vector3(ridge / 2, rise, 0);
+const borderWings = (face: Face): { interior: Vector3[]; wings: Vector3[][] } => {
+  const count = face.points.length;
+  const origin = face.points[0]!;
+  const u = new Vector3().subVectors(face.points[1]!, origin).normalize();
+  const v = new Vector3().crossVectors(face.normal, u).normalize();
+  const to2 = (p: Vector3) => new Vector2(p.clone().sub(origin).dot(u), p.clone().sub(origin).dot(v));
 
-  // Four PLANES, each wound so its normal comes out up and outward. A plane's normal is taken from its
-  // first triangle with real area, so the ridge collapsing cannot take a normal down with it.
-  const planes: { triangles: Vector3[][]; normal: Vector3 }[] = [
-    { triangles: [[c0, r0, r1], [c0, r1, c1]], normal: new Vector3() }, // the -Z slope
-    { triangles: [[c2, r1, r0], [c2, r0, c3]], normal: new Vector3() }, // the +Z slope
-    { triangles: [[c3, r0, c0]], normal: new Vector3() }, // the -X hip end
-    { triangles: [[c1, r1, c2]], normal: new Vector3() }, // the +X hip end
-  ];
+  const flat = face.points.map(to2);
+  // Inward normal of each edge, in the face's own plane.
+  const inward = flat.map((p, i) => {
+    const q = flat[(i + 1) % count]!;
+    const d = new Vector2(q.x - p.x, q.y - p.y).normalize();
+    return new Vector2(-d.y, d.x);
+  });
+  const signed =
+    flat.reduce((sum, p, i) => {
+      const q = flat[(i + 1) % count]!;
+      return sum + (p.x * q.y - q.x * p.y);
+    }, 0) / 2;
+  const sign = signed < 0 ? -1 : 1;
 
-  const kept: Vector3[][] = [];
-  for (const plane of planes) {
-    const solid = plane.triangles.filter(([a, b, c]) => area(a!, b!, c!) > 1e-9);
-    plane.normal
-      .subVectors(solid[0]![1]!, solid[0]![0]!)
-      .cross(new Vector3().subVectors(solid[0]![2]!, solid[0]![0]!))
-      .normalize();
-    kept.push(...solid);
+  const interior = flat.map((p, i) => {
+    const prev = (i + count - 1) % count;
+    const a = flat[prev]!;
+    const na = inward[prev]!.clone().multiplyScalar(sign);
+    const nb = inward[i]!.clone().multiplyScalar(sign);
+    const ca = na.x * a.x + na.y * a.y + face.insets[prev]!;
+    const cb = nb.x * p.x + nb.y * p.y + face.insets[i]!;
+    const det = na.x * nb.y - nb.x * na.y;
+    const q =
+      Math.abs(det) < 1e-9
+        ? new Vector2(p.x + na.x * face.insets[i]!, p.y + na.y * face.insets[i]!)
+        : new Vector2((ca * nb.y - cb * na.y) / det, (na.x * cb - nb.x * ca) / det);
+    return origin.clone().addScaledVector(u, q.x).addScaledVector(v, q.y);
+  });
+
+  const wings: Vector3[][] = [];
+  for (let i = 0; i < count; i++) {
+    if (!face.insets[i]) continue;
+    const j = (i + 1) % count;
+    wings.push([face.points[i]!, face.points[j]!, interior[j]!, interior[i]!]);
   }
+  return { interior, wings };
+};
 
-  const positions = new Float32Array(kept.length * 9);
-  kept.forEach((triangle, i) =>
-    triangle.forEach((p, v) => positions.set([p.x, p.y, p.z], i * 9 + v * 3)),
-  );
-
+/** A planar convex polygon, fanned; degenerate triangles dropped. */
+const polygon = (points: Vector3[]): BufferGeometry | null => {
+  const triangles: Vector3[][] = [];
+  for (let i = 1; i < points.length - 1; i++) {
+    if (area(points[0]!, points[i]!, points[i + 1]!) < 1e-12) continue;
+    triangles.push([points[0]!, points[i]!, points[i + 1]!]);
+  }
+  if (triangles.length === 0) return null;
+  const positions = new Float32Array(triangles.length * 9);
+  triangles.forEach((t, i) => t.forEach((p, w) => positions.set([p.x, p.y, p.z], i * 9 + w * 3)));
   const geometry = new BufferGeometry();
   geometry.setAttribute("position", new BufferAttribute(positions, 3));
   geometry.computeVertexNormals();
-
-  const [negZ, posZ, negX, posX] = planes.map((p) => p.normal) as [Vector3, Vector3, Vector3, Vector3];
-  const hip = (corner: Vector3, to: Vector3, pair: [Vector3, Vector3]): Joint => ({
-    from: corner.clone(),
-    to: to.clone(),
-    planes: pair,
-    outward: new Vector3(corner.x, 0, corner.z).normalize(),
-    label: "hip",
-  });
-
-  const joints: Joint[] = [
-    hip(c0, r0, [negZ, negX]),
-    hip(c1, r1, [negZ, posX]),
-    hip(c2, r1, [posZ, posX]),
-    hip(c3, r0, [posZ, negX]),
-  ];
-
-  // The ridge, only when it has length — at zero this is a pyramid and there is no joint here to cover.
-  if (ridge > 1e-6) {
-    joints.push({
-      from: r0.clone(),
-      to: r1.clone(),
-      // Two mirror-image slopes, so this bisector comes out exactly UP with no special case for it.
-      planes: [negZ, posZ],
-      // A ridge has no corner to borrow from. UP is the honest stand-in, and here it happens to be right —
-      // which is why this was the one joint the corner construction never got wrong.
-      outward: UP.clone(),
-      label: "ridge",
-    });
-  }
-
-  return { geometry, joints };
-};
-
-/**
- * Where a seam should FACE — the bisector of the two planes it covers.
- *
- * Automatically perpendicular to the joint, because the joint lies in both planes and is therefore
- * perpendicular to both normals. So it can serve directly as a frame axis.
- */
-const seating = (planes: [Vector3, Vector3]): Vector3 => planes[0].clone().add(planes[1]).normalize();
-
-/** The joint's HALF-ANGLE: bisector to either face normal. This is what sizes the cap. */
-const halfAngle = (planes: [Vector3, Vector3]): number =>
-  Math.acos(Math.max(-1, Math.min(1, planes[0].dot(seating(planes)))));
-
-/**
- * The section of a cap riding a joint whose half-angle is `alpha`, sized to SIT ON the roof.
- *
- * Thickness is not an input. A cap is a folded sheet laid over the joint, so its widest points have to
- * come to rest on the two planes — and the roof falls away from the joint at a rate the dihedral already
- * fixes. Put the widest points at `+/- width / 2` and they must drop exactly `(width / 2) * tan(alpha)`
- * below the joint line to make contact.
- *
- * On this roof that matters more than on a pyramid, because **every joint has a different dihedral**: the
- * four hips join a long slope to a hip end at two unequal pitches, and the ridge joins two equal ones. So
- * five caps of the same width come out five different thicknesses, each sized by the joint it covers.
- *
- * - `rise` is the only outward input, measured from the JOINT LINE to the top of the cap
- * - `rise = 0` puts the top flush with the joint line — the roof PLANED off. A solid section cannot be
- *   both flush and proud, so those two readings are one dial at different values, not rival ideas
- */
-const profile = (width: number, rise: number, alpha: number, section: Section): Profile => {
-  const half = width / 2;
-  const drop = half * Math.tan(Math.min(alpha, MAX_HALF_ANGLE));
-  return section === "cap"
-    ? [
-        [-half, -drop],
-        [half, -drop],
-        [half, rise],
-        [-half, rise],
-      ]
-    : [
-        [-half, -drop],
-        [half, -drop],
-        [0, rise],
-      ];
-};
-
-/**
- * Extrude a section along a joint, as a closed prism.
- *
- * Non-indexed, so every facet keeps its own normal and shades flat. The section is wound counter-clockwise
- * if it is not already, so sides come out facing away from the joint whichever way a caller wrote it.
- */
-/**
- * The frame for a seam riding one joint, by each of the three constructions.
- *
- * `bisector` seats the cap on the dihedral, from the roof's own normals. Correct at any plan and any ridge
- * length, including the ridge itself. `outward` borrows the corner's HORIZONTAL direction, right only
- * where that lies in a mirror plane of the roof — false on every hip here, since a slope and a hip end do
- * not share a pitch. `minimal` resolves its leftover roll against a world axis that never heard of a roof.
- */
-const seamFrame = (direction: Vector3, joint: Joint, construction: Construction): Quaternion => {
-  if (construction === "minimal") return new Quaternion().setFromUnitVectors(UP, direction);
-
-  const reference = construction === "bisector" ? seating(joint.planes) : joint.outward;
-  const x = new Vector3().crossVectors(direction, reference).normalize();
-  const z = new Vector3().crossVectors(x, direction);
-  return new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(x, direction, z));
-};
-
-/**
- * Lay a cap's section on its joint and cut BOTH ends against their bounding planes.
- *
- * `cutSegment` from the library, promoted out of these studies. It is the two-ended form because this roof
- * needs it: the RIDGE has a junction at each end, and the two ends generally split the ring at different
- * places — so cutting one end and squaring the other is not a substitute.
- *
- * The section is wound counter-clockwise if it is not already, so the sides face away from the joint
- * whichever way a caller wrote it. The ring is seeded at the run's midpoint and lofted both ways.
- */
-const extrude = (
-  from: Vector3,
-  to: Vector3,
-  across: Vector3,
-  out: Vector3,
-  section: Profile,
-  startBounds: [CutPlane, CutPlane],
-  endBounds: [CutPlane, CutPlane],
-): BufferGeometry => {
-  const signed =
-    section.reduce((sum, [u, v], i) => {
-      const [u2, v2] = section[(i + 1) % section.length]!;
-      return sum + (u * v2 - u2 * v);
-    }, 0) / 2;
-  const points = signed < 0 ? [...section].reverse() : section;
-
-  const seed = from.clone().lerp(to, 0.5);
-  const ring = points.map(([u, v]) => seed.clone().addScaledVector(across, u).addScaledVector(out, v));
-  return cutSegment(ring, new Vector3().subVectors(to, from).normalize(), {
-    start: startBounds,
-    end: endBounds,
-  });
+  return geometry;
 };
 
 export default function (container: HTMLElement) {
@@ -318,12 +173,11 @@ export default function (container: HTMLElement) {
     flatShading: true,
     side: DoubleSide,
   });
-  const seaming = new MeshStandardMaterial({
-    color: 0x6d7780,
+  const capping = new MeshStandardMaterial({
+    color: 0xd9d5cc,
     roughness: 0.45,
-    metalness: 0.5,
+    metalness: 0.35,
     flatShading: true,
-    // So that turning Seam Opacity down reveals the far side of the prism, not just its near shell.
     side: DoubleSide,
   });
   const masonry = new MeshStandardMaterial({ color: 0x5f5a54, roughness: 1, flatShading: true });
@@ -336,24 +190,18 @@ export default function (container: HTMLElement) {
     overhang: 0.16,
     ridgeLength: 1.8,
 
-    showSeams: true,
-    miter: true,
-    seamWidth: 0.14,
-    seamRise: 0.05,
-    section: "cap" as Section,
-    construction: "bisector" as Construction,
+    caps: true,
+    wing: 0.14,
+    relief: 0,
 
     wall: true,
     wallHeight: 2.2,
     wireframe: false,
-    seamOpacity: 1,
 
     ridge: "",
     pitch: "",
-    hip: "",
-    seat: "",
-    fit: "",
-    join: "",
+    capped: "",
+    close: "",
   };
 
   const stage = new Group();
@@ -368,16 +216,13 @@ export default function (container: HTMLElement) {
     }
   };
 
-  /** The only ridge length that puts every plane at the same pitch. The overhang cancels out of it. */
   const equalPitchRidge = () => Math.max(0, params.width - params.depth);
 
   const rebuild = () => {
     clear();
-
     const { width: W, depth: D, rise: R, overhang, wallHeight: base } = params;
     const halfWidth = W / 2 + overhang;
     const halfDepth = D / 2 + overhang;
-    // A ridge cannot outrun its own eaves; past that the hip ends would invert.
     const ridge = Math.max(0, Math.min(params.ridgeLength, halfWidth * 2));
 
     if (params.wall) {
@@ -386,257 +231,125 @@ export default function (container: HTMLElement) {
       stage.add(wall);
     }
 
-    const roof = buildRoof(halfWidth, halfDepth, R, ridge);
-    roof.geometry.translate(0, base, 0);
-    stage.add(new Mesh(roof.geometry, roofing));
+    const y = base;
+    const c0 = new Vector3(-halfWidth, y, -halfDepth);
+    const c1 = new Vector3(halfWidth, y, -halfDepth);
+    const c2 = new Vector3(halfWidth, y, halfDepth);
+    const c3 = new Vector3(-halfWidth, y, halfDepth);
+    const r0 = new Vector3(-ridge / 2, y + R, 0);
+    const r1 = new Vector3(ridge / 2, y + R, 0);
+    const hasRidge = ridge > 1e-6;
 
-    const errors: number[] = [];
-    const contacts: number[] = [];
-    const thicknesses: number[] = [];
-
-    if (params.showSeams) {
-      const parts: BufferGeometry[] = [];
-      const direction = new Vector3();
-
-      /**
-       * Who else arrives at this point, and from which direction.
-       *
-       * A cap is mitered against its two NEIGHBOURS, so first you have to know who they are. Unlike the
-       * pyramid — where every hip ends at the one apex and the neighbours are just `i +/- 1` — this roof
-       * has TWO junctions, the ridge terminates at both of them, and an eave end has no junction at all.
-       * So incidence is looked up per END rather than assumed from an index.
-       */
-      const arrivalsAt = (point: Vector3) =>
-        roof.joints
-          .flatMap((other) => {
-            const ends = [other.from, other.to].filter((e) => e.distanceTo(point) < 1e-9);
-            return ends.map((end) => ({
-              joint: other,
-              away: new Vector3()
-                .subVectors(end === other.from ? other.to : other.from, point)
-                .normalize()
-                .negate(),
-            }));
-          })
-          .filter((a) => a.away.lengthSq() > 0.5);
-
-      /** The two cut planes bounding one END of a cap, or a square stop where nothing else arrives. */
-      const boundsAt = (point: Vector3, mine: Vector3, axis: Vector3, lift: number): [CutPlane, CutPlane] => {
-        const at = point.clone();
-        at.y += lift;
-        const square: CutPlane = { point: at, normal: axis.clone().negate() };
-        const arrivals = arrivalsAt(point);
-        if (!params.miter || arrivals.length < 3) return [square, square];
-
-        // Cyclic order about the junction's CONE axis — the one every arrival makes the same angle with,
-        // perpendicular to every difference of their directions. Three arrivals always have one.
-        const base = arrivals[0]!.away;
-        const differences = arrivals.slice(1).map((a) => a.away.clone().sub(base));
-        let cone = new Vector3(0, 1, 0);
-        let strongest = 1e-9;
-        for (let i = 0; i < differences.length; i++) {
-          for (let j = i + 1; j < differences.length; j++) {
-            const candidate = new Vector3().crossVectors(differences[i]!, differences[j]!);
-            if (candidate.length() > strongest) {
-              strongest = candidate.length();
-              cone = candidate.clone().normalize();
-            }
-          }
+    const normalOf = (pts: Vector3[]) => {
+      for (let i = 1; i < pts.length - 1; i++) {
+        if (area(pts[0]!, pts[i]!, pts[i + 1]!) > 1e-12) {
+          return new Vector3()
+            .subVectors(pts[i]!, pts[0]!)
+            .cross(new Vector3().subVectors(pts[i + 1]!, pts[0]!))
+            .normalize();
         }
-        if (cone.dot(base) > 0) cone.negate();
-        const reference = Math.abs(new Vector3(1, 0, 0).dot(cone)) > 0.9 ? new Vector3(0, 0, 1) : new Vector3(1, 0, 0);
-        const u = new Vector3().crossVectors(cone, reference).normalize();
-        const v = new Vector3().crossVectors(cone, u);
-        const ordered = [...arrivals].sort(
-          (a, b) => Math.atan2(a.away.dot(v), a.away.dot(u)) - Math.atan2(b.away.dot(v), b.away.dot(u)),
-        );
-        const index = ordered.findIndex((a) => a.away.distanceTo(mine) < 1e-9);
-        if (index < 0) return [square, square];
+      }
+      return new Vector3(0, 1, 0);
+    };
 
-        const plane = (other: Vector3): CutPlane => miterPlane(at, mine, other);
-        return [
-          plane(ordered[(index + ordered.length - 1) % ordered.length]!.away),
-          plane(ordered[(index + 1) % ordered.length]!.away),
+    // Four faces. `insets` marks which edges get a wing — the four hips and the ridge. The eave of each
+    // face is left bare.
+    const w = params.caps ? params.wing : 0;
+    const raw = hasRidge
+      ? [
+          { points: [c0, r0, r1, c1], insets: [w, w, w, 0] },
+          { points: [c2, r1, r0, c3], insets: [w, w, w, 0] },
+          { points: [c3, r0, c0], insets: [w, w, 0] },
+          { points: [c1, r1, c2], insets: [w, w, 0] },
+        ]
+      : [
+          { points: [c0, r0, c1], insets: [w, w, 0] },
+          { points: [c2, r1, c3], insets: [w, w, 0] },
+          { points: [c3, r0, c0], insets: [w, w, 0] },
+          { points: [c1, r1, c2], insets: [w, w, 0] },
         ];
-      };
+    const faces: Face[] = raw.map((f) => ({ ...f, normal: normalOf(f.points) }));
 
-      // Kept so the junctions can be measured after every cap's frame is known.
-      const built: { joint: Joint; across: Vector3; out: Vector3; drop: number }[] = [];
+    let wingCount = 0;
+    let worstFold = 0;
+    const folds = new Map<string, Vector3[]>();
+    const keyOf = (a: Vector3, b: Vector3) => {
+      const s = (p: Vector3) => `${p.x.toFixed(4)},${p.y.toFixed(4)},${p.z.toFixed(4)}`;
+      return [s(a), s(b)].sort().join("|");
+    };
 
-      for (const joint of roof.joints) {
-        direction.subVectors(joint.to, joint.from);
-        const length = direction.length();
-        if (length < 1e-6) continue;
-        direction.divideScalar(length);
+    for (const face of faces) {
+      const { interior, wings } = borderWings(face);
+      const inner = polygon(interior);
+      if (inner) stage.add(new Mesh(inner, roofing));
 
-        // The frame the chosen construction gives: +X across the joint, +Z out along its bisector.
-        const orientation = seamFrame(direction, joint, params.construction);
-        const across = new Vector3(1, 0, 0).applyQuaternion(orientation);
-        const out = new Vector3(0, 0, 1).applyQuaternion(orientation);
+      for (const quad of wings) {
+        wingCount += 1;
+        // RELIEF lifts the wing off its face along that face's OWN normal. At zero the wing lies in the
+        // face and the fold stays exactly on the edge; lift it and the two halves of a cap rise along
+        // different normals, which is precisely how the swept-member approach came apart.
+        const lifted = quad.map((p) => p.clone().addScaledVector(face.normal, params.relief));
+        const g = polygon(lifted);
+        if (g) stage.add(new Mesh(g, capping));
 
-        const alpha = halfAngle(joint.planes);
-        const drop = (params.seamWidth / 2) * Math.tan(Math.min(alpha, MAX_HALF_ANGLE));
-        thicknesses.push(params.seamRise + drop);
-
-        const from = joint.from.clone().setY(joint.from.y + base);
-        const to = joint.to.clone().setY(joint.to.y + base);
-        parts.push(
-          extrude(
-            from,
-            to,
-            across,
-            out,
-            profile(params.seamWidth, params.seamRise, alpha, params.section),
-            boundsAt(joint.from, direction.clone().negate(), direction.clone().negate(), base),
-            boundsAt(joint.to, direction.clone(), direction.clone(), base),
-          ),
-        );
-
-        // How far the seating has drifted from the bisector it should sit on — a CORRECTNESS measure,
-        // unlike agreement between the caps, which they can have while all being wrong together.
-        const truth = seating(joint.planes);
-        errors.push((Math.acos(Math.min(1, Math.abs(out.dot(truth)))) * 180) / Math.PI);
-
-        // And what that costs physically: where the widest points actually END UP relative to the roof.
-        // The roof solid near a joint is where BOTH signed distances are negative, so `max` is the distance
-        // OUT of it: zero rests on the surface, positive floats above, negative is strictly buried. Taking
-        // `min` instead calls a healthy cap buried, because a corner resting on one plane sits behind the
-        // other plane.'.s infinite extension.
-        for (const side of [-1, 1]) {
-          const corner = new Vector3()
-            .addScaledVector(across, (side * params.seamWidth) / 2)
-            .addScaledVector(out, -drop);
-          contacts.push(Math.max(corner.dot(joint.planes[0]), corner.dot(joint.planes[1])));
-        }
-        built.push({ joint, across: across.clone(), out: out.clone(), drop });
-      }
-
-      // THE JOIN. At each junction, do adjacent caps' cut faces actually COINCIDE? A miter closes only
-      // when its plane is a mirror of the WHOLE member — axis, roll and section — so this is a distance,
-      // not an opinion. See `studies/miter/trihedral-corner`, where the same measure is the subject.
-      const gaps: { pair: string; gap: number }[] = [];
-      const seen: Vector3[] = [];
-      for (const { joint } of built) {
-        for (const point of [joint.from, joint.to]) {
-          if (seen.some((q) => q.distanceTo(point) < 1e-9)) continue;
-          seen.push(point.clone());
-          const here = built
-            .map((b) => {
-              const ends = [b.joint.from, b.joint.to].filter((e) => e.distanceTo(point) < 1e-9);
-              if (ends.length === 0) return null;
-              const other = ends[0] === b.joint.from ? b.joint.to : b.joint.from;
-              return { ...b, away: new Vector3().subVectors(point, other).normalize() };
-            })
-            .filter((x): x is NonNullable<typeof x> => x !== null);
-          if (here.length < 3) continue;
-
-          const faceOf = (m: (typeof here)[number], normal: Vector3) => {
-            const forward = m.away.clone().negate();
-            const origin = point.clone().addScaledVector(m.away, 1);
-            const half = params.seamWidth / 2;
-            return (
-              [
-                [-half, -m.drop],
-                [half, -m.drop],
-                [half, params.seamRise],
-                [-half, params.seamRise],
-              ] as [number, number][]
-            ).map(([u, w]) => {
-              const q = origin.clone().addScaledVector(m.across, u).addScaledVector(m.out, w);
-              const rel = q.clone().sub(point);
-              return q.clone().addScaledVector(forward, -rel.dot(normal) / forward.dot(normal));
-            });
-          };
-
-          for (let i = 0; i < here.length; i++) {
-            for (let j = i + 1; j < here.length; j++) {
-              const a = here[i]!;
-              const b = here[j]!;
-              const normal = a.away.clone().sub(b.away).normalize();
-              const fa = faceOf(a, normal);
-              const fb = faceOf(b, normal);
-              let gap = 0;
-              for (const q of fa) gap = Math.max(gap, Math.min(...fb.map((r) => q.distanceTo(r))));
-              for (const q of fb) gap = Math.max(gap, Math.min(...fa.map((r) => q.distanceTo(r))));
-              gaps.push({ pair: `${a.joint.label}/${b.joint.label}`, gap });
-            }
-          }
-        }
-      }
-      if (gaps.length === 0) {
-        params.join = "no junction — the ridge has collapsed to a point";
-      } else {
-        const worst = Math.max(...gaps.map((g) => g.gap));
-        const clean = gaps.filter((g) => g.gap < 1e-9).length;
-        params.join =
-          worst < 1e-9
-            ? `all ${gaps.length} pairs close exactly`
-            : `${clean}/${gaps.length} close · worst STEP ${worst.toFixed(4)} (${gaps.reduce((a, b) => (b.gap > a.gap ? b : a)).pair})`;
-      }
-
-      const merged = mergeGeometries(parts, false);
-      parts.forEach((part) => part.dispose());
-      if (merged) {
-        stage.add(new Mesh(merged, seaming));
-        if (params.wireframe) stage.add(new LineSegments(new WireframeGeometry(merged), wire));
+        const k = keyOf(quad[0]!, quad[1]!);
+        const bucket = folds.get(k) ?? [];
+        bucket.push(lifted[0]!.clone().add(lifted[1]!).multiplyScalar(0.5));
+        folds.set(k, bucket);
       }
     }
 
-    // The two pitches the ridge length arbitrates between. The long planes climb the rise over the depth;
-    // the hip ends climb the SAME rise over whatever the ridge left them.
+    // A cap's two wings share one fold — exactly, until relief separates them.
+    for (const bucket of folds.values()) {
+      if (bucket.length >= 2) worstFold = Math.max(worstFold, bucket[0]!.distanceTo(bucket[1]!));
+    }
+
+    if (params.wireframe) {
+      for (const child of [...stage.children]) {
+        if (child instanceof Mesh) stage.add(new LineSegments(new WireframeGeometry(child.geometry), wire));
+      }
+    }
+
     const mainPitch = (Math.atan2(R, halfDepth) * 180) / Math.PI;
     const endRun = halfWidth - ridge / 2;
     const endPitch = endRun < 1e-6 ? 90 : (Math.atan2(R, endRun) * 180) / Math.PI;
-    const hipPitch = (Math.atan2(R, Math.hypot(endRun, halfDepth)) * 180) / Math.PI;
-
     const equal = equalPitchRidge();
+
     params.ridge =
       ridge < 1e-6
-        ? `0.00 — PYRAMID, apex is a point`
+        ? "0.00 — PYRAMID, apex is a point"
         : endRun < 1e-6
           ? `${ridge.toFixed(2)} — GABLE, the ends have stood up into walls`
           : Math.abs(ridge - equal) < 0.005
             ? `${ridge.toFixed(2)} — equal-pitch HIP (width - depth)`
             : `${ridge.toFixed(2)} — hip, unequal pitch · equal wants ${equal.toFixed(2)}`;
-
     params.pitch =
       Math.abs(mainPitch - endPitch) < 0.05
         ? `${mainPitch.toFixed(1)}° on every plane`
-        : `${mainPitch.toFixed(1)}° long slopes · ${endPitch.toFixed(1)}° hip ends — they disagree`;
-    params.hip = `${hipPitch.toFixed(1)}° · ${roof.joints.length} joints, ${roof.joints.filter((j) => j.label === "hip").length} hips`;
-
-    if (errors.length === 0) {
-      params.seat = "no seams";
-      params.fit = "no seams";
-    } else {
-      const worst = Math.max(...errors);
-      params.seat =
-        worst < 0.005
-          ? `seated — 0.00° off the bisector on all ${errors.length} seams`
-          : `${worst.toFixed(2)}° OFF the bisector — the caps are tipped`;
-
-      const low = Math.min(...contacts);
-      const high = Math.max(...contacts);
-      // Five joints, five dihedrals, five thicknesses from one width — the range is the point.
-      const thinnest = Math.min(...thicknesses);
-      const thickest = Math.max(...thicknesses);
-      const span =
-        Math.abs(thickest - thinnest) < 5e-4
-          ? thickest.toFixed(3)
-          : `${thinnest.toFixed(3)}–${thickest.toFixed(3)}`;
-      params.fit =
-        Math.max(Math.abs(low), Math.abs(high)) < 1e-6
-          ? `resting on the roof · thickness ${span} (derived)`
-          : `${high > 1e-6 ? `floats ${high.toFixed(3)} ` : ""}${low < -1e-6 ? `buries ${(-low).toFixed(3)}` : ""} · thickness ${span}`;
-    }
+        : `${mainPitch.toFixed(1)}° long slopes · ${endPitch.toFixed(1)}° hip ends`;
+    params.capped = params.caps
+      ? `${hasRidge ? 5 : 4} edges capped · ${wingCount} wings · eaves left bare`
+      : "caps off — bare faces";
+    params.close = !params.caps
+      ? "no caps"
+      : worstFold < 1e-9
+        ? `folds closed to ${worstFold.toExponential(1)} — each cap's halves share their edge`
+        : `folds SPLIT by ${worstFold.toFixed(4)} — relief lifts each half along a different normal`;
   };
   rebuild();
 
   const gui = new GUI();
   gui.title("Ridge and Hips");
 
+  const cap = gui.addFolder("Caps");
+  cap.add(params, "caps").name("Caps").onChange(rebuild);
+  // Corners between two capped edges miter in the plane of the face they share — no angle is computed.
+  cap.add(params, "wing", 0.02, 0.5, 0.005).name("Wing Width").onChange(rebuild);
+  // The old failure, on a dial. At 0 the fold sits on its edge and everything closes.
+  cap.add(params, "relief", 0, 0.12, 0.002).name("Relief").onChange(rebuild);
+  cap.open();
+
   const ridgeFolder = gui.addFolder("Ridge");
-  // The study. 0 is a pyramid, `width - depth` the equal-pitch hip, full length a gable.
   const ridgeControl = ridgeFolder
     .add(params, "ridgeLength", 0, 10, 0.05)
     .name("Ridge Length")
@@ -659,69 +372,25 @@ export default function (container: HTMLElement) {
   form.add(params, "width", 1, 9, 0.1).name("Width").onChange(rebuild);
   form.add(params, "depth", 1, 9, 0.1).name("Depth").onChange(rebuild);
   form.add(params, "rise", 0.4, 6, 0.1).name("Rise").onChange(rebuild);
-  // Changes where the roof ends, never what it is — the equal-pitch ridge is the same either way.
   form.add(params, "overhang", 0, 0.8, 0.01).name("Overhang").onChange(rebuild);
-  form.open();
-
-  const seam = gui.addFolder("Seams");
-  seam.add(params, "showSeams").name("Show Seams").onChange(rebuild);
-  // Mitered against the neighbours at each junction. The two HIPS close exactly — they are mirror images.
-  // The RIDGE cannot, and the Join readout says by how much.
-  seam.add(params, "miter").name("Miter Junctions").onChange(rebuild);
-  // Across, and out. Thickness is derived per joint from the width and that joint's own dihedral, so
-  // every setting of these two still rests on the roof — and the five caps come out five thicknesses.
-  seam.add(params, "seamWidth", 0.02, 0.6, 0.005).name("Seam Width").onChange(rebuild);
-  // Measured from the JOINT LINE. 0 is flush — the roof planed off — and up from there it stands proud.
-  seam.add(params, "seamRise", 0, 0.4, 0.005).name("Seam Rise").onChange(rebuild);
-  // Flat-topped, or brought to a sharp edge over the joint. Both rest on the same two contact points.
-  seam.add(params, "section", { Cap: "cap", Crest: "crest" }).name("Section").onChange(rebuild);
-  seam.open();
-
-  const construction = gui.addFolder("Seating");
-  // Every hip here joins two planes of different pitch, so this roof tells the constructions apart at any
-  // setting — unlike a square pyramid, where the first two agree exactly.
-  construction
-    .add(params, "construction", {
-      "Dihedral Bisector": "bisector",
-      "Corner Outward": "outward",
-      "Minimal Rotation": "minimal",
-    })
-    .name("Construction")
-    .onChange(rebuild);
-  construction.open();
 
   const inspect = gui.addFolder("Inspect");
   inspect.add(params, "wall").name("Wall").onChange(rebuild);
   inspect.add(params, "wallHeight", 0.5, 5, 0.1).name("Wall Height").onChange(rebuild);
-  inspect.add(params, "wireframe").name("Seam Wireframe").onChange(rebuild);
-  // A diagnostic, not a look. Much of a cap is buried by design — it drops below the joint line to reach
-  // the roof — so seeing where it actually sits, and how it runs out at the eave, means seeing through it.
-  inspect
-    .add(params, "seamOpacity", 0.15, 1, 0.05)
-    .name("Seam Opacity")
-    .onChange((value: number) => {
-      seaming.transparent = value < 1;
-      seaming.opacity = value;
-      // Overlapping caps should ALL show through rather than the nearest one winning, which is the whole
-      // reason to turn this down at a junction.
-      seaming.depthWrite = value >= 1;
-      seaming.needsUpdate = true;
-    });
+  inspect.add(params, "wireframe").name("Wireframe").onChange(rebuild);
 
   const readout = gui.addFolder("Readout");
   readout.add(params, "ridge").name("Ridge").listen().disable();
   readout.add(params, "pitch").name("Pitch").listen().disable();
-  readout.add(params, "hip").name("Hip").listen().disable();
-  readout.add(params, "seat").name("Seat").listen().disable();
-  readout.add(params, "fit").name("Fit").listen().disable();
-  readout.add(params, "join").name("Join").listen().disable();
+  readout.add(params, "capped").name("Caps").listen().disable();
+  readout.add(params, "close").name("Closure").listen().disable();
   readout.open();
 
   return () => {
     gui.destroy();
     clear();
     roofing.dispose();
-    seaming.dispose();
+    capping.dispose();
     masonry.dispose();
     wire.dispose();
     dispose();
