@@ -27,6 +27,7 @@ import {
   type Vec2,
 } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Dentil Cornice",
@@ -220,16 +221,22 @@ const modillionShape = (height: number, projection: number) => {
 };
 
 export default function (container: HTMLElement) {
-  const { scene, camera, controls, dispose } = createScene(container, {
+  const handle = createScene(container, {
     background: 0x14171d,
-    cameraPosition: [1.5, 0.9, 1.9],
+    // FROM BELOW, because that is the only place a cornice is ever seen from. The stack tops out at about
+    // 0.44 and the camera was at 0.90 — looking DOWN on the crown, which shows the one face a room never
+    // presents and hides the soffit, the dentils' undersides and the modillion brackets, i.e. the subject.
+    // `frameObject` keeps this as a DIRECTION and only dollies along it, so this sets the eye level, not
+    // the distance.
+    cameraPosition: [1.1, -0.5, 1.5],
   });
+  const { scene, camera, dispose } = handle;
 
+  // A long lens: a cornice is a stack of shallow shadow lines, and perspective foreshortening is exactly
+  // what destroys the reading of one.
   camera.fov = 24;
   camera.near = 0.005;
   camera.updateProjectionMatrix();
-  controls.target.set(0, 0.2, 0);
-  controls.update();
 
   const key = new DirectionalLight(0xfff6ea, 1.3);
   key.position.set(1.2, 1.4, 1.5);
@@ -513,8 +520,11 @@ export default function (container: HTMLElement) {
     const missed = corners.filter(({ at }) => !laid.centers.some((d) => Math.abs(d - at) < 1e-6)).length;
     params.alignOut =
       missed === 0 ? "locked — both courses land on every corner" : `${missed} corner(s) unset`;
+
+    frameObject(handle, stage, { dolly: false });
   };
   rebuild();
+  frameObject(handle, stage, { fit: 1.5 });
 
   const STYLES: Record<string, MoldingStyle> = {
     "Cove (cavetto)": "cove",
