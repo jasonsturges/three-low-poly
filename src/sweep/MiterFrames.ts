@@ -164,6 +164,22 @@ export interface MiterFramesOptions {
    * it the joint pinches.
    */
   widenSeatCuts?: boolean;
+  /**
+   * Cap on how far a slanted cut may widen the section. Defaults to `4`.
+   *
+   * A cut at angle `φ` to the member widens its section by `1 / cos φ`, and that has no upper bound: the
+   * shallower the cut, the longer the spike. Measured here, an 88.85° cut widens by **50x** and throws the
+   * member a quarter of a unit clear of its own path. This is the same runaway that SVG's
+   * `stroke-miterlimit` exists to stop, and the default matches SVG's.
+   *
+   * Past the limit the widening is CLAMPED rather than switched to a true bevel — one station is one ring,
+   * so there is no second ring to bevel with. A clamped corner falls short of its own point instead of
+   * overshooting it, which reads as a small notch at the outer corner: the same trade a bevel makes, and
+   * the reason a limit is wanted at all.
+   *
+   * Set `Infinity` for the old unbounded behaviour.
+   */
+  miterLimit?: number;
 }
 
 /**
@@ -214,6 +230,7 @@ export function miterFrames(
     startCut,
     endCut,
     widenSeatCuts = false,
+    miterLimit = 4,
   }: MiterFramesOptions = {},
 ): Station[] {
   const points = distinct(path, (p) => p.position, closed);
@@ -276,7 +293,9 @@ export function miterFrames(
     // would flare the end face past the surface it lands on, and along the lean axis only — two of a
     // square's four corners push out while the other two stay put. A mitered corner must always widen,
     // because both segments share the ring.
-    const widen = cosPhi > 1e-6 && (widenSeatCuts || !seated.has(i)) ? 1 / cosPhi : 1;
+    const raw = cosPhi > 1e-6 && (widenSeatCuts || !seated.has(i)) ? 1 / cosPhi : 1;
+    // Bounded. Without this the spike is unbounded — see `miterLimit`.
+    const widen = Math.min(raw, Math.max(1, miterLimit));
 
     const frameNormal = normal.clone();
     const frameBinormal = new Vector3().crossVectors(cut, frameNormal).normalize();
