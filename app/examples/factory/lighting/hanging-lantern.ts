@@ -10,7 +10,7 @@ export const meta = {
     "and the consumer owning the materials, exactly as the Coach Lantern does. Origin is the HANG POINT " +
     "at the top of the chain, so the lantern hangs into −Y and `drop` lengthens the chain downward " +
     "without moving where it attaches to the ceiling. That is why the axes sit at the origin and the " +
-    "camera looks up from below, rather than the lantern being nudged into view. Colour and emissive " +
+    "camera looks up from below, rather than the lantern being nudged into view. Color and emissive " +
     "edits mutate materials in place and never rebuild geometry.",
 };
 

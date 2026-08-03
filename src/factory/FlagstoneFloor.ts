@@ -55,7 +55,7 @@ export interface FlagstoneFloorOptions {
  *
  * **The grout lines are the point.** A long floor is read down its length, and the gaps between flags give
  * perspective lines converging toward the far end — depth for free, before any light is placed. A single
- * plane with a tiled texture cannot do that, and a vertex-coloured plane gives tint variation but still no
+ * plane with a tiled texture cannot do that, and a vertex-colored plane gives tint variation but still no
  * gaps, because the quads stay flush. Take `gap` to `0` and watch the floor collapse into one slab: the
  * converging lines vanish and so does the depth.
  *
@@ -66,7 +66,7 @@ export interface FlagstoneFloorOptions {
  * tint differ. That is the opposite call from {@link PlankFloor} and {@link HardwoodFloor}, whose boards are
  * each a different shape and therefore merge — identical items instance, differing items merge.
  *
- * Centred on the origin, with the slab tops on `y = 0` so anything standing on the floor sits at zero.
+ * Centered on the origin, with the slab tops on `y = 0` so anything standing on the floor sits at zero.
  *
  * @example
  * ```ts
@@ -128,7 +128,7 @@ export class FlagstoneFloor extends InstancedMesh<BoxGeometry, MeshStandardMater
     const tint = new Color();
     const placement = new Object3D();
 
-    // Centred on the origin, like every other assembly here, rather than running from a caller-supplied
+    // Centered on the origin, like every other assembly here, rather than running from a caller-supplied
     // corner. The run's true extent is `columns * tile` — the rounding, not the request.
     const originX = -(columns * tile) / 2;
     const originZ = -(rows * tile) / 2;
@@ -142,7 +142,7 @@ export class FlagstoneFloor extends InstancedMesh<BoxGeometry, MeshStandardMater
           originZ + (row + 0.5) * tile,
         );
         // A whisper of yaw. Enough that the grout lines are not laser-straight, not enough to open corners
-        // between neighbours.
+        // between neighbors.
         placement.rotation.y = (random() - 0.5) * 0.02;
         placement.updateMatrix();
         this.setMatrixAt(index, placement.matrix);

@@ -19,7 +19,7 @@ export default function (container: HTMLElement) {
     mossOpacity: 0.8,
   };
 
-  // Group 0 is the stone, group 1 the moss shell. Built once — the colour controls mutate them.
+  // Group 0 is the stone, group 1 the moss shell. Built once — the color controls mutate them.
   const materials = [
     new MeshStandardMaterial({ color: params.rockColor, flatShading: true }),
     new MeshStandardMaterial({

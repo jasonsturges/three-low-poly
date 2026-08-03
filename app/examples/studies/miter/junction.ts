@@ -17,9 +17,9 @@ import { frameObject } from "../../../framework/frameObject";
 export const meta = {
   title: "Junction",
   description:
-    "STUDY — N members meeting at a POINT, and each one mitered against its neighbours. The roof studies " +
+    "STUDY — N members meeting at a POINT, and each one mitered against its neighbors. The roof studies " +
     "ran into this at a pyramid apex and again at a ridge end, and it is the same problem both times: a " +
-    "member has exactly TWO neighbours in the cyclic order around a junction however many arrive, so " +
+    "member has exactly TWO neighbors in the cyclic order around a junction however many arrive, so " +
     "member count never changes the cut count. Three, four, eight — always two planes per member. That is " +
     "why this is worth building once, in isolation, instead of twice on a roof. " +
     "The cut between two members is the plane through the junction whose normal is `normalize(a1 - a2)`, " +
@@ -43,7 +43,7 @@ export const meta = {
     "Miter turned off shows what the roof was doing before: end faces square to each member, all passing " +
     "through the one point, slicing through each other. That is the teeth. Note what mitering does NOT " +
     "fix — with the section offset out along its own axis, the members still splay and leave a dish at the " +
-    "centre. That is a coverage problem, not a cutting one, and it is what a finial is for.",
+    "center. That is a coverage problem, not a cutting one, and it is what a finial is for.",
 };
 
 //------------------------------
@@ -223,7 +223,7 @@ export default function (container: HTMLElement) {
     const list = members();
 
     // THE JUNCTION AXIS — out of the joint, against the members. Also what the cyclic order is measured
-    // around, since "next neighbour" is only meaningful as an angle about some axis.
+    // around, since "next neighbor" is only meaningful as an angle about some axis.
     //
     // The CONE axis when the members admit one, because that is the axis the cut planes actually share.
     // Only when they do not is there nothing better to do than average the directions.
@@ -273,7 +273,7 @@ export default function (container: HTMLElement) {
       ];
       wedges.push(180 - (Math.acos(Math.max(-1, Math.min(1, planes[0].normal.dot(planes[1].normal)))) * 180) / Math.PI);
 
-      // Miter off is the roof's old behaviour: an end square to the member, through the junction point.
+      // Miter off is the roof's old behavior: an end square to the member, through the junction point.
       const squareEnd: [CutPlane, CutPlane] = [
         { point: junction.clone(), normal: forward.clone().negate() },
         { point: junction.clone(), normal: forward.clone().negate() },
@@ -309,7 +309,7 @@ export default function (container: HTMLElement) {
     frameObject(handle, stage, { dolly: false });
   };
   rebuild();
-  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // Framed once here, then re-centered without dollying after every rebuild: these studies have dials that
   // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
   frameObject(handle, stage, { fit: 1.45 });
 
@@ -317,7 +317,7 @@ export default function (container: HTMLElement) {
   gui.title("Junction");
 
   const rig = gui.addFolder("Junction");
-  // Member count never changes the CUT count — two neighbours whatever n is. That is the whole point.
+  // Member count never changes the CUT count — two neighbors whatever n is. That is the whole point.
   rig.add(params, "sides", 3, 12, 1).name("Sides").onChange(rebuild);
   rig.add(params, "pitch", 5, 80, 1).name("Pitch").onChange(rebuild);
   rig.open();
@@ -333,7 +333,7 @@ export default function (container: HTMLElement) {
   const section = gui.addFolder("Section");
   section.add(params, "width", 0.03, 0.5, 0.005).name("Width").onChange(rebuild);
   section.add(params, "thickness", 0.02, 0.3, 0.005).name("Thickness").onChange(rebuild);
-  // Push the section OUT along its own axis and the members splay, leaving a dish at the centre no miter
+  // Push the section OUT along its own axis and the members splay, leaving a dish at the center no miter
   // can close. That is the roof's peak problem, and it is coverage rather than cutting.
   section.add(params, "offset", -0.15, 0.25, 0.005).name("Offset").onChange(rebuild);
   // Make alternate members wider. A miter between UNEQUAL members cannot bring both pairs of faces flush.

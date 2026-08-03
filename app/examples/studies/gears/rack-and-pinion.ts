@@ -12,7 +12,7 @@ export const meta = {
     "equal, so setting them equal and solving for the radius is the entire calculation — and it is three " +
     "lines, inlined below. Everything else follows: the pinion rides on the rack's PITCH LINE, midway " +
     "between its two heights, with the teeth straddling it by half the tooth depth each way. Change Rack " +
-    "Length or Rack Teeth and the pitch moves, so the pinion RESIZES to stay in mesh — it is never dialled " +
+    "Length or Rack Teeth and the pitch moves, so the pinion RESIZES to stay in mesh — it is never dialed " +
     "directly. Note what is NOT adjustable: the tooth profile is one shared constant, because two parts cut " +
     "to different teeth cannot mesh at any radius.",
 };
@@ -126,7 +126,7 @@ export default function (container: HTMLElement) {
     sweep = Math.max(params.length - outerRadius * 2, 1e-3);
     travel = 0;
 
-    // The rack's origin is its left end, so centring the pair is arithmetic on the rack's own anchor.
+    // The rack's origin is its left end, so centering the pair is arithmetic on the rack's own anchor.
     assembly.position.x = -params.length / 2;
 
     stats.rackPitch = pitch.toFixed(4);

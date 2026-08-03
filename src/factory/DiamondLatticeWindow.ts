@@ -75,7 +75,7 @@ export interface DiamondLatticeWindowOptions {
  * to be kept in step by hand. Every part is exposed as a field, so any of them can be replaced without
  * forking this.
  *
- * Local frame: centred on X, sill at `y = 0`, facing `+Z` — the anchor the whole trio shares, so the
+ * Local frame: centered on X, sill at `y = 0`, facing `+Z` — the anchor the whole trio shares, so the
  * window drops straight into a wall hole built from the same description.
  *
  * @example
@@ -179,7 +179,7 @@ export class DiamondLatticeWindow extends Group {
           flatShading: true,
         }),
       );
-      // `WindowFrameGeometry` extrudes into +z from zero; centre it on the came so the two sit flush.
+      // `WindowFrameGeometry` extrudes into +z from zero; center it on the came so the two sit flush.
       this.frame.position.z = -depth / 2;
       this.frame.castShadow = true;
       this.add(this.frame);
@@ -205,7 +205,7 @@ export class DiamondLatticeWindow extends Group {
       // The pane is now the OPENING's own shape, not a rectangle behind it — so an arched light no longer
       // shows glass squared off in the corners.
       //
-      // On the came's centreline at z = 0, because a came is an H-section wrapping the glass edge: the
+      // On the came's centerline at z = 0, because a came is an H-section wrapping the glass edge: the
       // glass runs through its middle, not behind it.
       this.glass.renderOrder = 0;
       this.glass.castShadow = false;

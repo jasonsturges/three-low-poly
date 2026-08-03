@@ -14,7 +14,7 @@ export interface ArchedSlabShapeOptions {
    *
    * Equal to `width` gives a smooth line sweeping across the top — a door, or a window. Pull it in and
    * SHOULDERS appear at the corners, and the arch sits *on* the slab: a headstone. The shoulders are
-   * not modelled; they are what is left over.
+   * not modeled; they are what is left over.
    */
   archWidth?: number;
   /**

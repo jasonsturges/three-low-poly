@@ -61,7 +61,7 @@ export function hslToHex(h: number, s: number, l: number): [number, number, numb
   let r: number, g: number, b: number;
 
   if (s === 0) {
-    r = g = b = l; // Achromatic (grey)
+    r = g = b = l; // Achromatic (gray)
   } else {
     const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
     const p = 2 * l - q;

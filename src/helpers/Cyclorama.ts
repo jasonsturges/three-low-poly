@@ -31,7 +31,7 @@ export interface CycloramaOptions {
    * by eye.
    */
   segments?: number;
-  /** Backdrop tint. Defaults to `0xd8d5d0` — a paper grey. */
+  /** Backdrop tint. Defaults to `0xd8d5d0` — a paper gray. */
   color?: ColorRepresentation;
   /**
    * A material to use instead of the default.
@@ -46,17 +46,17 @@ export interface CycloramaOptions {
  * A seamless backdrop: a wall curving into a floor with no visible join. A CYCLORAMA — an infinity cove,
  * or in a photographer's words simply a SWEEP, after the roll of paper it imitates.
  *
- * Stands with its back wall on `z = 0` rising in `+Y`, and its floor running toward `+Z`, centred on X.
+ * Stands with its back wall on `z = 0` rising in `+Y`, and its floor running toward `+Z`, centered on X.
  * A development and presentation aid like {@link GroundGrid}, not scene content.
  *
  * **The bend has exactly one control, and that is a property of the shape rather than a simplification.**
  * The corner is always 90°, so the arc is fully determined by its `radius`. `width`, `height` and `depth`
  * only say where the flats END; none of them touches what the curve does.
  *
- * **Why the join disappears.** The arc's centre sits at `(radius, radius)` — one radius in from the wall
+ * **Why the join disappears.** The arc's center sits at `(radius, radius)` — one radius in from the wall
  * and one up from the floor — which is the only place a circle can be tangent to both planes at once. At
- * tangency the curve leaves each flat travelling in exactly that flat's own direction, so there is no
- * crease for light to catch. Move the centre anywhere else and a corner appears, however smooth the
+ * tangency the curve leaves each flat traveling in exactly that flat's own direction, so there is no
+ * crease for light to catch. Move the center anywhere else and a corner appears, however smooth the
  * geometry.
  *
  * **Shading: this is the one place `flatShading` is wrong.** Every other low-poly surface in this library
@@ -104,8 +104,8 @@ export class Cyclorama extends Mesh<BufferGeometry, Material> {
     // The profile, in (z out from the wall, y up).
     const profile: [number, number][] = [[0, height]];
     if (height - fitted > 1e-6) profile.push([0, fitted]);
-    // The quarter, walked from 180° to 270° about a centre at (r, r): at 180° it meets the wall, at 270°
-    // the floor. Those are the tangent points, and putting the centre there is what removes the crease.
+    // The quarter, walked from 180° to 270° about a center at (r, r): at 180° it meets the wall, at 270°
+    // the floor. Those are the tangent points, and putting the center there is what removes the crease.
     for (let i = 0; i <= steps; i++) {
       const t = Math.PI + (Math.PI / 2) * (i / steps);
       profile.push([fitted + fitted * Math.cos(t), fitted + fitted * Math.sin(t)]);

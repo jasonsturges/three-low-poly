@@ -100,15 +100,15 @@ export default function (container: HTMLElement) {
   const laying = gui.addFolder("Laying");
   // THE rule. Take it to zero and the floor becomes a grid of aligned butt joints.
   laying.add(params, "minStagger", 0, 1.5, 0.01).name("Min Stagger").onChange(rebuild);
-  // A judgement, not a calculation. Zero fills the corners with needles; too high leaves a notch at the wall.
+  // A judgment, not a calculation. Zero fills the corners with needles; too high leaves a notch at the wall.
   laying.add(params, "minSliverArea", 0, 0.05, 0.001).name("Min Sliver Area").onChange(rebuild);
   laying.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
   laying.open();
 
-  const colour = gui.addFolder("Colour");
-  colour.addColor(params, "color").name("Timber").onChange(rebuild);
+  const color = gui.addFolder("Color");
+  color.addColor(params, "color").name("Timber").onChange(rebuild);
   // Per board, not per vertex — the whole board takes one tint, so it reads as a board.
-  colour.add(params, "colorVariance", 0, 0.25, 0.005).name("Variance").onChange(rebuild);
+  color.add(params, "colorVariance", 0, 0.25, 0.005).name("Variance").onChange(rebuild);
 
   const readout = gui.addFolder("Readout");
   readout.add(params, "laid").name("Laid").listen().disable();

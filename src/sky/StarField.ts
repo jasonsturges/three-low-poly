@@ -179,7 +179,7 @@ function profileRadiusXY(geometry: BufferGeometry): number {
  * Call {@link dispose} when removing the effect to free geometry and materials.
  */
 // TODO: split the two strategies. `points` and `radial` share only *data* — the shell distribution
-// (offsets, rotations, colours, twinkle phases) — while diverging on material, sizing units, twinkle
+// (offsets, rotations, colors, twinkle phases) — while diverging on material, sizing units, twinkle
 // write-back, and renderer requirement. Extract a `starShellDistribution()` returning plain arrays and
 // give each strategy its own thin class. Payoff: the radial variant becomes importable WITHOUT
 // `three/webgpu`, since only `points` needs a node material. Do not name the classes after their

@@ -92,7 +92,7 @@ export default function (container: HTMLElement) {
   // Should sit on 0 at every seed and every parameter — that is the base fix holding.
   mesh.add(stats, "baseY").name("Base Y").listen().disable();
 
-  // No rebuild — geometry is untouched by the bark colour.
+  // No rebuild — geometry is untouched by the bark color.
   const material = gui.addFolder("Material");
   material.addColor(colors, "bark").name("Bark").onChange(() => bark.color.set(colors.bark));
 

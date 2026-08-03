@@ -22,8 +22,8 @@ let sharedFalloff: DataTexture | undefined;
  * to call this rather than each restating the same stops and easing. Duplicating the ramp is how a seam
  * appears.
  *
- * Colourless by design, so the tint lives on the material and one 64 KB texture serves any population and
- * any colour. Never disposed — it is a module-level singleton other halos are still using.
+ * Colorless by design, so the tint lives on the material and one 64 KB texture serves any population and
+ * any color. Never disposed — it is a module-level singleton other halos are still using.
  *
  * TODO: settle `smoothstep` vs `linear` here. Because everything now shares this ramp, the choice is a
  * library-wide aesthetic decision rather than a per-asset one. `smoothstep` softens the rim (it zeroes the
@@ -40,9 +40,9 @@ export function glowFalloffTexture(): DataTexture {
 export interface GlowHaloOptions {
   /**
    * Glow tint, multiplied over the falloff. Defaults to `0xffaa44` — or to white when `map` is
-   * supplied, so a coloured texture passes through untouched.
+   * supplied, so a colored texture passes through untouched.
    *
-   * The default ramp is colourless, so with it this *is* the halo's colour.
+   * The default ramp is colorless, so with it this *is* the halo's color.
    */
   color?: ColorRepresentation;
   /** Card edge length in world units. Defaults to `1.2`. */
@@ -56,7 +56,7 @@ export interface GlowHaloOptions {
    *
    * The caller owns it. {@link GlowHalo.dispose} will not release a texture it did not create.
    *
-   * A supplied map may carry its own colours (a blue core inside a warm rim, say), so `color` defaults
+   * A supplied map may carry its own colors (a blue core inside a warm rim, say), so `color` defaults
    * to white here — a tint multiplies, and multiply can only darken, never add a hue that isn't there.
    */
   map?: DataTexture;
@@ -110,7 +110,7 @@ export interface GlowHaloOptions {
  */
 // TODO: extract a reusable `GlowHaloField`. The pattern is already PROVEN in `VotiveRack` — one
 // `InstancedMesh` + `SpriteNodeMaterial`, `positionNode`/`scaleNode`/`colorNode` as instanced attributes,
-// and per-item flicker folded into colour (identical to scaling opacity, because the blending is additive).
+// and per-item flicker folded into color (identical to scaling opacity, because the blending is additive).
 // So this is no longer a question of feasibility, only of whether a second mass consumer appears to justify
 // lifting it out of the rack. Cost either way: screen-aligned instancing needs a node material, i.e.
 // WebGPU. N separate `GlowHalo`s stays correct for dozens.
@@ -119,7 +119,7 @@ export class GlowHalo extends Sprite {
 
   constructor({ color, size = 1.2, opacity = 0.75, map }: GlowHaloOptions = {}) {
     const texture = map ?? glowFalloffTexture();
-    // A supplied map may already be coloured, so the tint falls back to identity rather than
+    // A supplied map may already be colored, so the tint falls back to identity rather than
     // multiplying someone's blue core by warm orange. Multiply can only darken.
     const tint = color ?? (map !== undefined ? 0xffffff : 0xffaa44);
 

@@ -5,7 +5,7 @@ import { Vector3 } from "three";
  *
  * A path is not just a list of positions. A curve knows its own derivative, and sampling only the
  * positions throws that away — you are then forced to estimate the tangent from the CHORD between
- * neighbours, which is not the tangent. In the interior that error averages out; at the ENDS it does
+ * neighbors, which is not the tangent. In the interior that error averages out; at the ENDS it does
  * not, and it tilts the end caps by half a segment angle. Carry the tangent.
  *
  * Every generator in this folder hands over its analytic tangent for exactly that reason.

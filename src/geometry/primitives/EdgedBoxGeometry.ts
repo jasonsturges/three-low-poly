@@ -133,7 +133,7 @@ export class EdgedBoxGeometry extends BufferGeometry {
  * The edge's own profile, from the face inward.
  *
  * All three run from `(rise 0, inset radius)` — the face, pulled fully in — to `(rise radius, inset 0)`,
- * where the solid reaches full size. Parametrised by ANGLE rather than by rise, because sampling rise
+ * where the solid reaches full size. Parametrized by ANGLE rather than by rise, because sampling rise
  * uniformly would bunch a round's points where the curve is flat and starve it where it turns.
  */
 function edgeProfile(style: EdgeStyle, radius: number, segments: number): Level[] {

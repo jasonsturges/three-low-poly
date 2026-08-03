@@ -80,7 +80,7 @@ export default function (container: HTMLElement) {
   slab.add(params, "height", 0.8, 3, 0.05).name("Body Height").onChange(rebuild);
   slab.add(params, "archHeight", 0.1, 1.4, 0.05).name("Arch Rise").onChange(rebuild);
   slab.add(params, "thickness", 0.03, 0.4, 0.01).name("Thickness").onChange(rebuild);
-  // The low-poly knob, on a filled arch. 3 is chiselled; 24 is cast.
+  // The low-poly knob, on a filled arch. 3 is chiseled; 24 is cast.
   slab.add(params, "curveSegments", 2, 32, 1).name("Curve Segments").onChange(rebuild);
 
   const hinge = gui.addFolder("Strap Hinges");

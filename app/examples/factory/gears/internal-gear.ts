@@ -88,7 +88,7 @@ export default function (container: HTMLElement) {
   tooth.add(params, "lean", -1, 1, 0.01).name("Lean").onChange(rebuild);
   tooth.add(params, "rotation", -Math.PI, Math.PI, 0.01).name("Rotation").onChange(rebuild);
 
-  // No rebuild — geometry is untouched by the colour.
+  // No rebuild — geometry is untouched by the color.
   const material = gui.addFolder("Material");
   material.addColor(colors, "steel").name("Steel").onChange(() => steel.color.set(colors.steel));
 

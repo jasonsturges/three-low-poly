@@ -100,7 +100,7 @@ export class WallShape extends Shape {
       this.lineTo(x - half, 0);
       this.lineTo(x - half, springing);
 
-      // Left to right, because the outline is travelling that way along the top of the opening.
+      // Left to right, because the outline is traveling that way along the top of the opening.
       traceArch(this, { ...archOf(doorway, half, springing), x, from: "left", to: "right" });
 
       this.lineTo(x + half, 0);

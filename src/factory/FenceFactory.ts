@@ -62,7 +62,7 @@ export function resolveFenceSpan({ pitch = 0.4, count, length, itemWidth = 0 }: 
   if (length !== undefined) {
     // Pinning both `count` and `length` leaves only the gap to absorb the difference — and the gap
     // has a floor, because pickets may touch but cannot overlap. When the request cannot be
-    // honoured, the count yields: it is the only variable free to move.
+    // honored, the count yields: it is the only variable free to move.
     const fits = itemWidth > 0 ? Math.max(1, Math.floor(length / itemWidth)) : Infinity;
     const asked = count ?? Math.max(1, Math.round(length / pitch));
     const bars = Math.min(asked, fits);

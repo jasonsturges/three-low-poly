@@ -58,7 +58,7 @@ export interface PanelDoorGeometryOptions {
    * How the panels are worked. Defaults to `"raised"`.
    *
    * - `"raised"` — a flat FIELD in the middle, a BEVEL sloping down to a thin edge. The classical panel,
-   *   and what casts the shadow line that makes a panelled door read as panelled.
+   *   and what casts the shadow line that makes a paneled door read as paneled.
    * - `"flat"` — a plain board of `panelThickness` throughout. The Shaker door.
    */
   panel?: "raised" | "flat";

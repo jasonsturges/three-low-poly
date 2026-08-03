@@ -28,14 +28,14 @@ export const meta = {
     "because that is what the cut is. Switch Joint to Miter and watch a real step appear between members " +
     "that cannot be mitered; switch back and it is gone. " +
     "The construction is the same loft used everywhere else, with a different stopping rule. A miter stops " +
-    "a ring point at the nearer of two PLANES. A cope stops it where it would ENTER the neighbour's SOLID, " +
+    "a ring point at the nearer of two PLANES. A cope stops it where it would ENTER the neighbor's SOLID, " +
     "which is a ray against a convex prism: the entry time is the LAST of the times it crosses into each " +
     "of the prism's half-spaces, and there is no hit at all unless that comes before the FIRST time it " +
-    "crosses out of one. Where consecutive ring points land on different faces of the neighbour the edge " +
+    "crosses out of one. Where consecutive ring points land on different faces of the neighbor the edge " +
     "between them is split exactly on the crossing, so the cut reads as a crease rather than a smear. " +
     "Two things a cope is not. It is NOT symmetric — a miter treats both members alike, but a cope has a " +
     "winner and a loser, and something outside the joint has to decide which is which. And it is not " +
-    "universal: a member that would have to wrap around its neighbour cannot be coped, which the readout " +
+    "universal: a member that would have to wrap around its neighbor cannot be coped, which the readout " +
     "reports as a MISS rather than quietly drawing nonsense. " +
     "The coped member comes out as ONE closed shell — the sides, the square start, and the cut end, all " +
     "from a single loft. That is worth saying because the alternative is tempting and worse: unioning a " +
@@ -56,14 +56,14 @@ export const meta = {
 //              SCRIBING, when the profile is traced by hand. The joint that tolerates mismatch.
 //  SEAT CUT    a cope against a flat surface — the simplest case, and the one already used for the post
 //              in the mitered corner study. A cope against a SOLID is the general one.
-//  SADDLE /    a cope where the cut wraps the neighbour, familiar from tube framing. Named for the shape
+//  SADDLE /    a cope where the cut wraps the neighbor, familiar from tube framing. Named for the shape
 //  FISHMOUTH   the end takes when a round member copes onto another round member.
 //  MITER       both members cut by ONE plane. Symmetric, and it demands matching sections and rolls.
-//  BUTT        no shaping at all — the member stops flat against its neighbour, leaving a visible joint.
+//  BUTT        no shaping at all — the member stops flat against its neighbor, leaving a visible joint.
 //              A cope is a butt that has been made to fit.
 //  MALE /      the coped member is cut; the member it copes INTO is untouched. Every cope picks one.
 //  FEMALE
-//  MISS        the member never enters its neighbour, so there is nothing to cope to. A real failure and
+//  MISS        the member never enters its neighbor, so there is nothing to cope to. A real failure and
 //              reported as one.
 
 type Joint = "cope" | "miter";
@@ -99,7 +99,7 @@ const frameOf = (m: Member) => {
 /**
  * The member as a SOLID — four outward-facing planes, extended forever along its own axis.
  *
- * Infinite on purpose. A cope cuts to the surface its neighbour presents, and the neighbour's own far end
+ * Infinite on purpose. A cope cuts to the surface its neighbor presents, and the neighbor's own far end
  * has nothing to do with that; treating it as finite would only introduce an edge that is not part of the
  * joint.
  */
@@ -157,7 +157,7 @@ interface Landing {
   owner: number;
 }
 
-/** How far a ring point runs before it meets something — the nearest neighbour it enters. */
+/** How far a ring point runs before it meets something — the nearest neighbor it enters. */
 const stopAt = (p: Vector3, axis: Vector3, solids: Face[][], fallback: number): Landing => {
   let best: Landing = { t: fallback, owner: -1 };
   solids.forEach((faces, index) => {
@@ -259,7 +259,7 @@ export default function (container: HTMLElement) {
     const { members, coper, into } = rig();
     const samples = Math.max(2, Math.round(params.samples));
 
-    // Everything that is NOT the coped member is drawn whole — a cope leaves its neighbour untouched, and
+    // Everything that is NOT the coped member is drawn whole — a cope leaves its neighbor untouched, and
     // that asymmetry is the joint's defining property.
     members.forEach((member, index) => {
       if (index === coper) return;
@@ -308,7 +308,7 @@ export default function (container: HTMLElement) {
     const solids = into.map((i) => solidOf(members[i]!));
 
     // The ring, at the member's far end, sampled finely enough that a crossing between two faces of the
-    // neighbour is caught on some edge. The exact split below then places it precisely.
+    // neighbor is caught on some edge. The exact split below then places it precisely.
     const half = member.width / 2;
     const halfT = member.thickness / 2;
     const corners: [number, number][] = [
@@ -377,7 +377,7 @@ export default function (container: HTMLElement) {
         });
       }
     } else {
-      // MITER, for comparison: the shared plane bisecting this member's axis and each neighbour's.
+      // MITER, for comparison: the shared plane bisecting this member's axis and each neighbor's.
       const planes = into.map((i) => ({
         point: member.origin.clone(),
         normal: member.away.clone().sub(members[i]!.away).normalize(),
@@ -413,7 +413,7 @@ export default function (container: HTMLElement) {
       pushTriangle(buffers, [at(landings[0]!.start), at(landings[i]!.start), at(landings[i + 1]!.start)], at(forward));
     }
     // The cut end, ONE FAN PER FACE. A single fan across the whole loop would span several of the
-    // neighbour's faces and emit non-planar triangles — the creases are exactly where it must be split.
+    // neighbor's faces and emit non-planar triangles — the creases are exactly where it must be split.
     const runs: number[][] = [];
     for (let i = 0; i < count; i++) {
       const previous = landings[(i + count - 1) % count]!.owner;
@@ -484,7 +484,7 @@ export default function (container: HTMLElement) {
     frameObject(handle, stage, { dolly: false });
   };
   rebuild();
-  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // Framed once here, then re-centered without dollying after every rebuild: these studies have dials that
   // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
   frameObject(handle, stage, { fit: 1.45 });
 
@@ -492,7 +492,7 @@ export default function (container: HTMLElement) {
   gui.title("Cope");
 
   const setup = gui.addFolder("Joint");
-  // Cope cuts to the neighbour's SURFACE; miter cuts both to one shared PLANE and needs them to match.
+  // Cope cuts to the neighbor's SURFACE; miter cuts both to one shared PLANE and needs them to match.
   setup.add(params, "joint", { Cope: "cope", "Miter (for contrast)": "miter" }).name("Joint").onChange(rebuild);
   setup.open();
 
@@ -509,7 +509,7 @@ export default function (container: HTMLElement) {
   host.add(params, "thickness", 0.03, 0.3, 0.005).name("Thickness").onChange(rebuild);
 
   const inspect = gui.addFolder("Inspect");
-  // Raise it where the neighbour's own edges cross the cut and the crease needs resolving.
+  // Raise it where the neighbor's own edges cross the cut and the crease needs resolving.
   inspect.add(params, "samples", 2, 32, 1).name("Ring Samples").onChange(rebuild);
   inspect.add(params, "opacity", 0.15, 1, 0.05).name("Opacity").onChange(rebuild);
   inspect.add(params, "wireframe").name("Wireframe").onChange(rebuild);

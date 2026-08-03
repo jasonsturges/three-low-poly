@@ -133,7 +133,7 @@ function buildLoop(params: Params, profile: Profile): Build {
 /**
  * FOUR PIECES — the frame as a carpenter cuts it: one stick per side, mitered at both ends.
  *
- * Each stick is seat cut against the bisector its end lands on, which is the same plane its neighbour is
+ * Each stick is seat cut against the bisector its end lands on, which is the same plane its neighbor is
  * cut against, so the two faces come out as the same polygon and the corner closes. `widenSeatCuts: true`
  * because these ends meet each other rather than landing on a surface — what has to be preserved is the
  * true cross-section, not the footprint.
@@ -281,7 +281,7 @@ export default function (container: HTMLElement) {
     cameraPosition: [1.5, 1.1, 3.7],
   });
 
-  // A long lens: whether four corners are shut is exactly the judgement perspective foreshortening
+  // A long lens: whether four corners are shut is exactly the judgment perspective foreshortening
   // ruins, and a frame puts one corner in each quadrant of the picture where the distortion differs.
   camera.fov = 22;
   camera.near = 0.01;

@@ -38,7 +38,7 @@ export interface PlankPlacement {
   length: number;
   /** Which row, counting from the near edge. */
   row: number;
-  /** The row's centre line, measured across the floor from its middle. */
+  /** The row's center line, measured across the floor from its middle. */
   across: number;
   /** Laying order. Use it to derive a per-board seed and tint, so no two boards repeat. */
   sequence: number;
@@ -50,7 +50,7 @@ export interface PlankFloorLayout {
   /** The width each board actually got, after the rows were fitted to `depth`. */
   plankWidth: number;
   /**
-   * The closest any two neighbouring-row joints came — **what the floor actually got**, against what
+   * The closest any two neighboring-row joints came — **what the floor actually got**, against what
    * `minStagger` asked for. Two things hold it down: the request is capped at `(longest − shortest) / 2`,
    * since a joint can only be moved by varying its board's length, and the per-board search is bounded, so
    * even inside the cap it lands short. Worth reading; a floor that came out at half its target is a floor
@@ -66,9 +66,9 @@ export interface PlankFloorLayout {
  * {@link WeatheredPlankGeometry}, a ceiling, or a deck. The trade knowledge is here; the geometry is not.
  *
  * **The mistake that makes a plank floor read as stripes is spanning each board across the whole room.** A
- * real floor is laid in rows of *several* boards butted end to end, with the end joints in neighbouring
+ * real floor is laid in rows of *several* boards butted end to end, with the end joints in neighboring
  * rows deliberately kept apart — the flooring trade's own rule, and the same idea as a running bond in
- * masonry. Board-to-board colour and shape variation cannot rescue a floor whose joints all line up, and is
+ * masonry. Board-to-board color and shape variation cannot rescue a floor whose joints all line up, and is
  * barely needed once they do not.
  *
  * Two smaller rules come from the same trade. Each row opens with a **shortened starter board**, so rows do
@@ -128,7 +128,7 @@ export function layPlankFloor({
 
       // Sample candidate lengths and keep whichever puts its end joint furthest from the joints in the row
       // alongside. The score saturates at `stagger`, so a candidate that is already clear is taken
-      // immediately rather than optimised past the point of mattering.
+      // immediately rather than optimized past the point of mattering.
       //
       // 24 rather than a handful: measured over 40 seeds, 5 attempts reached a median clearance of 0.14
       // against a 0.35 target, 10 reached 0.23, and 24 reaches ~0.30 — after which it flattens. The whole

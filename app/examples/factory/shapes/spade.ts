@@ -24,7 +24,7 @@ export default function (container: HTMLElement) {
     depth: 0.25,
   };
 
-  // The material the `Spade` prefab used to hard-code. It lives here now, so the colour is a control
+  // The material the `Spade` prefab used to hard-code. It lives here now, so the color is a control
   // rather than a constant.
   const colors = { spade: "#1c1c1c" };
   const material = new MeshStandardMaterial({
@@ -55,7 +55,7 @@ export default function (container: HTMLElement) {
 
   rebuild();
 
-  // No rebuild — geometry is untouched by the colour.
+  // No rebuild — geometry is untouched by the color.
   const materialFolder = gui.addFolder("Material");
   materialFolder.addColor(colors, "spade").name("Color").onChange(() => material.color.set(colors.spade));
 

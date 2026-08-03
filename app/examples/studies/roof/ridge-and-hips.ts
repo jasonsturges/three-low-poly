@@ -28,7 +28,7 @@ export const meta = {
     "equal-pitch HIP, and full length a GABLE, where the end plane does not vanish so much as stand up and " +
     "become a wall. Three roof types are one number. " +
     "THE CAPS REPLACE AN APPROACH THAT DID NOT WORK, and the failure is worth keeping. Covering each edge " +
-    "with a swept MEMBER — a bar seated on the dihedral and mitered against its neighbours — cannot close " +
+    "with a swept MEMBER — a bar seated on the dihedral and mitered against its neighbors — cannot close " +
     "here. A ridge cap seats on ITS bisector, straight up; the hips seat 44.1° away on theirs. Their " +
     "thicknesses derive from their own dihedrals, 0.146 against 0.099. A miter shuts only when its plane " +
     "mirrors the whole member — axis, roll AND section — so hip-to-ridge stepped by 0.083 and no tuning " +
@@ -338,7 +338,7 @@ export default function (container: HTMLElement) {
     frameObject(handle, stage, { dolly: false });
   };
   rebuild();
-  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // Framed once here, then re-centered without dollying after every rebuild: these studies have dials that
   // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
   frameObject(handle, stage, { fit: 1.45 });
 

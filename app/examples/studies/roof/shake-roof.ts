@@ -38,7 +38,7 @@ export const meta = {
     "stagger actually achieved rather than what was asked for. It also brings the RUNT rule: a shake that " +
     "would strand an uncuttable sliver at the verge takes the remainder itself. " +
     "Shakes vary in width, so by the instance-or-merge rule they MERGE, with a per-shake tint baked to " +
-    "vertex colours: one geometry, one material, one draw call, and no two shakes alike. Identical units " +
+    "vertex colors: one geometry, one material, one draw call, and no two shakes alike. Identical units " +
     "would have instanced instead. " +
     "EXPOSURE is an output wearing an input's clothing. It is what is left of the shake's length after the " +
     "headlap, and headlap is not decoration — it is what keeps water out. Wind it up and the roof gets " +
@@ -58,7 +58,7 @@ export const meta = {
 //              The rule of thumb is exposure no more than a third of the length, so every point on the
 //              roof has three thicknesses over it.
 //  COURSE      one row of shakes, laid across the slope. Built from the eave upward, each lapping the last.
-//  STAGGER     the offset between end joints in neighbouring courses. Align them and water runs straight
+//  STAGGER     the offset between end joints in neighboring courses. Align them and water runs straight
 //              through; it is also the difference between a roof and a set of stripes.
 //  VERGE       the sloping edge at the side of the roof face. Where the RUNT rule bites.
 //  RAKE        the slope's own length, eave to ridge. Courses are counted along it, not along the plan.
@@ -179,7 +179,7 @@ export default function (container: HTMLElement) {
     const colors: Color[] = [];
 
     for (const shake of layout.placements) {
-      // `across` runs from the face's near edge; centre it. `row` counts up the slope from the eave.
+      // `across` runs from the face's near edge; center it. `row` counts up the slope from the eave.
       const a0 = shake.start - params.width / 2;
       const a1 = a0 + shake.length;
       const butt = shake.row * layout.plankWidth;
@@ -242,7 +242,7 @@ export default function (container: HTMLElement) {
     frameObject(handle, stage, { dolly: false });
   };
   rebuild();
-  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // Framed once here, then re-centered without dollying after every rebuild: these studies have dials that
   // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
   frameObject(handle, stage, { fit: 1.45 });
 
@@ -274,9 +274,9 @@ export default function (container: HTMLElement) {
   // The rake — the slope's own length. Courses are counted along it, not along the plan.
   face.add(params, "rake", 1, 6, 0.1).name("Rake").onChange(rebuild);
 
-  const colour = gui.addFolder("Colour");
-  colour.addColor(params, "color").name("Color").onChange(rebuild);
-  colour.add(params, "colorVariance", 0, 0.3, 0.005).name("Color Variance").onChange(rebuild);
+  const color = gui.addFolder("Color");
+  color.addColor(params, "color").name("Color").onChange(rebuild);
+  color.add(params, "colorVariance", 0, 0.3, 0.005).name("Color Variance").onChange(rebuild);
 
   const inspect = gui.addFolder("Inspect");
   inspect.add(params, "wireframe").name("Wireframe").onChange(rebuild);

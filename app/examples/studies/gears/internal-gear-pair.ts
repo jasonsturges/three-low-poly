@@ -39,7 +39,7 @@ export default function (container: HTMLElement) {
 
   const params = { module: 0.075, ringTeeth: 34, pinionTeeth: 13, animate: true, speed: 0.4 };
   const colors = { ring: "#8f97a1", pinion: "#b08d4f" };
-  const stats = { ringRadius: "", pinionRadius: "", centerDistance: "", ratio: "" };
+  const stats = { ringRadius: "", pinionRadius: "", centeredistance: "", ratio: "" };
 
   const steel = new MeshStandardMaterial({ color: new Color(colors.ring), metalness: 0.8, roughness: 0.35, flatShading: true });
   const brass = new MeshStandardMaterial({ color: new Color(colors.pinion), metalness: 0.85, roughness: 0.3, flatShading: true });
@@ -73,7 +73,7 @@ export default function (container: HTMLElement) {
     const pinionRadius = (params.module * pinionTeeth) / 2;
     // FIRST SIGN FLIP. The ring's teeth face inward, so the pinion sits inside it and the shafts are the
     // DIFFERENCE apart, not the sum. Equal tooth counts would put them concentric — no pair at all.
-    const centerDistance = ringRadius - pinionRadius;
+    const centeredistance = ringRadius - pinionRadius;
 
     // The ring's teeth grow inward from its pitch circle, so its tip radius is the SMALLER of the two and its
     // valley the larger — the mirror of the pinion, which is what meshing inward means.
@@ -100,7 +100,7 @@ export default function (container: HTMLElement) {
     });
 
     // Contact happens at +X, where the pinion's pitch circle touches the ring's from the inside.
-    pinion.position.set(centerDistance, 0, 0);
+    pinion.position.set(centeredistance, 0, 0);
 
     // ---- phasing ----
     // Unchanged from an external pair, which is the surprise: the pinion presents a TOOTH toward +X and the
@@ -117,7 +117,7 @@ export default function (container: HTMLElement) {
 
     stats.ringRadius = ringRadius.toFixed(4);
     stats.pinionRadius = pinionRadius.toFixed(4);
-    stats.centerDistance = centerDistance.toFixed(4);
+    stats.centeredistance = centeredistance.toFixed(4);
     stats.ratio = `${(params.ringTeeth / pinionTeeth).toFixed(3)} : 1`;
 
     frameObject(handle, train, { dolly: false });
@@ -158,7 +158,7 @@ export default function (container: HTMLElement) {
   readout.add(stats, "ringRadius").name("Ring Pitch Radius").listen().disable();
   readout.add(stats, "pinionRadius").name("Pinion Pitch Radius").listen().disable();
   // The DIFFERENCE — drive the counts together and watch it collapse toward zero.
-  readout.add(stats, "centerDistance").name("Center Distance").listen().disable();
+  readout.add(stats, "centeredistance").name("Center Distance").listen().disable();
   readout.add(stats, "ratio").name("Pinion turns per ring turn").listen().disable();
   readout.open();
 

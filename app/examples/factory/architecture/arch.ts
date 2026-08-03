@@ -74,7 +74,7 @@ export default function (container: HTMLElement) {
   // Drop to 0 and the arch stands on the floor by itself. It still sits flat, because these arches
   // supply a vertical tangent at their springing — the base cap is perpendicular to it.
   gui.add(params, "legHeight", 0, 5, 0.1).name("Leg Height").onChange(rebuild);
-  // 3 gives a chiselled, faceted arch. 48 is smooth. The low-poly knob, on a curve.
+  // 3 gives a chiseled, faceted arch. 48 is smooth. The low-poly knob, on a curve.
   gui.add(params, "segments", 2, 64, 1).name("Arc Segments").onChange(rebuild);
 
   const bar = gui.addFolder("Bar");

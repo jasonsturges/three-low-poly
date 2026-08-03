@@ -132,7 +132,7 @@ export default function (container: HTMLElement) {
 
   // `createTextSprite` MEASURES the string and sizes its canvas to it. The local maker this replaced used
   // a fixed 512px canvas, and both of these labels overrun it — 15 and 16 monospace characters at 60px are
-  // about 540 and 576 — so, being centre-aligned, each lost characters off BOTH ends.
+  // about 540 and 576 — so, being center-aligned, each lost characters off BOTH ends.
   const label = (text: string, color: string) =>
     createTextSprite(text, { font: "ui-monospace, monospace", weight: "bold", size: 60, scale: 0.115, color });
   const insideLabel = label("INSIDE — a room", "#7fe3a1");

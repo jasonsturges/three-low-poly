@@ -67,7 +67,7 @@ export interface StaircaseOptions {
  * const stairs = createStaircase({ flights: 2, stepsPerFlight: 5 });
  * scene.add(stairs);
  *
- * // A stairwell climbing five storeys, wrapping a square shaft.
+ * // A stairwell climbing five stories, wrapping a square shaft.
  * const tower = createStaircase({ flights: 20, stepsPerFlight: 8, turn: 90 });
  *
  * // A straight run broken by landings, no turn.

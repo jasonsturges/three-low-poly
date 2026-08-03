@@ -101,7 +101,7 @@ export default function (container: HTMLElement) {
       stone,
     );
 
-    // 2. The window, from the SAME object. It normalises the opening's `x` and `y` away and anchors
+    // 2. The window, from the SAME object. It normalizes the opening's `x` and `y` away and anchors
     //    itself sill-at-zero, so it is placed at exactly the coordinates the hole was punched at.
     const window =
       params.lattice === "diamond"

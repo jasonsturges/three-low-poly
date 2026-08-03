@@ -38,7 +38,7 @@ export interface ProudStoneOptions {
    * Length range, as multiples of a whole stone. Defaults to `0.72`–`1.12`.
    *
    * **The brick/stone dial.** Collapse a range and every proud stone is the same unit that has popped,
-   * which is brick; open it and each came from its own mould, which is stone.
+   * which is brick; open it and each came from its own mold, which is stone.
    */
   lengthMin?: number;
   lengthMax?: number;
@@ -65,7 +65,7 @@ export interface ProudStoneOptions {
 
 /** One stone standing proud. Where and how big — what it is made of is the caller's business. */
 export interface ProudStone {
-  /** Centre on the surface, from its lower-left corner. */
+  /** Center on the surface, from its lower-left corner. */
   x: number;
   y: number;
   /** Along the course — the stretcher face. */

@@ -102,7 +102,7 @@ export default function (container: HTMLElement) {
       outline = null;
     }
     if (!params.showOutline) return;
-    // The SAME call the geometry makes, normalised to the origin the same way — so if these ever
+    // The SAME call the geometry makes, normalized to the origin the same way — so if these ever
     // disagreed, this line would be the thing that showed it.
     const points = openingOutline({ ...options().opening, x: 0, y: 0 })
       .getPoints(Math.max(2, Math.round(params.curveSegments)))

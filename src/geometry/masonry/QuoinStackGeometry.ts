@@ -3,7 +3,7 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import { mulberry32 } from "../../utils/Random";
 
 /**
- * How the two returns vary from course to course. Every pattern in the catalogue is a rule for two
+ * How the two returns vary from course to course. Every pattern in the catalog is a rule for two
  * numbers, which is why one construction covers them all.
  *
  * - `"straight"` — equal returns, every course the same. Reads as a plain stacked column.
@@ -32,7 +32,7 @@ export interface QuoinStackGeometryOptions {
   /**
    * Lay a quoin on every other course, leaving the wall showing between — "teeth of a comb". Defaults to
    * `false`. The pattern still advances per quoin LAID, so gapping and alternating compose rather than
-   * cancelling.
+   * canceling.
    */
   everyOther?: boolean;
   /**
@@ -63,7 +63,7 @@ export interface QuoinStackGeometryOptions {
    * Shade alternate courses light and dark. Defaults to `false`.
    *
    * **Only correct because ONE stack owns the corner.** A real corner is built by two walls contributing
-   * alternate courses; were this two stacks, each would need a UNIFORM tint opposite its neighbour, since
+   * alternate courses; were this two stacks, each would need a UNIFORM tint opposite its neighbor, since
    * both alternating in step gives light, light, dark, dark. Ownership decides the rule.
    */
   alternateTint?: boolean;
@@ -75,11 +75,11 @@ export interface QuoinStackGeometryOptions {
  * The dressed stones at a building's external corner.
  *
  * **A quoin is not an L-shaped block.** It is a rectangular stone laid so it shows a LONG face on one wall
- * and a SHORT end on the other, and every pattern in the catalogue is just a rule for those two returns
+ * and a SHORT end on the other, and every pattern in the catalog is just a rule for those two returns
  * per course. That is why one construction covers `straight`, `alternating` and `staggered` — nothing
  * differs but two numbers.
  *
- * **The origin is the corner LINE**, where the two walls' centre planes cross — not the stack's own outer
+ * **The origin is the corner LINE**, where the two walls' center planes cross — not the stack's own outer
  * corner. So placing it is one line: put it where the walls meet, and `wallThickness` and `proud` carry it
  * out to where a quoin actually sits. The stack runs UP from `y = 0` and its returns run along `−X` and
  * `−Z`, so the outside corner it dresses faces `+X +Z`.

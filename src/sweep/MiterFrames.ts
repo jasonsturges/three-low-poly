@@ -177,7 +177,7 @@ export interface MiterFramesOptions {
    * overshooting it, which reads as a small notch at the outer corner: the same trade a bevel makes, and
    * the reason a limit is wanted at all.
    *
-   * Set `Infinity` for the old unbounded behaviour.
+   * Set `Infinity` for the old unbounded behavior.
    */
   miterLimit?: number;
 }
@@ -342,13 +342,13 @@ export function miterFrames(
 //      UNEQUAL STOCK IS NOT A LIMIT OF THE MITER. Cut by a PLANE run from the joint's OUTER corner to its
 //      INNER corner, it closes exactly at any pair of widths — the cut simply stops being 45°, and the
 //      members tile the frame band to the last digit. What IS required is a shared THICKNESS: faces at
-//      different depths cannot be levelled by any cut. See `app/examples/studies/miter/unequal-stock.ts`.
+//      different depths cannot be leveled by any cut. See `app/examples/studies/miter/unequal-stock.ts`.
 //
 //   2. SEAT CUT — a member landing on a surface. Cut plane SUPPLIED by that surface. SOLVED:
 //      `{ startCut, endCut }`. GUARDED as of `miterLimit` (default 4, matching SVG's `stroke-miterlimit`):
 //      the `1 / |d · n|` widening is unbounded — measured 50x at 88.85°, throwing a bar 0.25 units off —
 //      and is now clamped. Past the limit a corner falls short of its point rather than overshooting it,
-//      which is the trade a bevel makes. `Infinity` restores the old behaviour.
+//      which is the trade a bevel makes. `Infinity` restores the old behavior.
 //
 //   3. HIP — two facets meeting where a member's end is bounded by TWO planes. Jason's sketch: an
 //      arrowhead, ">". Not expressible by FRAMING — one station is one ring is one plane — but SOLVED by
@@ -371,7 +371,7 @@ export function miterFrames(
 //   5. THREE-WAY CORNER — two rails and a post sharing one corner, as in a cube frame. Each end is a
 //      two-facet hip, so this is (3) applied twice and needs no sidestep. SOLVED by `cutEnd` with bounds
 //      from `miterPlane`, in `app/examples/studies/miter/trihedral-corner.ts` and `junction.ts` — the
-//      latter for N members, since a member has exactly TWO neighbours in the cyclic order however many
+//      latter for N members, since a member has exactly TWO neighbors in the cyclic order however many
 //      arrive, so the count never changes the cut count.
 //      THE CLOSURE CONDITION, measured: a miter shuts exactly when the cut plane is a SYMMETRY of the whole
 //      member — axis, roll and section together, reflections included. Angle asymmetry is NOT what breaks

@@ -8,7 +8,7 @@ export const meta = {
   description:
     "A BufferGeometry with three material groups — 0 iron, 1 glass, 2 wax — and the consumer owning the " +
     "materials. Origin is the hang point at the top of the bail, so the lantern hangs into −Y and `drop` " +
-    "lengthens the rod without moving where it attaches. Colour edits mutate materials in place and never " +
+    "lengthens the rod without moving where it attaches. Color edits mutate materials in place and never " +
     "rebuild geometry.",
 };
 

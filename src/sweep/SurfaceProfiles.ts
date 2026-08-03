@@ -146,8 +146,8 @@ export function surfaceProfile({
       // Two quarters of half size meeting at the middle: HOLLOW above, BULGING below, so it returns to
       // the wall the way a cyma does.
       //
-      //   upper arc, centre (h/2, projection) -> falls away from the chord, reading as hollow
-      //   lower arc, centre (h/2, 0)          -> stands proud of it, reading as a bulge
+      //   upper arc, center (h/2, projection) -> falls away from the chord, reading as hollow
+      //   lower arc, center (h/2, 0)          -> stands proud of it, reading as a bulge
       const half = Math.max(1, Math.round(steps / 2));
       const hx = height / 2;
       const hy = projection / 2;

@@ -108,7 +108,7 @@ export default function (container: HTMLElement) {
   const bars = gui.addFolder("Bars");
   bars.add(params, "mullionSpacing", 0.06, 0.6, 0.005).name("Mullion Spacing").onChange(rebuild);
   bars.add(params, "transomSpacing", 0.06, 0.6, 0.005).name("Transom Spacing").onChange(rebuild);
-  // Phase decides whether the centreline carries a BAR or a LIGHT. Half a spacing swaps them.
+  // Phase decides whether the centerline carries a BAR or a LIGHT. Half a spacing swaps them.
   bars.add(params, "mullionPhase", -0.3, 0.3, 0.005).name("Mullion Phase").onChange(rebuild);
   // At 0 a transom lands on the sill line and is dropped — its section straddles the boundary, and the
   // frame occupies that position anyway.

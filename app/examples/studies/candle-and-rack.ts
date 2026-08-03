@@ -159,7 +159,7 @@ function buildRack(s: CandleSpec, r: Resources, rows: number, columns: number): 
 
   // --- halos: one draw call, screen-aligned via SpriteNodeMaterial ------------
   // `positionNode` supplies each halo's center, `scaleNode` its size, `colorNode` its tint. Because the
-  // blending is ADDITIVE, folding the flicker factor into colour is identical to scaling opacity — which
+  // blending is ADDITIVE, folding the flicker factor into color is identical to scaling opacity — which
   // is how per-candle flicker survives with a single shared material.
   const offsets = new Float32Array(count * 3);
   const scales = new Float32Array(count);

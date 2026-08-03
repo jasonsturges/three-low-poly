@@ -50,7 +50,7 @@ export const meta = {
 //  SPRINGING     an ARCH term — the height where it leaves the jambs. A false friend; unrelated.
 
 /**
- * The chord's LEVEL, in the corner's own normalised coordinates.
+ * The chord's LEVEL, in the corner's own normalized coordinates.
  *
  * `level(p) = p.x / drop + p.y / projection` is `1` on the line joining the two backs' outer ends and `0`
  * at the corner, so it measures how far out from the corner a point sits regardless of the section's

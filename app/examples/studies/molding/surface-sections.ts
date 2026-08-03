@@ -49,7 +49,7 @@ export const meta = {
 //  LIP        a crest that OVERHANGS, cut back beneath into a throat. The undercut is the point: a
 //             picture-rail hook goes up into it and catches. Bead and astragal have undercuts too, but
 //             shallow and at mid-height; this one is deep and sits high, where a hook reaches.
-//  QUIRK      the narrow groove beside a bead that gives it its shadow. Not modelled here.
+//  QUIRK      the narrow groove beside a bead that gives it its shadow. Not modeled here.
 //
 //  CHAIR RAIL / DADO RAIL / PICTURE RAIL are APPLICATIONS, not sections — a height on a wall, not a
 //  shape. Any of the above becomes one by being run at the right height, which is why they are not in the

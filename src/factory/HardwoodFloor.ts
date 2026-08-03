@@ -30,11 +30,11 @@ export interface HardwoodFloorOptions extends Omit<PlankFloorLayoutOptions, "len
    * Smallest offcut worth laying, in square units. Defaults to `0.004`.
    *
    * Cutting boards to a room leaves scraps, and past some size a scrap is not a board. Where that line
-   * sits is a judgement rather than a calculation — set it to `0` and the corners fill with needles; set it
+   * sits is a judgment rather than a calculation — set it to `0` and the corners fill with needles; set it
    * high and real boards go in the bin, leaving a visible notch at the wall.
    */
   minSliverArea?: number;
-  /** Base timber colour. Defaults to `#6b4b2c`. */
+  /** Base timber color. Defaults to `#6b4b2c`. */
   color?: string;
   /** Per-board tint spread in HSL, so no two boards match. Defaults to `0.06`. */
   colorVariance?: number;
@@ -118,7 +118,7 @@ const prism = (polygon: Point[], thickness: number): BufferGeometry => {
 
 /**
  * A hardwood floor of planed boards, laid at any angle and **cut to the room**. Walking surface on
- * `y = 0`, centred on the origin.
+ * `y = 0`, centered on the origin.
  *
  * The laying is {@link layPlankFloor} — the same rows, stagger, starter boards and no-runt rule the rustic
  * {@link PlankFloor} uses. It never learns that the rows are not square to the room: the boards are laid on
@@ -130,7 +130,7 @@ const prism = (polygon: Point[], thickness: number): BufferGeometry => {
  * boards cover the room to within the row gaps at every angle.
  *
  * **Baked to a single geometry and a single material** at any size. Every board is a different shape once
- * cut, and differing items merge where identical ones would instance; per-board colour rides a vertex
+ * cut, and differing items merge where identical ones would instance; per-board color rides a vertex
  * attribute rather than a material group, which is what keeps it to one draw call.
  *
  * A cut board at the wall is not a defect. **A wall is a boundary condition, not the end of the floor** —
@@ -161,7 +161,7 @@ export class HardwoodFloor extends Group {
   readonly rowCount: number;
   /** The width each board actually got. */
   readonly plankWidth: number;
-  /** How close any two neighbouring-row joints came. Compare to `minStagger`. */
+  /** How close any two neighboring-row joints came. Compare to `minStagger`. */
   readonly closestJoint: number;
 
   readonly #geometry: BufferGeometry;
@@ -199,7 +199,7 @@ export class HardwoodFloor extends Group {
     });
 
     const seed = layout.seed ?? 0x51ab;
-    // A separate stream from the layout's, so changing a colour cannot move a board.
+    // A separate stream from the layout's, so changing a color cannot move a board.
     const random = mulberry32(seed ^ 0x9e3779b9);
     const base = new Color(color);
     const tint = new Color();
@@ -237,7 +237,7 @@ export class HardwoodFloor extends Group {
       // not in species.
       tint.copy(base).offsetHSL(signed(colorVariance) / 3, signed(colorVariance), signed(colorVariance));
 
-      // One colour for the WHOLE board, so it reads as a board rather than a gradient across it.
+      // One color for the WHOLE board, so it reads as a board rather than a gradient across it.
       const count = board.attributes.position!.count;
       const colors = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) {
@@ -256,7 +256,7 @@ export class HardwoodFloor extends Group {
     this.#ownsMaterial = material === undefined;
     this.#material =
       material ??
-      // White, so the vertex colour lands as the exact tint rather than multiplying into it.
+      // White, so the vertex color lands as the exact tint rather than multiplying into it.
       new MeshStandardMaterial({
         color: 0xffffff,
         vertexColors: true,

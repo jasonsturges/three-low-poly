@@ -131,7 +131,7 @@ export default function (container: HTMLElement) {
 
     // Bricks are grouped by the LENGTH they were cut to. A whole wall of identical bricks wants one
     // geometry; the moment the ends are closed properly it wants one per distinct bat as well. Rounding to
-    // a tenth of a millimetre keeps two bats that differ only by float noise from becoming two geometries.
+    // a tenth of a millimeter keeps two bats that differ only by float noise from becoming two geometries.
     const byLength = new Map<number, { length: number; matrices: Matrix4[]; tints: Color[] }>();
     const matrix = new Matrix4();
     const position = new Vector3();
@@ -304,14 +304,14 @@ export default function (container: HTMLElement) {
   bond.open();
 
   const wobble = gui.addFolder("Laying");
-  // Tiny. A bricklayer is good; these are the millimetres that stop it reading as a texture.
+  // Tiny. A bricklayer is good; these are the millimeters that stop it reading as a texture.
   wobble.add(params, "positionJitter", 0, 0.03, 0.001).name("Position Jitter").onChange(rebuild);
   wobble.add(params, "rotationJitter", 0, 0.08, 0.002).name("Rotation Jitter").onChange(rebuild);
 
-  const colour = gui.addFolder("Colour");
-  colour.addColor(params, "clayColor").name("Clay Color").onChange(rebuild);
-  colour.add(params, "colorVariance", 0, 0.35, 0.005).name("Color Variance").onChange(rebuild);
-  colour.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
+  const color = gui.addFolder("Color");
+  color.addColor(params, "clayColor").name("Clay Color").onChange(rebuild);
+  color.add(params, "colorVariance", 0, 0.35, 0.005).name("Color Variance").onChange(rebuild);
+  color.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
 
   const readout = gui.addFolder("Readout");
   readout.add(params, "laid").name("Laid").listen().disable();

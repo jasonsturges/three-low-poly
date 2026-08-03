@@ -8,7 +8,7 @@ export const meta = {
   description:
     "Individual slabs, not a textured plane — and the GROUT is the point. The gaps give perspective lines " +
     "that converge as the floor recedes, which is depth for free before any light is placed. A tiled " +
-    "texture cannot do that, and a vertex-coloured plane gives tint variation but no gaps, because the " +
+    "texture cannot do that, and a vertex-colored plane gives tint variation but no gaps, because the " +
     "quads stay flush. Take Grout Gap to zero and watch the floor collapse into one slab: the converging " +
     "lines vanish and so does the depth. Every slab is the SAME box, differing only by matrix and tint — so " +
     "unlike the plank floors, whose boards are each a different shape and therefore merge, this one " +
@@ -81,7 +81,7 @@ export default function (container: HTMLElement) {
   wear.addColor(params, "color").name("Stone").onChange(rebuild);
   // Lightness only — hue drift per slab reads as STAINED rather than weathered, which is the opposite of
   // what stone wants. A pumpkin patch wants the hue; a floor does not.
-  wear.add(params, "tintJitter", 0, 0.5, 0.005).name("Colour Variance").onChange(rebuild);
+  wear.add(params, "tintJitter", 0, 0.5, 0.005).name("Color Variance").onChange(rebuild);
   // How far each slab settles or lifts. Past about 0.05 it stops reading as worn and reads as broken.
   wear.add(params, "heightJitter", 0, 0.12, 0.002).name("Settle").onChange(rebuild);
   wear.add(params, "roughness", 0, 1, 0.02).name("Roughness").onChange(rebuild);

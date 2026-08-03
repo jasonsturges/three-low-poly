@@ -16,14 +16,14 @@ export interface GregorianLatticeGeometryOptions {
    * one geometry.
    */
   opening?: WallOpeningOptions;
-  /** Distance between neighbouring MULLIONS — the upright bars. Defaults to `0.24`. */
+  /** Distance between neighboring MULLIONS — the upright bars. Defaults to `0.24`. */
   mullionSpacing?: number;
-  /** Distance between neighbouring TRANSOMS — the level bars. Defaults to `0.3`. */
+  /** Distance between neighboring TRANSOMS — the level bars. Defaults to `0.3`. */
   transomSpacing?: number;
   /**
-   * Slides the mullions across the opening. Defaults to `0`, which puts one on the centreline.
+   * Slides the mullions across the opening. Defaults to `0`, which puts one on the centerline.
    *
-   * Half a spacing puts a LIGHT on the centreline instead, which is what an even number of lights wants.
+   * Half a spacing puts a LIGHT on the centerline instead, which is what an even number of lights wants.
    * {@link GregorianLatticeWindow} works this out from the light counts.
    */
   mullionPhase?: number;
@@ -58,7 +58,7 @@ export interface GregorianLatticeGeometryOptions {
  *
  * Baked to a single `BufferGeometry` — one draw call for the whole lattice.
  *
- * Drawn at the ORIGIN — centred on X, sill at `y = 0` — so it lands on a frame and a pane built from the
+ * Drawn at the ORIGIN — centered on X, sill at `y = 0` — so it lands on a frame and a pane built from the
  * same opening. Material groups: none.
  *
  * @example

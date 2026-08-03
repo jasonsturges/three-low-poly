@@ -423,7 +423,7 @@ export default function (container: HTMLElement) {
   camera.fov = 24;
   camera.near = 0.01;
   camera.updateProjectionMatrix();
-  // The door's own middle, so it sits centred rather than riding low.
+  // The door's own middle, so it sits centered rather than riding low.
   controls.target.set(0, 1.02, 0);
   controls.update();
 
@@ -458,7 +458,7 @@ export default function (container: HTMLElement) {
   const wire = new LineBasicMaterial({ color: 0x00e5ff });
 
   const params: Params = {
-    // A real 32in x 80in x 1-3/4in door, in metres.
+    // A real 32in x 80in x 1-3/4in door, in meters.
     width: 0.813,
     height: 2.032,
     thickness: 0.045,

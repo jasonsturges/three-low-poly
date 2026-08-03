@@ -8,12 +8,12 @@ import { PolygonGeometry } from "../geometry/shapes/PolygonGeometry";
 const FLAT_TOP = Math.PI / 6;
 
 /**
- * Hexagons already tile perfectly at a given radius, with all six neighbours the same distance
+ * Hexagons already tile perfectly at a given radius, with all six neighbors the same distance
  * away. So a gap is *not* extra space added to the lattice — inflating the X and Z spacings
  * separately would stretch the grid unevenly and leave the gap wider on the diagonals than in the
  * columns. Instead the lattice stays a true hex grid and the tile is shrunk inside its cell.
  *
- * Shrinking a hexagon's inradius by `gap / 2` opens a uniform `gap` to every neighbour, and that
+ * Shrinking a hexagon's inradius by `gap / 2` opens a uniform `gap` to every neighbor, and that
  * costs `gap / √3` of circumradius.
  */
 const shrinkForGap = (gap: number) => gap / Math.sqrt(3);
@@ -148,7 +148,7 @@ export function createHexagonalTilesByRadius(options: HexagonalTileRadiusOptions
   const tileMaterial = material ?? new MeshStandardMaterial({ color: 0xffffff });
 
   // The tile is the size you asked for; the lattice grows around it to open the gap. Expanding the
-  // lattice by `gap / √3` of radius opens a uniform `gap` to all six neighbours — inflating the X
+  // lattice by `gap / √3` of radius opens a uniform `gap` to all six neighbors — inflating the X
   // and Z spacings separately would stretch the grid and leave the diagonals wider than the columns.
   const latticeRadius = radius + shrinkForGap(gap);
   const spacingX = (latticeRadius * 3) / 2;

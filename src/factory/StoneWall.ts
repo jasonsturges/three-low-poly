@@ -55,7 +55,7 @@ export interface StoneWallOptions {
    * How much course heights differ from one another. Defaults to `0`.
    *
    * Per COURSE, never within one — a course that is not level is not a course. `0` is ASHLAR; above it is
-   * RANDOM COURSED. The courses are jittered and then normalised, so they still sum to `height` exactly.
+   * RANDOM COURSED. The courses are jittered and then normalized, so they still sum to `height` exactly.
    */
   courseVariance?: number;
   /** How much stone lengths differ, as a fraction of a whole stone. Defaults to `0.22`. */
@@ -84,11 +84,11 @@ export interface StoneWallOptions {
    * How far each stone strays from its bed, in world units. Defaults to `0`.
    *
    * Displacement, not size. Together with {@link StoneWallOptions.tilt} this takes a wall from newly built
-   * to long-standing — a stylised read rather than masonry truth, which is why both default to nothing.
+   * to long-standing — a stylized read rather than masonry truth, which is why both default to nothing.
    */
   settle?: number;
   /**
-   * Max roll per stone, radians, about its own centre. Defaults to `0`.
+   * Max roll per stone, radians, about its own center. Defaults to `0`.
    *
    * Past about `0.038` a stone's corner reaches through the mortar recess, which is the decrepit look and
    * is allowed. Note only the Z component stays in the wall's plane; X and Y tip the stone out of it and
@@ -114,7 +114,7 @@ export interface StoneWallOptions {
 }
 
 /**
- * A coursed stone wall — **ASHLAR**: squared, dressed stone laid in level courses. Centred on X, foot on
+ * A coursed stone wall — **ASHLAR**: squared, dressed stone laid in level courses. Centered on X, foot on
  * `y = 0`, faces on ±Z.
  *
  * The wall is built stone by stone rather than as a slab with lines drawn on it, and three rules make it
@@ -134,7 +134,7 @@ export interface StoneWallOptions {
  * controls needs each one reined in.
  *
  * `settle` and `tilt` are **displacement**, not size — where a stone ended up rather than how big it is —
- * and are a stylised, decrepit read rather than masonry truth. Both default to nothing.
+ * and are a stylized, decrepit read rather than masonry truth. Both default to nothing.
  *
  * **One geometry, one material, one draw call** at any size. Every stone differs, so they merge; the tint
  * rides a vertex attribute rather than a material group, which is what keeps it to a single call.
@@ -199,7 +199,7 @@ export class StoneWall extends Group {
     const courses = Math.max(1, Math.round(height / courseHeight));
 
     // Course heights vary ACROSS courses and never within one. They must still sum to the wall exactly, so
-    // this is slack absorption: jitter every course, then normalise the set. Jittering independently and
+    // this is slack absorption: jitter every course, then normalize the set. Jittering independently and
     // hoping would strand a remainder at the top — the runt problem standing on its end.
     const weights = Array.from({ length: courses }, () => 1 + signed(courseVariance));
     const weightTotal = weights.reduce((sum, w) => sum + w, 0);
@@ -262,7 +262,7 @@ export class StoneWall extends Group {
         const depth = Math.max(course * 0.15, thickness + out);
 
         const block = new BoxGeometry(cut, course - joint, depth);
-        // Rotate about the stone's own centre first, then move it — the geometry is born centred, so this
+        // Rotate about the stone's own center first, then move it — the geometry is born centered, so this
         // is a spin in place rather than a swing about the wall's origin.
         if (tilt > 0) {
           block.rotateX(signed(tilt));
@@ -285,7 +285,7 @@ export class StoneWall extends Group {
     }
 
     // The mortar core: one box behind everything, recessed from EVERY face so each joint reads as a joint
-    // rather than a hole. Painted with the same vertex colours, so the wall is still one draw call.
+    // rather than a hole. Painted with the same vertex colors, so the wall is still one draw call.
     //
     // Recessed on all three axes, not just the thickness. The stones do not reach the wall's nominal
     // extent — each is `length - joint` wide and `course - joint` tall, so the stonework stops `joint / 2`
@@ -302,13 +302,13 @@ export class StoneWall extends Group {
     const merged = mergeGeometries(stones, false);
     stones.forEach((part) => part.dispose());
     if (!merged) throw new Error("StoneWall: merge failed — the wall may be smaller than one stone.");
-    // Centred on X, foot on y = 0.
+    // Centered on X, foot on y = 0.
     merged.translate(-width / 2, 0, 0);
 
     this.#ownsMaterial = material === undefined;
     this.#material =
       material ??
-      // White, so the vertex colour lands as the exact tint rather than multiplying into it.
+      // White, so the vertex color lands as the exact tint rather than multiplying into it.
       new MeshStandardMaterial({
         color: 0xffffff,
         vertexColors: true,

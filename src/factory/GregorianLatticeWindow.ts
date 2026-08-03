@@ -69,7 +69,7 @@ export interface GregorianLatticeWindowOptions {
  * All three parts are built from ONE `opening`, which is also what you punch the wall with. Every part is
  * exposed as a field, so any of them can be replaced without forking this.
  *
- * Local frame: centred on X, sill at `y = 0`, facing `+Z`.
+ * Local frame: centered on X, sill at `y = 0`, facing `+Z`.
  *
  * @example
  * ```ts
@@ -117,14 +117,14 @@ export class GregorianLatticeWindow extends Group {
     this.mullionSpacing = width / across;
     this.transomSpacing = springing / up;
 
-    // The phase decides whether the centreline carries a BAR or a LIGHT, and the light COUNT decides which
+    // The phase decides whether the centerline carries a BAR or a LIGHT, and the light COUNT decides which
     // is wanted. `n` lights need `n − 1` bars between them:
     //
-    //   ODD count  -> an even number of bars -> they pair up about the centre, and none sits on it,
+    //   ODD count  -> an even number of bars -> they pair up about the center, and none sits on it,
     //                 so the family is offset by half a spacing.
-    //   EVEN count -> an odd number of bars  -> one lands on the centreline, so no offset.
+    //   EVEN count -> an odd number of bars  -> one lands on the centerline, so no offset.
     //
-    // Get it backwards and you get one bar too many, every time — the extra one being the centreline bar
+    // Get it backwards and you get one bar too many, every time — the extra one being the centerline bar
     // that should have been a light.
     //
     // Bars landing exactly on the sill, the head, or a jamb need no special case: their section straddles
@@ -181,7 +181,7 @@ export class GregorianLatticeWindow extends Group {
           flatShading: true,
         }),
       );
-      // `WindowFrameGeometry` extrudes into +z from zero; centre it on the bar so the two sit flush.
+      // `WindowFrameGeometry` extrudes into +z from zero; center it on the bar so the two sit flush.
       this.frame.position.z = -depth / 2;
       this.frame.castShadow = true;
       this.add(this.frame);

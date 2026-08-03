@@ -65,7 +65,7 @@ export const meta = {
 //  DIES INTO   where a line on the dormer meets the roof. For a horizontal line at height `y` on a roof
 //              of pitch `p`, that is `z = -y / tan p`. Every death point here is that one formula.
 //  ADDITIVE    the roof left whole, the dormer's buried parts hidden inside it.
-//  HEAD        the top of the dormer's window opening. Not modelled — this study is the shell.
+//  HEAD        the top of the dormer's window opening. Not modeled — this study is the shell.
 
 type Build = "additive" | "hole";
 
@@ -269,7 +269,7 @@ export default function (container: HTMLElement) {
     frameObject(handle, stage, { dolly: false });
   };
   rebuild();
-  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // Framed once here, then re-centered without dollying after every rebuild: these studies have dials that
   // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
   frameObject(handle, stage, { fit: 1.45 });
 

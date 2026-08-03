@@ -41,7 +41,7 @@ export default function (container: HTMLElement) {
 
   const params = { module: 0.09, teethA: 22, teethB: 11, animate: true, speed: 0.5 };
   const colors = { driver: "#b08d4f", driven: "#8f97a1" };
-  const stats = { radiusA: "", radiusB: "", centerDistance: "", ratio: "" };
+  const stats = { radiusA: "", radiusB: "", centeredistance: "", ratio: "" };
 
   const brass = new MeshStandardMaterial({ color: new Color(colors.driver), metalness: 0.85, roughness: 0.3, flatShading: true });
   const steel = new MeshStandardMaterial({ color: new Color(colors.driven), metalness: 0.8, roughness: 0.35, flatShading: true });
@@ -81,13 +81,13 @@ export default function (container: HTMLElement) {
     const radiusA = (params.module * params.teethA) / 2;
     const radiusB = (params.module * params.teethB) / 2;
     // Their pitch circles roll on each other, so the shafts sit exactly that far apart.
-    const centerDistance = radiusA + radiusB;
+    const centeredistance = radiusA + radiusB;
 
     gearA.geometry = cut(params.teethA, radiusA, params.module, false);
     gearB.geometry = cut(params.teethB, radiusB, params.module, true);
 
     gearA.position.set(0, 0, 0);
-    gearB.position.set(centerDistance, 0, 0);
+    gearB.position.set(centeredistance, 0, 0);
 
     // ---- phasing ----
     // On the line of centers, A must present a TOOTH and B a VALLEY, or they collide instead of meshing.
@@ -102,11 +102,11 @@ export default function (container: HTMLElement) {
     gearB.rotation.z = phaseB;
     spin = 0;
 
-    train.position.x = -centerDistance / 2;
+    train.position.x = -centeredistance / 2;
 
     stats.radiusA = radiusA.toFixed(4);
     stats.radiusB = radiusB.toFixed(4);
-    stats.centerDistance = centerDistance.toFixed(4);
+    stats.centeredistance = centeredistance.toFixed(4);
     stats.ratio = `${(params.teethB / params.teethA).toFixed(3)} : 1`;
 
     frameObject(handle, train, { dolly: false });
@@ -148,7 +148,7 @@ export default function (container: HTMLElement) {
   const readout = gui.addFolder("Measured");
   readout.add(stats, "radiusA").name("Pitch Radius A").listen().disable();
   readout.add(stats, "radiusB").name("Pitch Radius B").listen().disable();
-  readout.add(stats, "centerDistance").name("Center Distance").listen().disable();
+  readout.add(stats, "centeredistance").name("Center Distance").listen().disable();
   // Tooth counts, never radii — a 22:11 pair turns 2:1 at any module.
   readout.add(stats, "ratio").name("Ratio (driven turns)").listen().disable();
   readout.open();

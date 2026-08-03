@@ -11,7 +11,7 @@ export const meta = {
     "2 glass chimney — and the consumer owning the materials, the same shape as the Coach and Hanging " +
     "Lanterns. Origin is the WALL MOUNT POINT: the sconce faces +X from a −X wall, so the plate straddles " +
     "x=0 and the fixture projects out from it. The axes sit there to show where a wall would be, and the " +
-    "camera is framed to the object rather than the sconce being nudged into view. Colour edits mutate " +
+    "camera is framed to the object rather than the sconce being nudged into view. Color edits mutate " +
     "materials in place and never rebuild geometry.",
 };
 

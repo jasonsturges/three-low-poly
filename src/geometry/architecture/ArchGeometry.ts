@@ -63,7 +63,7 @@ export interface ArchGeometryOptions {
  * `traceArch` curve**, so an archway and the doorway it frames agree by construction.
  *
  * Every station states its TANGENT, taken from the curve's own derivative rather than guessed from the
- * chord between neighbours. That is what lets the base caps sit perfectly flat on the floor. Estimate
+ * chord between neighbors. That is what lets the base caps sit perfectly flat on the floor. Estimate
  * them from chords instead and the first cap tilts by half a segment angle — the sort of error you fix
  * by nudging a parameter until it looks right without ever learning what was wrong.
  *

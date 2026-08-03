@@ -28,7 +28,7 @@ export const meta = {
   title: "Edge Treatment",
   description:
     "STUDY — a box whose edges are CHAMFERED, ROUNDED, or COVED, built as a LOFT between offset loops. " +
-    "The construction is the raised panel's, generalised: a stack of cross-sections, each the base " +
+    "The construction is the raised panel's, generalized: a stack of cross-sections, each the base " +
     "rectangle pushed inward by however much the edge profile says at that height, lofted together. Three " +
     "treatments come out of one mechanism, differing only in how the inset falls off — a straight line, a " +
     "convex quarter, a concave quarter. That is the inside/outside curve problem as ONE construction with " +
@@ -55,7 +55,7 @@ interface Level {
  * where the solid reaches full size. Only the path between differs, and that is the entire difference
  * between a chamfer, a round, and a cove.
  *
- * They are parametrised by ANGLE rather than by rise, because sampling rise uniformly would bunch a
+ * They are parametrized by ANGLE rather than by rise, because sampling rise uniformly would bunch a
  * round's points where the curve is flat and starve it where it turns.
  */
 function edgeProfile(style: EdgeStyle, radius: number, segments: number): Level[] {

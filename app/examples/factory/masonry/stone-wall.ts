@@ -12,7 +12,7 @@ export const meta = {
     "up — a stone that would strand an uncuttable remainder takes the remainder instead, so every course " +
     "reaches the edge. And the joint comes OUT of the stone, so widening the mortar never moves the " +
     "coursing. Three variance axes: Length and Depth per STONE, Course per COURSE — because a course that " +
-    "is not level is not a course. Settle and Tilt are displacement rather than size, and are a stylised " +
+    "is not level is not a course. Settle and Tilt are displacement rather than size, and are a stylized " +
     "decrepit read rather than masonry truth, which is why they default to nothing. One draw call at any " +
     "size.",
 };
@@ -109,7 +109,7 @@ export default function (container: HTMLElement) {
   mortar.addColor(params, "mortarColor").name("Mortar Color").onChange(rebuild);
 
   const laid = gui.addFolder("Laid");
-  // Displacement, not size — where a stone ended up rather than how big it is. Stylised, not masonry.
+  // Displacement, not size — where a stone ended up rather than how big it is. Stylized, not masonry.
   laid.add(params, "settle", 0, 0.03, 0.001).name("Settle").onChange(rebuild);
   laid.add(params, "tilt", 0, 0.08, 0.002).name("Tilt").onChange(rebuild);
 
@@ -119,10 +119,10 @@ export default function (container: HTMLElement) {
   relief.add(params, "proudDepth", 0, 0.1, 0.002).name("Proud Depth").onChange(rebuild);
   relief.open();
 
-  const colour = gui.addFolder("Colour");
-  colour.addColor(params, "color").name("Color").onChange(rebuild);
-  colour.add(params, "colorVariance", 0, 0.3, 0.005).name("Color Variance").onChange(rebuild);
-  colour.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
+  const color = gui.addFolder("Color");
+  color.addColor(params, "color").name("Color").onChange(rebuild);
+  color.add(params, "colorVariance", 0, 0.3, 0.005).name("Color Variance").onChange(rebuild);
+  color.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
 
   const readout = gui.addFolder("Readout");
   readout.add(params, "laid").name("Laid").listen().disable();

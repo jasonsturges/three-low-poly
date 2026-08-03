@@ -21,7 +21,7 @@ export const meta = {
   description:
     "STUDY — what happens where two walls MEET, which turned out to be a bigger question than the quoins " +
     "that sit on it. Quoins are here because they are the corner's treatment, and they behave: the " +
-    "realisation that makes them simple is that a quoin is NOT an L-shaped block but a rectangular stone " +
+    "realization that makes them simple is that a quoin is NOT an L-shaped block but a rectangular stone " +
     "showing a LONG face on one wall and a SHORT end on the other, so every pattern is a rule for two " +
     "numbers per course. Those are shipped. What is NOT solved is underneath them. Turn Show Quoins off " +
     "and look into the corner: two independent coursings occupy the same cube, each wall's end caps land " +
@@ -38,7 +38,7 @@ export const meta = {
 //               SHIPPED as `QuoinStackGeometry` — this study keeps them only as the corner's treatment.
 //  LONG FACE    the stretcher face, showing along one wall. The SHORT end shows along the other.
 //  RUSTICATED   quoins with a deliberately rough or recessed face, so the corner reads as heavier than
-//               the wall it turns. A face treatment rather than a layout — not modelled here.
+//               the wall it turns. A face treatment rather than a layout — not modeled here.
 //  RETURN       how far a quoin runs along a wall from the corner. The two legs are its two returns.
 //  TOOTHING     leaving alternate stones projecting so another wall can be bonded in later. What the
 //               alternating pattern imitates, and why it reads as structural rather than applied.
@@ -60,7 +60,7 @@ interface Quoin {
  * The stack, as lengths rather than geometry.
  *
  * Every pattern is a rule for two numbers per course. That is the whole difference between them, which is
- * why one function covers the catalogue and no pattern needs its own construction.
+ * why one function covers the catalog and no pattern needs its own construction.
  */
 const stackQuoins = (
   height: number,
@@ -208,7 +208,7 @@ export default function (container: HTMLElement) {
         depthVariance: 0.004,
       };
       // BOTH walls run to the OUTER corner and overlap in the corner square, rather than stopping at the
-      // corner LINE. A wall centred on its own length ends at the origin, which leaves the `thickness ×
+      // corner LINE. A wall centered on its own length ends at the origin, which leaves the `thickness ×
       // thickness` square at the corner empty — and the emptier it gets the thicker the wall is, until the
       // quoins are visibly floating clear of anything.
       //
@@ -253,7 +253,7 @@ export default function (container: HTMLElement) {
 
       // ONE stack, TWO walls — so the tint alternates PER COURSE. Were this built as two stacks each
       // contributing alternate courses, each stack would need a UNIFORM tint instead, opposite to its
-      // neighbour: both alternating in step would give light, light, dark, dark. Ownership decides the
+      // neighbor: both alternating in step would give light, light, dark, dark. Ownership decides the
       // rule, and inverting the ownership inverts it.
       const shade = params.alternateTint && index % 2 === 1 ? -params.colorVariance : params.colorVariance;
       tint.copy(base).offsetHSL(signed(params.colorVariance) / 4, 0, shade * 0.5 + signed(params.colorVariance) / 2);
@@ -317,14 +317,14 @@ export default function (container: HTMLElement) {
   build.add(params, "showWalls").name("Show Walls").onChange(rebuild);
   build.open();
 
-  const colour = gui.addFolder("Colour");
-  colour.addColor(params, "color").name("Color").onChange(rebuild);
+  const color = gui.addFolder("Color");
+  color.addColor(params, "color").name("Color").onChange(rebuild);
   // Both are reachable, because the study is about the CONTRAST rather than either stone alone.
-  colour.addColor(params, "wallColor").name("Wall Color").onChange(rebuild);
-  colour.add(params, "colorVariance", 0, 0.25, 0.005).name("Color Variance").onChange(rebuild);
+  color.addColor(params, "wallColor").name("Wall Color").onChange(rebuild);
+  color.add(params, "colorVariance", 0, 0.25, 0.005).name("Color Variance").onChange(rebuild);
   // ONE stack owns the corner, so it alternates per course. Two stacks would each want a uniform tint.
-  colour.add(params, "alternateTint").name("Alternate Tint").onChange(rebuild);
-  colour.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
+  color.add(params, "alternateTint").name("Alternate Tint").onChange(rebuild);
+  color.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
 
   const inspect = gui.addFolder("Inspect");
   // For looking at what the two walls are doing to each other in the corner square. The quoins cover that

@@ -38,7 +38,7 @@ export const meta = {
     "`stile / sin(a) = rail / sin(b)` holds to 6e-17. The cut and the two members' edges form a TRIANGLE, " +
     "which is all the law of sines ever is. " +
     "Set Construction to 45 degrees to see what the naive miter does. The members no longer meet: one " +
-    "overruns its neighbour and the other leaves a wedge of nothing, by exactly the difference in the two " +
+    "overruns its neighbor and the other leaves a wedge of nothing, by exactly the difference in the two " +
     "widths. The readout measures it. " +
     "What this unlocks is ordinary and was previously unavailable: a panel door with a DEEP BOTTOM RAIL " +
     "and mitered corners, a picture frame with a heavy base member, a window with a weighty sill. All " +
@@ -65,7 +65,7 @@ export const meta = {
 //  BUTT        the alternative: stop one member square against the other and let the joint show. What
 //              frame-and-panel does today when the rails are not locked to the stile.
 //  HAUNCH      the shoulder left when a wide member meets a narrow one and only part of it is cut. Not
-//              modelled — it is a joinery detail, invisible once assembled.
+//              modeled — it is a joinery detail, invisible once assembled.
 
 type Construction = "corner" | "fortyfive";
 
@@ -121,7 +121,7 @@ interface Frame {
  *
  * `fortyfive` is the naive alternative, kept because it is what everyone reaches for and what makes the
  * "unequal stock cannot be mitered" claim look true. It cuts every corner at 45 degrees regardless, so
- * each member's cut ends where ITS OWN width says rather than where its neighbour is, and the two miss by
+ * each member's cut ends where ITS OWN width says rather than where its neighbor is, and the two miss by
  * the difference between the widths.
  */
 const buildFrame = (
@@ -281,7 +281,7 @@ export default function (container: HTMLElement) {
     frameObject(handle, stage, { dolly: false });
   };
   rebuild();
-  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // Framed once here, then re-centered without dollying after every rebuild: these studies have dials that
   // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
   frameObject(handle, stage, { fit: 1.45 });
 

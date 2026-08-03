@@ -16,7 +16,7 @@ export default function (container: HTMLElement) {
     depth: 0.25,
   };
 
-  // The material the `Burst` prefab used to hard-code. It lives here now, so the colour is a control
+  // The material the `Burst` prefab used to hard-code. It lives here now, so the color is a control
   // rather than a constant.
   const colors = { burst: "#ffff00" };
   const material = new MeshStandardMaterial({
@@ -46,7 +46,7 @@ export default function (container: HTMLElement) {
 
   rebuild();
 
-  // No rebuild — geometry is untouched by the colour.
+  // No rebuild — geometry is untouched by the color.
   const materialFolder = gui.addFolder("Material");
   materialFolder.addColor(colors, "burst").name("Color").onChange(() => material.color.set(colors.burst));
 

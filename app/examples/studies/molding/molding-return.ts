@@ -129,7 +129,7 @@ export default function (container: HTMLElement) {
     cameraPosition: [1.5, 1.5, 2.2],
   });
 
-  // The subject is a few centimetres across on a two-metre wall, so this needs both a long lens and a
+  // The subject is a few centimeters across on a two-meter wall, so this needs both a long lens and a
   // near plane far tighter than the 0.1 default.
   camera.fov = 20;
   camera.near = 0.005;
@@ -221,7 +221,7 @@ export default function (container: HTMLElement) {
    * Dropping to `sweep` here is itself a finding: `MoldingGeometry` has no way to say "cut this end on a
    * plane I am giving you", so it cannot express a run built as separate pieces.
    */
-  const mitredRun = (y: number, legEnd: Vector3) => {
+  const miteredRun = (y: number, legEnd: Vector3) => {
     const { from, corner } = runLine(y);
     const profile = moldingProfile({
       style: params.style,
@@ -267,7 +267,7 @@ export default function (container: HTMLElement) {
     clear();
     const y = params.run === "crown" ? params.wallHeight : 0;
     const { from, corner } = runLine(y);
-    // The leg heads OUT from the wall. That is not a free choice: with the run travelling +x, a leg on
+    // The leg heads OUT from the wall. That is not a free choice: with the run traveling +x, a leg on
     // +z puts the section's own projection on −x, which is the side the run's end face is on. A leg the
     // other way lands the material in front of the end instead of behind it.
     const legEnd = new Vector3(0, y, params.legLength);
@@ -306,7 +306,7 @@ export default function (container: HTMLElement) {
       body = new MoldingGeometry({ points: [from, corner, legEnd], ...section });
       add(body, plaster);
     } else {
-      const { profile, reference, cut, stations, endStation, crown } = mitredRun(y, legEnd);
+      const { profile, reference, cut, stations, endStation, crown } = miteredRun(y, legEnd);
       body = sweep(profile, stations);
       add(body, plaster);
 
@@ -390,7 +390,7 @@ export default function (container: HTMLElement) {
       y: params.run === "crown" ? params.wallHeight + 0.16 : 0.34,
       z: 0.1,
     });
-    // A billboard turns about its own CENTRE, so seen edge-on it sweeps half its own width in depth. Left
+    // A billboard turns about its own CENTER, so seen edge-on it sweeps half its own width in depth. Left
     // at a fixed offset it cuts into the wall (face at z = 0) as soon as the camera comes round — and the
     // offset that works depends on the string, since these labels differ in length. So it stands itself off
     // by its own half-width instead of by a number that would need revisiting every time the text changed.

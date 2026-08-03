@@ -32,7 +32,7 @@ export const meta = {
     "every hip is congruent to every other, so one Seam Width gives one thickness — unlike a ridged roof, " +
     "where a hip and a ridge have different dihedrals and come out different sizes. " +
     "The APEX is where the count would be expected to matter, and it does not. A member has exactly TWO " +
-    "neighbours in the cyclic order however many arrive, so `n` never changes the number of cuts — always " +
+    "neighbors in the cyclic order however many arrive, so `n` never changes the number of cuts — always " +
     "two planes per cap, always the same hip-end arrowhead. And on a regular plan adjacent hips are MIRROR " +
     "IMAGES across the plane bisecting them, which is the condition for a miter to shut, so it closes to " +
     "1e-16 at every count. The cut planes come out exactly vertical and the wedges exactly 360/n. See " +
@@ -45,7 +45,7 @@ export const meta = {
     "rectangular plan breaks that mirror and the same shortcut lands 12.6 degrees out. " +
     "What still does not close is the PEAK. Each cap's top face sits `rise` out along its OWN bisector and " +
     "those bisectors splay, so adjacent top faces meet only once the width reaches " +
-    "`2 * rise * |horizontal part of the bisector|`. Below that a dish opens at the centre; above it the " +
+    "`2 * rise * |horizontal part of the bisector|`. Below that a dish opens at the center; above it the " +
     "caps overlap. The count turns out not to matter here either, but for a reason worth having: that " +
     "critical width is IDENTICAL at every `n` — 0.076 at these proportions — because the bisector is " +
     "perpendicular to the hip and lies in the vertical plane through it, so it is fixed by the HIP PITCH " +
@@ -63,7 +63,7 @@ export const meta = {
 //  HIP        the sloping joint between two adjacent faces, eave to apex. There are `n` of them, all
 //             congruent on a regular plan — which is why one width gives one thickness here.
 //  APEX       where every hip converges. `n` seams arriving at one point, and still only TWO cuts each.
-//  BROACH     the transition from a square base to an octagonal spire above it. NOT modelled — it is a
+//  BROACH     the transition from a square base to an octagonal spire above it. NOT modeled — it is a
 //             change of plan partway up, and belongs to its own study.
 //  DIHEDRAL   the angle between two faces at their shared edge. A cap seats on its BISECTOR, and the
 //             HALF-ANGLE from that bisector to either face is what sizes it.
@@ -370,8 +370,8 @@ export default function (container: HTMLElement) {
       const parts: BufferGeometry[] = [];
       const direction = new Vector3();
 
-      // Each cap's apex end is cut against its two NEIGHBOURS around the apex — the construction proved
-      // in `studies/miter/junction`. Corner `i`'s neighbours are simply corners `i - 1` and `i + 1`.
+      // Each cap's apex end is cut against its two NEIGHBORS around the apex — the construction proved
+      // in `studies/miter/junction`. Corner `i`'s neighbors are simply corners `i - 1` and `i + 1`.
       const awayFrom = (joint: Joint) => new Vector3().subVectors(joint.from, joint.to).normalize();
 
       roof.joints.forEach((joint, index) => {
@@ -394,14 +394,14 @@ export default function (container: HTMLElement) {
         const from = joint.from.clone().setY(joint.from.y + base);
         const to = joint.to.clone().setY(joint.to.y + base);
 
-        // The miter plane against a neighbour: through the apex, normal `normalize(a_i - a_j)` with both
-        // axes pointing AWAY down their own hip. The neighbour is handed the same plane from the other
+        // The miter plane against a neighbor: through the apex, normal `normalize(a_i - a_j)` with both
+        // axes pointing AWAY down their own hip. The neighbor is handed the same plane from the other
         // side, so adjacent caps abut with no gap by construction rather than by tuning.
         const count = roof.joints.length;
         const mine = awayFrom(joint);
         const against = (other: Joint): CutPlane => miterPlane(to, mine, awayFrom(other));
         // Un-mitered leaves the end square across the hip — every cap through the apex, slicing through
-        // its neighbours. That is the pile-up the miter exists to resolve.
+        // its neighbors. That is the pile-up the miter exists to resolve.
         const square: CutPlane = { point: to.clone(), normal: new Vector3().subVectors(from, to).normalize() };
         const bounds: [CutPlane, CutPlane] = params.miter
           ? [against(roof.joints[(index + count - 1) % count]!), against(roof.joints[(index + 1) % count]!)]
@@ -477,7 +477,7 @@ export default function (container: HTMLElement) {
     frameObject(handle, stage, { dolly: false });
   };
   rebuild();
-  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // Framed once here, then re-centered without dollying after every rebuild: these studies have dials that
   // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
   frameObject(handle, stage, { fit: 1.45 });
 
@@ -487,7 +487,7 @@ export default function (container: HTMLElement) {
   const seam = gui.addFolder("Seams");
   // The whole point of the study. Off, it is a tent; on, it is a roof.
   seam.add(params, "seams").name("Show Seams").onChange(rebuild);
-  // Each cap's apex end cut against its two neighbours. Off, every end is square across its own hip and
+  // Each cap's apex end cut against its two neighbors. Off, every end is square across its own hip and
   // all four pass through the apex, slicing through each other — the pile-up this resolves.
   seam.add(params, "miter").name("Miter Apex").onChange(rebuild);
   // The two dials that are left, and they no longer fight: across, and out. Thickness is derived from
@@ -501,7 +501,7 @@ export default function (container: HTMLElement) {
 
   const form = gui.addFolder("Roof");
   // The count never changes the CONSTRUCTION — two cut planes per cap whatever it is. It only changes
-  // who each cap's neighbours are.
+  // who each cap's neighbors are.
   form.add(params, "sides", 3, 12, 1).name("Sides").onChange(rebuild);
   form.add(params, "radius", 0.6, 4, 0.05).name("Radius").onChange(rebuild);
   form.add(params, "rise", 0.4, 6, 0.1).name("Rise").onChange(rebuild);

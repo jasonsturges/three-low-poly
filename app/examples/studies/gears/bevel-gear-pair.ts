@@ -9,7 +9,7 @@ export const meta = {
   description:
     "STUDY — two bevel wheels on intersecting shafts, and the law that sets their cone angles. Bevel teeth " +
     "are cut on a PITCH CONE, and a pair meshes when the two cones share an APEX — which makes the shaft " +
-    "angle the SUM of the two cone angles, not a free choice for either. So neither angle is dialled here: " +
+    "angle the SUM of the two cone angles, not a free choice for either. So neither angle is dialed here: " +
     "set the shaft angle and the two tooth counts, and both cones are solved. Equal counts at 90° give 45° " +
     "and 45°, the MITER pair. Push the ratio and the angles split apart — the fast wheel narrows toward a " +
     "spike and the slow one opens toward a plate. Everything else is the spur pair's law unchanged: equal " +

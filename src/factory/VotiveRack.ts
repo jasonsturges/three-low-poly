@@ -62,9 +62,9 @@ export interface VotiveRackOptions {
   candleHeightMax?: number;
   /** Flame and glow tint. Defaults to `0xffb347`. */
   color?: ColorRepresentation;
-  /** Wax colour. Defaults to `0xd9cdb2`. */
+  /** Wax color. Defaults to `0xd9cdb2`. */
   waxColor?: ColorRepresentation;
-  /** Iron colour. Defaults to `0x2b2622`. */
+  /** Iron color. Defaults to `0x2b2622`. */
   ironColor?: ColorRepresentation;
   /** Halo card size in world units. Defaults to `0.48`. */
   glowSize?: number;
@@ -119,7 +119,7 @@ interface Placement {
  * per-instance value, so the batches are sized to the survivors.
  *
  * **Per-candle flicker with one shared material** works because the halo blending is additive: folding
- * the flicker factor into per-instance *colour* is mathematically identical to scaling opacity, so a
+ * the flicker factor into per-instance *color* is mathematically identical to scaling opacity, so a
  * single material serves N independently guttering halos.
  *
  * > **Requires `WebGPURenderer`.** Screen-aligned instancing needs a node material
@@ -309,7 +309,7 @@ export class VotiveRack extends Group {
     haloMaterial.positionNode = instancedBufferAttribute(new InstancedBufferAttribute(offsets, 3), "vec3");
     haloMaterial.scaleNode = instancedDynamicBufferAttribute(this.#haloScaleAttribute, "float");
     haloMaterial.colorNode = instancedDynamicBufferAttribute(this.#haloColorAttribute, "vec3");
-    // The ramp is colourless, so only its alpha matters here; the tint arrives per instance.
+    // The ramp is colorless, so only its alpha matters here; the tint arrives per instance.
     haloMaterial.opacityNode = texture(haloTexture).a.mul(glowOpacity);
     this.#materials.push(haloMaterial);
 

@@ -35,13 +35,13 @@ const cross2 = (a: Vector2, b: Vector2) => a.x * b.y - a.y * b.x;
 export interface BarFamily {
   /** Direction, in degrees from horizontal. `90` is upright, `0` is level, `45` is a diamond's leg. */
   angle: number;
-  /** Perpendicular distance between neighbours — the same at any angle, unlike spacing along an axis. */
+  /** Perpendicular distance between neighbors — the same at any angle, unlike spacing along an axis. */
   spacing: number;
   /** Slides the family across the opening. Defaults to `0`. */
   phase?: number;
 }
 
-/** The opening's outline as a closed polyline, normalised to the origin and de-duplicated. */
+/** The opening's outline as a closed polyline, normalized to the origin and de-duplicated. */
 export function openingBoundary(opening: WallOpeningOptions, curveSegments: number): Vector2[] {
   const points = openingOutline({ ...opening, x: 0, y: 0 })
     .getPoints(Math.max(2, Math.round(curveSegments)))
@@ -205,7 +205,7 @@ function spanOpening(ring: Vector3[], axis: Vector3, boundary: Vector2[]): Span[
  * One end cap, triangulated so no triangle spans two facets.
  *
  * The cast reads only a point's LATERAL offset, so facet boundaries are lines of constant lateral offset,
- * and the cap — which projects exactly onto the ring, every point travelling along the same axis — is a
+ * and the cap — which projects exactly onto the ring, every point traveling along the same axis — is a
  * polygon monotone in that coordinate with a vertex on both chains at every cut. Walking the two chains in
  * lateral order therefore never reaches past a cut. Fanning each facet instead leaves a hole the moment
  * there are more than two crossings.

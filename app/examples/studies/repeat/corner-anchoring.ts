@@ -321,7 +321,7 @@ export default function (container: HTMLElement) {
   // in the Readout, and it equals what you asked for only when the run happened to divide evenly.
   //
   // Note what is NOT in this folder: the item's WIDTH. It belongs to family A alone, and that is the
-  // study's whole thesis showing up in the controls — the layout hands out CENTRES, and only a notched
+  // study's whole thesis showing up in the controls — the layout hands out CENTERS, and only a notched
   // band needs an interval around one. An applied repeat is placed and never measured.
   set.add(params, "pitch", 0.08, 0.6, 0.005).name("Pitch (requested)").onChange(rebuild);
   set.add(params, "closed").name("Closed Run").onChange(rebuild);
@@ -330,10 +330,10 @@ export default function (container: HTMLElement) {
 
   const a = gui.addFolder("A — Notched Band");
   a.add(params, "notched").name("Show").onChange(rebuild);
-  // Family A ONLY. A notched band uses each item's INTERVAL — `centre ± width/2`, sliced out of the path —
-  // so it needs a width. Family B uses only the centre and never asks.
+  // Family A ONLY. A notched band uses each item's INTERVAL — `center ± width/2`, sliced out of the path —
+  // so it needs a width. Family B uses only the center and never asks.
   //
-  // It also moves NOTHING. It fattens each item in place; the centres never budge, which is what makes the
+  // It also moves NOTHING. It fattens each item in place; the centers never budge, which is what makes the
   // pitch the invariant and why a half item can never appear.
   a.add(params, "itemWidth", 0.04, 0.35, 0.005).name("Item Width").onChange(rebuild);
   a.add(params, "merlonHeight", 0.06, 0.5, 0.01).name("Merlon Height").onChange(rebuild);

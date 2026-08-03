@@ -23,7 +23,7 @@ export interface DiamondLatticeGeometryOptions {
    */
   angle?: number;
   /**
-   * Perpendicular distance between neighbouring cames. Defaults to `0.19`.
+   * Perpendicular distance between neighboring cames. Defaults to `0.19`.
    *
    * Measured across the cames rather than along an axis, so it means the same thing at any `angle` —
    * spacing measured on an axis would compress as the lattice leans.
@@ -32,7 +32,7 @@ export interface DiamondLatticeGeometryOptions {
   /**
    * Slides the whole grid across the opening, in world units. Defaults to `0`.
    *
-   * The difference between a quarry centred on the crown and a came running up it. Nothing else moves the
+   * The difference between a quarry centered on the crown and a came running up it. Nothing else moves the
    * pattern relative to the opening, and it is what decides which cames clip a corner and get dropped.
    */
   phase?: number;
@@ -75,7 +75,7 @@ export interface DiamondLatticeGeometryOptions {
  *
  * Baked to a single `BufferGeometry` — one draw call for the whole leading.
  *
- * Drawn at the ORIGIN — centred on X, sill at `y = 0` — whatever the opening's own `x` and `y` say, so
+ * Drawn at the ORIGIN — centered on X, sill at `y = 0` — whatever the opening's own `x` and `y` say, so
  * one lattice can be positioned into many openings and so it lands on a `WindowFrameGeometry` built from
  * the same description. Material groups: none; pass one material, not an array.
  *

@@ -101,8 +101,8 @@ const arcThrough = (from: Vector3, to: Vector3, rise: number, segments: number):
   const uy =
     ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx) + (cx * cx + cy * cy) * (bx - ax)) / d;
 
-  const centre = new Vector3(ux, uy, from.z);
-  const radius = centre.distanceTo(from);
+  const center = new Vector3(ux, uy, from.z);
+  const radius = center.distanceTo(from);
   let a0 = Math.atan2(ay - uy, ax - ux);
   const a2 = Math.atan2(cy - uy, cx - ux);
   const a1 = Math.atan2(by - uy, bx - ux);
@@ -208,9 +208,9 @@ export default function (container: HTMLElement) {
     const paint = (geometry: BufferGeometry, spread = params.colorVariance) => {
       // `mergeGeometries` needs every input to agree on whether it has an index — all or none. This scene
       // mixes both: `BoxGeometry` and `ConeGeometry` arrive INDEXED, while `ExtrudeGeometry` and anything
-      // from `sweep` arrive NON-indexed. Normalising to non-indexed is the right way round rather than the
-      // other, because flat shading and per-vertex colour both want unshared vertices anyway — an indexed
-      // box would have one vertex serving three faces, and one colour serving all three with it.
+      // from `sweep` arrive NON-indexed. Normalizing to non-indexed is the right way round rather than the
+      // other, because flat shading and per-vertex color both want unshared vertices anyway — an indexed
+      // box would have one vertex serving three faces, and one color serving all three with it.
       const flat = geometry.index ? geometry.toNonIndexed() : geometry;
       if (flat !== geometry) geometry.dispose();
 
@@ -421,10 +421,10 @@ export default function (container: HTMLElement) {
   pierFolder.add(params, "stringCourses").name("String Courses").onChange(rebuild);
   pierFolder.open();
 
-  const colour = gui.addFolder("Colour");
-  colour.addColor(params, "color").name("Color").onChange(rebuild);
-  colour.add(params, "colorVariance", 0, 0.25, 0.005).name("Color Variance").onChange(rebuild);
-  colour.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
+  const color = gui.addFolder("Color");
+  color.addColor(params, "color").name("Color").onChange(rebuild);
+  color.add(params, "colorVariance", 0, 0.25, 0.005).name("Color Variance").onChange(rebuild);
+  color.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
 
   const inspect = gui.addFolder("Inspect");
   inspect.add(params, "wireframe").name("Wireframe").onChange(rebuild);

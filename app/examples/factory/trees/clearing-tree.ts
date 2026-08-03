@@ -83,7 +83,7 @@ export default function (container: HTMLElement) {
   trunk.add(params, "baseRise", 0, 1, 0.05).name("Base Rise").onChange(rebuild);
   trunk.open();
 
-  // No rebuild — geometry is untouched by the bark colour.
+  // No rebuild — geometry is untouched by the bark color.
   const material = gui.addFolder("Material");
   material.addColor(colors, "bark").name("Bark").onChange(() => bark.color.set(colors.bark));
 

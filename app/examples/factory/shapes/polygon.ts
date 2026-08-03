@@ -15,7 +15,7 @@ export default function (container: HTMLElement) {
     depth: 0.01,
   };
 
-  // The material the `Polygon` prefab used to hard-code. It lives here now, so the colour is a control
+  // The material the `Polygon` prefab used to hard-code. It lives here now, so the color is a control
   // rather than a constant.
   const colors = { polygon: "#ffffff" };
   const material = new MeshStandardMaterial({
@@ -44,7 +44,7 @@ export default function (container: HTMLElement) {
 
   rebuild();
 
-  // No rebuild — geometry is untouched by the colour.
+  // No rebuild — geometry is untouched by the color.
   const materialFolder = gui.addFolder("Material");
   materialFolder.addColor(colors, "polygon").name("Color").onChange(() => material.color.set(colors.polygon));
 

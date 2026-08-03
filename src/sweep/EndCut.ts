@@ -5,7 +5,7 @@ import { BufferAttribute, BufferGeometry, Vector3 } from "three";
  *
  * At a joint these are not arbitrary: the plane mitering member `i` against member `j` passes through the
  * shared point with normal `normalize(a_i - a_j)`, both axes pointing AWAY down their own member. Handing
- * `j` the same plane with the arguments swapped gives exactly the opposite normal, so two neighbours are
+ * `j` the same plane with the arguments swapped gives exactly the opposite normal, so two neighbors are
  * bounded by ONE surface from opposite sides and cannot leave a gap between them.
  */
 export interface CutPlane {
@@ -32,7 +32,7 @@ export interface CutEndOptions {
    *
    * - `"first"` — the member is landing INSIDE a corner, so it is bounded by whichever surface it reaches
    *   soonest and its end comes to a point reaching into the joint. The ARROWHEAD. A roof HIP, and any
-   *   member mitered against its neighbours at a junction.
+   *   member mitered against its neighbors at a junction.
    * - `"last"` — the member wraps the OUTSIDE of a corner and may continue until it is behind both
    *   surfaces, so the end is notched instead of pointed. A roof VALLEY, and any reentrant corner.
    *
@@ -71,7 +71,7 @@ const hitDistance = (p: Vector3, axis: Vector3, plane: CutPlane): number => {
  *
  * @example
  * ```ts
- * // Two hips meeting at a roof apex: each cap is cut against its two neighbours.
+ * // Two hips meeting at a roof apex: each cap is cut against its two neighbors.
  * const bound = (mine: Vector3, theirs: Vector3): CutPlane => ({
  *   point: apex,
  *   normal: mine.clone().sub(theirs).normalize(),
@@ -166,7 +166,7 @@ export function cutEndGeometry(points: CutPoint[], axis: Vector3): BufferGeometr
     }
   }
 
-  // A joint can consume a whole facet — a member fully overrun by a neighbour leaves coincident points.
+  // A joint can consume a whole facet — a member fully overrun by a neighbor leaves coincident points.
   // A zero-area triangle contributes a zero-length normal, which lights as solid black rather than as
   // nothing at all, so they are dropped rather than emitted.
   const solid = triangles.filter(

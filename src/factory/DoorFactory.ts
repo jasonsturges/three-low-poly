@@ -64,7 +64,7 @@ export interface ArchedDoorOptions {
   arch?: ArchStyle;
   /** Thickness of the slab. Defaults to `0.12`. */
   thickness?: number;
-  /** How finely the arch is tessellated — the low-poly knob. `3` is chiselled; `24` is cast. Defaults to `16`. */
+  /** How finely the arch is tessellated — the low-poly knob. `3` is chiseled; `24` is cast. Defaults to `16`. */
   curveSegments?: number;
 
   /** Number of strap hinges. Defaults to `3`. */

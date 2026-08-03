@@ -259,10 +259,10 @@ export default function (container: HTMLElement) {
   wall.add(params, "wallThickness", 0.1, 1, 0.05).name("Wall Thickness").onChange(rebuild);
   wall.open();
 
-  const colour = gui.addFolder("Colour");
-  colour.addColor(params, "color").name("Color").onChange(rebuild);
-  colour.add(params, "colorVariance", 0, 0.25, 0.005).name("Color Variance").onChange(rebuild);
-  colour.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
+  const color = gui.addFolder("Color");
+  color.addColor(params, "color").name("Color").onChange(rebuild);
+  color.add(params, "colorVariance", 0, 0.25, 0.005).name("Color Variance").onChange(rebuild);
+  color.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
 
   const inspect = gui.addFolder("Inspect");
   inspect.add(params, "wireframe").name("Wireframe").onChange(rebuild);

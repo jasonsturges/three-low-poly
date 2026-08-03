@@ -35,7 +35,7 @@ export const meta = {
 //------------------------------
 //
 //  RUBBLE       stone used roughly as found, not squared. RANDOM rubble is uncoursed; SNECKED rubble uses
-//               small fillers; COURSED rubble is levelled up every so often. This is random rubble.
+//               small fillers; COURSED rubble is leveled up every so often. This is random rubble.
 //  ASHLAR       the opposite — squared, dressed stone in regular courses. The Stone Wall study.
 //  HEARTING     the rubble core between two faced skins. Why a real rubble wall is so thick.
 //  VARIETY POOL not a masonry term. K distinct geometries instanced many times each, which is the middle
@@ -112,7 +112,7 @@ export default function (container: HTMLElement) {
     const base = new Color(params.stoneColor);
     const tint = new Color();
 
-    // Packed TIGHTER than the stone, so neighbours overlap and the wall closes. A rubble wall has no
+    // Packed TIGHTER than the stone, so neighbors overlap and the wall closes. A rubble wall has no
     // joints to speak of — the stones simply bear on each other, and the gaps are filled with hearting.
     const spacing = params.stoneSize * params.packing;
     const columns = Math.max(1, Math.floor(params.width / spacing));
@@ -276,10 +276,10 @@ export default function (container: HTMLElement) {
   variation.add(params, "scaleMin", 0.3, 1.5, 0.02).name("Scale Min").onChange(rebuild);
   variation.add(params, "scaleMax", 0.3, 1.5, 0.02).name("Scale Max").onChange(rebuild);
 
-  const colour = gui.addFolder("Colour");
-  colour.addColor(params, "stoneColor").name("Stone Color").onChange(rebuild);
-  colour.add(params, "colorVariance", 0, 0.35, 0.005).name("Color Variance").onChange(rebuild);
-  colour.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
+  const color = gui.addFolder("Color");
+  color.addColor(params, "stoneColor").name("Stone Color").onChange(rebuild);
+  color.add(params, "colorVariance", 0, 0.35, 0.005).name("Color Variance").onChange(rebuild);
+  color.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
 
   const readout = gui.addFolder("Readout");
   readout.add(params, "readout").name("Readout").listen().disable();

@@ -42,7 +42,7 @@ export const meta = {
     "courses are laid out INDEPENDENTLY from their own width and gap; they need not agree in the field, " +
     "only at the corners, and corner anchoring gives that to each of them for free. Two more things the " +
     "castle scale could not show. A section standing OFF its path must run `outer x tan(turn/2)` past a " +
-    "convex corner, so the corner dentil is genuinely bigger and reaches over its neighbours — which are " +
+    "convex corner, so the corner dentil is genuinely bigger and reaches over its neighbors — which are " +
     "dropped, and the block then CUT TO SUIT so its face sits exactly one gap from the first survivor, " +
     "the way a joiner does it. And an applied repeat needs a FRAME, not a point: a bracket has a BACK, so " +
     "unlike a baluster it cannot sit on the bisector without burying half of itself — a corner wants a " +
@@ -196,7 +196,7 @@ const runAlong = (points: Vector3[], profile: Vec2[], closed = false): BufferGeo
   );
 
 /**
- * The direction the run is travelling at a distance along it.
+ * The direction the run is traveling at a distance along it.
  *
  * `pointAtDistance` answers WHERE, and for a rotationally symmetric item — a baluster — that is enough. A
  * modillion has a front, so it needs a frame, and this is the missing half. Sampling either side rather
@@ -399,7 +399,7 @@ export default function (container: HTMLElement) {
     // A section standing off its path still runs `depth · tan(turn/2)` past a convex corner — but that is
     // now its OWN depth, so the corner block comes out a little over one dentil wide instead of two and a
     // half, and nothing needs swallowing at sane proportions. The rule stays because extreme settings can
-    // still bury a neighbour, and a buried dentil is worse than a missing one.
+    // still bury a neighbor, and a buried dentil is worse than a missing one.
     const vertexIndices = params.closed
       ? face.map((_, i) => i)
       : face.map((_, i) => i).slice(1, -1); // an open run's ENDS are square cuts, not miters
@@ -423,7 +423,7 @@ export default function (container: HTMLElement) {
     const dropped = new Set<number>();
     // Per corner, per side.
     //
-    // A neighbour only has to GO if it is actually inside the block — `near edge < reach`. Demanding a
+    // A neighbor only has to GO if it is actually inside the block — `near edge < reach`. Demanding a
     // full nominal gap as well drops a dentil that fits perfectly well, and trades a slightly tight gap
     // for a conspicuously large one. The photograph settles it: real courses run up to the corner block
     // with a tighter interdentil, they do not leave a hole.

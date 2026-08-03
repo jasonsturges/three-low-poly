@@ -29,7 +29,7 @@ export interface CameraClip {
   readonly duration: number;
   start(runtime: ClipRuntime): void;
   update(runtime: ClipRuntime, dt: number): ClipPhase;
-  /** Called when playback is cancelled mid-clip. */
+  /** Called when playback is canceled mid-clip. */
   cancel?(runtime: ClipRuntime): void;
 }
 

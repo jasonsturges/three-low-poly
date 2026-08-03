@@ -28,9 +28,9 @@ export interface AutumnTreeOptions {
   maxDepth?: number;
   /** Fraction of crown points that receive leaf clusters. Defaults to `0.72`. */
   leafDensity?: number;
-  /** Bark colour. Defaults to `"#332419"`. */
+  /** Bark color. Defaults to `"#332419"`. */
   barkColor?: string;
-  /** Colours sampled per leaf cluster. Defaults to a rust/ochre/deep-red autumn set. */
+  /** Colors sampled per leaf cluster. Defaults to a rust/ochre/deep-red autumn set. */
   leafPalette?: string[];
   /** Leaf cluster radius. Defaults to `0.38`. */
   leafSize?: number;
@@ -88,7 +88,7 @@ function frustum(start: Vector3, end: Vector3, startRadius: number, endRadius: n
  * exposed as {@link branches} and {@link leaves} rather than left to be dug out of `children`.
  *
  * **This factory owns its materials**, unlike the geometry classes. That is faithful to the scene it came
- * from, where bark colour and leaf palette are part of the asset's identity rather than a consumer choice.
+ * from, where bark color and leaf palette are part of the asset's identity rather than a consumer choice.
  * Call {@link dispose} to release them.
  *
  * @example

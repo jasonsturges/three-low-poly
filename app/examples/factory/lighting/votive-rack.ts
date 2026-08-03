@@ -71,7 +71,7 @@ export default function (container: HTMLElement) {
   // The presence cascade: a cup may be empty, then a present candle may be spent.
   gui.add(params, "density", 0, 1, 0.01).name("Cup Density").onChange(rebuild);
   gui.add(params, "litFraction", 0, 1, 0.01).name("Lit Fraction").onChange(rebuild);
-  gui.addColor(params, "color").name("Flame Colour").onChange(rebuild);
+  gui.addColor(params, "color").name("Flame Color").onChange(rebuild);
   gui.add(params, "glowSize", 0.1, 1.5, 0.01).name("Glow Size").onChange(rebuild);
   gui.add(params, "glowOpacity", 0, 1, 0.01).name("Glow Opacity").onChange(rebuild);
   // Zero omits the light entirely — hundreds of votives must never mean hundreds of lights.

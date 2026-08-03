@@ -8,7 +8,7 @@ export const meta = {
   description:
     "A compact cultivated apple tree with a low, rounded crown. Six primary branches leave a short trunk, " +
     "each carrying a shoulder, a tip, and two twigs — orchard form rather than a wild gnarl, which is why " +
-    "this is its own factory rather than a reparameterised Autumn Tree. Three draw calls at any size: merged " +
+    "this is its own factory rather than a reparameterized Autumn Tree. Three draw calls at any size: merged " +
     "wood, one InstancedMesh of leaf clusters tinted per instance, and one of apples. Fruit and foliage " +
     "scatter independently, so an apple can hang where a leaf cluster was skipped.",
 };

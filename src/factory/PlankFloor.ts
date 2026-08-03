@@ -34,7 +34,7 @@ export interface PlankFloorOptions extends PlankFloorLayoutOptions {
    * much, so this stays low; it mostly catches the light.
    */
   plankBow?: number;
-  /** Base timber colour. Defaults to `#6b4b2c`. Ignored when `tints` is given. */
+  /** Base timber color. Defaults to `#6b4b2c`. Ignored when `tints` is given. */
   color?: string;
   /**
    * Per-board tint spread in HSL, so no two boards match. Defaults to `0.06`.
@@ -55,7 +55,7 @@ export interface PlankFloorOptions extends PlankFloorLayoutOptions {
 }
 
 /**
- * A boarded floor, **laid rather than tiled**. Walking surface on `y = 0`, boards running along X, centred
+ * A boarded floor, **laid rather than tiled**. Walking surface on `y = 0`, boards running along X, centered
  * on the origin.
  *
  * The laying is {@link layPlankFloor} — rows of boards butted end to end, joints staggered from the row
@@ -64,9 +64,9 @@ export interface PlankFloorOptions extends PlankFloorLayoutOptions {
  *
  * **Baked to a single geometry and a single material**, whatever the floor's size. Every board is its own
  * {@link WeatheredPlankGeometry} with its own seed, so no two repeat — and differing items merge where
- * identical ones would instance. Per-board colour rides a **vertex attribute** rather than a material
+ * identical ones would instance. Per-board color rides a **vertex attribute** rather than a material
  * group, which is what keeps it to one draw call: a palette would otherwise cost one group, and one draw
- * call, per tint. The board's whole shell gets one colour, so it reads as a board rather than a gradient.
+ * call, per tint. The board's whole shell gets one color, so it reads as a board rather than a gradient.
  *
  * **Rotation is deliberately absent.** These boards are deformed individually and butt end-grain to
  * end-grain; laying them diagonally would need every perimeter board cut to the room, which is a different
@@ -79,7 +79,7 @@ export interface PlankFloorOptions extends PlankFloorLayoutOptions {
  * const floor = new PlankFloor({ length: 6, depth: 4, seed: 12 });
  * scene.add(floor);
  * floor.plankCount;   // how many boards it took
- * floor.closestJoint; // how close two neighbouring joints came — compare to minStagger
+ * floor.closestJoint; // how close two neighboring joints came — compare to minStagger
  * ```
  */
 export class PlankFloor extends Group {
@@ -91,7 +91,7 @@ export class PlankFloor extends Group {
   readonly rowCount: number;
   /** The width each board actually got, after the rows were fitted to `depth`. */
   readonly plankWidth: number;
-  /** How close any two neighbouring-row joints came. Compare to `minStagger`. */
+  /** How close any two neighboring-row joints came. Compare to `minStagger`. */
   readonly closestJoint: number;
 
   readonly #geometry: BufferGeometry;
@@ -113,13 +113,13 @@ export class PlankFloor extends Group {
 
     const { placements, rows, plankWidth, closestJoint } = layPlankFloor(layout);
     const seed = layout.seed ?? 0x51ab;
-    // A separate stream from the layout's, so changing a colour cannot move a board.
+    // A separate stream from the layout's, so changing a color cannot move a board.
     const random = mulberry32(seed ^ 0x9e3779b9);
 
     this.#ownsMaterial = material === undefined;
     this.#material =
       material ??
-      // White, so the vertex colour lands as the exact tint rather than multiplying into it — the same
+      // White, so the vertex color lands as the exact tint rather than multiplying into it — the same
       // trick `PumpkinPatch` plays with its rind.
       new MeshStandardMaterial({
         color: 0xffffff,
@@ -161,7 +161,7 @@ export class PlankFloor extends Group {
           .offsetHSL(signed(colorVariance) / 3, signed(colorVariance), signed(colorVariance));
       }
 
-      // One colour for the WHOLE board, so it reads as a board rather than a gradient across it.
+      // One color for the WHOLE board, so it reads as a board rather than a gradient across it.
       const count = board.attributes.position!.count;
       const colors = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) {
@@ -174,7 +174,7 @@ export class PlankFloor extends Group {
       boards.push(board);
     }
 
-    // Centre the run so the floor sits on the origin like every other assembly.
+    // Center the run so the floor sits on the origin like every other assembly.
     const merged = mergeGeometries(boards, false);
     boards.forEach((part) => part.dispose());
     if (!merged) throw new Error("PlankFloor: merge failed.");

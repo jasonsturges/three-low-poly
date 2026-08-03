@@ -30,7 +30,7 @@ export const meta = {
     "at any scale. Density is a CHANCE per cell, so the grid stays regular while the result does not. " +
     "This is ACCENT, not a brick simulation — a hand-drawn wall never draws every stone, it draws a few " +
     "proud ones and lets you infer the rest. Tight Length and Height ranges give you BRICK, where every " +
-    "unit is the same and one has simply popped; wide ranges give you moulded STONE. The two presets set " +
+    "unit is the same and one has simply popped; wide ranges give you molded STONE. The two presets set " +
     "nothing but those ranges.",
 };
 
@@ -44,7 +44,7 @@ export const meta = {
 //               architectural version of this, done on purpose and to a pattern rather than at random.
 //  BOSS         a projecting stone left for a carver to work later, sometimes never carved. The reason a
 //               real wall has these at all.
-//  BATTER       a wall's backward lean. Not modelled; would tilt the whole surface, not the stones.
+//  BATTER       a wall's backward lean. Not modeled; would tilt the whole surface, not the stones.
 
 export default function (container: HTMLElement) {
   const { scene, controls, dispose } = createScene(container, {
@@ -177,7 +177,7 @@ export default function (container: HTMLElement) {
       //   TOO THIN — the block's back face rises to meet the surface's FRONT face, and two coplanar
       //     surfaces fight.
       //   TOO THICK — with both faces built, a block from one side grows past the midplane and meets its
-      //     opposite number, two differently-tinted solids sharing space. That is the colour shimmer.
+      //     opposite number, two differently-tinted solids sharing space. That is the color shimmer.
       const floor = depth + params.surfaceThickness * 0.12;
       const ceiling = Math.max(floor, half + depth - params.surfaceThickness * 0.08);
       const wanted = params.stoneWidth;
@@ -245,7 +245,7 @@ export default function (container: HTMLElement) {
 
   const size = gui.addFolder("Stone Size");
   // THE brick/stone dial. Multiples of the nominal stone and of the course, so they hold at any scale.
-  // Collapse a range and every proud stone is the same unit; open it and each came from its own mould.
+  // Collapse a range and every proud stone is the same unit; open it and each came from its own mold.
   size.add(params, "lengthMin", 0.2, 2, 0.02).name("Length Min").onChange(rebuild);
   size.add(params, "lengthMax", 0.2, 2, 0.02).name("Length Max").onChange(rebuild);
   size.add(params, "heightMin", 0.2, 1.2, 0.02).name("Height Min").onChange(rebuild);
@@ -270,7 +270,7 @@ export default function (container: HTMLElement) {
     .add(
       {
         stone: () => {
-          // Each from its own mould. Wide on every axis, and rolled enough to catch the light unevenly.
+          // Each from its own mold. Wide on every axis, and rolled enough to catch the light unevenly.
           Object.assign(params, {
             lengthMin: 0.55, lengthMax: 1.35, heightMin: 0.68, heightMax: 0.98,
             depthMin: 0.018, depthMax: 0.07, tilt: 0.03, density: 0.16,
@@ -284,10 +284,10 @@ export default function (container: HTMLElement) {
     .name("Preset: Stone");
   size.open();
 
-  const colour = gui.addFolder("Colour");
-  colour.addColor(params, "stoneColor").name("Stone Color").onChange(rebuild);
-  colour.add(params, "colorVariance", 0, 0.35, 0.005).name("Color Variance").onChange(rebuild);
-  colour.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
+  const color = gui.addFolder("Color");
+  color.addColor(params, "stoneColor").name("Stone Color").onChange(rebuild);
+  color.add(params, "colorVariance", 0, 0.35, 0.005).name("Color Variance").onChange(rebuild);
+  color.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
 
   const inspect = gui.addFolder("Inspect");
   inspect.add(params, "wireframe").name("Wireframe").onChange(rebuild);

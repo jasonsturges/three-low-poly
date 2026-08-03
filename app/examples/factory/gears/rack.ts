@@ -79,7 +79,7 @@ export default function (container: HTMLElement) {
   gui.title("Rack");
 
   // "Bar" is the WHOLE rack — its stock dimensions. The plain material below the roots is the "back", and it
-  // is derived rather than dialled.
+  // is derived rather than dialed.
   const bar = gui.addFolder("Bar");
   bar.add(params, "length", 0.5, 8, 0.05).name("Length").onChange(rebuild);
   bar.add(params, "depth", 0.05, 1, 0.01).name("Depth").onChange(rebuild);
@@ -104,7 +104,7 @@ export default function (container: HTMLElement) {
   teeth.add(params, "lean", -1, 1, 0.01).name("Lean").onChange(rebuild);
   teeth.open();
 
-  // No rebuild — geometry is untouched by the colour.
+  // No rebuild — geometry is untouched by the color.
   const material = gui.addFolder("Material");
   material.addColor(colors, "steel").name("Steel").onChange(() => steel.color.set(colors.steel));
 

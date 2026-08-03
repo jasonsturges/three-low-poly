@@ -98,7 +98,7 @@ export default function (container: HTMLElement) {
   // Only visible on a low side count: at 4 the bore rests as a diamond, and PI/4 squares it up.
   bore.add(params, "holeRotation", 0, Math.PI / 2, 0.01).name("Hole Rotation").onChange(rebuild);
 
-  // No rebuild — geometry is untouched by the colour.
+  // No rebuild — geometry is untouched by the color.
   const material = gui.addFolder("Material");
   material.addColor(colors, "steel").name("Steel").onChange(() => steel.color.set(colors.steel));
 

@@ -88,7 +88,7 @@ export default function (container: HTMLElement) {
   mesh.add(params, "rotation", 0, Math.PI / 2, 0.01).name("Rotation").onChange(rebuild);
   mesh.open();
 
-  // No rebuild — geometry is untouched by the colour.
+  // No rebuild — geometry is untouched by the color.
   const material = gui.addFolder("Material");
   material.addColor(colors, "iron").name("Iron").onChange(() => iron.color.set(colors.iron));
 

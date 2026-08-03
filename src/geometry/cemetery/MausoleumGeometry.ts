@@ -135,7 +135,7 @@ export class MausoleumGeometry extends BufferGeometry {
     roofGeometry.translate(0, 5, 0);
 
     // The room inside. The floor sits a hair proud of the base's top face rather than flush with it —
-    // two coplanar faces at the same depth is a z-fight, and a millimetre is cheaper than a fix.
+    // two coplanar faces at the same depth is a z-fight, and a millimeter is cheaper than a fix.
     const floor = new BoxGeometry(INNER_W, 0.1, INNER_D);
     floor.translate(0, BASE_HEIGHT - 0.05 + 0.001, 0);
 

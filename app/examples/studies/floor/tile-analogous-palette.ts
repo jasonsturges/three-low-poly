@@ -6,9 +6,9 @@ import { createScene } from "../../../framework/createScene";
 export const meta = {
   title: "Tile Analogous Palette",
   description:
-    "STUDY — how a tile field gets COLOURED, which is deliberately the caller's job. The factories return " +
+    "STUDY — how a tile field gets COLORED, which is deliberately the caller's job. The factories return " +
     "an InstancedMesh with a WHITE material, so `setColorAt` lands the exact tint rather than multiplying " +
-    "into it; everything past that is yours. Here `getAnalogousColors` walks a base hue into neighbours on " +
+    "into it; everything past that is yours. Here `getAnalogousColors` walks a base hue into neighbors on " +
     "the wheel, which is why the field reads as one material weathered differently rather than as a set of " +
     "unrelated tiles. Drag Hue and the whole floor shifts together, keeping its relationships.",
 };

@@ -57,13 +57,13 @@ export const meta = {
 //               member directions. Any three directions have one; four usually do not.
 //  SEAM         where two members' surfaces meet. For members related by a mirror it lies in the plane
 //               bisecting their axes, which is why that simpler construction works — when it works.
-//  SECTION      the cross-section, CENTRED on the member's axis here. Centring matters: a section offset
+//  SECTION      the cross-section, CENTERED on the member's axis here. Centering matters: a section offset
 //               to one side displaces each member along its own roll, so members rolled differently end up
 //               translated as well as turned, and the joint fails in a way that looks like bad placement
 //               rather than bad seating.
 //  HIP END      an end bounded by TWO planes rather than one. What every member here has.
 //  ARROWHEAD    the end shape from stopping at the FIRST bounding plane met.
-//  COPE         cutting a member to the SURFACE of its neighbour instead of to a plane. The fallback when
+//  COPE         cutting a member to the SURFACE of its neighbor instead of to a plane. The fallback when
 //               a miter cannot close, and what a ridge cap has to do against a pair of hips.
 
 type Seating = "common" | "own";
@@ -227,7 +227,7 @@ export default function (container: HTMLElement) {
     const list = members();
     const axis = coneAxis(list);
 
-    // Cyclic order about the cone axis — "next neighbour" is only meaningful as an angle about some axis.
+    // Cyclic order about the cone axis — "next neighbor" is only meaningful as an angle about some axis.
     const reference = Math.abs(new Vector3(1, 0, 0).dot(axis)) > 0.9 ? new Vector3(0, 0, 1) : new Vector3(1, 0, 0);
     const u = new Vector3().crossVectors(axis, reference).normalize();
     const v = new Vector3().crossVectors(axis, u);
@@ -282,7 +282,7 @@ export default function (container: HTMLElement) {
       stage.add(new Mesh(geometry, material));
       if (params.wireframe) stage.add(new LineSegments(new WireframeGeometry(geometry), wire));
 
-      // CLOSURE — do this member's cut face and its neighbour's coincide on the plane they share? That is
+      // CLOSURE — do this member's cut face and its neighbor's coincide on the plane they share? That is
       // the whole question, and it is a distance rather than an opinion.
       const mine = faceOn(member, up, planes[1].normal, params.length);
       const theirs = faceOn(next, rollOf(next), planes[1].normal, params.length);
@@ -301,7 +301,7 @@ export default function (container: HTMLElement) {
     frameObject(handle, stage, { dolly: false });
   };
   rebuild();
-  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // Framed once here, then re-centered without dollying after every rebuild: these studies have dials that
   // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
   frameObject(handle, stage, { fit: 1.45 });
 

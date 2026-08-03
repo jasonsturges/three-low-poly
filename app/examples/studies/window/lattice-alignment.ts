@@ -46,7 +46,7 @@ export const meta = {
 //      x = v·s / (2 sin θ)                 v = m − k
 //      y = (u·s + 2·phase) / (2 cos θ)     u = k + m,  same parity as v
 //
-//  So the crossings are a centred rectangular lattice, and one DIAMOND measures
+//  So the crossings are a centered rectangular lattice, and one DIAMOND measures
 //
 //      W = s / sin θ     corner to corner, horizontally
 //      H = s / cos θ     corner to corner, vertically

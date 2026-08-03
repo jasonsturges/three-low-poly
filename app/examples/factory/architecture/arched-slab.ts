@@ -28,7 +28,7 @@ export default function (container: HTMLElement) {
     curveSegments: 16,
   };
 
-  // The material the `ArchedSlab` prefab used to hard-code. It lives here now, so the colour is a control
+  // The material the `ArchedSlab` prefab used to hard-code. It lives here now, so the color is a control
   // rather than a constant.
   const colors = { slab: "#8d8477" };
   const material = new MeshStandardMaterial({
@@ -58,12 +58,12 @@ export default function (container: HTMLElement) {
   gui.add(params, "archWidth", 0.1, 2, 0.05).name("Arch Span").onChange(rebuild);
   gui.add(params, "archHeight", 0.05, 1.5, 0.05).name("Arch Rise").onChange(rebuild);
   gui.add(params, "depth", 0.02, 0.8, 0.02).name("Depth").onChange(rebuild);
-  // 3 = chiselled and faceted. 24 = smooth.
+  // 3 = chiseled and faceted. 24 = smooth.
   gui.add(params, "curveSegments", 2, 32, 1).name("Curve Segments").onChange(rebuild);
 
   rebuild();
 
-  // No rebuild — geometry is untouched by the colour.
+  // No rebuild — geometry is untouched by the color.
   const materialFolder = gui.addFolder("Material");
   materialFolder.addColor(colors, "slab").name("Color").onChange(() => material.color.set(colors.slab));
 

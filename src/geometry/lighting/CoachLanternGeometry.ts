@@ -317,7 +317,7 @@ export class CoachLanternGeometry extends BufferGeometry {
     );
 
     // --- floor plate, and the finial hanging under it -------------------------
-    // STACKS BELOW the lower rail, mirroring the roof plate stacking above the upper rail. Centring it on
+    // STACKS BELOW the lower rail, mirroring the roof plate stacking above the upper rail. Centering it on
     // `baseY` instead let it swallow the rail — and once the thickness became adjustable, a thick enough
     // plate made the bottom rail disappear entirely. Stacked, the cage reads as a complete frame at every
     // setting, with both plates outside it.

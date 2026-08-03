@@ -39,7 +39,7 @@ export default function (container: HTMLElement) {
     speed: 0.4,
   };
   const colors = { wheel: "#a8935e", pinion: "#c9a227" };
-  const stats = { wheelRadius: "", pinionRadius: "", centerDistance: "", ratio: "", slide: "" };
+  const stats = { wheelRadius: "", pinionRadius: "", centeredistance: "", ratio: "", slide: "" };
 
   const brass = new MeshStandardMaterial({ color: new Color(colors.wheel), metalness: 0.85, roughness: 0.32, flatShading: true });
   const gilt = new MeshStandardMaterial({ color: new Color(colors.pinion), metalness: 0.9, roughness: 0.26, flatShading: true });
@@ -73,7 +73,7 @@ export default function (container: HTMLElement) {
     const pinionRadius = (params.module * params.pinionTeeth) / 2;
     // Two skew lines have exactly one common perpendicular, and the pitch cylinders touch on it — so the
     // center distance is the plain sum, with no apex to reconcile and no cone angle to convert.
-    const centerDistance = wheelRadius + pinionRadius;
+    const centeredistance = wheelRadius + pinionRadius;
 
     wheel.geometry = new CrossedWheelGeometry({
       teeth: params.wheelTeeth,
@@ -119,7 +119,7 @@ export default function (container: HTMLElement) {
 
     // Folding about the tangent swings the pinion's center along an arc around the contact; tipping about the
     // line of centers leaves it where it was.
-    if (skew) pinionPivot.position.set(centerDistance, 0, 0);
+    if (skew) pinionPivot.position.set(centeredistance, 0, 0);
     else pinionPivot.position.set(wheelRadius + pinionRadius * Math.cos(fold), 0, -pinionRadius * Math.sin(fold));
 
     // Explicit basis again: local +Z on the pinion's own axis, local +Y aimed back at the contact, so
@@ -139,7 +139,7 @@ export default function (container: HTMLElement) {
 
     stats.wheelRadius = wheelRadius.toFixed(4);
     stats.pinionRadius = pinionRadius.toFixed(4);
-    stats.centerDistance = centerDistance.toFixed(4);
+    stats.centeredistance = centeredistance.toFixed(4);
     stats.ratio = `${(params.wheelTeeth / params.pinionTeeth).toFixed(3)} : 1`;
     // Skew: both surface velocities have the SAME magnitude and differ only in direction, by the crossing
     // angle — so their difference is the chord across it, and depends on nothing else. Intersecting: the two
@@ -186,7 +186,7 @@ export default function (container: HTMLElement) {
   const readout = gui.addFolder("Measured");
   readout.add(stats, "wheelRadius").name("Wheel Pitch Radius").listen().disable();
   readout.add(stats, "pinionRadius").name("Pinion Pitch Radius").listen().disable();
-  readout.add(stats, "centerDistance").name("Center Distance").listen().disable();
+  readout.add(stats, "centeredistance").name("Center Distance").listen().disable();
   readout.add(stats, "ratio").name("Ratio").listen().disable();
   // The finding: 2 x sin(angle / 2), as a fraction of pitch-line speed. Zero only at zero.
   readout.add(stats, "slide").name("Tooth Scrub").listen().disable();

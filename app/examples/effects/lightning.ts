@@ -138,7 +138,7 @@ export default function (container: HTMLElement) {
       glass: false,
     });
     // Placed by its SILL, exactly like the hole — the window's own anchor is `y = 0` at the sill, so no
-    // centre has to be computed and kept in agreement.
+    // center has to be computed and kept in agreement.
     window.position.set(x, SILL_Y, windowZ);
     architecture.add(window);
     windows.push(window);

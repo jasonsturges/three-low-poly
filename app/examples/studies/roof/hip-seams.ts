@@ -25,7 +25,7 @@ export const meta = {
   description:
     "STUDY — a pyramid roof is a tent until its joints are covered. Four planes meeting at an apex leave " +
     "four HIPS, and on a real roof every one is a seam that has to be capped or the water gets in. " +
-    "Modelling that cap is what turns a cone into a built object. The roof is the port; the SEAM is the " +
+    "Modeling that cap is what turns a cone into a built object. The roof is the port; the SEAM is the " +
     "subject. " +
     "A cap is not a box you place, it is a folded sheet laid over the joint, and almost everything about " +
     "it is therefore DERIVED. It seats on the bisector of the two planes it covers — `normalize(n1 + n2)`, " +
@@ -47,7 +47,7 @@ export const meta = {
     "looks authoritative. Take the plan off square and the two planes at each hip no longer share a pitch, " +
     "the mirror is gone, and it drifts — 1.4° at 3.4 x 3.6, 12.6° at 4.4 x 2.6, 27.7° at 6 x 1.5. Both " +
     "wrong seatings now fail VISIBLY as well as numerically, because a tipped cap stops touching the roof. " +
-    "The apex is now MITERED. Each cap's end is cut against its two neighbours around the apex — the plane " +
+    "The apex is now MITERED. Each cap's end is cut against its two neighbors around the apex — the plane " +
     "through the apex with normal `normalize(a_i - a_j)`, both axes pointing away down their own hip, so " +
     "adjacent caps are handed the same surface from opposite sides and abut with no gap by construction. " +
     "Every cap ends in an arrowhead: two facets meeting at a ridge, which is a HIP END, so the cut is the " +
@@ -58,7 +58,7 @@ export const meta = {
     "other. " +
     "What the miter does NOT fix is the peak. A cap's top face sits `rise` out along its OWN bisector and " +
     "those bisectors SPLAY, so adjacent top faces only meet when the width reaches `2 * rise * |horizontal " +
-    "part of the bisector|` — about 0.071 at the default rise. Below it a dish opens at the centre; above " +
+    "part of the bisector|` — about 0.071 at the default rise. Below it a dish opens at the center; above " +
     "it they overlap. That is a COVERAGE problem rather than a cutting one, no cut can close it, and it is " +
     "what a FINIAL is for — a joint cover, not ornament, the same thing the quoin turned out to be at a " +
     "wall corner.",
@@ -360,8 +360,8 @@ export default function (container: HTMLElement) {
       const parts: BufferGeometry[] = [];
       const direction = new Vector3();
 
-      // Each cap's apex end is cut against its two NEIGHBOURS around the apex — the construction proved
-      // in `studies/miter/junction`. Corner `i`'s neighbours are simply corners `i - 1` and `i + 1`.
+      // Each cap's apex end is cut against its two NEIGHBORS around the apex — the construction proved
+      // in `studies/miter/junction`. Corner `i`'s neighbors are simply corners `i - 1` and `i + 1`.
       const awayFrom = (joint: Joint) => new Vector3().subVectors(joint.from, joint.to).normalize();
 
       roof.joints.forEach((joint, index) => {
@@ -384,14 +384,14 @@ export default function (container: HTMLElement) {
         const from = joint.from.clone().setY(joint.from.y + base);
         const to = joint.to.clone().setY(joint.to.y + base);
 
-        // The miter plane against a neighbour: through the apex, normal `normalize(a_i - a_j)` with both
-        // axes pointing AWAY down their own hip. The neighbour is handed the same plane from the other
+        // The miter plane against a neighbor: through the apex, normal `normalize(a_i - a_j)` with both
+        // axes pointing AWAY down their own hip. The neighbor is handed the same plane from the other
         // side, so adjacent caps abut with no gap by construction rather than by tuning.
         const count = roof.joints.length;
         const mine = awayFrom(joint);
         const against = (other: Joint): CutPlane => miterPlane(to, mine, awayFrom(other));
         // Un-mitered leaves the end square across the hip — every cap through the apex, slicing through
-        // its neighbours. That is the pile-up the miter exists to resolve.
+        // its neighbors. That is the pile-up the miter exists to resolve.
         const square: CutPlane = { point: to.clone(), normal: new Vector3().subVectors(from, to).normalize() };
         const bounds: [CutPlane, CutPlane] = params.miter
           ? [against(roof.joints[(index + count - 1) % count]!), against(roof.joints[(index + 1) % count]!)]
@@ -466,7 +466,7 @@ export default function (container: HTMLElement) {
     frameObject(handle, stage, { dolly: false });
   };
   rebuild();
-  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // Framed once here, then re-centered without dollying after every rebuild: these studies have dials that
   // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
   frameObject(handle, stage, { fit: 1.45 });
 
@@ -476,7 +476,7 @@ export default function (container: HTMLElement) {
   const seam = gui.addFolder("Seams");
   // The whole point of the study. Off, it is a tent; on, it is a roof.
   seam.add(params, "seams").name("Show Seams").onChange(rebuild);
-  // Each cap's apex end cut against its two neighbours. Off, every end is square across its own hip and
+  // Each cap's apex end cut against its two neighbors. Off, every end is square across its own hip and
   // all four pass through the apex, slicing through each other — the pile-up this resolves.
   seam.add(params, "miter").name("Miter Apex").onChange(rebuild);
   // The two dials that are left, and they no longer fight: across, and out. Thickness is derived from

@@ -21,8 +21,8 @@ export const meta = {
     "The bend has exactly ONE control, and that is a property of the shape rather than a simplification: " +
     "the corner is always 90°, so a quarter arc is fully determined by its RADIUS. Width, height and depth " +
     "only say where the flats end — none of them touches what the curve does. " +
-    "The join disappears because the arc's centre sits at (radius, radius), the only place a circle is " +
-    "tangent to BOTH planes at once; there the curve leaves each flat travelling in that flat's own " +
+    "The join disappears because the arc's center sits at (radius, radius), the only place a circle is " +
+    "tangent to BOTH planes at once; there the curve leaves each flat traveling in that flat's own " +
     "direction, so there is no crease to catch light. " +
     "And it is the one place `flatShading` is wrong. Everything else here wants to read as intentionally " +
     "faceted; this wants to read as continuous, and faceting IS seeing the bend. Turn Flat Shading on and " +

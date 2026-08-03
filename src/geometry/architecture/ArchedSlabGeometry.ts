@@ -7,7 +7,7 @@ export interface ArchedSlabGeometryOptions extends ArchedSlabShapeOptions {
   /**
    * Segments in the arc — the low-poly knob. Defaults to `16`.
    *
-   * `3` gives a chiselled, faceted arch; `24` a smooth cast one. Same outline, chosen resolution.
+   * `3` gives a chiseled, faceted arch; `24` a smooth cast one. Same outline, chosen resolution.
    */
   curveSegments?: number;
 }

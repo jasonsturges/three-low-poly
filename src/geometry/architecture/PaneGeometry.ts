@@ -46,7 +46,7 @@ export interface PaneGeometryOptions {
  * Follows ANY arch, including `square` — a flat head is an arch-shaped hole with no curve in it — so
  * there is no separate rectangular pane, and the name does not pretend otherwise.
  *
- * Drawn at the ORIGIN — centred on X, sill at `y = 0`, lying in the XY plane at `z = 0` — regardless of
+ * Drawn at the ORIGIN — centered on X, sill at `y = 0`, lying in the XY plane at `z = 0` — regardless of
  * where the opening sits in its wall, so one pane can be positioned into many openings and so it lands on
  * a frame and a lattice built from the same description. Material groups: none.
  *

@@ -6,9 +6,9 @@ import { createScene } from "../../../framework/createScene";
 export const meta = {
   title: "Quoins",
   description:
-    "The dressed stones at a building's external corner. The realisation that makes this simple: a quoin " +
+    "The dressed stones at a building's external corner. The realization that makes this simple: a quoin " +
     "is NOT an L-shaped block. It is a rectangular stone laid so it shows a LONG face on one wall and a " +
-    "SHORT end on the other — so every pattern in the catalogue is just a rule for those two returns per " +
+    "SHORT end on the other — so every pattern in the catalog is just a rule for those two returns per " +
     "course. Straight keeps them equal; Alternating swaps them each course, which is TOOTHING and reads as " +
     "though the two walls are bonded into one another; Staggered varies one leg and holds the other. " +
     "Standing proud is not decoration either: flush would land the quoin's end exactly coplanar with the " +
@@ -85,7 +85,7 @@ export default function (container: HTMLElement) {
     b.position.set(0, height / 2, -L / 2 + t / 2);
     stage.add(a, b);
 
-    // The origin is the corner LINE — where the two walls' centre planes cross — so placing the stack is
+    // The origin is the corner LINE — where the two walls' center planes cross — so placing the stack is
     // one line. `wallThickness` and `proud` carry it out to where a quoin actually sits.
     const geometry = new QuoinStackGeometry(params);
     const quoins = new Mesh(geometry, stone);
@@ -112,7 +112,7 @@ export default function (container: HTMLElement) {
   pattern.add(params, "longLeg", 0.1, 1, 0.02).name("Long Leg").onChange(build);
   pattern.add(params, "shortLeg", 0.05, 1, 0.02).name("Short Leg").onChange(build);
   // Teeth of a comb — the wall shows between quoins. The pattern still advances per quoin LAID, so this
-  // composes with Alternating instead of cancelling it.
+  // composes with Alternating instead of canceling it.
   pattern.add(params, "everyOther").name("Every Other").onChange(build);
   // Two corners of one building want opposite phases, or the pattern mirrors instead of continuing round.
   pattern.add(params, "phase", 0, 1, 1).name("Phase").onChange(build);
@@ -127,12 +127,12 @@ export default function (container: HTMLElement) {
   corner.add(params, "wallLength", 1, 6, 0.1).name("Wall Length").onChange(build);
   corner.open();
 
-  const colour = gui.addFolder("Colour");
-  colour.addColor(params, "color").name("Color").onChange(build);
-  colour.add(params, "colorVariance", 0, 0.25, 0.005).name("Color Variance").onChange(build);
+  const color = gui.addFolder("Color");
+  color.addColor(params, "color").name("Color").onChange(build);
+  color.add(params, "colorVariance", 0, 0.25, 0.005).name("Color Variance").onChange(build);
   // Only correct because ONE stack owns the corner. Two stacks would each want a uniform tint instead.
-  colour.add(params, "alternateTint").name("Alternate Tint").onChange(build);
-  colour.add(params, "seed", 0, 65535, 1).name("Seed").onChange(build);
+  color.add(params, "alternateTint").name("Alternate Tint").onChange(build);
+  color.add(params, "seed", 0, 65535, 1).name("Seed").onChange(build);
 
   const readout = gui.addFolder("Readout");
   readout.add(params, "laid").name("Laid").listen().disable();

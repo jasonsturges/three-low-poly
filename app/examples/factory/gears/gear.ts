@@ -108,7 +108,7 @@ export default function (container: HTMLElement) {
   bore.add(params, "holeRotation", 0, Math.PI / 2, 0.01).name("Hole Rotation").onChange(rebuild);
   bore.open();
 
-  // No rebuild — geometry is untouched by the colour.
+  // No rebuild — geometry is untouched by the color.
   const material = gui.addFolder("Material");
   material.addColor(colors, "metal").name("Metal").onChange(() => metal.color.set(colors.metal));
 

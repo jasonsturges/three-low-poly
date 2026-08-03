@@ -8,8 +8,8 @@ export const meta = {
   description:
     "A boarded floor, LAID rather than tiled. The mistake that makes a plank floor read as stripes is " +
     "spanning each board across the whole room — a real floor is rows of several boards butted end to end, " +
-    "with the end joints in neighbouring rows deliberately kept apart. Drag Min Stagger to nothing and " +
-    "watch the joints line up into a grid; no amount of colour or edge wander rescues it. Two smaller " +
+    "with the end joints in neighboring rows deliberately kept apart. Drag Min Stagger to nothing and " +
+    "watch the joints line up into a grid; no amount of color or edge wander rescues it. Two smaller " +
     "trade rules are in there too: each row opens with a shortened starter board, and a row never ends on " +
     "a runt. Every board is its own weathered plank with its own seed, so none repeat — and because they " +
     "all differ, the whole floor MERGES: one geometry, one material, ONE DRAW CALL at any size. Watch the " +
@@ -110,11 +110,11 @@ export default function (container: HTMLElement) {
   weather.add(params, "plankBow", 0, 0.6, 0.01).name("Bow").onChange(rebuild);
   weather.open();
 
-  const colour = gui.addFolder("Colour");
-  colour.addColor(params, "color").name("Timber").onChange(rebuild);
+  const color = gui.addFolder("Color");
+  color.addColor(params, "color").name("Timber").onChange(rebuild);
   // Per board, not per vertex — the whole board takes one tint, so it reads as a board.
-  colour.add(params, "colorVariance", 0, 0.25, 0.005).name("Variance").onChange(rebuild);
-  colour.open();
+  color.add(params, "colorVariance", 0, 0.25, 0.005).name("Variance").onChange(rebuild);
+  color.open();
 
   const readout = gui.addFolder("Readout");
   readout.add(params, "planks").name("Laid").listen().disable();

@@ -61,7 +61,7 @@ function branchGeometry(
  * Six primary branches leave a short trunk, each carrying a shoulder, a tip, and two twigs — orchard form
  * rather than the recursive gnarl of {@link AutumnTree}. **Deliberately independent of it:** branching rules,
  * foliage, and fruit all live here, because a pruned orchard tree is a different thing from a wild one, not a
- * reparameterisation of it.
+ * reparameterization of it.
  *
  * Three draw calls at any size — merged wood, one {@link InstancedMesh} of leaf clusters tinted per instance,
  * and one of apples. Exposed as {@link wood}, {@link leaves}, and {@link apples}.
@@ -69,7 +69,7 @@ function branchGeometry(
  * Local frame: **grows from the origin**, base flat on the `y = 0` plane, occupying `+Y`. See
  * {@link AppleTreeOptions.baseRise}.
  *
- * **This factory owns its materials**, faithful to the scene it came from, where bark, leaf, and apple colours
+ * **This factory owns its materials**, faithful to the scene it came from, where bark, leaf, and apple colors
  * are part of the asset's identity. Call {@link dispose} to release them.
  *
  * @example

@@ -35,7 +35,7 @@ export const meta = {
     "hidden by construction, and a rough one costs nothing. " +
     "The clipping is Sutherland–Hodgman against a convex interior, the same operation the hardwood floor " +
     "uses, with the same sliver rule: a shake reduced below a minimum area is dropped rather than laid, " +
-    "because a two-millimetre wedge of cedar is debris and not a shake. The readout counts how many were " +
+    "because a two-millimeter wedge of cedar is debris and not a shake. The readout counts how many were " +
     "laid whole, how many were cut, and how many were thrown away — on a triangular face that last number " +
     "is large, and it is the real cost of covering a shape that is not a rectangle. " +
     "Watch Sides. The faces get narrower and more numerous, so the same roof takes more courses of shorter " +
@@ -53,7 +53,7 @@ export const meta = {
 //  BEVEL BACK  the trade's name for that cut. Deliberately rough — it is covered.
 //  SLIVER      an offcut too small to be a shake. Dropped, not laid.
 //  EXPOSURE    how much of each shake shows. Shake length minus headlap, and an OUTPUT.
-//  STAGGER     the offset between end joints in neighbouring courses. On a roof, aligned joints are where
+//  STAGGER     the offset between end joints in neighboring courses. On a roof, aligned joints are where
 //              water goes.
 //  COURSE      one row of shakes, laid across the face and stacked up the slope from the eave.
 
@@ -286,8 +286,8 @@ export default function (container: HTMLElement) {
         // cap's fold is where the two OFFSET PLANES meet, which is up the BISECTOR by `lap / cos(alpha)`:
         // that single point lies in both, since the bisector makes the same angle with either normal.
         const lap = params.thickness * (1 + params.capLap);
-        const neighbour = faces[edgeIndex === 0 ? (fi + n - 1) % n : (fi + 1) % n]!;
-        const bisector = face.normal.clone().add(neighbour.normal).normalize();
+        const neighbor = faces[edgeIndex === 0 ? (fi + n - 1) % n : (fi + 1) % n]!;
+        const bisector = face.normal.clone().add(neighbor.normal).normalize();
         const cosAlpha = Math.max(1e-6, bisector.dot(face.normal));
 
         // AT THE APEX THE LIFT FOLLOWS THE ROOF'S AXIS, NOT THE HIP'S BISECTOR. Every hip has a different
@@ -452,7 +452,7 @@ export default function (container: HTMLElement) {
     frameObject(handle, stage, { dolly: false });
   };
   rebuild();
-  // Framed once here, then re-centred without dollying after every rebuild: these studies have dials that
+  // Framed once here, then re-centered without dollying after every rebuild: these studies have dials that
   // move the model (rise, ridge length, sides), and re-fitting each time would snap the viewer's zoom back.
   frameObject(handle, stage, { fit: 1.45 });
 
@@ -471,7 +471,7 @@ export default function (container: HTMLElement) {
   cap.add(params, "caps").name("Caps").onChange(rebuild);
   cap.add(params, "wing", 0.03, 0.4, 0.005).name("Wing Width").onChange(rebuild);
   // How far the cap rides above the field, in butt thicknesses. It has to clear the course beneath, or
-  // the bevelled ends it exists to hide show through it.
+  // the beveled ends it exists to hide show through it.
   cap.add(params, "capLap", 0.2, 4, 0.1).name("Cap Lap").onChange(rebuild);
   cap.open();
 
@@ -487,9 +487,9 @@ export default function (container: HTMLElement) {
   shake.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
   shake.open();
 
-  const colour = gui.addFolder("Colour");
-  colour.addColor(params, "color").name("Color").onChange(rebuild);
-  colour.add(params, "colorVariance", 0, 0.3, 0.005).name("Color Variance").onChange(rebuild);
+  const color = gui.addFolder("Color");
+  color.addColor(params, "color").name("Color").onChange(rebuild);
+  color.add(params, "colorVariance", 0, 0.3, 0.005).name("Color Variance").onChange(rebuild);
 
   const inspect = gui.addFolder("Inspect");
   inspect.add(params, "wireframe").name("Wireframe").onChange(rebuild);

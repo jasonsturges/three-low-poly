@@ -28,9 +28,9 @@ export const meta = {
 //
 //  CROWN         wall meets ceiling. Corner section, hanging down.
 //  PICTURE RAIL  high on the wall. Hooks hang from it, which is why the plaster above is often a
-//                different colour. Surface section.
+//                different color. Surface section.
 //  CHAIR RAIL    ~900mm, at the back of a chair. Surface section. DADO RAIL is the same thing named for
-//                the panelled zone beneath it.
+//                the paneled zone beneath it.
 //  BASE          wall meets floor. Corner section, standing up. Skirting, in the UK.
 //
 //  A rail's height on the wall is a DESIGN decision, not a derived one — a chair rail sits where a chair

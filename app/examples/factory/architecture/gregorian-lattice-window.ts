@@ -106,7 +106,7 @@ export default function (container: HTMLElement) {
   shape.open();
 
   const glazing = gui.addFolder("Glazing Bars");
-  // A LIGHT is one pane; 3 across gives two mullions. An odd count puts a light on the centreline, an
+  // A LIGHT is one pane; 3 across gives two mullions. An odd count puts a light on the centerline, an
   // even one puts a bar there — the factory phases the family accordingly.
   glazing.add(params, "lightsAcross", 1, 8, 1).name("Lights Across").onChange(build);
   glazing.add(params, "lightsUp", 1, 10, 1).name("Lights Up").onChange(build);

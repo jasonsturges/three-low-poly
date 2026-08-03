@@ -22,7 +22,7 @@ export const meta = {
   title: "Mitered Corner",
   description:
     "STUDY — the reference for joining swept bars, isolated to THREE PIECES at one bottom corner of an " +
-    "iron cage: two rails and the raked post they meet. Built twice, labelled in the scene. LEFT (BUG) is " +
+    "iron cage: two rails and the raked post they meet. Built twice, labeled in the scene. LEFT (BUG) is " +
     "framed perpendicular to each path — the rails stop dead at the corner leaving a wedge of nothing, and " +
     "the post's slanted end lip punches out through the rail. RIGHT (MITERED) shares one ring between rail " +
     "segments and seat cuts the post to the surface it stands on, so nothing interpenetrates. Overlay the " +
@@ -206,7 +206,7 @@ export default function (container: HTMLElement) {
   bounce.position.set(-0.4, -0.8, 0.3);
   scene.add(key, bounce);
 
-  // Mid-grey and barely metallic. Dark metal needs an environment map to read as anything but black, and
+  // Mid-gray and barely metallic. Dark metal needs an environment map to read as anything but black, and
   // this study is about seeing form — legibility beats material accuracy here.
   const iron = new MeshStandardMaterial({
     color: 0x8d949e,
