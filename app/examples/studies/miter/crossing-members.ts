@@ -9,9 +9,11 @@ import {
   LineSegments,
   Mesh,
   MeshStandardMaterial,
+  Vector2,
   Vector3,
   WireframeGeometry,
 } from "three";
+import { ShapeUtils } from "three";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -62,6 +64,7 @@ export const meta = {
 //  NOTCH WALL    bounded by the crossing member's own SIDE PLANE, so it slants with the crossing angle.
 
 type Joint = "pass" | "interpenetrate" | "halfLap" | "housed";
+type Build = "assembly" | "solid";
 
 interface Member {
   name: string;
@@ -161,6 +164,152 @@ const piece = (
   return geometry;
 };
 
+/**
+ * The shoulder positions on ONE side of the host, as distances along its axis.
+ *
+ * A notch is bounded by the crossing member's two side planes, and for a point at cross-offset `u` those
+ * are reached at `t = (+/-w/2 - c0 - u k) / m`. Every term is linear in `u`, which is the fact the solid
+ * below is built on: the shoulders sweep straight across the host's width, so the whole notched member is
+ * a LOFT between two outlines rather than anything needing a boolean.
+ */
+const shouldersAt = (
+  u: number,
+  host: Member,
+  hostAcross: Vector3,
+  other: Member,
+  otherAcross: Vector3,
+): [number, number] | null => {
+  const c0 = host.origin.clone().sub(other.origin).dot(otherAcross);
+  const k = hostAcross.dot(otherAcross);
+  const m = host.axis.dot(otherAcross);
+  if (Math.abs(m) < 1e-9) return null; // running parallel to the slab — no shoulders to find
+  const half = other.width / 2;
+  const a = (half - c0 - u * k) / m;
+  const b = (-half - c0 - u * k) / m;
+  return [Math.min(a, b), Math.max(a, b)];
+};
+
+/**
+ * The host's silhouette at one side face, as a closed outline in (length, height).
+ *
+ * A rectangle with a step cut into one edge — eight vertices, always eight, even when the notch runs past
+ * an end and some of them coincide. Keeping the count fixed is what lets the two side outlines be lofted
+ * to each other directly; the degenerate triangles that result are dropped at emit time, which is cheaper
+ * and far less fiddly than reconciling two polygons of different lengths.
+ */
+const notchOutline = (
+  t0: number,
+  t1: number,
+  low: number,
+  high: number,
+  shoulders: [number, number] | null,
+  cheek: number,
+  keep: "bottom" | "top",
+): [number, number][] => {
+  if (!shoulders) {
+    return [
+      [t0, low],
+      [t1, low],
+      [t1, high],
+      [t0, high],
+    ];
+  }
+  const s = Math.max(t0, Math.min(shoulders[0], t1));
+  const e = Math.max(t0, Math.min(shoulders[1], t1));
+  return keep === "bottom"
+    ? [
+        [t0, low],
+        [t1, low],
+        [t1, high],
+        [e, high],
+        [e, cheek],
+        [s, cheek],
+        [s, high],
+        [t0, high],
+      ]
+    : [
+        [t0, low],
+        [s, low],
+        [s, cheek],
+        [e, cheek],
+        [e, low],
+        [t1, low],
+        [t1, high],
+        [t0, high],
+      ];
+};
+
+/**
+ * ONE closed shell for a notched member, lofted between its two side outlines.
+ *
+ * The alternative — and what the Assembly build does — is to union several prisms. That is correct and
+ * invisible while opaque, but it leaves coincident interior faces where the pieces abut, costs more
+ * triangles, and is not a single manifold. This is the same member as one surface.
+ */
+const notchedSolid = (
+  host: Member,
+  up: Vector3,
+  across: Vector3,
+  low: number,
+  high: number,
+  cheek: number,
+  keep: "bottom" | "top",
+  other: Member,
+  otherAcross: Vector3,
+  length: number,
+): BufferGeometry | null => {
+  const halfWidth = host.width / 2;
+  const t0 = -length / 2;
+  const t1 = length / 2;
+
+  const sides = [-halfWidth, halfWidth].map((u) => ({
+    u,
+    outline: notchOutline(t0, t1, low, high, shouldersAt(u, host, across, other, otherAcross), cheek, keep),
+  }));
+  if (sides[0]!.outline.length !== sides[1]!.outline.length) return null;
+
+  const at = (u: number, [t, v]: [number, number]) =>
+    host.origin.clone().addScaledVector(host.axis, t).addScaledVector(across, u).addScaledVector(up, v);
+  const left = sides[0]!.outline.map((p) => at(sides[0]!.u, p));
+  const right = sides[1]!.outline.map((p) => at(sides[1]!.u, p));
+  const count = left.length;
+
+  const triangles: Vector3[][] = [];
+  // The two side faces, EAR CLIPPED rather than fanned. The outline is not convex — a step is cut into one
+  // edge — and a corner fan only stays inside a polygon that is star-shaped from that corner. It happens
+  // to be for a notch cut into the top, and is NOT for one cut into the bottom, where the fan escapes
+  // across the notch and leaves an open shell. Volume still comes out right in that case, because the
+  // stray triangles cancel in the divergence sum, so only an edge-manifold check catches it.
+  const contour = sides[0]!.outline.map(([t, v]) => new Vector2(t, v));
+  const faces = ShapeUtils.triangulateShape(contour, []);
+  for (const [x, y, z] of faces) {
+    triangles.push([left[x!]!, left[y!]!, left[z!]!]);
+    triangles.push([right[x!]!, right[z!]!, right[y!]!]);
+  }
+  // The band around the silhouette: bottom, ends, top, cheek and both shoulders, all in one loop.
+  for (let i = 0; i < count; i++) {
+    const j = (i + 1) % count;
+    triangles.push([left[i]!, right[i]!, right[j]!], [left[i]!, right[j]!, left[j]!]);
+  }
+
+  // Drop the degenerate triangles left where the notch ran past an end and vertices coincided. A
+  // zero-area triangle contributes a zero-length normal, which lights as solid black rather than nothing.
+  const solid = triangles.filter(
+    ([a, b, c]) =>
+      new Vector3().subVectors(b!, a!).cross(new Vector3().subVectors(c!, a!)).length() > 1e-12,
+  );
+  if (solid.length === 0) return null;
+
+  const positions = new Float32Array(solid.length * 9);
+  solid.forEach((triangle, i) =>
+    triangle.forEach((p, v) => positions.set([p.x, p.y, p.z], i * 9 + v * 3)),
+  );
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new BufferAttribute(positions, 3));
+  geometry.computeVertexNormals();
+  return geometry;
+};
+
 export default function (container: HTMLElement) {
   const { scene, controls, dispose } = createScene(container, {
     background: 0x14171d,
@@ -189,6 +338,7 @@ export default function (container: HTMLElement) {
 
   const params = {
     joint: "halfLap" as Joint,
+    build: "solid" as Build,
     angle: 70,
     skew: 0,
     widthA: 0.12,
@@ -202,6 +352,7 @@ export default function (container: HTMLElement) {
     separation: "",
     lap: "",
     notch: "",
+    shell: "",
   };
 
   const stage = new Group();
@@ -307,17 +458,48 @@ export default function (container: HTMLElement) {
     } else if (params.joint === "housed") {
       // The whole overlap out of A; B runs through untouched.
       whole(b, acrossB, spanB[0], spanB[1]);
-      if (spanA[0] < overlapLow - 1e-9) whole(a, acrossA, spanA[0], overlapLow);
-      if (overlapHigh < spanA[1] - 1e-9) whole(a, acrossA, overlapHigh, spanA[1]);
-      notched(a, acrossA, b, acrossB, overlapLow, overlapHigh);
+      if (params.build === "solid") {
+        // The host as ONE shell. Which part survives in the notch depends on where the overlap sits:
+        // if it reaches A's top, the top is what goes.
+        const keep = Math.abs(overlapHigh - spanA[1]) < 1e-9 ? "bottom" : "top";
+        const cheek = keep === "bottom" ? overlapLow : overlapHigh;
+        add(
+          notchedSolid(a, up, acrossA, spanA[0], spanA[1], cheek, keep, b, acrossB, params.length),
+          a.color,
+        );
+      } else {
+        if (spanA[0] < overlapLow - 1e-9) whole(a, acrossA, spanA[0], overlapLow);
+        if (overlapHigh < spanA[1] - 1e-9) whole(a, acrossA, overlapHigh, spanA[1]);
+        notched(a, acrossA, b, acrossB, overlapLow, overlapHigh);
+      }
     } else {
       // HALF LAP — the overlap split down the middle, so both finish flush.
       const middle = (overlapLow + overlapHigh) / 2;
-      if (spanA[0] < middle - 1e-9) whole(a, acrossA, spanA[0], middle);
-      notched(a, acrossA, b, acrossB, middle, spanA[1]);
-      if (middle < spanB[1] - 1e-9) whole(b, acrossB, middle, spanB[1]);
-      notched(b, acrossB, a, acrossA, spanB[0], middle);
+      if (params.build === "solid") {
+        // A keeps its BOTTOM through the notch, B keeps its TOP. That is the interlock, in one line each.
+        add(notchedSolid(a, up, acrossA, spanA[0], spanA[1], middle, "bottom", b, acrossB, params.length), a.color);
+        add(notchedSolid(b, up, acrossB, spanB[0], spanB[1], middle, "top", a, acrossA, params.length), b.color);
+      } else {
+        if (spanA[0] < middle - 1e-9) whole(a, acrossA, spanA[0], middle);
+        notched(a, acrossA, b, acrossB, middle, spanA[1]);
+        if (middle < spanB[1] - 1e-9) whole(b, acrossB, middle, spanB[1]);
+        notched(b, acrossB, a, acrossA, spanB[0], middle);
+      }
     }
+
+    // What the two builds actually cost, side by side.
+    let meshes = 0;
+    let triangles = 0;
+    for (const child of stage.children) {
+      if (child instanceof Mesh) {
+        meshes += 1;
+        triangles += (child.geometry.getAttribute("position")?.count ?? 0) / 3;
+      }
+    }
+    params.shell =
+      params.build === "solid"
+        ? `${meshes} closed shell${meshes === 1 ? "" : "s"} · ${triangles} triangles — one manifold per member`
+        : `${meshes} prisms · ${triangles} triangles — abutting, with coincident interior faces`;
 
     // --- readouts ---------------------------------------------------------
     const separation = Math.abs(params.skew);
@@ -361,6 +543,10 @@ export default function (container: HTMLElement) {
     })
     .name("Joint")
     .onChange(rebuild);
+  // Assembly unions several prisms per member — correct, invisible while opaque, but it leaves coincident
+  // interior faces where the pieces abut and is not a single manifold. Solid is the same member as ONE
+  // closed shell, lofted between its two side outlines.
+  joint.add(params, "build", { "Single solid": "solid", "Assembly of prisms": "assembly" }).name("Build").onChange(rebuild);
   joint.open();
 
   const cross = gui.addFolder("Crossing");
@@ -387,6 +573,7 @@ export default function (container: HTMLElement) {
   readout.add(params, "separation").name("Axes").listen().disable();
   readout.add(params, "lap").name("Overlap").listen().disable();
   readout.add(params, "notch").name("Notch").listen().disable();
+  readout.add(params, "shell").name("Build").listen().disable();
   readout.open();
 
   return () => {
