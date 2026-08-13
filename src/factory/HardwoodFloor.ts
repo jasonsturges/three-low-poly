@@ -106,8 +106,8 @@ const prism = (polygon: Point[], thickness: number): BufferGeometry => {
   const bottom = (i: number): Vec3 => [polygon[i]![0], -thickness, polygon[i]![1]];
 
   for (let i = 1; i < polygon.length - 1; i++) {
-    pushTriangle(buffers, [top(0), top(i), top(i + 1)], [0, 1, 0]);
-    pushTriangle(buffers, [bottom(0), bottom(i + 1), bottom(i)], [0, -1, 0]);
+    pushTriangle(buffers, [top(0), top(i + 1), top(i)], [0, 1, 0]);
+    pushTriangle(buffers, [bottom(0), bottom(i), bottom(i + 1)], [0, -1, 0]);
   }
   for (let i = 0; i < polygon.length; i++) {
     const j = (i + 1) % polygon.length;
