@@ -22,5 +22,5 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "types": []
   },
-  "include": ["dist/index.d.ts"]
+  "include": ["dist/three-low-poly.d.ts"]
 }

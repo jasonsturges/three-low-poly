@@ -16,7 +16,12 @@ export default defineConfig({
       // No IIFE build: it needs every external as a bare global, and three ships no
       // UMD build to supply them. ESM CDNs cover the script-tag case.
       formats: ["es", "cjs"],
-      fileName: (format) => `index.${format === "es" ? "mjs" : "cjs"}`,
+      // Name the published bundle after the PACKAGE, not `index`. A consumer's
+      // bundler names a shared chunk after this file; `index.*` makes it fall
+      // back to the directory name (`dist-<hash>.js`), while `three-low-poly.*`
+      // surfaces as `three-low-poly-<hash>.js`. This matches three
+      // (`three.module.js`), lil-gui (`lil-gui.esm.js`), et al.
+      fileName: (format) => `three-low-poly.${format === "es" ? "mjs" : "cjs"}`,
     },
     rollupOptions: {
       external: [/^three(\/.+)?$/],
