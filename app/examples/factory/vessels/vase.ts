@@ -8,7 +8,7 @@ export const meta = { title: "Vase" };
 export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container);
 
-  // The five radii ARE the vase. There is no formula here, and that is the point.
+  // The five radii ARE the vase — control points, not a formula.
   const params = {
     foot: 0.55,
     lowerBelly: 0.95,
@@ -18,30 +18,42 @@ export default function (container: HTMLElement) {
     height: 2.4,
     profileSegments: 40,
     radialSegments: 32,
+    // Bands step the material index at fractions of height. Off leaves a single group.
+    banded: true,
+    lower: 0.33,
+    upper: 0.66,
   };
+
+  const bands = () => (params.banded ? [params.lower, params.upper].sort((a, b) => a - b) : []);
 
   const options = () => ({
     radii: [params.foot, params.lowerBelly, params.waist, params.shoulder, params.lip],
     height: params.height,
     profileSegments: params.profileSegments,
     radialSegments: params.radialSegments,
+    bands: bands(),
   });
 
-  const glaze = new MeshStandardMaterial({
-    color: 0x7fa8b8,
-    roughness: 0.35,
-    metalness: 0.05,
-    flatShading: true,
-  });
+  // One material per band plus one. Three distinct colors so the group boundaries read at a glance.
+  const lower = new MeshStandardMaterial({ color: 0x4f7488, roughness: 0.55, flatShading: true });
+  const middle = new MeshStandardMaterial({ color: 0xd7d2c6, roughness: 0.5, flatShading: true });
+  const upper = new MeshStandardMaterial({ color: 0xb06a3c, roughness: 0.55, flatShading: true });
+  const grouped = [lower, middle, upper];
 
-  const vase = new Mesh(new VaseGeometry(options()), glaze);
+  const vase: Mesh<VaseGeometry, MeshStandardMaterial | MeshStandardMaterial[]> = new Mesh(
+    new VaseGeometry(options()),
+    grouped,
+  );
   vase.castShadow = true;
   vase.receiveShadow = true;
   scene.add(vase);
 
   const rebuild = () => {
     vase.geometry.dispose();
-    vase.geometry = new VaseGeometry(options());
+    const geometry = new VaseGeometry(options());
+    vase.geometry = geometry;
+    // Unbanded, the geometry has no groups, and an array would draw with the first material only.
+    vase.material = geometry.groups.length > 0 ? grouped : middle;
     centerObject(vase);
   };
 
@@ -63,12 +75,21 @@ export default function (container: HTMLElement) {
   // Drop to 6 and it becomes a faceted, hand-thrown pot. The low-poly knob, on a lathe.
   gui.add(params, "radialSegments", 3, 64, 1).name("Radial Segments").onChange(rebuild);
 
+  // A boundary snaps to a profile ring, so Profile Segments sets how precisely a band can be placed.
+  const banding = gui.addFolder("Bands");
+  banding.add(params, "banded").name("Banded").onChange(rebuild);
+  banding.add(params, "lower", 0.05, 0.95, 0.01).name("Lower Band").onChange(rebuild);
+  banding.add(params, "upper", 0.05, 0.95, 0.01).name("Upper Band").onChange(rebuild);
+  banding.open();
+
   rebuild();
 
   return () => {
     gui.destroy();
     vase.geometry.dispose();
-    glaze.dispose();
+    lower.dispose();
+    middle.dispose();
+    upper.dispose();
     dispose();
   };
 }

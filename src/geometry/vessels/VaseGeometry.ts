@@ -15,6 +15,14 @@ export interface VaseGeometryOptions {
   profileSegments?: number;
   /** How many times the silhouette is revolved — the low-poly knob. `6` gives a faceted, hand-thrown pot. Defaults to `32`. */
   radialSegments?: number;
+  /**
+   * Horizontal bands, as ascending fractions of `height`, where the material index steps up. Defaults to
+   * none — a single group.
+   *
+   * `[0.1, 0.9]` yields three groups: material `0` below a tenth of the height, `1` between, `2` above —
+   * a contrasting foot and lip against the body. Supply one material per band plus one; repeats are fine.
+   */
+  bands?: number[];
 }
 
 /**
@@ -53,6 +61,7 @@ export class VaseGeometry extends LatheGeometry {
     height = 2.4,
     profileSegments = 40,
     radialSegments = 32,
+    bands = [],
   }: VaseGeometryOptions = {}) {
     const control = radii.map(
       (r, i) => new Vector2(Math.max(r, 0.001), (i / Math.max(1, radii.length - 1)) * height),
@@ -67,8 +76,50 @@ export class VaseGeometry extends LatheGeometry {
     // Only ONE point is prepended. The spline already starts at the foot, so adding `(r0, 0)` as well
     // would duplicate it — and a repeated profile point lathes into a ring of zero-area quads whose
     // normals are undefined.
-    super([new Vector2(0.001, 0), ...silhouette], radialSegments);
+    const profile = [new Vector2(0.001, 0), ...silhouette];
+    super(profile, radialSegments);
 
     this.height = height;
+
+    if (bands.length > 0) {
+      //  **A lathe's index is SEGMENT-major, so a horizontal band is not contiguous in it.**
+      //  `LatheGeometry` walks every profile point of one radial segment before moving to the next, which
+      //  means a band around the pot is a stripe scattered through the whole buffer at a stride of the
+      //  profile length. A material group is a `start` and a `count` into that buffer, so bands cannot be
+      //  expressed as groups without reordering it first — the vertices never move, only the index does.
+      const index = this.getIndex();
+      if (index) {
+        const points = profile.length;
+        const edges = [...bands].sort((a, b) => a - b);
+        //  Which band a profile point falls in, by its own height rather than by its ordinal — the spline
+        //  samples evenly in parameter, not in `y`, so the two part company on any pot with a waist.
+        const bandOf = (j: number) => {
+          const at = profile[Math.min(j, points - 1)]!.y / Math.max(1e-9, height);
+          let band = 0;
+          while (band < edges.length && at >= edges[band]!) band++;
+          return band;
+        };
+
+        const source = Array.from(index.array);
+        const buckets: number[][] = Array.from({ length: edges.length + 1 }, () => []);
+        for (let t = 0; t < source.length; t += 3) {
+          const [a, b, c] = [source[t]!, source[t + 1]!, source[t + 2]!];
+          //  A quad spans profile points `j` and `j + 1`; the LOWER one names the band, so a boundary
+          //  falls on a ring of the lathe rather than cutting through a row of quads.
+          const j = Math.min(a % points, b % points, c % points);
+          buckets[bandOf(j)]!.push(a, b, c);
+        }
+
+        const reordered: number[] = [];
+        this.clearGroups();
+        buckets.forEach((tris, material) => {
+          if (tris.length === 0) return;
+          this.addGroup(reordered.length, tris.length, material);
+          reordered.push(...tris);
+        });
+        index.set(reordered);
+        index.needsUpdate = true;
+      }
+    }
   }
 }
