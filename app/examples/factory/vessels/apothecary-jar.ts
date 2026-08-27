@@ -21,7 +21,9 @@ export default function (container: HTMLElement) {
     corkUpper: 0,
     corkLower: 0.7,
     fill: 0.5,
+    gap: 0.06,
     color: 0x6ac06a,
+    opacity: 0.9,
     glow: 0.5,
   };
 
@@ -37,7 +39,7 @@ export default function (container: HTMLElement) {
       cork: { upperHeight: params.corkUpper, lowerHeight: params.corkLower },
       fill:
         params.fill > 0
-          ? { fill: params.fill, color: params.color, glow: params.glow, opacity: 0.9, inset: 0.06 }
+          ? { fill: params.fill, color: params.color, glow: params.glow, opacity: params.opacity, inset: params.gap }
           : undefined,
     });
 
@@ -82,7 +84,9 @@ export default function (container: HTMLElement) {
 
   const fill = gui.addFolder("Fill");
   fill.add(params, "fill", 0, 1, 0.01).name("Fill").onChange(rebuild);
+  fill.add(params, "gap", 0, 0.25, 0.005).name("Gap").onChange(rebuild);
   fill.addColor(params, "color").name("Color").onChange(rebuild);
+  fill.add(params, "opacity", 0, 1, 0.01).name("Opacity").onChange(rebuild);
   fill.add(params, "glow", 0, 2, 0.01).name("Glow").onChange(rebuild);
   fill.open();
 
