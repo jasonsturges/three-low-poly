@@ -94,6 +94,10 @@ export * from "./factory/DoorFactory";
 export * from "./factory/DiamondLatticeWindow";
 export * from "./factory/GregorianLatticeWindow";
 export * from "./factory/FenceFactory";
+export * from "./factory/ApothecaryJar";
+export * from "./factory/FlorenceFlaskStand";
+export * from "./factory/TestTubeRack";
+export * from "./factory/liquidFill";
 export * from "./factory/HeadstoneFactory";
 export * from "./factory/HexagonalTileFactory";
 export * from "./factory/AppleTree";
@@ -290,16 +294,10 @@ export { StarGeometry, type StarGeometryOptions } from "./geometry/shapes/StarGe
 export { BoneGeometry } from "./geometry/skeleton/BoneGeometry";
 
 // Science
-export {
-  ErlenmeyerFlaskGeometry,
-  type ErlenmeyerFlaskGeometryOptions,
-} from "./geometry/science/ErlenmeyerFlaskGeometry";
-export { FlorenceFlaskGeometry } from "./geometry/science/FlorenceFlaskGeometry";
-export { MortarGeometry } from "./geometry/science/MortarGeometry";
+export { MortarGeometry, type MortarGeometryOptions } from "./geometry/science/MortarGeometry";
 export { PestleGeometry, type PestleGeometryOptions } from "./geometry/science/PestleGeometry";
-export { StandGeometry, type StandGeometryOptions } from "./geometry/science/StandGeometry";
+export { RingStandGeometry, type RingStandGeometryOptions } from "./geometry/science/RingStandGeometry";
 export { TeslaCoilGeometry } from "./geometry/science/TeslaCoilGeometry";
-export { TestTubeGeometry } from "./geometry/science/TestTubeGeometry";
 
 // Terrain
 export { TerrainMoundGeometry, type TerrainMoundGeometryOptions } from "./geometry/terrain/TerrainMoundGeometry";
@@ -322,8 +320,29 @@ export {
 } from "./geometry/trees/ClearingTreeGeometry";
 
 // Vessels
-export { JarGeometry } from "./geometry/vessels/JarGeometry";
+export { BeakerGeometry, type BeakerGeometryOptions } from "./geometry/vessels/BeakerGeometry";
+export {
+  ErlenmeyerFlaskGeometry,
+  type ErlenmeyerFlaskGeometryOptions,
+} from "./geometry/vessels/ErlenmeyerFlaskGeometry";
+export {
+  FlorenceFlaskGeometry,
+  type FlorenceFlaskGeometryOptions,
+} from "./geometry/vessels/FlorenceFlaskGeometry";
+export {
+  GraduatedCylinderGeometry,
+  type GraduatedCylinderGeometryOptions,
+} from "./geometry/vessels/GraduatedCylinderGeometry";
+export {
+  ApothecaryJarGeometry,
+  type ApothecaryJarGeometryOptions,
+} from "./geometry/vessels/ApothecaryJarGeometry";
+export { CorkGeometry, type CorkGeometryOptions } from "./geometry/vessels/CorkGeometry";
+export { PipetteGeometry, type PipetteGeometryOptions } from "./geometry/vessels/PipetteGeometry";
 export { PotionBottleGeometry } from "./geometry/vessels/PotionBottleGeometry";
+export { TestTubeGeometry, type TestTubeGeometryOptions } from "./geometry/vessels/TestTubeGeometry";
+export { LiquidFillGeometry, type LiquidFillGeometryOptions } from "./geometry/vessels/LiquidFillGeometry";
+export * from "./geometry/vessels/vesselProfiles";
 export { VaseGeometry, type VaseGeometryOptions } from "./geometry/vessels/VaseGeometry";
 export { WineBottleGeometry, type WineBottleGeometryOptions } from "./geometry/vessels/WineBottleGeometry";
 
@@ -446,6 +465,11 @@ export {
   type RadialGradientStop,
   type RadialGradientTextureOptions,
 } from "./textures/radialGradient";
+export {
+  createLinearGradientTexture,
+  type LinearGradientStop,
+  type LinearGradientTextureOptions,
+} from "./textures/linearGradient";
 
 //------------------------------
 //  Utils
