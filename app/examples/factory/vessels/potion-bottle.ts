@@ -1,12 +1,16 @@
 import GUI from "lil-gui";
 import { Mesh } from "three";
-import { PotionBottle, centerObject } from "three-low-poly";
+import { PotionBottle } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
+import { gradientBackdrop } from "../../../framework/gradientBackdrop";
 
 export const meta = { title: "Potion Bottle" };
 
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container, { cameraPosition: [3.5, 2.5, 5] });
+  const handle = createScene(container, { cameraPosition: [3.5, 2.5, 5] });
+  const { scene, dispose } = handle;
+  const disposeBackdrop = gradientBackdrop(scene);
 
   const params = {
     radius: 1,
@@ -48,14 +52,14 @@ export default function (container: HTMLElement) {
 
   let bottle = build();
   scene.add(bottle);
-  centerObject(bottle);
+  frameObject(handle, bottle);
 
   const rebuild = () => {
     scene.remove(bottle);
     disposeAssembly(bottle);
     bottle = build();
     scene.add(bottle);
-    centerObject(bottle);
+    frameObject(handle, bottle, { dolly: false });
   };
 
   const gui = new GUI();
@@ -84,6 +88,7 @@ export default function (container: HTMLElement) {
     gui.destroy();
     scene.remove(bottle);
     disposeAssembly(bottle);
+    disposeBackdrop();
     dispose();
   };
 }

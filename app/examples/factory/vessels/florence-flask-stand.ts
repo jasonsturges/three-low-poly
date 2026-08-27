@@ -1,12 +1,16 @@
 import GUI from "lil-gui";
 import { Mesh } from "three";
-import { FlorenceFlaskStand, centerObject } from "three-low-poly";
+import { FlorenceFlaskStand } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
+import { gradientBackdrop } from "../../../framework/gradientBackdrop";
 
 export const meta = { title: "Florence Flask Stand" };
 
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container);
+  const handle = createScene(container);
+  const { scene, dispose } = handle;
+  const disposeBackdrop = gradientBackdrop(scene);
 
   const params = {
     bodyRadius: 1,
@@ -43,14 +47,14 @@ export default function (container: HTMLElement) {
 
   let assembly = build();
   scene.add(assembly);
-  centerObject(assembly);
+  frameObject(handle, assembly);
 
   const rebuild = () => {
     scene.remove(assembly);
     disposeAssembly(assembly);
     assembly = build();
     scene.add(assembly);
-    centerObject(assembly);
+    frameObject(handle, assembly, { dolly: false });
   };
 
   const gui = new GUI();
@@ -79,6 +83,7 @@ export default function (container: HTMLElement) {
     gui.destroy();
     scene.remove(assembly);
     disposeAssembly(assembly);
+    disposeBackdrop();
     dispose();
   };
 }

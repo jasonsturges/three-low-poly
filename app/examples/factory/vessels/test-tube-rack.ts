@@ -1,12 +1,16 @@
 import GUI from "lil-gui";
 import { Mesh } from "three";
-import { TestTubeRack, centerObject } from "three-low-poly";
+import { TestTubeRack } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
+import { gradientBackdrop } from "../../../framework/gradientBackdrop";
 
 export const meta = { title: "Test Tube Rack" };
 
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container);
+  const handle = createScene(container);
+  const { scene, dispose } = handle;
+  const disposeBackdrop = gradientBackdrop(scene);
 
   const params = {
     columns: 6,
@@ -44,14 +48,14 @@ export default function (container: HTMLElement) {
 
   let rack = build();
   scene.add(rack);
-  centerObject(rack);
+  frameObject(handle, rack);
 
   const rebuild = () => {
     scene.remove(rack);
     disposeAssembly(rack);
     rack = build();
     scene.add(rack);
-    centerObject(rack);
+    frameObject(handle, rack, { dolly: false });
   };
 
   const gui = new GUI();
@@ -76,6 +80,7 @@ export default function (container: HTMLElement) {
     gui.destroy();
     scene.remove(rack);
     disposeAssembly(rack);
+    disposeBackdrop();
     dispose();
   };
 }

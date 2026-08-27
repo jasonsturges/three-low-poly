@@ -1,12 +1,17 @@
 import GUI from "lil-gui";
 import { Mesh, MeshStandardMaterial } from "three";
-import { centerObject, VaseGeometry } from "three-low-poly";
+import { VaseGeometry } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
+import { gradientBackdrop } from "../../../framework/gradientBackdrop";
 
 export const meta = { title: "Vase" };
 
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container);
+  const handle = createScene(container);
+  const { scene, dispose } = handle;
+  const disposeBackdrop = gradientBackdrop(scene);
+  let framed = false;
 
   // The five radii ARE the vase — control points, not a formula.
   const params = {
@@ -54,7 +59,9 @@ export default function (container: HTMLElement) {
     vase.geometry = geometry;
     // Unbanded, the geometry has no groups, and an array would draw with the first material only.
     vase.material = geometry.groups.length > 0 ? grouped : middle;
-    centerObject(vase);
+    // Frame once; follow (without re-fitting) on rebuilds so the viewer's zoom survives.
+    frameObject(handle, vase, { dolly: !framed });
+    framed = true;
   };
 
   const gui = new GUI();
@@ -90,6 +97,7 @@ export default function (container: HTMLElement) {
     lower.dispose();
     middle.dispose();
     upper.dispose();
+    disposeBackdrop();
     dispose();
   };
 }

@@ -1,12 +1,16 @@
 import GUI from "lil-gui";
 import { Mesh, MeshStandardMaterial } from "three";
-import { CorkGeometry, centerObject } from "three-low-poly";
+import { CorkGeometry } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
+import { gradientBackdrop } from "../../../framework/gradientBackdrop";
 
 export const meta = { title: "Cork" };
 
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container);
+  const handle = createScene(container);
+  const { scene, dispose } = handle;
+  const disposeBackdrop = gradientBackdrop(scene);
 
   const params = {
     topRadius: 0.61,
@@ -21,12 +25,12 @@ export default function (container: HTMLElement) {
   const mesh = new Mesh(new CorkGeometry(params), material);
   mesh.castShadow = true;
   scene.add(mesh);
-  centerObject(mesh);
+  frameObject(handle, mesh);
 
   const rebuild = () => {
     mesh.geometry.dispose();
     mesh.geometry = new CorkGeometry(params);
-    centerObject(mesh);
+    frameObject(handle, mesh, { dolly: false });
   };
 
   const gui = new GUI();
@@ -45,6 +49,7 @@ export default function (container: HTMLElement) {
     gui.destroy();
     mesh.geometry.dispose();
     material.dispose();
+    disposeBackdrop();
     dispose();
   };
 }

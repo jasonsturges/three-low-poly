@@ -1,12 +1,16 @@
 import GUI from "lil-gui";
 import { Mesh } from "three";
-import { ApothecaryJar, centerObject } from "three-low-poly";
+import { ApothecaryJar } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
+import { gradientBackdrop } from "../../../framework/gradientBackdrop";
 
 export const meta = { title: "Apothecary Jar" };
 
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container, { cameraPosition: [4, 3, 6] });
+  const handle = createScene(container, { cameraPosition: [4, 3, 6] });
+  const { scene, dispose } = handle;
+  const disposeBackdrop = gradientBackdrop(scene);
 
   const params = {
     radius: 1.5,
@@ -48,14 +52,14 @@ export default function (container: HTMLElement) {
 
   let jar = build();
   scene.add(jar);
-  centerObject(jar);
+  frameObject(handle, jar);
 
   const rebuild = () => {
     scene.remove(jar);
     disposeAssembly(jar);
     jar = build();
     scene.add(jar);
-    centerObject(jar);
+    frameObject(handle, jar, { dolly: false });
   };
 
   const gui = new GUI();
@@ -86,6 +90,7 @@ export default function (container: HTMLElement) {
     gui.destroy();
     scene.remove(jar);
     disposeAssembly(jar);
+    disposeBackdrop();
     dispose();
   };
 }

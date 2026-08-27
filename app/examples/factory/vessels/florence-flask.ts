@@ -1,12 +1,17 @@
 import GUI from "lil-gui";
 import { Group, Mesh, MeshPhysicalMaterial } from "three";
-import { FlorenceFlaskGeometry, createLiquidFill, centerObject } from "three-low-poly";
+import { FlorenceFlaskGeometry, createLiquidFill } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { frameObject } from "../../../framework/frameObject";
+import { gradientBackdrop } from "../../../framework/gradientBackdrop";
 
 export const meta = { title: "Florence Flask" };
 
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container, { background: 0xe64d4d });
+  const handle = createScene(container);
+  const { scene, dispose } = handle;
+  const disposeBackdrop = gradientBackdrop(scene);
+  let framed = false;
 
   const params = {
     bodyRadius: 1,
@@ -66,7 +71,9 @@ export default function (container: HTMLElement) {
     );
     if (liquid) group.add(liquid);
 
-    centerObject(group);
+    // Frame once; follow (without re-fitting) on rebuilds so the viewer's zoom survives.
+    frameObject(handle, group, { dolly: !framed });
+    framed = true;
   };
 
   build();
@@ -91,6 +98,7 @@ export default function (container: HTMLElement) {
     gui.destroy();
     clear();
     glass.dispose();
+    disposeBackdrop();
     dispose();
   };
 }
