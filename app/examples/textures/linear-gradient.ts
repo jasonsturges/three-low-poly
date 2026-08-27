@@ -1,11 +1,11 @@
 import GUI from "lil-gui";
 import { AdditiveBlending, Color, Mesh, MeshBasicMaterial, NormalBlending, PlaneGeometry, SphereGeometry } from "three";
-import { Easing, createRadialGradientTexture, type RadialGradientStop } from "three-low-poly";
+import { Easing, createLinearGradientTexture, type LinearGradientStop } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = {
-  title: "Radial Gradient",
-  description: "A soft radial falloff baked to a DataTexture — inner to outer through an easing curve.",
+  title: "Linear Gradient",
+  description: "A straight ramp baked to a DataTexture — start to end through an easing curve.",
 };
 
 export default function (container: HTMLElement) {
@@ -30,14 +30,14 @@ export default function (container: HTMLElement) {
   sphere.position.y = 1.3;
   scene.add(sphere);
 
-  // The gradient IS a curve: sample the chosen easing at `stops` points between the inner and outer
+  // The gradient IS a curve: sample the chosen easing at `stops` points between the start and end
   // colours. More stops approximate the curve more closely; a few make the segments visible.
-  const buildStops = (): RadialGradientStop[] => {
+  const buildStops = (): LinearGradientStop[] => {
     const inner = new Color(params.inner);
     const outer = new Color(params.outer);
     const ease = Easing[params.falloff as keyof typeof Easing];
     const n = Math.max(2, params.stops);
-    const stops: RadialGradientStop[] = [];
+    const stops: LinearGradientStop[] = [];
     for (let i = 0; i < n; i++) {
       const offset = i / (n - 1);
       const t = Math.min(1, Math.max(0, ease(offset)));
@@ -48,16 +48,16 @@ export default function (container: HTMLElement) {
 
   const rebuild = () => {
     material.map?.dispose();
-    material.map = createRadialGradientTexture({ stops: buildStops(), size: params.size, easing: Easing.linear });
+    material.map = createLinearGradientTexture({ stops: buildStops(), size: params.size, easing: Easing.linear });
     material.blending = params.additive ? AdditiveBlending : NormalBlending;
     material.needsUpdate = true;
   };
   rebuild();
 
   const gui = new GUI();
-  gui.title("Radial Gradient");
-  gui.addColor(params, "inner").name("Inner").onChange(rebuild);
-  gui.addColor(params, "outer").name("Outer").onChange(rebuild);
+  gui.title("Linear Gradient");
+  gui.addColor(params, "inner").name("Start").onChange(rebuild);
+  gui.addColor(params, "outer").name("End").onChange(rebuild);
   gui.add(params, "falloff", Object.keys(Easing)).name("Falloff").onChange(rebuild);
   gui.add(params, "stops", 2, 32, 1).name("Stops").onChange(rebuild);
   gui.add(params, "size", 4, 512, 4).name("Resolution").onChange(rebuild);

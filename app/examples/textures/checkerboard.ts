@@ -1,27 +1,32 @@
 import GUI from "lil-gui";
-import { Mesh, MeshStandardMaterial, PlaneGeometry } from "three";
+import { DirectionalLight, Mesh, MeshStandardMaterial, PlaneGeometry, SphereGeometry } from "three";
 import { createCheckerboardTexture } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = {
   title: "Checkerboard",
-  description:
-    "Hard-edged checker pattern as a DataTexture — a chessboard or tile floor. Two ways to get more " +
-    "squares: raise the texel count, or keep a tiny 2×2 texture and tile it with repeat. The second " +
-    "is nearly free, which is the point of the pattern living in a texture at all.",
+  description: "A hard-edged checker as a DataTexture — raise the texel count, or tile a tiny 2×2 with repeat.",
 };
 
 export default function (container: HTMLElement) {
-  const { scene, dispose } = createScene(container);
+  const { scene, dispose } = createScene(container, { cameraPosition: [4, 3.5, 6] });
+
+  // createScene's default lights are soft; a brighter key makes the pattern read like it should.
+  const key = new DirectionalLight(0xffffff, 2.4);
+  key.position.set(4, 7, 4);
+  scene.add(key);
 
   const params = { size: 2, repeat: 8 };
 
-  const geometry = new PlaneGeometry(10, 10);
-  const material = new MeshStandardMaterial();
-  const plane = new Mesh(geometry, material);
+  const material = new MeshStandardMaterial({ roughness: 0.9, metalness: 0 });
+  const plane = new Mesh(new PlaneGeometry(10, 10), material);
   plane.rotation.x = -Math.PI / 2;
-  plane.position.y = -1;
+  plane.receiveShadow = true;
   scene.add(plane);
+  const sphere = new Mesh(new SphereGeometry(1.4, 48, 48), material);
+  sphere.position.y = 1.4;
+  sphere.castShadow = true;
+  scene.add(sphere);
 
   const rebuild = () => {
     material.map?.dispose();
@@ -41,7 +46,8 @@ export default function (container: HTMLElement) {
 
   return () => {
     gui.destroy();
-    geometry.dispose();
+    plane.geometry.dispose();
+    sphere.geometry.dispose();
     material.map?.dispose();
     material.dispose();
     dispose();
