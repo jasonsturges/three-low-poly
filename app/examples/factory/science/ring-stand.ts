@@ -1,9 +1,9 @@
 import GUI from "lil-gui";
 import { Mesh, MeshStandardMaterial } from "three";
-import { StandGeometry, centerObject } from "three-low-poly";
+import { RingStandGeometry, centerObject } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
-export const meta = { title: "Stand" };
+export const meta = { title: "Ring Stand" };
 
 export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container);
@@ -18,18 +18,18 @@ export default function (container: HTMLElement) {
 
   const metal = new MeshStandardMaterial({ color: 0x888888, roughness: 0.7, metalness: 0.3 });
 
-  const stand = new Mesh(new StandGeometry(params), metal);
+  const stand = new Mesh(new RingStandGeometry(params), metal);
   scene.add(stand);
   centerObject(stand);
 
   const rebuild = () => {
     stand.geometry.dispose();
-    stand.geometry = new StandGeometry(params);
+    stand.geometry = new RingStandGeometry(params);
     centerObject(stand);
   };
 
   const gui = new GUI();
-  gui.title("Stand");
+  gui.title("Ring Stand");
   gui.add(params, "radius", 0.1, 1).name("Radius").step(0.01).onChange(rebuild);
   gui.add(params, "height", 0.1, 1).name("Height").step(0.01).onChange(rebuild);
   gui.add(params, "count", 1, 8).name("Leg Count").step(1).onChange(rebuild);

@@ -1,0 +1,93 @@
+import GUI from "lil-gui";
+import { Group, Mesh, MeshPhysicalMaterial } from "three";
+import { GraduatedCylinderGeometry, createLiquidFill, centerObject } from "three-low-poly";
+import { createScene } from "../../../framework/createScene";
+
+export const meta = { title: "Graduated Cylinder" };
+
+export default function (container: HTMLElement) {
+  const { scene, dispose } = createScene(container);
+
+  const params = {
+    radius: 0.35,
+    height: 3,
+    radialSegments: 24,
+    rim: 0.4,
+    fill: 0.5,
+    color: 0x4bbfa0,
+    opacity: 0.85,
+    glow: 0.5,
+    gap: 0.05,
+  };
+
+  const glass = new MeshPhysicalMaterial({
+    color: 0x9fdfff,
+    transparent: true,
+    opacity: 0.35,
+    roughness: 0.08,
+    metalness: 0,
+    transmission: 0.9,
+    ior: 1.5,
+  });
+
+  const group = new Group();
+  scene.add(group);
+
+  const clear = () => {
+    for (const child of group.children.slice()) {
+      if (child instanceof Mesh) {
+        child.geometry.dispose();
+        if (child.material !== glass) {
+          (Array.isArray(child.material) ? child.material : [child.material]).forEach((m) => m.dispose());
+        }
+      }
+    }
+    group.clear();
+  };
+
+  const build = () => {
+    clear();
+    const geometry = new GraduatedCylinderGeometry({
+      radius: params.radius,
+      height: params.height,
+      radialSegments: params.radialSegments,
+      rim: params.rim,
+    });
+    const shell = new Mesh(geometry, glass);
+    shell.renderOrder = 1;
+    group.add(shell);
+
+    const liquid = createLiquidFill(
+      geometry.profile,
+      { fill: params.fill, color: params.color, opacity: params.opacity, glow: params.glow, inset: params.gap },
+      params.radialSegments,
+    );
+    if (liquid) group.add(liquid);
+
+    centerObject(group);
+  };
+
+  build();
+
+  const gui = new GUI();
+  gui.title("Graduated Cylinder");
+  gui.add(params, "radius", 0.15, 0.8, 0.01).name("Radius").onChange(build);
+  gui.add(params, "height", 1, 5, 0.01).name("Height").onChange(build);
+  gui.add(params, "radialSegments", 3, 64, 1).name("Radial Segments").onChange(build);
+  gui.add(params, "rim", 0, 0.8, 0.01).name("Rim").onChange(build);
+
+  const liquid = gui.addFolder("Fill");
+  liquid.add(params, "fill", 0, 1, 0.01).name("Fill").onChange(build);
+  liquid.add(params, "gap", 0, 0.25, 0.005).name("Gap").onChange(build);
+  liquid.addColor(params, "color").name("Color").onChange(build);
+  liquid.add(params, "opacity", 0, 1, 0.01).name("Opacity").onChange(build);
+  liquid.add(params, "glow", 0, 2, 0.01).name("Glow").onChange(build);
+  liquid.open();
+
+  return () => {
+    gui.destroy();
+    clear();
+    glass.dispose();
+    dispose();
+  };
+}

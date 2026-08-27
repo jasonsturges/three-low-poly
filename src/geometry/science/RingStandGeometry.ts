@@ -1,7 +1,7 @@
 import { BufferGeometry, CylinderGeometry, TorusGeometry } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
-export interface StandGeometryOptions {
+export interface RingStandGeometryOptions {
   /** Ring radius. Defaults to `0.3`. */
   radius?: number;
   /** Leg height. Defaults to `0.4`. */
@@ -15,11 +15,11 @@ export interface StandGeometryOptions {
 }
 
 /**
- * Tripod-style stand — torus ring with radial legs.
+ * Ring stand — a torus ring on radial legs, for a round-bottom vessel to rest in.
  *
- * Local frame: legs on Y=0.
+ * Local frame: legs on Y=0, ring at Y=height.
  */
-export class StandGeometry extends BufferGeometry {
+export class RingStandGeometry extends BufferGeometry {
   readonly radius: number;
   readonly height: number;
   readonly count: number;
@@ -30,7 +30,7 @@ export class StandGeometry extends BufferGeometry {
     count = 3,
     thickness = 0.03,
     radialSegments = 16,
-  }: StandGeometryOptions = {}) {
+  }: RingStandGeometryOptions = {}) {
     super();
 
     this.radius = radius;
