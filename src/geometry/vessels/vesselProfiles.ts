@@ -191,6 +191,82 @@ export function apothecaryJarProfile({
   ];
 }
 
+export interface PotionBottleProfileOptions {
+  /** Widest body radius. Defaults to `1`. */
+  radius?: number;
+  /** Base (foot) radius. Defaults to `0.7 ×` the body radius. */
+  baseRadius?: number;
+  /** Neck (mouth) radius — where the cork seats. Defaults to `0.4 ×` the body radius. */
+  neckRadius?: number;
+  /** Overall height. Defaults to `2.6`. */
+  height?: number;
+}
+
+/**
+ * Potion bottle silhouette — a small, bulbous body drawn in to a narrow neck (a perfume-bottle shape).
+ * Base on Y=0, ends at the rim.
+ */
+export function potionBottleProfile({
+  radius = 1,
+  baseRadius,
+  neckRadius,
+  height = 2.6,
+}: PotionBottleProfileOptions = {}): Vector2[] {
+  const br = baseRadius ?? radius * 0.7;
+  const nr = neckRadius ?? radius * 0.4;
+  return [
+    new Vector2(0, 0),
+    new Vector2(br, 0),
+    new Vector2(radius, height * 0.45), // belly (widest)
+    new Vector2(radius * 0.7, height * 0.64), // shoulder
+    new Vector2(nr, height * 0.8), // neck
+    new Vector2(nr, height), // rim
+  ];
+}
+
+export interface WineBottleProfileOptions {
+  /** Body radius. Defaults to `0.5`. */
+  radius?: number;
+  /** Neck (mouth) radius — where the cork seats. Defaults to `0.18`. */
+  neckRadius?: number;
+  /** Overall height. Defaults to `3`. */
+  height?: number;
+  /** Straight neck height. Defaults to `0.9`. */
+  neckHeight?: number;
+  /** Shoulder height — the curve from body to neck, the bottle's classical tell. Defaults to `0.5`. */
+  shoulderHeight?: number;
+  /** Points sampling the shoulder curve. `1` is a single straight line (a hard `/`); more rounds it. Defaults to `6`. */
+  shoulderSegments?: number;
+}
+
+/**
+ * Wine bottle silhouette — a straight cylindrical body, a shoulder, and a long neck. Base on Y=0, ends at
+ * the rim.
+ *
+ * The shoulder is a quarter-ellipse sampled at `shoulderSegments` points: `1` collapses it to one straight
+ * facet (a hard Bordeaux shoulder), more rounds it (a Burgundy/Champagne slope). That is the whole trick to
+ * a lathe — roundness is point count, since the segments between points are straight.
+ */
+export function wineBottleProfile({
+  radius = 0.5,
+  neckRadius = 0.18,
+  height = 3,
+  neckHeight = 0.9,
+  shoulderHeight = 0.5,
+  shoulderSegments = 6,
+}: WineBottleProfileOptions = {}): Vector2[] {
+  const bodyTop = Math.max(0, height - neckHeight - shoulderHeight);
+  const seg = Math.max(1, Math.floor(shoulderSegments));
+  const points = [new Vector2(0, 0), new Vector2(radius, 0)];
+  // Shoulder as a quarter-ellipse from body (radius, bodyTop) up to neck (neckRadius, bodyTop + shoulderHeight).
+  for (let i = 0; i <= seg; i++) {
+    const a = (i / seg) * (Math.PI / 2);
+    points.push(new Vector2(neckRadius + (radius - neckRadius) * Math.cos(a), bodyTop + shoulderHeight * Math.sin(a)));
+  }
+  points.push(new Vector2(neckRadius, height)); // neck to rim
+  return points;
+}
+
 // ---------------------------------------------------------------------------
 // Shell — thicken a silhouette into the renderable glass.
 // ---------------------------------------------------------------------------

@@ -1,51 +1,33 @@
-import { BufferGeometry, CylinderGeometry } from "three";
-import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { LatheGeometry, Vector2 } from "three";
+import {
+  vesselShell,
+  wineBottleProfile,
+  type VesselShellOptions,
+  type WineBottleProfileOptions,
+} from "./vesselProfiles";
 
-export interface WineBottleGeometryOptions {
-  /** Body radius. Defaults to `0.5`. */
-  radius?: number;
-  /** Neck radius. Defaults to `0.2`. */
-  neckRadius?: number;
-  /** Total height including neck. Defaults to `3`. */
-  height?: number;
-  /** Neck height. Defaults to `1`. */
-  neckHeight?: number;
-  /** Circumference segments. Defaults to `16`. */
-  segments?: number;
+export interface WineBottleGeometryOptions extends WineBottleProfileOptions, VesselShellOptions {
+  /** Circumference segments — the low-poly knob. Defaults to `20`. */
+  radialSegments?: number;
 }
 
 /**
- * Wine bottle — cylindrical body, shoulder taper, and neck.
+ * Wine bottle — a straight body, rounded shoulder, and long neck, as glass with a rolled rim; corked by
+ * {@link WineBottle}.
  *
- * Local frame: base at Y=0.
+ * A lathe of {@link vesselShell} over {@link wineBottleProfile}; the silhouette is exposed as `.profile`
+ * for the fill and for seating a cork. Local frame: base on Y=0, opening up +Y.
  */
-export class WineBottleGeometry extends BufferGeometry {
+export class WineBottleGeometry extends LatheGeometry {
+  readonly profile: Vector2[];
   readonly radius: number;
   readonly height: number;
 
-  constructor({
-    radius = 0.5,
-    neckRadius = 0.2,
-    height = 3,
-    neckHeight = 1,
-    segments = 16,
-  }: WineBottleGeometryOptions = {}) {
-    super();
-
-    this.radius = radius;
-    this.height = height;
-
-    const bodyHeight = height - neckHeight;
-    const bodyGeometry = new CylinderGeometry(radius, radius, bodyHeight, segments);
-    bodyGeometry.translate(0, bodyHeight / 2, 0);
-
-    const shoulderHeight = 0.3;
-    const shoulderGeometry = new CylinderGeometry(neckRadius, radius, shoulderHeight, segments);
-    shoulderGeometry.translate(0, bodyHeight + shoulderHeight / 2, 0);
-
-    const neckGeometry = new CylinderGeometry(neckRadius, neckRadius, neckHeight, segments);
-    neckGeometry.translate(0, bodyHeight + shoulderHeight + neckHeight / 2, 0);
-
-    this.copy(mergeGeometries([bodyGeometry, shoulderGeometry, neckGeometry], false) as BufferGeometry);
+  constructor(options: WineBottleGeometryOptions = {}) {
+    const silhouette = wineBottleProfile(options);
+    super(vesselShell(silhouette, { ...options, rim: options.rim ?? 0.12 }), options.radialSegments ?? 20);
+    this.profile = silhouette;
+    this.radius = options.radius ?? 0.5;
+    this.height = silhouette.reduce((m, p) => Math.max(m, p.y), 0);
   }
 }

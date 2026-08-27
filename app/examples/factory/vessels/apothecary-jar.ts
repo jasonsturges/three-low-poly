@@ -12,7 +12,10 @@ export default function (container: HTMLElement) {
     radius: 1.5,
     neckRadius: 0.6,
     height: 3.5,
-    corkDrop: 0.4,
+    radialSegments: 20,
+    corkDepth: 0.6,
+    corkUpper: 0,
+    corkLower: 0.7,
     fill: 0.5,
     color: 0x6ac06a,
     glow: 0.5,
@@ -20,8 +23,14 @@ export default function (container: HTMLElement) {
 
   const build = () =>
     new ApothecaryJar({
-      jar: { radius: params.radius, neckRadius: params.neckRadius, height: params.height },
-      corkDrop: params.corkDrop,
+      jar: {
+        radius: params.radius,
+        neckRadius: params.neckRadius,
+        height: params.height,
+        radialSegments: params.radialSegments,
+      },
+      corkDepth: params.corkDepth,
+      cork: { upperHeight: params.corkUpper, lowerHeight: params.corkLower },
       fill:
         params.fill > 0
           ? { fill: params.fill, color: params.color, glow: params.glow, opacity: 0.9, inset: 0.06 }
@@ -56,11 +65,15 @@ export default function (container: HTMLElement) {
   jarFolder.add(params, "radius", 0.6, 2.5, 0.01).name("Radius").onChange(rebuild);
   jarFolder.add(params, "neckRadius", 0.2, 1.2, 0.01).name("Neck Radius").onChange(rebuild);
   jarFolder.add(params, "height", 2, 6, 0.05).name("Height").onChange(rebuild);
+  jarFolder.add(params, "radialSegments", 3, 48, 1).name("Radial Segments").onChange(rebuild);
   jarFolder.open();
 
-  // Drag Drop down and the cork sinks into the neck; up and it lifts off the mouth.
+  // Depth 1 seats the flat top flush with the rim; lower values push the lid up, and it scales to stay sealed.
   const cork = gui.addFolder("Cork");
-  cork.add(params, "corkDrop", 0, 0.9, 0.01).name("Drop").onChange(rebuild);
+  cork.add(params, "corkDepth", 0, 1, 0.01).name("Depth").onChange(rebuild);
+  // Upper Height rises the cap vertically above the seal (top radius stays equal to the middle).
+  cork.add(params, "corkUpper", 0, 0.8, 0.01).name("Upper Height").onChange(rebuild);
+  cork.add(params, "corkLower", 0.05, 0.8, 0.01).name("Lower Height").onChange(rebuild);
   cork.open();
 
   const fill = gui.addFolder("Fill");

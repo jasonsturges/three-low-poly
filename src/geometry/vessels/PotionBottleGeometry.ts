@@ -1,47 +1,34 @@
-import { BufferGeometry, CylinderGeometry, LatheGeometry, Vector2 } from "three";
-import { calculateXFromSlopeIntercept } from "../../utils/LineEquations";
-import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { LatheGeometry, Vector2 } from "three";
+import {
+  potionBottleProfile,
+  vesselShell,
+  type PotionBottleProfileOptions,
+  type VesselShellOptions,
+} from "./vesselProfiles";
+
+export interface PotionBottleGeometryOptions extends PotionBottleProfileOptions, VesselShellOptions {
+  /** Circumference segments — the low-poly knob. Defaults to `20`. */
+  radialSegments?: number;
+}
 
 /**
- * Potion bottle geometry
+ * Potion bottle — a small, bulbous glass bottle with a narrow neck and a rolled rim, corked by
+ * {@link PotionBottle}.
  *
- * Group indices
- * 0. Bottle
- * 1. Cork
- * 2. Liquid (optional)
+ * A lathe of {@link vesselShell} over {@link potionBottleProfile}; the silhouette is exposed as `.profile`
+ * for the fill and for seating a cork. Local frame: base on Y=0, opening up +Y.
  */
-export class PotionBottleGeometry extends BufferGeometry {
-  constructor() {
-    super();
+export class PotionBottleGeometry extends LatheGeometry {
+  readonly profile: Vector2[];
+  readonly radius: number;
+  readonly height: number;
 
-    // Bottle
-    const points = [
-      new Vector2(0, 0),     // Origin
-      new Vector2(0.8, 0),   // Base
-      new Vector2(1, 1.5),   // Rounded body
-      new Vector2(0.5, 2.2), // Neck
-      new Vector2(0.6, 2.5), // Mouth
-      new Vector2(0.5, 2.5), // Cork
-    ];
-
-    const bottleGeometry = new LatheGeometry(points, 10);
-
-    // Cork
-    const corkGeometry = new CylinderGeometry(0.55, 0.45, 0.2, 10);
-    corkGeometry.translate(0, 2.5, 0);
-
-    // Liquid (optional)
-    const liquidPoints = [
-      new Vector2(0, 0),
-      new Vector2(0.8, 0),
-      new Vector2(calculateXFromSlopeIntercept(0.8, 0, 1, 1.5, 1.0), 1.0),
-      new Vector2(0, 1.0),
-    ];
-
-    const liquidGeometry = new LatheGeometry(liquidPoints, 10);
-    liquidGeometry.translate(0, 0.1, 0);
-    liquidGeometry.scale(0.9, 0.9, 0.9);
-
-    this.copy(mergeGeometries([bottleGeometry, corkGeometry, liquidGeometry], true) as BufferGeometry);
+  constructor(options: PotionBottleGeometryOptions = {}) {
+    const silhouette = potionBottleProfile(options);
+    // A subtle rim so the opening stays close to the neck.
+    super(vesselShell(silhouette, { ...options, rim: options.rim ?? 0.15 }), options.radialSegments ?? 20);
+    this.profile = silhouette;
+    this.radius = options.radius ?? 1;
+    this.height = silhouette.reduce((m, p) => Math.max(m, p.y), 0);
   }
 }

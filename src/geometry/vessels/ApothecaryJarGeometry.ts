@@ -24,7 +24,8 @@ export class ApothecaryJarGeometry extends LatheGeometry {
 
   constructor(options: ApothecaryJarGeometryOptions = {}) {
     const silhouette = apothecaryJarProfile(options);
-    super(vesselShell(silhouette, options), options.radialSegments ?? 20);
+    // A subtle rim by default — a jar mouth, not a fat rolled lip — so the opening stays close to the neck.
+    super(vesselShell(silhouette, { ...options, rim: options.rim ?? 0.15 }), options.radialSegments ?? 20);
     this.profile = silhouette;
     this.radius = options.radius ?? 1.5;
     this.height = silhouette.reduce((m, p) => Math.max(m, p.y), 0);
