@@ -159,6 +159,38 @@ export function pipetteProfile({ radius = 0.1, height = 3, tipLength }: PipetteP
   return [new Vector2(0, 0), new Vector2(radius, tl), new Vector2(radius, height)];
 }
 
+export interface ApothecaryJarProfileOptions {
+  /** Widest body radius. Defaults to `1.5`. */
+  radius?: number;
+  /** Base (foot) radius. Defaults to `0.8 ×` the body radius. */
+  baseRadius?: number;
+  /** Neck (mouth) radius — where the cork seats. Defaults to `0.4 ×` the body radius. */
+  neckRadius?: number;
+  /** Overall height. Defaults to `3.5`. */
+  height?: number;
+}
+
+/**
+ * Apothecary jar silhouette — a round, oblong body drawn in to a short neck. Base on Y=0, ends at the rim.
+ */
+export function apothecaryJarProfile({
+  radius = 1.5,
+  baseRadius,
+  neckRadius,
+  height = 3.5,
+}: ApothecaryJarProfileOptions = {}): Vector2[] {
+  const br = baseRadius ?? radius * 0.8;
+  const nr = neckRadius ?? radius * 0.4;
+  return [
+    new Vector2(0, 0),
+    new Vector2(br, 0),
+    new Vector2(radius * 0.98, height * 0.25),
+    new Vector2(radius, height * 0.5), // widest belly
+    new Vector2(radius * 0.74, height * 0.78), // shoulder
+    new Vector2(nr, height), // neck / rim
+  ];
+}
+
 // ---------------------------------------------------------------------------
 // Shell — thicken a silhouette into the renderable glass.
 // ---------------------------------------------------------------------------
