@@ -1,7 +1,8 @@
-import { DirectionalLight, Mesh, MeshStandardMaterial, SphereGeometry } from "three";
-import { GroundGrid, createLinearGradientTexture } from "three-low-poly";
+import { Mesh, MeshStandardMaterial, SphereGeometry } from "three";
+import { GroundGrid } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 import { frameObject } from "../../framework/frameObject";
+import { gradientBackdrop } from "../../framework/gradientBackdrop";
 
 export const meta = {
   title: "Gradient Backdrop",
@@ -11,29 +12,19 @@ export const meta = {
 /**
  * Contribution starter: the "moody showcase" backdrop, isolated to copy.
  *
- * Three ingredients, marked below. The gradient is the load-bearing one: transmission glass and glossy
- * surfaces refract/reflect it, so they read as material instead of vanishing against flat black. The rim
- * light catches silhouettes; the grid grounds the subject. Drop your own object where the sphere is.
+ * The load-bearing pair — a slate→near-black gradient background and a cool rim light — is the reusable
+ * `gradientBackdrop` helper (transmission glass and glossy surfaces refract/reflect the gradient, so they
+ * read as material instead of vanishing against flat black; the rim catches silhouettes). Add a grid to
+ * ground the subject, then drop your own object where the sphere is.
  */
 export default function (container: HTMLElement) {
   const handle = createScene(container, { cameraPosition: [3, 2.5, 5] });
   const { scene, dispose } = handle;
 
-  // 1 — Gradient background: slate at the floor, near-black overhead. Gives the scene value to refract.
-  const background = createLinearGradientTexture({
-    stops: [
-      { offset: 0, color: 0x28323f }, // bottom of the view
-      { offset: 1, color: 0x0c1016 }, // top
-    ],
-  });
-  scene.background = background;
+  // 1 — The moody gradient wash + rim light. Pass options (colours, rim intensity) to retune.
+  const disposeBackdrop = gradientBackdrop(scene);
 
-  // 2 — Cool back-rim light to catch edges against the dark.
-  const rim = new DirectionalLight(0xaad2f0, 0.7);
-  rim.position.set(5, 7, -9);
-  scene.add(rim);
-
-  // 3 — A grounding floor.
+  // 2 — A grounding floor. Optional: the vessel examples omit it so transparent subjects read from below.
   const grid = new GroundGrid({ size: 16, planeColor: 0x0f141b });
   scene.add(grid);
 
@@ -57,7 +48,7 @@ export default function (container: HTMLElement) {
         (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose());
       }
     });
-    background.dispose();
+    disposeBackdrop();
     dispose();
   };
 }

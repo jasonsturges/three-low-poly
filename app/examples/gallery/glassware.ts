@@ -1,5 +1,5 @@
 import GUI from "lil-gui";
-import { Box3, DirectionalLight, Group, LatheGeometry, Mesh, MeshPhysicalMaterial, Sprite, Vector2 } from "three";
+import { Box3, Group, LatheGeometry, Mesh, MeshPhysicalMaterial, Sprite, Vector2 } from "three";
 import {
   ApothecaryJar,
   BeakerGeometry,
@@ -11,13 +11,13 @@ import {
   PotionBottle,
   TestTubeGeometry,
   WineBottle,
-  createLinearGradientTexture,
   createLiquidFill,
   type FillOptions,
 } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 import { createTextSprite } from "../../framework/createTextSprite";
 import { frameObject } from "../../framework/frameObject";
+import { gradientBackdrop } from "../../framework/gradientBackdrop";
 
 export const meta = { title: "Glassware" };
 
@@ -25,20 +25,8 @@ export default function (container: HTMLElement) {
   const handle = createScene(container, { cameraPosition: [7, 5, 16] });
   const { scene, dispose } = handle;
 
-  // A moody vertical wash — slate at the floor, near-black overhead. Transmission glass refracts it, so the
-  // vessels read as glass instead of vanishing against flat black.
-  const background = createLinearGradientTexture({
-    stops: [
-      { offset: 0, color: 0x28323f }, // bottom of the view
-      { offset: 1, color: 0x0c1016 }, // top
-    ],
-  });
-  scene.background = background;
-
-  const rim = new DirectionalLight(0xaad2f0, 0.7);
-  rim.position.set(5, 7, -9);
-  scene.add(rim);
-
+  // The shared moody gradient wash + cool rim light (see framework/gradientBackdrop), plus a shelf floor.
+  const disposeBackdrop = gradientBackdrop(scene);
   const grid = new GroundGrid({ size: 28, planeColor: 0x0f141b });
   scene.add(grid);
 
@@ -141,7 +129,7 @@ export default function (container: HTMLElement) {
     });
     disposeContent(content);
     glass.dispose();
-    background.dispose();
+    disposeBackdrop();
     dispose();
   };
 }

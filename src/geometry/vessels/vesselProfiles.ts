@@ -371,11 +371,14 @@ export function vesselShell(
  * The liquid that fills a vessel to a given fraction of its height — derived from the shell's OWN
  * silhouette rather than written per vessel.
  *
- * Take the wall up to the surface, cut it where it actually crosses `fill`, and close it flat across the
- * axis. One function serves every vessel, and the liquid cannot disagree with the glass it sits in because
- * it is the same curve. `fill` is a fraction of the vessel's height, so it means the same on every shape.
+ * One function serves every vessel, and the liquid cannot disagree with the glass it sits in because it is
+ * the same curve. `fill` is a fraction of the vessel's height, so it means the same on every shape.
  *
- * `inset` shrinks the radius so the liquid clears the inner glass wall and does not z-fight it.
+ * `inset` clears the liquid off the glass by ONE uniform gap — a fraction of the widest radius — applied
+ * along the wall's own NORMAL, so the sides, the bottom AND the meniscus all pull in by the same amount and
+ * nothing is coplanar with the glass to z-fight. (A radius-only shrink leaves zero gap at the axis, so the
+ * flat bottom stays on the glass floor and fights it.) The whole silhouette is offset first, THEN cut at the
+ * fill line, so every point keeps a clean normal and the rim never juts where the level meets a shell point.
  *
  * Returns `[]` when there is nothing to draw.
  */
@@ -383,31 +386,38 @@ export function fillProfile(shell: Vector2[], fill: number, inset = 0.03): Vecto
   if (shell.length < 2) return [];
   const base = shell[0]!.y;
   let top = base;
-  for (const p of shell) top = Math.max(top, p.y);
+  let maxRadius = 0;
+  for (const p of shell) {
+    top = Math.max(top, p.y);
+    maxRadius = Math.max(maxRadius, p.x);
+  }
   const level = lerp(base, top, clamp(fill, 0, 1));
   if (level <= base) return [];
 
-  const shrink = 1 - clamp(inset, 0, 0.5);
+  const gap = clamp(inset, 0, 0.5) * (maxRadius || 1);
+  const inner = offsetInward(shell, gap);
+  if (level <= inner[0]!.y + 1e-6) return []; // fill shallower than the lifted floor — nothing to draw
+
   const points: Vector2[] = [];
-  for (let i = 0; i < shell.length; i++) {
-    const p = shell[i]!;
+  if (inner[0]!.x > 1e-6) points.push(new Vector2(0, inner[0]!.y)); // close the floor across the axis
+  for (let i = 0; i < inner.length; i++) {
+    const p = inner[i]!;
     if (p.y <= level) {
-      points.push(new Vector2(p.x * shrink, p.y));
+      points.push(p);
       continue;
     }
     if (i > 0) {
-      const prev = shell[i - 1]!;
+      const prev = inner[i - 1]!;
       const span = p.y - prev.y;
       if (span > 1e-6) {
         const t = (level - prev.y) / span;
-        points.push(new Vector2(lerp(prev.x, p.x, t) * shrink, level));
+        points.push(new Vector2(lerp(prev.x, p.x, t), level));
       }
     }
     break;
   }
 
-  const last = points[points.length - 1];
-  if (!last) return [];
-  if (last.x > 1e-6) points.push(new Vector2(0, last.y)); // flat meniscus, closed across the axis
+  const surface = points[points.length - 1]!;
+  if (surface.x > 1e-6) points.push(new Vector2(0, surface.y)); // flat meniscus, inset to match the sides
   return points.length >= 2 ? points : [];
 }
