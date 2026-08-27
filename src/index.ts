@@ -95,6 +95,9 @@ export * from "./factory/DiamondLatticeWindow";
 export * from "./factory/GregorianLatticeWindow";
 export * from "./factory/FenceFactory";
 export * from "./factory/ApothecaryJar";
+export * from "./factory/PotionBottle";
+export * from "./factory/WineBottle";
+export * from "./factory/corkStopper";
 export * from "./factory/FlorenceFlaskStand";
 export * from "./factory/TestTubeRack";
 export * from "./factory/liquidFill";
@@ -339,7 +342,7 @@ export {
 } from "./geometry/vessels/ApothecaryJarGeometry";
 export { CorkGeometry, type CorkGeometryOptions } from "./geometry/vessels/CorkGeometry";
 export { PipetteGeometry, type PipetteGeometryOptions } from "./geometry/vessels/PipetteGeometry";
-export { PotionBottleGeometry } from "./geometry/vessels/PotionBottleGeometry";
+export { PotionBottleGeometry, type PotionBottleGeometryOptions } from "./geometry/vessels/PotionBottleGeometry";
 export { TestTubeGeometry, type TestTubeGeometryOptions } from "./geometry/vessels/TestTubeGeometry";
 export { LiquidFillGeometry, type LiquidFillGeometryOptions } from "./geometry/vessels/LiquidFillGeometry";
 export * from "./geometry/vessels/vesselProfiles";
