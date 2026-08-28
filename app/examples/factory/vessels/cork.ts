@@ -30,7 +30,6 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     mesh.geometry.dispose();
     mesh.geometry = new CorkGeometry(params);
-    frameObject(handle, mesh, { dolly: false });
   };
 
   const gui = new GUI();

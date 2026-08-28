@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
-import { Group, Mesh, MeshPhysicalMaterial } from "three";
-import { TestTubeGeometry, createLiquidFill } from "three-low-poly";
+import { Color, Mesh, MeshPhysicalMaterial, MeshStandardMaterial } from "three";
+import { LiquidFillGeometry, TestTubeGeometry } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
 import { gradientBackdrop } from "../../../framework/gradientBackdrop";
@@ -11,7 +11,6 @@ export default function (container: HTMLElement) {
   const handle = createScene(container);
   const { scene, dispose } = handle;
   const disposeBackdrop = gradientBackdrop(scene);
-  let framed = false;
 
   const params = {
     radius: 0.2,
@@ -35,66 +34,100 @@ export default function (container: HTMLElement) {
     ior: 1.5,
   });
 
-  const group = new Group();
-  scene.add(group);
+  // The example owns the liquid's material, so color, opacity and glow mutate in place and never touch the
+  // geometry. Left permanently transparent: the opacity dial drives the look, and flipping that flag would
+  // force a program recompile for no visible gain.
+  const liquidMaterial = new MeshStandardMaterial({
+    color: params.color,
+    transparent: true,
+    opacity: params.opacity,
+    roughness: 0.25,
+    emissive: new Color(params.color),
+    emissiveIntensity: params.glow,
+  });
 
-  const clear = () => {
-    for (const child of group.children.slice()) {
-      if (child instanceof Mesh) {
-        child.geometry.dispose();
-        if (child.material !== glass) {
-          (Array.isArray(child.material) ? child.material : [child.material]).forEach((m) => m.dispose());
-        }
-      }
-    }
-    group.clear();
+  let shellGeometry = new TestTubeGeometry({
+    radius: params.radius,
+    height: params.height,
+    radialSegments: params.radialSegments,
+    rim: params.rim,
+  });
+  const shell = new Mesh(shellGeometry, glass);
+  // The liquid and the glass share a center, so depth sorting has nothing to say — state the order.
+  shell.renderOrder = 1;
+
+  // Cut from the shell's own profile, so the liquid can never clip through the glass.
+  const liquid = new Mesh(
+    new LiquidFillGeometry({
+      profile: shellGeometry.profile,
+      fill: params.fill,
+      inset: params.gap,
+      radialSegments: params.radialSegments,
+    }),
+    liquidMaterial,
+  );
+  liquid.renderOrder = 0;
+  // An empty vessel lathes to a geometry with no attributes — hide the mesh rather than let it reach the renderer.
+  liquid.visible = params.fill > 0;
+
+  scene.add(shell, liquid);
+
+  // Framed once, here. Both meshes persist across every dial, so the viewer's pan and zoom are never disturbed.
+  frameObject(handle, shell);
+
+  // Level and wall gap are geometry — dispose then replace, and the Mesh carries on.
+  const rebuildLiquid = () => {
+    liquid.geometry.dispose();
+    liquid.geometry = new LiquidFillGeometry({
+      profile: shellGeometry.profile,
+      fill: params.fill,
+      inset: params.gap,
+      radialSegments: params.radialSegments,
+    });
+    liquid.visible = params.fill > 0;
   };
 
-  const build = () => {
-    clear();
-    const geometry = new TestTubeGeometry({
+  // The shell's profile is the liquid's input, so re-cut the liquid whenever the shell changes.
+  const rebuildShell = () => {
+    shell.geometry.dispose();
+    shellGeometry = new TestTubeGeometry({
       radius: params.radius,
       height: params.height,
       radialSegments: params.radialSegments,
       rim: params.rim,
     });
-    const shell = new Mesh(geometry, glass);
-    shell.renderOrder = 1;
-    group.add(shell);
-
-    const liquid = createLiquidFill(
-      geometry.profile,
-      { fill: params.fill, color: params.color, opacity: params.opacity, glow: params.glow, inset: params.gap },
-      params.radialSegments,
-    );
-    if (liquid) group.add(liquid);
-
-    // Frame once; follow (without re-fitting) on rebuilds so the viewer's zoom survives.
-    frameObject(handle, group, { dolly: !framed });
-    framed = true;
+    shell.geometry = shellGeometry;
+    rebuildLiquid();
   };
-
-  build();
 
   const gui = new GUI();
   gui.title("Test Tube");
-  gui.add(params, "radius", 0.05, 0.5, 0.01).name("Radius").onChange(build);
-  gui.add(params, "height", 0.5, 4, 0.01).name("Height").onChange(build);
-  gui.add(params, "radialSegments", 3, 64, 1).name("Radial Segments").onChange(build);
-  gui.add(params, "rim", 0, 0.8, 0.01).name("Rim").onChange(build);
+  gui.add(params, "radius", 0.05, 0.5, 0.01).name("Radius").onChange(rebuildShell);
+  gui.add(params, "height", 0.5, 4, 0.01).name("Height").onChange(rebuildShell);
+  gui.add(params, "radialSegments", 3, 64, 1).name("Radial Segments").onChange(rebuildShell);
+  gui.add(params, "rim", 0, 0.8, 0.01).name("Rim").onChange(rebuildShell);
 
-  const liquid = gui.addFolder("Fill");
-  liquid.add(params, "fill", 0, 1, 0.01).name("Fill").onChange(build);
-  liquid.add(params, "gap", 0, 0.25, 0.005).name("Gap").onChange(build);
-  liquid.addColor(params, "color").name("Color").onChange(build);
-  liquid.add(params, "opacity", 0, 1, 0.01).name("Opacity").onChange(build);
-  liquid.add(params, "glow", 0, 2, 0.01).name("Glow").onChange(build);
-  liquid.open();
+  const fillFolder = gui.addFolder("Fill");
+  fillFolder.add(params, "fill", 0, 1, 0.01).name("Fill").onChange(rebuildLiquid);
+  fillFolder.add(params, "gap", 0, 0.25, 0.005).name("Gap").onChange(rebuildLiquid);
+  fillFolder.addColor(params, "color").name("Color").onChange(() => {
+    liquidMaterial.color.set(params.color);
+    liquidMaterial.emissive.set(params.color);
+  });
+  fillFolder.add(params, "opacity", 0, 1, 0.01).name("Opacity").onChange(() => {
+    liquidMaterial.opacity = params.opacity;
+  });
+  fillFolder.add(params, "glow", 0, 2, 0.01).name("Glow").onChange(() => {
+    liquidMaterial.emissiveIntensity = params.glow;
+  });
+  fillFolder.open();
 
   return () => {
     gui.destroy();
-    clear();
+    shell.geometry.dispose();
+    liquid.geometry.dispose();
     glass.dispose();
+    liquidMaterial.dispose();
     disposeBackdrop();
     dispose();
   };

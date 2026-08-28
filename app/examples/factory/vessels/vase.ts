@@ -59,9 +59,11 @@ export default function (container: HTMLElement) {
     vase.geometry = geometry;
     // Unbanded, the geometry has no groups, and an array would draw with the first material only.
     vase.material = geometry.groups.length > 0 ? grouped : middle;
-    // Frame once; follow (without re-fitting) on rebuilds so the viewer's zoom survives.
-    frameObject(handle, vase, { dolly: !framed });
-    framed = true;
+    // Frame once at first build; never on rebuild, so the viewer's pan and zoom both survive.
+    if (!framed) {
+      frameObject(handle, vase);
+      framed = true;
+    }
   };
 
   const gui = new GUI();

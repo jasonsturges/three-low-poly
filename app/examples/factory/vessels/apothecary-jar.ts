@@ -61,7 +61,6 @@ export default function (container: HTMLElement) {
     disposeAssembly(jar);
     jar = build();
     scene.add(jar);
-    frameObject(handle, jar, { dolly: false });
   };
 
   const gui = new GUI();

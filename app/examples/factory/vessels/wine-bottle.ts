@@ -67,7 +67,6 @@ export default function (container: HTMLElement) {
     disposeAssembly(wine);
     wine = build();
     scene.add(wine);
-    frameObject(handle, wine, { dolly: false });
   };
 
   const gui = new GUI();

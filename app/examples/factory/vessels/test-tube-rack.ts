@@ -55,7 +55,6 @@ export default function (container: HTMLElement) {
     disposeAssembly(rack);
     rack = build();
     scene.add(rack);
-    frameObject(handle, rack, { dolly: false });
   };
 
   const gui = new GUI();
