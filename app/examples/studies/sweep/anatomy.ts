@@ -608,7 +608,9 @@ export default function (container: HTMLElement) {
     let triangles = 0;
     if (params.showSolid) {
       const geometry = sweep(profile, stations, { cap: params.cap });
-      triangles = geometry.getAttribute("position").count / 3;
+      // `toBufferGeometry` returns INDEXED geometry, so the triangle count is in the index, not the
+      // position attribute — `position.count / 3` counts shared vertices and is not even an integer.
+      triangles = geometry.getIndex()!.count / 3;
       stage.add(new Mesh(geometry, solidMaterial));
     }
 
