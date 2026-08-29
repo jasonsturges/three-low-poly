@@ -157,13 +157,6 @@ function buildSections(set: SectionSet, height: number): { sections: Section[]; 
 //  Correspondence
 //------------------------------
 
-/** Cycle a 2D outline's start index — the 2D counterpart of the library's `rotateRing`. */
-function rotateRing2(loop: Vector2[], offset: number): Vector2[] {
-  const n = loop.length;
-  const k = ((offset % n) + n) % n;
-  return Array.from({ length: n }, (_, i) => loop[(i + k) % n]!.clone());
-}
-
 /** Total rail length across one band — the study's own readout, not a library concern. */
 function railLength(a: Vector3[], b: Vector3[]): number {
   return a.reduce((sum, p, i) => sum + p.distanceTo(b[i]!), 0);
@@ -292,15 +285,22 @@ export default function (container: HTMLElement) {
     const target = Math.max(...sections.map((s) => s.loop.length));
 
     const loops = sections.map((section, index) => {
-      let loop = resampleLoop(section.loop, target, params.resample);
-      // Seam Offset applies to every section AFTER the first, so section 0 stays the reference.
-      if (index > 0 && params.seam !== 0) loop = rotateRing2(loop, params.seam);
-      if (index === sections.length - 1 && params.reverse) loop = [...loop].reverse();
-      return loop;
+      const loop = resampleLoop(section.loop, target, params.resample);
+      // Reversing stays in 2D so the signed area below sees it — that is what the winding readout reads.
+      return index === sections.length - 1 && params.reverse ? [...loop].reverse() : loop;
     });
 
     const lift = (loop: Vector2[], y: number): Vector3[] => loop.map((p) => new Vector3(p.x, y, p.y));
     let rings = loops.map((loop, i) => lift(loop, sections[i]!.at));
+
+    // Seam Offset applies to every ring AFTER the first, so ring 0 stays the reference. Applied in 3D
+    // with the library's own `rotateRing` rather than to the 2D outlines: cycling a start index is
+    // dimension-agnostic, so doing it here means the study is not carrying a second copy of it. Leaving
+    // `loops` un-cycled is safe — signed area, distinct points and collapsed edges are all invariant
+    // under a rotation of the array.
+    if (params.seam !== 0) {
+      rings = rings.map((ring, i) => (i === 0 ? ring : rotateRing(ring, params.seam)));
+    }
 
     // BEST ROTATION, applied band by band: each ring is aligned against the one below it, already-aligned
     // ring. Aligning every ring against section 0 instead would fail on the stack, where the shape turns
