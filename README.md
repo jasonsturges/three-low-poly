@@ -488,7 +488,7 @@ scene objects.
 
 ---
 
-## Profiles
+### Profiles
 
 Profiles are computational geometry rather than renderable geometry.
 
@@ -496,6 +496,7 @@ They describe reusable boundaries, silhouettes, sections, paths, or other mathem
 multiple construction operations.
 
 A profile may be used to derive:
+
 - shape
 - path
 - extrusion
@@ -522,6 +523,79 @@ For example, an arched window may derive all of the following from one profile:
 
 The profile is not merely an implementation helper, it is the shared geometric intent from which related geometry can be
 constructed consistently.
+
+---
+
+### Factories
+
+Factories resolve construction or one or many entities.
+
+A factory is used when producing an entity requires knowledge beyond the responsibility
+of a single geometry.
+
+Construction may include:
+
+- combining independent geometries
+- resolving contact or seating relationships
+- deriving several geometries from a shared profile
+- producing cuts or boundaries for external geometry
+- creating meshes and material assignments
+- creating `Group` or `InstancedMesh` structures
+- generating stochastic variation
+- batching repeated geometry
+- baking transforms into unique geometry
+- attaching lights, sprites, effects, or other scene resources
+- coordinating behavior intrinsic to the constructed entity
+
+Each call expresses domain intent. The factory chooses the scene representation required to implement it.
+
+**Factory Classes**
+
+Factories may be represented as classes when construction has reusable context or several related operations.
+
+This avoids forcing shared construction state through a large collection of unrelated functions.
+
+Static creation may be provided when no reusable context is required:
+
+Low-level pure functions remain useful internally, but do not need to define the public architecture.
+
+---
+
+### Assembly
+
+Assembly describes how independently valid parts relate to one another.
+
+This knowledge belongs to neither component.
+
+For example, placing a Florence flask onto a ring stand requires knowing both:
+
+- the flask's spherical body radius
+- the stand's ring radius
+
+The factory can solve the contact relationship and position the flask so the sphere rests correctly on the ring.
+
+```text
+FlorenceFlaskGeometry
+          │
+          │ geometry properties
+          ▼
+      FlaskFactory ◄──── RingStandGeometry
+          │
+          │ solve contact relationship
+          ▼
+     assembled entity
+```
+
+The same principle applies to:
+
+- seating a pumpkin stem on a rind
+- positioning a candle within a lantern
+- fitting a liquid volume inside a vessel
+- matching a jamb to wall thickness
+- placing decorative geometry against a generated boundary
+
+Where possible, relational placement should remain expressible as transforms rather than being permanently embedded into
+the source geometry.
 
 ---
 ## Author
