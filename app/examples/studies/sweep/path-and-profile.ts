@@ -1,11 +1,19 @@
 import GUI from "lil-gui";
 import { CatmullRomCurve3, DoubleSide, Matrix4, Mesh, MeshStandardMaterial, Vector3 } from "three";
 import { arcPath, circleProfile, curvePath, helixPath, joinPaths, linePath, type PathPoint, spiralPath, sweep, transformPath, transportFrames } from "three-low-poly";
-import { createScene } from "../../framework/createScene";
+import { createScene } from "../../../framework/createScene";
 
 export const meta = {
-  title: "Path Gallery (sweep prototype)",
-  description: "TEMPORARY — one profile, every path. The sweep never knows which one it is carrying.",
+  title: "Path and Profile",
+  description:
+    "STUDY — one profile, every path. A sweep has two independent halves, and this is the demonstration " +
+    "that they are independent: the same eight-sided tube is carried along a line, an arc, a closed ring, " +
+    "a helix, a spiral, an arbitrary Catmull-Rom curve, and a composed archway, and the sweep never knows " +
+    "which one it is on. Change the profile instead and the archway becomes masonry without the path " +
+    "being touched. What this does NOT show is the half that does the work — how the section is ORIENTED " +
+    "at each step, which is why the tube arrives at the far leg of the archway unrotated. That is " +
+    "`studies/sweep/anatomy`, and the archway here is the case it turns on: two straight legs, where a " +
+    "Frenet frame has no curvature to derive a normal from, joined to an arc that does."
 };
 
 /**
