@@ -357,6 +357,21 @@ export { Cyclorama, type CycloramaOptions } from "./helpers/Cyclorama";
 export { GroundGrid, type GroundGridOptions } from "./helpers/GroundGrid";
 
 //------------------------------
+//  Loft
+//------------------------------
+
+export {
+  alignRings,
+  bestRingOffset,
+  correspondLoops,
+  type CorrespondOptions,
+  resampleLoop,
+  type ResampleMethod,
+  rotateRing,
+} from "./loft/Correspondence";
+export { loft, type LoftOptions } from "./loft/Loft";
+
+//------------------------------
 //  Paths
 //------------------------------
 
