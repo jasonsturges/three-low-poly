@@ -46,12 +46,22 @@ export const meta = {
     "round tube it is invisible, which is exactly why it ships. " +
     "Four constructions answer the question, and the readout measures them the same way: INTRINSIC TWIST, " +
     "the rotation of the section about its own tangent BEYOND what the path forces, summed step by step. " +
-    "Parallel transport scores 0 by construction. TRUE FRENET — the normal derived from the path's " +
-    "CURVATURE — is the one everybody believes `TubeGeometry` uses, and it is genuinely broken: 180° flip " +
-    "at the inflection of a reverse curve, 90° steps across an archway's straight legs where zero " +
-    "curvature leaves the normal undefined, 539° total on a Catmull-Rom curve. FIXED REFERENCE projects a " +
-    "constant world axis and is exact on any PLANAR path, which is why it survives in so much code — take " +
-    "it onto the helix and the section spins. " +
+    "Parallel transport scores 0 by construction. Read it next to OFFSET, which is the largest angle " +
+    "between a construction's frame and transport's: the pair separates a section that is merely ROTATED " +
+    "from one that is TWISTING, and without that second number every difference looks like a defect. " +
+    "TRUE FRENET — the normal taken from the path's CURVATURE — is what everybody believes " +
+    "`TubeGeometry` uses. On the plain arc it is perfectly sound: 0.00° of twist, sitting a constant 90° " +
+    "off transport because it points at the center of curvature rather than out of the plane. Give it " +
+    "anything harder and it breaks. 180° across an archway's straight legs, where zero curvature leaves " +
+    "the normal undefined and some arbitrary axis has to answer. 180° across the reverse curve's " +
+    "inflection — arriving as TWO 90° steps rather than one snap, because a central difference straddles " +
+    "the inflection and smears the flip over the two stations either side of it. And 539° on the " +
+    "Catmull-Rom curve, with a 180° step in it, where the failures stop being incidents and simply " +
+    "accumulate. FIXED REFERENCE projects one constant world axis and is EXACT on any planar path — 0.00° " +
+    "on the arc, the archway and the reverse curve, matching transport to the digit, which is why it " +
+    "survives in so much working code. It has no memory, so it re-derives the section from the world at " +
+    "every step instead of carrying it, and the moment the path leaves its plane the world stops " +
+    "agreeing: 570° on the helix, worse than Frenet manages anywhere. " +
     "The fourth is the finding. Three's `computeFrenetFrames` IS NOT FRENET. Its own source cites TR425, " +
     "the parallel transport tech report, and the algorithm carries the previous normal forward by the " +
     "minimum rotation — the same thing `transportFrames` does. Measured here: identical intrinsic twist " +
@@ -92,7 +102,6 @@ export const meta = {
 type Construction = "transport" | "three" | "frenet" | "fixed";
 type PathName = "arc" | "archway" | "reverse" | "helix" | "curve";
 type ProfileName = "angle" | "bar" | "tube";
-type Stage = "path" | "stations" | "rings" | "rails" | "solid";
 
 const DEG = 180 / Math.PI;
 const clamp = (x: number) => Math.min(1, Math.max(-1, x));
@@ -102,7 +111,7 @@ const clamp = (x: number) => Math.min(1, Math.max(-1, x));
 //------------------------------
 
 /**
- * Four paths, chosen so that each construction is right somewhere and wrong somewhere. A comparison
+ * Five paths, chosen so that each construction is right somewhere and wrong somewhere. A comparison
  * where one method simply wins everywhere teaches nothing about why the others exist.
  *
  * `arc`      planar, constant curvature. Everything agrees. The control.
@@ -309,9 +318,12 @@ function threeFrames(points: Vector3[], tangents: Vector3[]): Station[] {
  * - A STRAIGHT RUN has zero curvature, so `dT` vanishes and the normal is not merely inaccurate, it is
  *   UNDEFINED. Some arbitrary axis has to be substituted, and the arbitrary choice made below is what
  *   produces the 90° steps at the archway's legs. There is no better choice available — that is the point.
- * - AN INFLECTION reverses the curvature vector while the tangent runs on smoothly, so the normal flips
- *   through 180° between two adjacent stations and the section turns inside out. The reverse curve is
- *   two arcs and nothing else, and it still breaks.
+ * - AN INFLECTION reverses the curvature vector while the tangent runs on smoothly, so the normal turns
+ *   through 180° and the section ends up inside out. It arrives as TWO 90° steps rather than one snap:
+ *   the central difference below straddles the inflection, so the station either side of it sees a
+ *   half-reversed `dT`. A one-sided difference would snap all 180° at once instead. Neither is better —
+ *   the flip is in the construction, and the discretization only decides how it is spread. The reverse
+ *   curve is two arcs meeting tangentially and nothing else, and it still breaks.
  */
 function frenetFrames(points: Vector3[], tangents: Vector3[]): Station[] {
   return tangents.map((tangent, i) => {
@@ -499,6 +511,7 @@ export default function (container: HTMLElement) {
 
     twist: "",
     worst: "",
+    offset: "",
     counts: "",
     about: "",
   };
@@ -600,11 +613,20 @@ export default function (container: HTMLElement) {
     }
 
     const { total, worst } = twist(stations);
+    // The largest angle between this construction's frame and parallel transport's. Reported NEXT TO the
+    // twist because the two answer different questions and neither is enough alone: true Frenet on the
+    // plain arc twists by 0.00° yet sits a constant 90° away, which is a section pointing somewhere else,
+    // not a section spinning. Offset without twist is a choice of seed; twist is the defect.
+    const offset = Math.max(...stations.map((s, i) => Math.acos(clamp(Math.abs(s.normal.dot(base[i]!.normal)))) * DEG));
     params.twist = total < 5e-4 ? "0.00° — carried, never spun" : `${total.toFixed(2)}° accumulated`;
     params.worst =
       worst < 5e-4
         ? "0.00° — no step rotates the section"
         : `${worst.toFixed(2)}° in a single step${worst > 90 ? " — the section turns over" : ""}`;
+    params.offset =
+      offset < 5e-4
+        ? "0.00° — the same frames transport builds"
+        : `${offset.toFixed(2)}° from transport${total < 5e-4 ? " — rotated, not twisted" : ""}`;
     params.counts = `${stations.length} stations · ${profile.length}-sided profile · ${triangles} triangles`;
     params.about = label;
   };
@@ -672,6 +694,7 @@ export default function (container: HTMLElement) {
   const readout = gui.addFolder("Readout");
   readout.add(params, "twist").name("Intrinsic Twist").listen().disable();
   readout.add(params, "worst").name("Worst Step").listen().disable();
+  readout.add(params, "offset").name("Offset vs Transport").listen().disable();
   readout.add(params, "counts").name("Built").listen().disable();
   readout.add(params, "about").name("This Path").listen().disable();
   readout.open();
