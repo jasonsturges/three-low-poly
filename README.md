@@ -125,6 +125,8 @@ function animate(dt) {
 * **Valley:** A concave region lying between neighboring elevated regions or ridges.
 * **Crown:** A broad convex rise, camber, or domed summit region of a surface rather than a singular point or narrow ridge.
 
+### Usage
+
 Nouns describe structure and spatial relationships, verbs describe operations on form.
 
 - gather a rank across a footprint
@@ -414,6 +416,114 @@ Plots
 
 
 
+
+## Structure
+
+- App host
+- Distributable
+
+
+## Conventions
+
+tbd.
+
+### units
+
+- Localization: EN-US
+- Radians
+- Metric: meters and millimeters
+
+### Approach
+
+Separation of shape, geometric intent, and construction of cohesive entities.
+
+- **Geometry** defines intrinsic renderable shape.
+- **Profiles** define reusable computational descriptions of shape or boundary.
+- **Factories** resolve construction: composition, relationships, variation, batching, and scene representation.
+
+This separation keeps individual geometry APIs small while allowing complex assets and large procedural assemblies to
+remain cohesive from the caller's perspective.
+
+### Geometry
+
+Geometry classes describe independently meaningful shape.
+
+They follow the conventions of Three.js built-ins such as `BoxGeometry`, `LatheGeometry`, and `ExtrudeGeometry` which
+are immutable after construction. Parameters are for initialization only.
+
+A geometry:
+
+- produces `BufferGeometry`
+- is complete after construction
+- contains no scene placement or runtime behavior
+- knows only about its own shape
+- may expose parameters needed by higher-level construction
+- may use geometry groups when one cohesive shape requires multiple materials
+
+The relationship between independently valid geometries belongs to construction.
+
+**Composite Geometry**
+
+Some domain objects are naturally represented as one `BufferGeometry` even when they contain several distinct parts.
+
+- A book combines cover and pages geometry
+- A pumpkin combines rind and stem geometry
+- A tree combines trunk and leaf geometry
+
+The parts can be authored independently, transformed into their assembled positions, and merged using geometry groups.
+
+The result remains one cohesive geometry:
+
+```ts
+const geometry = new PumpkinGeometry(options);
+
+const mesh = new Mesh(geometry, [
+  rindMaterial,
+  stemMaterial,
+]);
+```
+
+This is appropriate when the finished object is fundamentally geometric and does not require independently addressable
+scene objects.
+
+---
+
+## Profiles
+
+Profiles are computational geometry rather than renderable geometry.
+
+They describe reusable boundaries, silhouettes, sections, paths, or other mathematical forms that can participate in
+multiple construction operations.
+
+A profile may be used to derive:
+- shape
+- path
+- extrusion
+- sweep
+- loft
+- cut
+
+Profiles are especially useful when several parts must agree on the same geometric definition.
+
+For example, an arched window may derive all of the following from one profile:
+
+```text
+                         ArchProfile
+                              │
+             ┌────────────────┼────────────────┐
+             │                │                │
+             ▼                ▼                ▼
+        wall opening       glass pane        frame
+                                               │
+                                  ┌────────────┼────────────┐
+                                  ▼            ▼            ▼
+                                jamb        lattice        sill
+```
+
+The profile is not merely an implementation helper, it is the shared geometric intent from which related geometry can be
+constructed consistently.
+
+---
 ## Author
 
 Jason Sturges
