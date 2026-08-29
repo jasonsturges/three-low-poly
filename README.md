@@ -391,6 +391,7 @@ Plots
 
 ```text
       Sweep           Parametric Curve           Mapping              Parameter Space       Parametric Surface
+
                                                                     v ↑                        v ↑
    ●───╮                ●──╮                      (u,v)               | +---+                    │   ╱────╱
        ╰──╮                ╰──╮                     │                 | |   |                    │  ╱────╱
