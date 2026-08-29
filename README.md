@@ -166,7 +166,7 @@ Compact reference for geometric notation, diagram glyphs, computational geometry
 | **Measured Angle**         |   `∡`   | Angle with an indicated measurement                      |
 | **Spherical Angle**        |   `∢`   | Spherical or spatial angle                               |
 | **Right Angle**            |   `∟`   | Right angle, $90^\circ$                                  |
-| **Perpendicular**          | `⟂` `⊥` | Perpendicular lines, orthogonal vectors, surface normals |
+| **Perpendicular**          |   `⟂`   | Perpendicular lines, orthogonal vectors, surface normals |
 | **Parallel**               | `∥` `⫽` | Parallel lines or vectors                                |
 | **Not Parallel**           |   `∦`   | Non-parallel relationship                                |
 | **Congruent**              |   `≅`   | Congruent geometric objects                              |
