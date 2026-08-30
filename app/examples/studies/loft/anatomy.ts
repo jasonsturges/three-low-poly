@@ -181,10 +181,18 @@ interface Line {
   a: Vector3;
   b: Vector3;
   color: Color;
+  /** Fades the segment toward its start, so a line reads as an arrow without needing a head. */
   taper?: boolean;
 }
 
-/** One `LineSegments` for a whole stage, colored per vertex. Same approach as the sweep study. */
+/**
+ * One `LineSegments` for a whole stage, colored per vertex.
+ *
+ * A single object rather than one per station: a 96-station diagram would otherwise be hundreds of
+ * objects to add, traverse and dispose. Direction rides a brightness ramp — dark at the base, bright at
+ * the tip — because line width is 1px whatever you ask for, in WebGL and WebGPU alike, so it cannot be
+ * carried by weight.
+ */
 function lineSet(lines: Line[], material: LineBasicMaterial): LineSegments {
   const positions = new Float32Array(lines.length * 6);
   const colors = new Float32Array(lines.length * 6);
