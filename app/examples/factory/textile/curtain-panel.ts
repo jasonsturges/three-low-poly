@@ -51,7 +51,7 @@ export default function (container: HTMLElement) {
     topPull: 0,
     pull: 0.42,
     hemPull: 0,
-    slack: 0.5,
+    slack: 0.7,
     widthSegments: 160,
     heightSegments: 40,
     pair: true,
@@ -69,8 +69,10 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     clear();
 
-    // One geometry, used twice. The panel's outer edge sits at x = 0, so a pair is this and its mirror —
-    // rotated rather than negatively scaled, which would invert the winding.
+    // A pair is TWO geometries — the second built with `mirror: true`, not the first one rotated.
+    // Turning a panel 180° about Y would flip its depth as well as its width, so one half's pleats would
+    // face the room and the other's the wall. Invisible on a heading symmetric about zero; very visible
+    // on `pinch`, whose faces would become pinches.
     const geometry = new CurtainPanelGeometry(params);
     const gap = 0.04;
 
@@ -78,14 +80,17 @@ export default function (container: HTMLElement) {
     right.position.x = gap;
     stage.add(right);
 
+    let triangles = geometry.getIndex()!.count / 3;
+
     if (params.pair) {
-      const left = new Mesh(geometry, fabric);
+      const mirrored = new CurtainPanelGeometry({ ...params, mirror: true });
+      const left = new Mesh(mirrored, fabric);
       left.position.x = -gap;
-      left.rotation.y = Math.PI;
       stage.add(left);
+      triangles += mirrored.getIndex()!.count / 3;
     }
 
-    params.triangles = `${geometry.getIndex()!.count / 3} triangles${params.pair ? " × 2" : ""}`;
+    params.triangles = `${triangles} triangles`;
   };
 
   rebuild();

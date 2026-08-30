@@ -69,11 +69,25 @@ export interface CurtainPanelGeometryOptions {
    */
   hemPull?: number;
   /**
-   * How the leading edge curves between its three anchors. Defaults to `0.5`.
+   * Mirror the panel about `x = 0`, for the other half of a pair. Defaults to `false`.
+   *
+   * **Use this rather than rotating or negatively scaling a second copy in the scene.** Turning a panel
+   * through 180° about Y maps `(x, y, z)` to `(−x, y, −z)`, which flips the DEPTH as well as the width —
+   * so one panel's pleats face the room and the other's face the wall. On a heading that is symmetric
+   * about zero, `pencil`, `box` and `knife`, that is invisible. On `pinch` it is not: its section runs
+   * from −1.9 to +1, so negating the depth turns its flat faces into pinches and the pair stops matching.
+   * A negative scale would keep the depth but invert the winding instead.
+   *
+   * This reflects only `x` and re-winds the surface to suit, so both halves of a pair present the same
+   * face to the room.
+   */
+  mirror?: boolean;
+  /**
+   * How the leading edge curves between its three anchors. Defaults to `0.7`.
    *
    * `0` runs straight lines from rod to tie to hem, giving a hard V at the tieback. `1` eases into and
-   * out of every anchor, which bows each half. Real cloth sits between: it leaves the rod on a slant and
-   * softens as it reaches the band.
+   * out of every anchor, which bows each half. The default leans toward the curve, because hung cloth
+   * bows rather than creasing into a straight line between its anchors.
    */
   slack?: number;
   /**
@@ -141,8 +155,8 @@ function ease(t: number, slack: number): number {
  * special case. See {@link CurtainPanelGeometryOptions.hemPull}.
  *
  * **Origin is the rod**, at `y = 0`, with the cloth hanging to negative Y and the panel's outer edge at
- * `x = 0` — so a pair is this geometry and its mirror. The same convention as {@link SwagGeometry} and
- * {@link CascadeGeometry}.
+ * `x = 0` — so a pair is this geometry and a second built with `mirror: true`. The same convention as
+ * {@link SwagGeometry} and {@link CascadeGeometry}.
  *
  * **This is a sheet with no thickness**, so it needs a material with `side: DoubleSide`.
  *
@@ -167,7 +181,8 @@ export class CurtainPanelGeometry extends BufferGeometry {
     topPull = 0,
     pull = 0.42,
     hemPull = 0,
-    slack = 0.5,
+    mirror = false,
+    slack = 0.7,
     widthSegments = 160,
     heightSegments = 40,
   }: CurtainPanelGeometryOptions = {}) {
@@ -206,13 +221,16 @@ export class CurtainPanelGeometry extends BufferGeometry {
       const row: Vector3[] = [];
       for (let i = 0; i <= across; i++) {
         const u = i / across;
-        row.push(new Vector3(lead + u * span, -v * drop, shape(u * pleats) * amplitude));
+        const x = lead + u * span;
+        // Only `x` is reflected. The depth is left alone, so a mirrored panel still faces the room.
+        row.push(new Vector3(mirror ? -x : x, -v * drop, shape(u * pleats) * amplitude));
       }
 
       grid.push(row);
     }
 
-    const geometry = surfaceGrid(grid);
+    // Reflecting one axis reverses handedness, so the mirrored panel needs its winding turned back.
+    const geometry = surfaceGrid(grid, { flip: mirror });
     this.setIndex(geometry.getIndex());
     for (const name of Object.keys(geometry.attributes)) {
       this.setAttribute(name, geometry.attributes[name]!);
