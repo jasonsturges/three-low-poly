@@ -13,10 +13,11 @@ export const meta = {
     "into the available width demands. The tieback is a constraint on WIDTH, not a force on cloth: " +
     "narrowing the span raises the local fullness and the folds deepen because they cannot do otherwise. " +
     "The leading edge runs through THREE anchors — rod, tieback, hem — which is what lets one class do " +
-    "both real curtains. Leave Hem Pull at 0 and the panel flares back out into an hourglass, which is a " +
-    "heavy curtain with material in the base. Set it equal to Pull and the edge falls straight from the " +
-    "tie, parallel to the outer edge, which is a thin curtain with nothing to flare with. Above Pull it " +
-    "keeps narrowing to the floor. " +
+    "both real curtains. Drop Hem Pull to 0 and the panel flares fully back out into the widest " +
+    "hourglass, a heavy curtain with material in the base. Set it equal to Pull and the edge falls " +
+    "straight from the tie, parallel to the outer edge, which is a thin curtain with nothing to flare " +
+    "with. Above Pull it keeps narrowing to the floor. The default sits just off zero because a tieback " +
+    "holds some cloth back permanently, so a real panel rarely recovers its full width at the floor. " +
     "Origin is the rod at y = 0 with the outer edge at x = 0, so a pair is this geometry and its mirror. " +
     "Needs `side: DoubleSide`. Worked out in `studies/drape/pleating`.",
 };
@@ -50,7 +51,7 @@ export default function (container: HTMLElement) {
     tiebackHeight: 0.62,
     topPull: 0,
     pull: 0.42,
-    hemPull: 0,
+    hemPull: 0.12,
     slack: 0.7,
     widthSegments: 160,
     heightSegments: 40,
