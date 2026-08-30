@@ -48,7 +48,17 @@ export function solveAmplitude(shape: PleatShape, fullness: number, pitch: numbe
   if (fullness <= 1.0000001) return 0;
 
   let low = 0;
-  let high = pitch * 4;
+  // THE SEARCH BOUND HAS TO SCALE WITH WHAT IS BEING ASKED, or the solve fails silently.
+  //
+  // A fixed ceiling of `pitch * 4` looks generous and is not: a triangular plan needs
+  // `A = (pitch/4)·√(f²−1)`, which is about `14.5 · pitch` at 58× fullness. Past the ceiling the
+  // bisection simply converges on the ceiling and returns it, and the caller gets a panel holding a
+  // third of its fabric with nothing reporting a problem. Measured at 31%, 22% and 18% before this.
+  //
+  // `pitch * fullness` is comfortably above the requirement for every shape here — the triangle is the
+  // hungriest, at roughly a quarter of it — and bisection over a wider range costs nothing, since 60
+  // halvings reach machine precision from any bound.
+  let high = pitch * Math.max(4, fullness);
   for (let i = 0; i < 60; i++) {
     const mid = (low + high) / 2;
     if (arcRatio(shape, mid, pitch) < fullness) low = mid;
