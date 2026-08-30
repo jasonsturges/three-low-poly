@@ -74,6 +74,24 @@ export interface CurtainPanelGeometryOptions {
    */
   hemPull?: number;
   /**
+   * How much the OUTER edge follows the leading edge, `0` to `1`. Defaults to `0`.
+   *
+   * At `0` the outer edge is pinned at {@link width} and never moves, which is right for a rod-hung
+   * curtain: that edge is the RETURN, wrapping back to the wall where a bracket holds it. One panel is
+   * then an L — one edge curved, one straight — and the hourglass you see in photographs belongs to the
+   * PAIR, each half contributing one curve.
+   *
+   * At `1` the outer edge draws in by exactly as much as the leading edge, and a single panel becomes a
+   * symmetric hourglass on its own. Between the two it follows partway. This is not a stylistic dial: a
+   * panel with no return is a real thing — a stage curtain cinched at its middle, a portière in a
+   * doorway with no wall to return to, a free-hanging banner tied in the centre — and none of those can
+   * be built with the outer edge pinned.
+   *
+   * The two draws are scaled down together if they would close the panel, so the ratio between them
+   * survives and the cloth stays centred rather than one edge overrunning the other.
+   */
+  outerPull?: number;
+  /**
    * Mirror the panel about `x = 0`, for the other half of a pair. Defaults to `false`.
    *
    * **Use this rather than rotating or negatively scaling a second copy in the scene.** Turning a panel
@@ -167,6 +185,10 @@ function ease(t: number, slack: number): number {
  * lets a panel drop vertically from its tie or flare back out into an hourglass without either being a
  * special case. See {@link CurtainPanelGeometryOptions.hemPull}.
  *
+ * By default only that edge moves; the outer one is the RETURN and stays pinned against the wall, so a
+ * single panel is an L and the hourglass belongs to the pair. {@link CurtainPanelGeometryOptions.outerPull}
+ * releases the return, for the panels that genuinely have none.
+ *
  * **Origin is the rod**, at `y = 0`, with the cloth hanging to negative Y and the panel's outer edge at
  * `x = 0` — so a pair is this geometry and a second built with `mirror: true`. The same convention as
  * {@link SwagGeometry} and {@link CascadeGeometry}.
@@ -194,6 +216,7 @@ export class CurtainPanelGeometry extends BufferGeometry {
     topPull = 0,
     pull = 0.42,
     hemPull = 0.12,
+    outerPull = 0,
     mirror = false,
     slack = 0.7,
     widthSegments = 160,
@@ -221,8 +244,20 @@ export class CurtainPanelGeometry extends BufferGeometry {
           ? topPull + (pull - topPull) * ease(v / tie, slack)
           : pull + (hemPull - pull) * ease((v - tie) / (1 - tie), slack);
 
-      const lead = drawn * width;
-      const span = Math.max(width * 0.06, width - lead);
+      // The outer edge takes the SAME curve, scaled. It is one factor rather than a second set of
+      // anchors because a panel that draws in at both edges does so for one reason — nothing is holding
+      // its outer edge — and that is a single fact about the panel, not an independent shape.
+      const wanted = drawn * width;
+      const wantedOuter = wanted * Math.max(0, Math.min(1, outerPull));
+
+      // Scale BOTH down together if they would close the panel, so their ratio survives and the cloth
+      // stays centred. Clamping the span instead would let one edge overrun the other.
+      const total = wanted + wantedOuter;
+      const room = width * 0.94;
+      const scale = total > room ? room / total : 1;
+
+      const lead = wanted * scale;
+      const span = width - lead - wantedOuter * scale;
 
       // Same cloth, less width: the local fullness is whatever the leading edge leaves it, and the fold
       // depth is solved from that rather than set.

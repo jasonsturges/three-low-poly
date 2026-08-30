@@ -18,6 +18,11 @@ export const meta = {
     "straight from the tie, parallel to the outer edge, which is a thin curtain with nothing to flare " +
     "with. Above Pull it keeps narrowing to the floor. The default sits just off zero because a tieback " +
     "holds some cloth back permanently, so a real panel rarely recovers its full width at the floor. " +
+    "Only the LEADING edge moves by default. The outer one is the RETURN, wrapping back to the wall " +
+    "where a bracket holds it, so a single panel is an L and the hourglass belongs to the PAIR — each " +
+    "half contributing one curve. Outer Pull releases that return, and a panel drawing in from both " +
+    "sides is its own hourglass. Not a stylistic dial: a stage curtain cinched at its middle, a portière " +
+    "in a doorway, a banner tied in the centre all genuinely have no return. " +
     "Origin is the rod at y = 0 with the outer edge at x = 0, so a pair is this geometry and its mirror. " +
     "Needs `side: DoubleSide`. Worked out in `studies/drape/pleating`.",
 };
@@ -52,6 +57,7 @@ export default function (container: HTMLElement) {
     topPull: 0,
     pull: 0.42,
     hemPull: 0.12,
+    outerPull: 0,
     slack: 0.7,
     widthSegments: 160,
     heightSegments: 40,
@@ -121,6 +127,10 @@ export default function (container: HTMLElement) {
   edge.add(params, "hemPull", 0, 0.85, 0.01).name("Hem Pull").onChange(rebuild);
   // 0 is a hard V at the tie, 1 bows both halves. Cloth sits between.
   edge.add(params, "slack", 0, 1, 0.05).name("Slack").onChange(rebuild);
+  // 0 pins the outer edge against the wall — the RETURN of a rod-hung curtain, and why one panel is an
+  // L rather than an hourglass. 1 releases it, for a panel with no wall to return to: a stage curtain
+  // cinched at its middle, a portière, a banner tied in the centre.
+  edge.add(params, "outerPull", 0, 1, 0.05).name("Outer Pull").onChange(rebuild);
   edge.open();
 
   const size = gui.addFolder("Panel");
