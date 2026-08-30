@@ -163,7 +163,12 @@ export {
 } from "./geometry/atmosphere/SmokeCurlGeometry";
 
 // Books
-export { BookGeometry, type BookGeometryOptions } from "./geometry/books/BookGeometry";
+export {
+  BOOK_COVER_MATERIAL,
+  BOOK_PAGES_MATERIAL,
+  BookGeometry,
+  type BookGeometryOptions,
+} from "./geometry/books/BookGeometry";
 
 // Cemetery
 export {

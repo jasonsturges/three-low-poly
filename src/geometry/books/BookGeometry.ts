@@ -1,12 +1,19 @@
-import { BoxGeometry, BufferAttribute, BufferGeometry } from "three";
+import { BoxGeometry, BufferGeometry } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import {
+  createGeometryBuffers,
+  pushQuad,
+  toBufferGeometry,
+  type Vec2,
+  type Vec3,
+} from "../../utils/GeometryBuffers";
 
 export interface BookGeometryOptions {
-  /** Cover width (spine to fore-edge). Defaults to `1`. */
+  /** Cover width, spine to fore-edge. Defaults to `1`. */
   width?: number;
   /** Cover height. Defaults to `1.5`. */
   height?: number;
-  /** Spine depth (cover to cover). Defaults to `0.5`. */
+  /** Spine depth, cover to cover. Defaults to `0.5`. */
   depth?: number;
   /** Cover board thickness. Defaults to `0.05`. */
   coverThickness?: number;
@@ -14,10 +21,50 @@ export interface BookGeometryOptions {
   pageIndent?: number;
 }
 
+/** Material slot for the cover shell. */
+export const BOOK_COVER_MATERIAL = 0;
+/** Material slot for the page block. */
+export const BOOK_PAGES_MATERIAL = 1;
+
 /**
- * Closed book — cover shell (group 0) and page block (group 1).
+ * A closed book — cover shell (group 0) and page block (group 1), merge-baked into one geometry.
  *
- * Local frame: spine at X=0, fore-edge at +X, sits on the Y=0 plane.
+ * Fourteen quads make the shell: three outer boards, three inner faces, three top edges, three bottom
+ * edges, and the two fore-edges. The inner faces are what make it a SHELL rather than a slab — a book
+ * seen from its fore-edge shows the inside of both boards and the page block held between them.
+ *
+ * Local frame: **spine at X = 0, fore-edge at +X, sitting on Y = 0**, with the book extending to −Z. Not
+ * centred in XZ, and deliberately: books are placed against each other, so the spine is the useful
+ * anchor. A row lays them out along Z; a shelf stands them along X.
+ *
+ * ## The two groups are the point
+ *
+ * A cover is red and its pages are white, so the two need different materials — and merging them with
+ * groups is what keeps a single book to one geometry and one draw pair. It also rules something out:
+ * Three's `InstancedMesh` carries ONE colour per instance for the whole object, so a shelf of books with
+ * differently coloured spines cannot be a single instanced mesh here. (Metal can do it — `setColorAt`
+ * against a material group — which is why the Swift port of this reads differently.) Merging a whole
+ * shelf into one baked geometry is the way that works here, and it is what the row and stack factories
+ * do.
+ *
+ * ## The cover UV wraps front to back
+ *
+ * `u` runs continuously across **back cover → spine → front cover**, in proportion to `2·width + depth`,
+ * so the three outer boards share one unbroken 0→1 span. That is the layout a real dust jacket is
+ * printed on: one flat sheet, folded around the boards. Apply a paper texture and it wraps correctly
+ * across the spine instead of restarting at every face.
+ *
+ * The three INNER faces carry the same spans reversed, so a texture continues around the fold rather
+ * than mirroring at it. The edge, top and bottom strips take a plain 0→1: they are thin, and nothing on
+ * a jacket is registered to them.
+ *
+ * @example
+ * ```ts
+ * const book = new Mesh(new BookGeometry({ depth: 0.32 }), [
+ *   new MeshStandardMaterial({ color: 0x8c2f2f, roughness: 0.62 }), // cover
+ *   new MeshStandardMaterial({ color: 0xe8e0cc, roughness: 0.92 }), // pages
+ * ]);
+ * ```
  */
 export class BookGeometry extends BufferGeometry {
   readonly width: number;
@@ -47,161 +94,90 @@ export class BookGeometry extends BufferGeometry {
     const t = coverThickness;
     const i = pageIndent;
 
-    const vertices = [
-      // Front cover
-      0, 0, 0,
-      w, 0, 0,
-      w, h, 0,
-      0, h, 0,
+    // The jacket's two folds, as fractions of the flat sheet `2w + d`. Everything the cover UV does is
+    // these two numbers: back cover [0, u1], spine [u1, u2], front cover [u2, 1].
+    const sheet = w * 2 + d;
+    const u1 = w / sheet;
+    const u2 = (w + d) / sheet;
 
-      // Back cover
-      w, 0, -d,
-      0, 0, -d,
-      0, h, -d,
-      w, h, -d,
+    const buffers = createGeometryBuffers();
 
-      // Spine
-      0, 0, -d,
-      0, 0,  0,
-      0, h,  0,
-      0, h, -d,
+    /**
+     * One planar quad of the shell.
+     *
+     * The normal is left to the winding rather than transcribed. For a planar quad the two are identical,
+     * and it removes a parallel table that has to be kept in step by hand — the original carried fifty-six
+     * normals written out longhand beside fifty-six positions.
+     */
+    const quad = (corners: [Vec3, Vec3, Vec3, Vec3], uvs: [Vec2, Vec2, Vec2, Vec2]) =>
+      pushQuad(buffers, corners, undefined, uvs);
 
-      // Inside front cover
-      w, 0, -t,
-      t, 0, -t,
-      t, h, -t,
-      w, h, -t,
-
-      // Inside back cover
-      t, 0, -d + t,
-      w, 0, -d + t,
-      w, h, -d + t,
-      t, h, -d + t,
-
-      // Inside spine
-      t, 0, -t,
-      t, 0, -d + t,
-      t, h, -d + t,
-      t, h, -t,
-
-      // Front cover top
-      0, h,  0,
-      w, h,  0,
-      w, h, -t,
-      t, h, -t,
-
-      // Back cover top
-      0, h, -d,
-      t, h, -d + t,
-      w, h, -d + t,
-      w, h, -d,
-
-      // Spine cover top
-      0, h,  0,
-      t, h, -t,
-      t, h, -d + t,
-      0, h, -d,
-
-      // Front cover bottom
-      0, 0,  0,
-      t, 0, -t,
-      w, 0, -t,
-      w, 0,  0,
-
-      // Back cover bottom
-      0, 0, -d,
-      w, 0, -d,
-      w, 0, -d + t,
-      t, 0, -d + t,
-
-      // Spine cover bottom
-      0, 0,  0,
-      0, 0, -d,
-      t, 0, -d + t,
-      t, 0, -t,
-
-      // Front cover edge
-      w, 0,  0,
-      w, 0, -t,
-      w, h, -t,
-      w, h,  0,
-
-      // Back cover edge
-      w, 0, -d,
-      w, h, -d,
-      w, h, -d + t,
-      w, 0, -d + t,
+    /** A thin strip — edges, tops and bottoms. Nothing on a jacket registers to these. */
+    const STRIP: [Vec2, Vec2, Vec2, Vec2] = [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
     ];
 
+    //  Outer boards. Their `u` spans are the jacket, unbroken from back through spine to front.
+    quad(
+      [[0, 0, 0], [w, 0, 0], [w, h, 0], [0, h, 0]],
+      [[u2, 0], [1, 0], [1, 1], [u2, 1]],
+    ); // front cover
+    quad(
+      [[w, 0, -d], [0, 0, -d], [0, h, -d], [w, h, -d]],
+      [[0, 0], [u1, 0], [u1, 1], [0, 1]],
+    ); // back cover
+    quad(
+      [[0, 0, -d], [0, 0, 0], [0, h, 0], [0, h, -d]],
+      [[u1, 0], [u2, 0], [u2, 1], [u1, 1]],
+    ); // spine
 
+    //  Inner faces of the boards — what makes this a shell and not a slab. Their spans run the other
+    //  way, so a jacket texture carries around the fold rather than mirroring at it.
+    quad(
+      [[w, 0, -t], [t, 0, -t], [t, h, -t], [w, h, -t]],
+      [[1, 0], [u2, 0], [u2, 1], [1, 1]],
+    ); // inside front
+    quad(
+      [[t, 0, -d + t], [w, 0, -d + t], [w, h, -d + t], [t, h, -d + t]],
+      [[u1, 0], [0, 0], [0, 1], [u1, 1]],
+    ); // inside back
+    quad(
+      [[t, 0, -t], [t, 0, -d + t], [t, h, -d + t], [t, h, -t]],
+      [[u2, 0], [u1, 0], [u1, 1], [u2, 1]],
+    ); // inside spine
 
-    const normals = [
-       0, 0, 1,   0, 0, 1,   0, 0, 1,   0, 0, 1,   // Front cover
-       0, 0,-1,   0, 0,-1,   0, 0,-1,   0, 0,-1,   // Back cover
-      -1, 0, 0,  -1, 0, 0,  -1, 0, 0,  -1, 0, 0,   // Spine
-       0, 0,-1,   0, 0,-1,   0, 0,-1,   0, 0,-1,   // Inside front cover
-       0, 0, 1,   0, 0, 1,   0, 0, 1,   0, 0, 1,   // Inside back cover
-       1, 0, 0,   1, 0, 0,   1, 0, 0,   1, 0, 0,   // Inside spine
-       0, 1, 0,   0, 1, 0,   0, 1, 0,   0, 1, 0,   // Front cover top
-       0, 1, 0,   0, 1, 0,   0, 1, 0,   0, 1, 0,   // Back cover top
-       0, 1, 0,   0, 1, 0,   0, 1, 0,   0, 1, 0,   // Spine cover top
-       0,-1, 0,   0,-1, 0,   0,-1, 0,   0,-1, 0,   // Front cover bottom
-       0,-1, 0,   0,-1, 0,   0,-1, 0,   0,-1, 0,   // Back cover bottom
-       0,-1, 0,   0,-1, 0,   0,-1, 0,   0,-1, 0,   // Spine cover bottom
-       1, 0, 0,   1, 0, 0,   1, 0, 0,   1, 0, 0,   // Front cover edge
-       1, 0, 0,   1, 0, 0,   1, 0, 0,   1, 0, 0,   // Back cover edge
-    ];
+    //  Top edges of the three boards.
+    quad([[0, h, 0], [w, h, 0], [w, h, -t], [t, h, -t]], [[u2, 0], [1, 0], [1, 1], [u2, 1]]);
+    quad([[0, h, -d], [t, h, -d + t], [w, h, -d + t], [w, h, -d]], STRIP);
+    quad([[0, h, 0], [t, h, -t], [t, h, -d + t], [0, h, -d]], STRIP);
 
-    const u1 = width / ((width * 2) + depth);
-    const u2 = (width + depth) / ((width * 2) + depth);
+    //  Bottom edges.
+    quad([[0, 0, 0], [t, 0, -t], [w, 0, -t], [w, 0, 0]], STRIP);
+    quad([[0, 0, -d], [w, 0, -d], [w, 0, -d + t], [t, 0, -d + t]], STRIP);
+    quad([[0, 0, 0], [0, 0, -d], [t, 0, -d + t], [t, 0, -t]], STRIP);
 
-    const uvs = [
-      u2,0,   1,0,   1,1,  u2,1,   // Front cover
-       0,0,  u1,0,  u1,1,   0,1,   // Back cover
-      u1,0,  u2,0,  u2,1,  u1,1,   // Spine
-       1,0,  u2,0,  u2,1,   1,1,   // Inside front cover
-      u1,0,   0,0,   0,1,  u1,1,   // Inside back cover
-      u2,0,  u1,0,  u1,1,  u2,1,   // Inside spine
-      u2,0,   1,0,   1,1,  u2,1,   // Front cover top
-       0,0,   1,0,   1,1,   0,1,   // Back cover top
-       0,0,   1,0,   1,1,   0,1,   // Spine cover top
-       0,0,   1,0,   1,1,   0,1,   // Front cover bottom
-       0,0,   1,0,   1,1,   0,1,   // Back cover bottom
-       0,0,   1,0,   1,1,   0,1,   // Spine cover bottom
-       0,0,   1,0,   1,1,   0,1,   // Front cover edge
-       0,0,   1,0,   1,1,   0,1,   // Back cover edge
-    ];
+    //  Fore-edges of the two boards — the open side of the book.
+    quad([[w, 0, 0], [w, 0, -t], [w, h, -t], [w, h, 0]], STRIP);
+    quad([[w, 0, -d], [w, h, -d], [w, h, -d + t], [w, 0, -d + t]], STRIP);
 
-    const indices = [
-       0,  1,  2,   0,  2,  3,  // Front cover face
-       4,  5,  6,   4,  6,  7,  // Back cover face
-       8,  9, 10,   8, 10, 11,  // Spine face
-      12, 13, 14,  12, 14, 15,  // Inside front cover
-      16, 17, 18,  16, 18, 19,  // Inside back cover
-      20, 21, 22,  20, 22, 23,  // Inside spine
-      24, 25, 26,  24, 26, 27,  // Front cover top
-      28, 29, 30,  28, 30, 31,  // Back cover top
-      32, 33, 34,  32, 34, 35,  // Spine cover top
-      36, 37, 38,  36, 38, 39,  // Front cover bottom
-      40, 41, 42,  40, 42, 43,  // Back cover bottom
-      44, 45, 46,  44, 46, 47,  // Spine cover bottom
-      48, 49, 50,  48, 50, 51,  // Front cover edge
-      52, 53, 54,  52, 54, 55,  // Back cover edge
-    ];
+    const shell = toBufferGeometry(buffers);
 
-    const positions = new Float32Array(vertices);
-    const normalArray = new Float32Array(normals);
-    const uvArray = new Float32Array(uvs);
-    const indexArray = new Uint16Array(indices);
+    // The page block, inset from the boards on every side. A box today; see `docs/books.md` for the
+    // curved fore-edge a real block has.
+    const pages = new BoxGeometry(w - t - i, h - i * 2, d - t * 2);
+    pages.translate((w - t - i) / 2 + t, h / 2, -d / 2);
 
-    const coverGeometry = new BufferGeometry();
-    coverGeometry.setAttribute('position', new BufferAttribute(positions, 3));
-    coverGeometry.setAttribute('normal', new BufferAttribute(normalArray, 3));
-    coverGeometry.setAttribute('uv', new BufferAttribute(uvArray, 2));
-    coverGeometry.setIndex(new BufferAttribute(indexArray, 1));
-
-    const pagesGeometry = new BoxGeometry(width - t - i, h - i * 2, d - t * 2);
-    pagesGeometry.translate((width - t - i) / 2 + t, h / 2, -d / 2 );
-    this.copy(mergeGeometries([coverGeometry, pagesGeometry], true) as BufferGeometry);
+    // `true` keeps the two as separate groups rather than flattening them, which is the whole reason
+    // this is one geometry instead of two meshes.
+    const merged = mergeGeometries([shell, pages], true);
+    shell.dispose();
+    pages.dispose();
+    if (merged) {
+      this.copy(merged);
+      merged.dispose();
+    }
   }
 }
