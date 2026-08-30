@@ -1,5 +1,6 @@
 import { BufferGeometry, Vector3 } from "three";
 import { surfaceGrid } from "../../loft/SurfaceGrid";
+import { samplesPerPleat, solveAmplitude, type PleatShape } from "./pleatWave";
 
 /**
  * The plan section of the accordion.
@@ -59,51 +60,13 @@ export interface CascadeGeometryOptions {
   heightSegments?: number;
 }
 
-/** The accordion's plan section, normalized to ±1. */
-function planShape(pleat: CascadePleat, phase: number): number {
-  const t = phase - Math.floor(phase);
-  if (pleat === "sine") return Math.sin(t * Math.PI * 2);
-  return t < 0.5 ? 4 * t - 1 : 3 - 4 * t;
-}
-
-/** Arc length of one pleat relative to its projected width — the fullness a given amplitude buys. */
-function arcRatio(pleat: CascadePleat, amplitude: number, pitch: number, samples = 240): number {
-  let length = 0;
-  let previousX = 0;
-  let previousZ = planShape(pleat, 0) * amplitude;
-
-  for (let i = 1; i <= samples; i++) {
-    const t = i / samples;
-    const x = t * pitch;
-    const z = planShape(pleat, t) * amplitude;
-    length += Math.hypot(x - previousX, z - previousZ);
-    previousX = x;
-    previousZ = z;
-  }
-
-  return length / pitch;
-}
-
-/**
- * Amplitude for a required fullness. Bisected, because a sine plan's arc length is an elliptic integral
- * with no elementary inverse. The function is monotonic in amplitude, so bisection is exact.
- *
- * Solved against the CONTINUOUS arc length rather than the built polyline. Solving against the polyline
- * would make the fabric come out exact and would make `widthSegments` move the silhouette, since a
- * coarser sampling would need a deeper wave to reach the same length.
- */
-function solveAmplitude(pleat: CascadePleat, fullness: number, pitch: number): number {
-  if (fullness <= 1.0000001) return 0;
-
-  let low = 0;
-  let high = pitch * 4;
-  for (let i = 0; i < 60; i++) {
-    const mid = (low + high) / 2;
-    if (arcRatio(pleat, mid, pitch) < fullness) low = mid;
-    else high = mid;
-  }
-
-  return (low + high) / 2;
+/** The accordion's plan section, normalized to ±1. The one part that is this shape's own vocabulary. */
+function planShape(pleat: CascadePleat): PleatShape {
+  if (pleat === "sine") return (phase) => Math.sin((phase - Math.floor(phase)) * Math.PI * 2);
+  return (phase) => {
+    const t = phase - Math.floor(phase);
+    return t < 0.5 ? 4 * t - 1 : 3 - 4 * t;
+  };
 }
 
 /**
@@ -147,15 +110,8 @@ export class CascadeGeometry extends BufferGeometry {
   }: CascadeGeometryOptions = {}) {
     super();
 
-    // Rounded UP to a MULTIPLE OF FOUR samples per pleat, so every extremum lands on the grid.
-    //
-    // Four, not one: a knife wave turns at phases 0 and 0.5, a sine at 0.25 and 0.75, and only a
-    // multiple of four puts a sample on all of them. A whole number per pleat is not enough — at 40
-    // requested across 6 pleats that gives 7, which is odd, misses the crease and clips the fold depth
-    // to 0.2213 against its true 0.2482.
-    const requested = Math.max(4, Math.floor(widthSegments));
-    const perPleat = Math.max(1, Math.ceil(requested / pleats / 4)) * 4;
-    const across = perPleat * pleats;
+    const across = samplesPerPleat(widthSegments, pleats) * pleats;
+    const shape = planShape(pleat);
     const down = Math.max(1, Math.floor(heightSegments));
     const grid: Vector3[][] = [];
 
@@ -164,15 +120,15 @@ export class CascadeGeometry extends BufferGeometry {
       const width = topWidth + v * (bottomWidth - topWidth);
       const pitch = width / pleats;
       // Same cloth, more width: the local fullness is whatever the flare leaves it.
-      const amplitude = solveAmplitude(pleat, fabricWidth / Math.max(1e-6, width), pitch);
+      const amplitude = solveAmplitude(shape, fabricWidth / Math.max(1e-6, width), pitch);
 
       // Arc length along this tier, so the diagonal can be straight in the CLOTH rather than in the
       // picture of it. An accordion compresses cloth unevenly, so the two are not the same parameter.
       const arc: number[] = [0];
-      let previous = new Vector3(0, 0, planShape(pleat, 0) * amplitude);
+      let previous = new Vector3(0, 0, shape(0) * amplitude);
       for (let i = 1; i <= across; i++) {
         const u = i / across;
-        const point = new Vector3(u * width, 0, planShape(pleat, u * pleats) * amplitude);
+        const point = new Vector3(u * width, 0, shape(u * pleats) * amplitude);
         arc.push(arc[i - 1]! + point.distanceTo(previous));
         previous = point;
       }
@@ -189,7 +145,7 @@ export class CascadeGeometry extends BufferGeometry {
             u * width - width / 2,
             -v * drop,
             // `roll` carries `v`: at the board the cloth is stapled flat and cannot lean.
-            planShape(pleat, u * pleats) * amplitude + roll * (u - 0.5) * v,
+            shape(u * pleats) * amplitude + roll * (u - 0.5) * v,
           ),
         );
       }

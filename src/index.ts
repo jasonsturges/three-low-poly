@@ -308,6 +308,11 @@ export { TerrainPlaneGeometry, type TerrainPlaneGeometryOptions } from "./geomet
 
 // Timber
 export {
+  CurtainPanelGeometry,
+  type CurtainPanelGeometryOptions,
+  type CurtainPleat,
+} from "./geometry/textile/CurtainPanelGeometry";
+export {
   CascadeGeometry,
   type CascadeGeometryOptions,
   type CascadePleat,
