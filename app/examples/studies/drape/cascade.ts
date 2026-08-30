@@ -211,7 +211,13 @@ function buildCascade(options: CascadeOptions): Cascade {
         new Vector3(
           u * width - width / 2,
           -v * drop,
-          waveShape(wave, u * pleats) * amplitude + roll * (u - 0.5),
+          // ROLL CARRIES A `v` FACTOR, and the reason is the board. At `v = 0` the cloth is stapled flat
+          // to a straight piece of timber, so it cannot lean; the tuck and the forward throw are hanging
+          // behaviour and develop with the drop. Without the factor the whole panel is sheared bodily,
+          // its top edge tilts about 10° away from the board it is supposedly fixed to, and the board
+          // line stops looking parallel to the cloth — which is exactly how this was spotted.
+          // `studies/drape/gather` had it right: its bulge and ripple both carry `v`.
+          waveShape(wave, u * pleats) * amplitude + roll * (u - 0.5) * v,
         ),
       );
     }
@@ -401,9 +407,11 @@ export default function (container: HTMLElement) {
       }
     }
 
+    // The mounting board spans the TOP of the cascade, which is where it is stapled — the hem is wider
+    // because the panel flares, and drawing the board at the hem's width overstated it.
     lines.push({
-      a: new Vector3(-params.bottomWidth / 2 - 0.12, 0.02, 0),
-      b: new Vector3(params.bottomWidth / 2 + 0.12, 0.02, 0),
+      a: new Vector3(-params.topWidth / 2 - 0.1, 0.02, 0),
+      b: new Vector3(params.topWidth / 2 + 0.1, 0.02, 0),
       color: COLOR.board,
     });
 
