@@ -308,6 +308,16 @@ export { TerrainPlaneGeometry, type TerrainPlaneGeometryOptions } from "./geomet
 
 // Timber
 export {
+  CascadeGeometry,
+  type CascadeGeometryOptions,
+  type CascadePleat,
+} from "./geometry/textile/CascadeGeometry";
+export {
+  SwagGeometry,
+  type SwagGeometryOptions,
+  type SwagSagCurve,
+} from "./geometry/textile/SwagGeometry";
+export {
   WeatheredPlankGeometry,
   type WeatheredPlankGeometryOptions,
 } from "./geometry/timber/WeatheredPlankGeometry";
@@ -370,6 +380,7 @@ export {
   rotateRing,
 } from "./loft/Correspondence";
 export { loft, type LoftOptions } from "./loft/Loft";
+export { surfaceGrid, type SurfaceGridOptions } from "./loft/SurfaceGrid";
 
 //------------------------------
 //  Paths
