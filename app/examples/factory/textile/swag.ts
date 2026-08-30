@@ -38,6 +38,7 @@ export default function (container: HTMLElement) {
   const params = {
     span: 2,
     sag: 0.85,
+    topSag: 0,
     sagPower: 1.2,
     folds: 3.5,
     foldDepth: 0.12,
@@ -67,7 +68,10 @@ export default function (container: HTMLElement) {
 
   const shape = gui.addFolder("Swag");
   shape.add(params, "span", 0.6, 4, 0.05).name("Span").onChange(rebuild);
-  shape.add(params, "sag", 0.1, 2, 0.02).name("Sag").onChange(rebuild);
+  shape.add(params, "sag", 0.1, 2, 0.02).name("Sag (hem)").onChange(rebuild);
+  // 0 is a board-mounted swag, whose top edge is stapled straight. Lift it and the first visible fold
+  // hangs on its own, the way a pole-mounted one does. The pins stay at y = 0 either way.
+  shape.add(params, "topSag", 0, 1, 0.01).name("Sag (top)").onChange(rebuild);
   // Above 1 the tiers bunch toward the hem instead of stacking evenly. Cloth is not linear.
   shape.add(params, "sagPower", 0.6, 2.5, 0.05).name("Sag Power").onChange(rebuild);
   shape.add(params, "sagCurve", { Catenary: "catenary", Parabola: "parabola" }).name("Sag Curve").onChange(rebuild);
