@@ -407,41 +407,8 @@ function twist(stations: Station[]): { total: number; worst: number } {
 }
 
 //------------------------------
-//  Drawing
+//  Placement
 //------------------------------
-
-interface Line {
-  a: Vector3;
-  b: Vector3;
-  color: Color;
-  /** Fades the segment toward its start, so a triad axis reads as an arrow without needing a head. */
-  taper?: boolean;
-}
-
-/**
- * One `LineSegments` for a whole stage, colored per vertex.
- *
- * Built as a single object rather than one per station because a 96-station helix would otherwise be 288
- * objects to add, traverse, and dispose. Direction is carried by a brightness ramp — dark at the station,
- * bright at the tip — instead of by arrowheads, which is both cheaper and legible at any zoom. Line width
- * is 1px whatever you ask for, in WebGL and WebGPU alike, so it cannot be carried by weight.
- */
-function lineSet(lines: Line[], material: LineBasicMaterial): LineSegments {
-  const positions = new Float32Array(lines.length * 6);
-  const colors = new Float32Array(lines.length * 6);
-  const dim = new Color();
-
-  lines.forEach(({ a, b, color, taper }, i) => {
-    positions.set([a.x, a.y, a.z, b.x, b.y, b.z], i * 6);
-    dim.copy(color).multiplyScalar(taper ? 0.25 : 1);
-    colors.set([dim.r, dim.g, dim.b, color.r, color.g, color.b], i * 6);
-  });
-
-  const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new BufferAttribute(positions, 3));
-  geometry.setAttribute("color", new BufferAttribute(colors, 3));
-  return new LineSegments(geometry, material);
-}
 
 /** The profile placed in one station's frame. The same three lines `sweep` runs to build its rings. */
 function ring(station: Station, profile: [number, number][], scale: number): Vector3[] {
@@ -451,6 +418,43 @@ function ring(station: Station, profile: [number, number][], scale: number): Vec
       .addScaledVector(station.normal, px * scale)
       .addScaledVector(station.binormal, py * scale),
   );
+}
+
+//------------------------------
+//  Drawing
+//------------------------------
+
+interface Line {
+  a: Vector3;
+  b: Vector3;
+  color: Color;
+  /** Fades the segment toward its start, so a line reads as an arrow without needing a head. */
+  taper?: boolean;
+}
+
+/**
+ * One `LineSegments` for a whole stage, colored per vertex.
+ *
+ * A single object rather than one per station: a 96-station diagram would otherwise be hundreds of
+ * objects to add, traverse and dispose. Direction rides a brightness ramp — dark at the base, bright at
+ * the tip — because line width is 1px whatever you ask for, in WebGL and WebGPU alike, so it cannot be
+ * carried by weight.
+ */
+function lineSet(lines: Line[], material: LineBasicMaterial): LineSegments {
+  const positions = new Float32Array(lines.length * 6);
+  const colors = new Float32Array(lines.length * 6);
+  const dim = new Color();
+
+  lines.forEach(({ a, b, color, taper }, i) => {
+    positions.set([a.x, a.y, a.z, b.x, b.y, b.z], i * 6);
+    dim.copy(color).multiplyScalar(taper ? 0.28 : 1);
+    colors.set([dim.r, dim.g, dim.b, color.r, color.g, color.b], i * 6);
+  });
+
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new BufferAttribute(colors, 3));
+  return new LineSegments(geometry, material);
 }
 
 //------------------------------
