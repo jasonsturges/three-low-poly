@@ -456,6 +456,7 @@ A geometry:
 - produces `BufferGeometry`
 - is complete after construction
 - contains no scene placement or runtime behavior
+- translates to set its anchor origin point
 - knows only about its own shape
 - may expose parameters needed by higher-level construction
 - may use geometry groups when one cohesive shape requires multiple materials
@@ -549,15 +550,7 @@ Construction may include:
 
 Each call expresses domain intent. The factory chooses the scene representation required to implement it.
 
-**Factory Classes**
 
-Factories may be represented as classes when construction has reusable context or several related operations.
-
-This avoids forcing shared construction state through a large collection of unrelated functions.
-
-Static creation may be provided when no reusable context is required:
-
-Low-level pure functions remain useful internally, but do not need to define the public architecture.
 
 ---
 
@@ -575,15 +568,13 @@ For example, placing a Florence flask onto a ring stand requires knowing both:
 The factory can solve the contact relationship and position the flask so the sphere rests correctly on the ring.
 
 ```text
-FlorenceFlaskGeometry
-          │
-          │ geometry properties
-          ▼
-      FlaskFactory ◄──── RingStandGeometry
-          │
-          │ solve contact relationship
-          ▼
-     assembled entity
+Geometry                    Assembly
+───────────────────────     ─────────────────
+
+FlorenceFlaskGeometry ─┐
+                       ├──► FlaskStandFactory ──► Assembled Entity
+RingStandGeometry ─────┘
+
 ```
 
 The same principle applies to:
