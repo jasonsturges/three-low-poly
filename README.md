@@ -437,9 +437,12 @@ tbd.
 
 Separation of shape, geometric intent, and construction of cohesive entities.
 
-- **Geometry** defines intrinsic renderable shape.
-- **Profiles** define reusable computational descriptions of shape or boundary.
-- **Factories** resolve construction: composition, relationships, variation, batching, and scene representation.
+- **Geometry**: intrinsic renderable shape
+- **Profiles**: reusable computational shape or boundary
+- **Factories**: construction knowledge - composition, relationships, variation, batching
+- **assemblies**: relationships between independent parts
+- **options**: local definitions composed through ownership
+- **variation**
 
 This separation keeps individual geometry APIs small while allowing complex assets and large procedural assemblies to
 remain cohesive from the caller's perspective.
