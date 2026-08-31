@@ -152,7 +152,7 @@ Compact reference for geometric notation, diagram glyphs, computational geometry
 | **Rounded Corners** | `╭` `╮` `╰` `╯`     | **Half Circles**  | `◖` `◗`                         |
 | **Square Corners**  | `┏` `┓` `┗` `┛`     | **Wedges**        | `◔` `◑` `◕` `◴` `◵` `◶` `◷`     |
 | **Junctions**       | `┼` `├` `┤` `┬` `┴` | **Triangles**     | `▲` `▼` `◀` `▶` `◬` `◭` `◮`     |
-| **Diagonals**       | `╱` `╲` `⟋` `⟍`     | **Quadrants**     | `◢` `◣` `◤` `◥`                 |
+| **Diagonals**       | `╱` `╲` `⟋` `⟍` `╳` | **Quadrants**     | `◢` `◣` `◤` `◥`                 |
 | **Vector Turns**    | `↳` `↵` `↱` `⤢` `⤡` | **Circles**       | `●` `○`                         |
 | **Rotation**        | `↻` `↺` `↷` `↶` `⤸` | **Diamonds**      | `◆` `◇` `◊`                     |
 | **Markers**         | `⌖` `✛`            | **Polygons**      | `⬟` `⬢` `⬠` `⬡`                 |
@@ -321,7 +321,7 @@ For quick copying while constructing diagrams:
 - **Lines** — `─ │ ━ ┃ ╎ ┆ ┊`
 - **Corners** — `╭ ╮ ╰ ╯ ┏ ┓ ┗ ┛`
 - **Junctions** — `┼ ├ ┤ ┬ ┴`
-- **Diagonals** — `╱ ╲ ⟋ ⟍`
+- **Diagonals** — `╱ ╲ ⟋ ⟍╳`
 - **Arcs** — `⌒ ⌓ ◠ ◡ ◜ ◝ ◞ ◟`
 - **Circular** — `◖ ◗ ◔ ◑ ◕ ◴ ◵ ◶ ◷`
 - **Triangles** — `▲ ▼ ◀ ▶ ◬ ◭ ◮ ◢ ◣ ◤ ◥`
