@@ -120,8 +120,13 @@ noResults.setAttribute("role", "status");
 noResults.hidden = true;
 nav.appendChild(noResults);
 
+let previousSearchTerm = "";
+
 search.addEventListener("input", () => {
   const term = search.value.trim().toLowerCase();
+  const searchWasCleared = previousSearchTerm !== "" && term === "";
+  previousSearchTerm = term;
+
   let visibleCount = 0;
   for (const link of linkById.values()) {
     const match = !term || (link.dataset.search ?? "").includes(term);
@@ -135,6 +140,12 @@ search.addEventListener("input", () => {
     section.classList.toggle("hidden", !anyVisible);
   });
   noResults.hidden = visibleCount > 0;
+
+  if (searchWasCleared) {
+    requestAnimationFrame(() => {
+      nav.querySelector<HTMLAnchorElement>(".nav-link.active")?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    });
+  }
 });
 
 //------------------------------
