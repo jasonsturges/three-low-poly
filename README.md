@@ -272,7 +272,7 @@ Compact reference for geometric notation, diagram glyphs, computational geometry
 | **Derivative**                    |      `C′(t)`     | Curve derivative / tangent                  |
 | **Partial Derivative**            |  `∂S/∂u` `∂S/∂v` | Surface tangent directions                  |
 | **Gradient**                      |       `∇f`       | Direction of greatest scalar-field increase |
-| **Nabla**                         |        `∇`       | Gradient and other differential operators   |
+| **Nabla**                         |       `∇`        | Gradient and other differential operators   |
 
 ---
 
