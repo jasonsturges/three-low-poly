@@ -17,7 +17,7 @@ import {
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { createRandom } from "../utils/Random";
 
-export interface AutumnTreeOptions {
+export interface DeciduousTreeOptions {
   /** Seed for the deterministic stream. Defaults to `0xa711`. Shapes differ from the source scene's. */
   seed?: number;
   /** Trunk radius at the base. Defaults to `0.32`. */
@@ -30,7 +30,15 @@ export interface AutumnTreeOptions {
   leafDensity?: number;
   /** Bark color. Defaults to `"#332419"`. */
   barkColor?: string;
-  /** Colors sampled per leaf cluster. Defaults to a rust/ochre/deep-red autumn set. */
+  /**
+   * Colors sampled per leaf cluster. Defaults to a set of summer greens.
+   *
+   * **The palette is what makes this tree a season**, and nothing else does. Swapping in rust and ochre
+   * gives an autumn tree; swapping in pale pinks and raising `clustersPerPoint` gives a cherry in blossom.
+   * Both are studies rather than subclasses — see `Studies › Trees` — because a season is ten numbers, not
+   * a different tree. The default stays green so the class is not named for one family and dressed as one
+   * member of it.
+   */
   leafPalette?: string[];
   /** Leaf cluster radius. Defaults to `0.38`. */
   leafSize?: number;
@@ -74,14 +82,14 @@ function frustum(start: Vector3, end: Vector3, startRadius: number, endRadius: n
 }
 
 /**
- * Deterministic crooked deciduous tree with a sparse, instanced autumn crown.
+ * Deterministic crooked broadleaf tree with a sparse, instanced crown.
  *
  * One merged low-poly branch skeleton plus an {@link InstancedMesh} of faceted leaf clusters tinted per
- * instance from {@link AutumnTreeOptions.leafPalette}. The trunk's deliberate lean supplies the large
+ * instance from {@link DeciduousTreeOptions.leafPalette}. The trunk's deliberate lean supplies the large
  * silhouette; recursive branching supplies the gnarl.
  *
  * Local frame: **grows from the origin**, so the base sits flat on the `y = 0` plane and the tree occupies
- * `+Y`. That flatness comes from {@link AutumnTreeOptions.baseRise}; without it the leaning trunk's bottom
+ * `+Y`. That flatness comes from {@link DeciduousTreeOptions.baseRise}; without it the leaning trunk's bottom
  * face tilts and sinks below the ground.
  *
  * Two draw calls regardless of crown size — one for the merged branches, one for every leaf cluster. Both are
@@ -93,11 +101,11 @@ function frustum(start: Vector3, end: Vector3, startRadius: number, endRadius: n
  *
  * @example
  * ```typescript
- * const tree = new AutumnTree({ seed: 0xa711 });
+ * const tree = new DeciduousTree({ seed: 0xa711 });
  * scene.add(tree);
  * ```
  */
-export class AutumnTree extends Group {
+export class DeciduousTree extends Group {
   /** The merged branch skeleton — one draw call however deep the branching goes. */
   readonly branches: Mesh<BufferGeometry, MeshStandardMaterial>;
   /** Every leaf cluster, tinted per instance. `count` is the cluster total. */
@@ -112,11 +120,11 @@ export class AutumnTree extends Group {
     maxDepth = 4,
     leafDensity = 0.72,
     barkColor = "#332419",
-    leafPalette = ["#8d3c1d", "#aa5b21", "#c27a28", "#6e3120", "#b68a32"],
+    leafPalette = ["#4e5f33", "#5d7142", "#6b8150", "#455a2e", "#7a8a58"],
     leafSize = 0.38,
     clustersPerPoint = 2,
     baseRise = 0.35,
-  }: AutumnTreeOptions = {}) {
+  }: DeciduousTreeOptions = {}) {
     super();
 
     // The library's seeded source (mulberry32) rather than the scene's own linear congruential generator.
@@ -191,7 +199,7 @@ export class AutumnTree extends Group {
     grow(new Vector3(), new Vector3(-0.16, 1, 0.08), trunkRadius, segmentLength, 0);
 
     const branchGeometry = mergeGeometries(branchParts);
-    if (!branchGeometry) throw new Error("AutumnTree: branch parts failed to merge.");
+    if (!branchGeometry) throw new Error("DeciduousTree: branch parts failed to merge.");
     branchParts.forEach((geometry) => geometry.dispose());
 
     const barkMaterial = new MeshStandardMaterial({
@@ -214,6 +222,7 @@ export class AutumnTree extends Group {
       flatShading: true,
     });
     const leaves = new InstancedMesh(leafGeometry, leafMaterial, visiblePoints.length * clustersPerPoint);
+    leaves.visible = leaves.count > 0;
     const placement = new Object3D();
     const tint = new Color();
     let index = 0;

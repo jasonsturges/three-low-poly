@@ -104,7 +104,7 @@ export * from "./factory/liquidFill";
 export * from "./factory/HeadstoneFactory";
 export * from "./factory/HexagonalTileFactory";
 export * from "./factory/AppleTree";
-export * from "./factory/AutumnTree";
+export * from "./factory/DeciduousTree";
 export * from "./factory/FlagstoneFloor";
 export * from "./factory/HardwoodFloor";
 export * from "./factory/PlankFloor";

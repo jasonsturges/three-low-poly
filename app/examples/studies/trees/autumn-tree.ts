@@ -1,16 +1,11 @@
 import GUI from "lil-gui";
-import { AutumnTree, type AutumnTreeOptions, GroundGrid } from "three-low-poly";
+import { DeciduousTree, type DeciduousTreeOptions, GroundGrid } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Autumn Tree",
-  description:
-    "A deterministic crooked deciduous tree: one merged low-poly branch skeleton and a sparse, instanced " +
-    "crown of faceted rust, ochre, and deep-red leaf clusters. The trunk's intentional lean supplies the " +
-    "large silhouette; recursive branching supplies the gnarl. Two draw calls at any crown size — the " +
-    "branches merge, and every leaf cluster is one InstancedMesh tinted per instance. It grows from the " +
-    "origin, so the base rests on y=0 and the grid confirms it.",
+  description: "The original autumn configuration: rust, ochre, and deep-red foliage on a seeded DeciduousTree.",
 };
 
 export default function (container: HTMLElement) {
@@ -23,7 +18,7 @@ export default function (container: HTMLElement) {
   const ground = new GroundGrid({ size: 14, divisions: 14 });
   scene.add(ground);
 
-  const params: Required<AutumnTreeOptions> = {
+  const params: Required<DeciduousTreeOptions> = {
     seed: 0xa711,
     trunkRadius: 0.32,
     segmentLength: 0.66,
@@ -38,7 +33,7 @@ export default function (container: HTMLElement) {
 
   const stats = { branchTriangles: 0, leafClusters: 0, drawCalls: 2, baseY: "" };
 
-  let tree = new AutumnTree(params);
+  let tree = new DeciduousTree(params);
   scene.add(tree);
 
   const refresh = () => {
@@ -59,7 +54,7 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     tree.dispose();
     scene.remove(tree);
-    tree = new AutumnTree(params);
+    tree = new DeciduousTree(params);
     scene.add(tree);
     refresh();
   };

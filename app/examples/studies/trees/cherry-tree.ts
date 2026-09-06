@@ -1,22 +1,18 @@
 import GUI from "lil-gui";
-import { AutumnTree, type AutumnTreeOptions, GroundGrid } from "three-low-poly";
+import { DeciduousTree, type DeciduousTreeOptions, GroundGrid } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Cherry Tree",
-  description:
-    "A single spring cherry, isolated from a grove. NO new geometry — this is Autumn Tree under a different " +
-    "SPECIFICATION: pale blossom palette, warmer bark, smaller leaf clusters, and three per crown point " +
-    "instead of two. Same mechanics, different spec, which is why the library ships one class rather than " +
-    "two. Compare it against the Autumn Tree example: identical branching, entirely different season.",
+  description: "The original cherry configuration: pale blossoms, warm bark, and three small clusters per crown point on a seeded DeciduousTree.",
 };
 
 /**
  * The cherry specification, lifted from the source scene's grove. Its hero tree is the one isolated here;
  * the grove's other three are the same spec at smaller `trunkRadius`, `leafDensity`, and scale.
  */
-const CHERRY: Required<AutumnTreeOptions> = {
+const CHERRY: Required<DeciduousTreeOptions> = {
   seed: 0xc401,
   trunkRadius: 0.37,
   segmentLength: 0.76,
@@ -37,10 +33,10 @@ export default function (container: HTMLElement) {
   const ground = new GroundGrid({ size: 14, divisions: 14 });
   scene.add(ground);
 
-  const params: Required<AutumnTreeOptions> = { ...CHERRY };
+  const params: Required<DeciduousTreeOptions> = { ...CHERRY };
   const stats = { branchTriangles: 0, blossomClusters: 0, drawCalls: 2, baseY: "" };
 
-  let tree = new AutumnTree(params);
+  let tree = new DeciduousTree(params);
   scene.add(tree);
 
   const refresh = () => {
@@ -61,7 +57,7 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     tree.dispose();
     scene.remove(tree);
-    tree = new AutumnTree(params);
+    tree = new DeciduousTree(params);
     scene.add(tree);
     refresh();
   };

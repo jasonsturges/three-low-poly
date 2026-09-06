@@ -59,7 +59,7 @@ function branchGeometry(
  * A compact cultivated apple tree with a low, rounded crown.
  *
  * Six primary branches leave a short trunk, each carrying a shoulder, a tip, and two twigs — orchard form
- * rather than the recursive gnarl of {@link AutumnTree}. **Deliberately independent of it:** branching rules,
+ * rather than the recursive gnarl of {@link DeciduousTree}. **Deliberately independent of it:** branching rules,
  * foliage, and fruit all live here, because a pruned orchard tree is a different thing from a wild one, not a
  * reparameterization of it.
  *
