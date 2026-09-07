@@ -1,17 +1,24 @@
 import GUI from "lil-gui";
 import {
   BoxGeometry,
+  DataTexture,
   DoubleSide,
   Group,
   IcosahedronGeometry,
+  LinearFilter,
+  LinearMipmapLinearFilter,
   Mesh,
   MeshBasicMaterial,
   MeshPhysicalMaterial,
   MeshStandardMaterial,
   PlaneGeometry,
+  Raycaster,
+  RepeatWrapping,
   SphereGeometry,
+  Vector2,
   type BufferGeometry,
   type RenderTarget,
+  type Texture,
 } from "three";
 import { PMREMGenerator } from "three/webgpu";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
@@ -25,14 +32,51 @@ export const meta = {
   title: "Material Glass",
   description:
     "Compare alpha-blended panes, clearcoated lab glass, emissive windows, faux crystal, and physical " +
-    "transmission: clear, frosted, absorbing, and dispersive. Change the shared shape, then select a " +
-    "sample to inspect its material. Stripes behind each sample reveal refraction and blur; a studio " +
+    "transmission: clear, frosted, absorbing, dispersive, rippled, and iridescent. Change the shared shape, then select a " +
+    "sample by clicking or tapping the glass, or using Inspect Sample. Stripes behind each sample reveal refraction and blur; a studio " +
     "environment supplies reflections. These are raster techniques, not ray-traced glass or caustics.",
 };
 
-// Website-inspired recipes are deliberately separate from the transmission recipes. A physical
+// Stylized recipes are deliberately separate from the transmission recipes. A physical
 // material can have transmission OFF: its class name alone does not tell you its rendering cost.
-const recipes = [
+interface GlassRecipe {
+  title: string;
+  subtitle: string;
+  note: string;
+  make: (rippleTexture: Texture) => MeshStandardMaterial;
+}
+
+// A seamless tangent-space normal map, derived from a periodic height field. It changes the
+// surface normals used for lighting and refraction, not the geometry or the raycast silhouette.
+function createRippleTexture(): DataTexture {
+  const size = 128;
+  const pixels = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const u = (x / size) * Math.PI * 2;
+      const v = (y / size) * Math.PI * 2;
+      const dx = Math.cos(u) * 0.65 + Math.cos(u + v) * 0.25 - Math.cos(2 * v - u) * 0.15;
+      const dy = Math.cos(u + v) * 0.25 + Math.cos(2 * v - u) * 0.3;
+      const length = Math.hypot(dx, dy, 1);
+      const offset = (y * size + x) * 4;
+      pixels[offset] = Math.round((1 - dx / length) * 127.5);
+      pixels[offset + 1] = Math.round((1 - dy / length) * 127.5);
+      pixels[offset + 2] = Math.round((1 + 1 / length) * 127.5);
+      pixels[offset + 3] = 255;
+    }
+  }
+  const texture = new DataTexture(pixels, size, size);
+  // Normal vectors are data, so keep the default NoColorSpace; no sRGB conversion.
+  texture.wrapS = texture.wrapT = RepeatWrapping;
+  texture.magFilter = LinearFilter;
+  texture.minFilter = LinearMipmapLinearFilter;
+  texture.generateMipmaps = true;
+  texture.repeat.set(4, 4);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+const recipes: GlassRecipe[] = [
   {
     title: "Alpha pane",
     subtitle: "Standard · opacity",
@@ -50,7 +94,7 @@ const recipes = [
   {
     title: "Coated lab glass",
     subtitle: "Physical · transmission off",
-    note: "Mad Science approach: alpha transparency plus clearcoat. Highlights suggest glass without refracting the background. Clearcoat adds shading work; this is not a zero-cost material.",
+    note: "Alpha transparency plus clearcoat. Highlights suggest glass without refracting the background. Clearcoat adds shading work; this is not a zero-cost material.",
     make: () =>
       new MeshPhysicalMaterial({
         color: 0x6a7d8c,
@@ -66,7 +110,7 @@ const recipes = [
   {
     title: "Emissive window",
     subtitle: "Standard · tinted glow",
-    note: "Cathedral-inspired backlit glass: tinted opacity and emissive color. Emission brightens the surface; it does not cast light or create a halo here. The website also supplies lighting and bloom.",
+    note: "Backlit glass: tinted opacity and emissive color. Emission brightens the surface; it does not cast light or create a halo here. Add scene lighting and bloom for illumination and glow beyond the surface.",
     make: () =>
       new MeshStandardMaterial({
         color: 0x6a8aab,
@@ -82,7 +126,7 @@ const recipes = [
   {
     title: "Faux crystal",
     subtitle: "Standard · opaque sparkle",
-    note: "Music Room chandelier approach: near-white, smooth, slightly metallic, opaque facets. Try Faceted crystal. Reflections and geometry suggest sparkle, but you cannot see through it. No bloom is applied here.",
+    note: "Chandelier approach: near-white, smooth, slightly metallic, opaque facets. Try Faceted crystal. Reflections and geometry suggest sparkle, but you cannot see through it. No bloom is applied here.",
     make: () => new MeshStandardMaterial({ color: 0xeef2f7, roughness: 0.05, metalness: 0.1, flatShading: true }),
   },
   {
@@ -116,6 +160,35 @@ const recipes = [
     subtitle: "Physical · spectral separation",
     note: "Dispersion separates color channels in transmitted light. Try the crystal shape and inspect the stripe edges. This is already part of MeshPhysicalMaterial; it is not a separate glass class. It adds transmission sampling work.",
     make: () => new MeshPhysicalMaterial({ transmission: 1, roughness: 0.02, thickness: 0.9, ior: 1.7, dispersion: 0.8 }),
+  },
+  {
+    title: "Rippled glass",
+    subtitle: "Physical · textured refraction",
+    note: "A repeating normal map gives clear glass an uneven surface, bending the stripes into waves. Try Window pane and vary Ripple Strength and Ripple Repeats. The silhouette stays unchanged; sculpted ridges would require geometry.",
+    make: (normalMap) =>
+      new MeshPhysicalMaterial({
+        transmission: 1,
+        roughness: 0.07,
+        thickness: 0.4,
+        ior: 1.5,
+        normalMap,
+        normalScale: new Vector2(0.45, 0.45),
+      }),
+  },
+  {
+    title: "Iridescent glass",
+    subtitle: "Physical · thin-film coating",
+    note: "A thin coating shifts reflection colors with viewing angle. Orbit the glass or vary Film Thickness to explore interference colors. This colors the reflected light, unlike dispersion in transmitted light. No metallic tint or rainbow texture is used.",
+    make: () =>
+      new MeshPhysicalMaterial({
+        transmission: 1,
+        roughness: 0.08,
+        thickness: 0.65,
+        ior: 1.5,
+        iridescence: 1,
+        iridescenceIOR: 1.8,
+        iridescenceThicknessRange: [100, 420],
+      }),
   },
 ];
 
@@ -160,12 +233,17 @@ export default function (container: HTMLElement) {
   const stage = new Group();
   scene.add(stage);
   const tile = new PlaneGeometry(0.24, 1.75);
+  const rippleTexture = createRippleTexture();
   const stripeMaterials = [0xe8e4d9, 0x192b3e, 0xd57549, 0x4ba9b2].map((color) => new MeshBasicMaterial({ color }));
   const labels: ReturnType<typeof createTextSprite>[] = [];
   const samples = recipes.map((recipe, index) => {
     const group = new Group();
-    group.position.set(((index % 4) - 1.5) * 2.8, index < 4 ? 1.65 : -1.65, 0);
-    const material = recipe.make();
+    const columns = 4;
+    const row = Math.floor(index / columns);
+    const rowCount = Math.ceil(recipes.length / columns);
+    const columnsInRow = Math.min(columns, recipes.length - row * columns);
+    group.position.set(((index % columns) - (columnsInRow - 1) / 2) * 2.8, ((rowCount - 1) / 2 - row) * 3.3, 0);
+    const material = recipe.make(rippleTexture);
     const mesh = new Mesh<BufferGeometry, MeshStandardMaterial>(shapes.Sphere, material);
     group.add(mesh);
 
@@ -262,6 +340,29 @@ export default function (container: HTMLElement) {
       inspector.add(material, "emissiveIntensity", 0, 4, 0.05).name("Emission");
     }
     if (material instanceof MeshPhysicalMaterial) {
+      if (recipe.title === "Rippled glass") {
+        const ripple = { strength: material.normalScale.x, repeats: rippleTexture.repeat.x };
+        inspector
+          .add(ripple, "strength", 0, 1.5, 0.01)
+          .name("Ripple Strength")
+          .onChange((value: number) => material.normalScale.set(value, value));
+        inspector
+          .add(ripple, "repeats", 1, 12, 1)
+          .name("Ripple Repeats")
+          .onChange((value: number) => rippleTexture.repeat.set(value, value));
+      }
+      if (recipe.title === "Iridescent glass") {
+        inspector.add(material, "iridescence", 0, 1, 0.01).name("Iridescence");
+        inspector.add(material, "iridescenceIOR", 1, 2.5, 0.01).name("Film IOR");
+        const film = { thickness: material.iridescenceThicknessRange[1] };
+        // Without a thickness map, Three uses the upper end of the range, in nanometers.
+        inspector
+          .add(film, "thickness", 0, 1200, 1)
+          .name("Film Thickness (nm)")
+          .onChange((value: number) => {
+            material.iridescenceThicknessRange = [value, value];
+          });
+      }
       inspector.add(material, "ior", 1, 2.33, 0.01).name("IOR");
       inspector.add(material, "clearcoat", 0, 1, 0.01).name("Clearcoat");
       inspector.add(material, "clearcoatRoughness", 0, 1, 0.01).name("Coat Roughness");
@@ -289,7 +390,8 @@ export default function (container: HTMLElement) {
       .add(
         {
           reset: () => {
-            const defaults = recipe.make();
+            const defaults = recipe.make(rippleTexture);
+            if (recipe.title === "Rippled glass") rippleTexture.repeat.set(4, 4);
             material.copy(defaults);
             material.needsUpdate = true;
             defaults.dispose();
@@ -302,7 +404,7 @@ export default function (container: HTMLElement) {
     inspector.open();
     if (params.isolate) updateLayout();
   };
-  gui
+  const sampleControl = gui
     .add(
       params,
       "sample",
@@ -310,6 +412,46 @@ export default function (container: HTMLElement) {
     )
     .name("Inspect Sample")
     .onChange(inspect);
+
+  // Pick only glass meshes, so stripes and labels do not intercept the ray. Track the whole gesture:
+  // moving away and back still counts as a drag, and a second finger cancels tap selection.
+  const canvas = renderer.domElement;
+  const raycaster = new Raycaster();
+  const pointer = new Vector2();
+  let tap: { id: number; x: number; y: number } | undefined;
+  const cancelTap = () => {
+    tap = undefined;
+  };
+  const pointerDown = (event: PointerEvent) => {
+    tap = event.isPrimary && event.button === 0 ? { id: event.pointerId, x: event.clientX, y: event.clientY } : undefined;
+  };
+  const pointerMove = (event: PointerEvent) => {
+    if (tap && event.pointerId === tap.id && Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 6) cancelTap();
+  };
+  const pointerUp = (event: PointerEvent) => {
+    const start = tap;
+    cancelTap();
+    if (!start || event.pointerId !== start.id || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6) return;
+    const bounds = canvas.getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+    pointer.set(((event.clientX - bounds.left) / bounds.width) * 2 - 1, -((event.clientY - bounds.top) / bounds.height) * 2 + 1);
+    if (Math.abs(pointer.x) > 1 || Math.abs(pointer.y) > 1) return;
+    scene.updateMatrixWorld(true);
+    camera.updateMatrixWorld();
+    raycaster.setFromCamera(pointer, camera);
+    const visible = samples.filter((sample) => sample.group.visible);
+    const hit = raycaster.intersectObjects(
+      visible.map((sample) => sample.mesh),
+      false,
+    )[0];
+    const sample = visible.find((sample) => sample.mesh === hit?.object);
+    if (sample && sample.recipe.title !== params.sample) sampleControl.setValue(sample.recipe.title);
+  };
+  canvas.addEventListener("pointerdown", pointerDown);
+  canvas.addEventListener("pointermove", pointerMove);
+  canvas.addEventListener("pointerup", pointerUp);
+  canvas.addEventListener("pointercancel", cancelTap);
+  canvas.addEventListener("pointerleave", cancelTap);
   inspect();
   frame();
   onFrame((delta) => {
@@ -320,6 +462,11 @@ export default function (container: HTMLElement) {
   });
 
   return () => {
+    canvas.removeEventListener("pointerdown", pointerDown);
+    canvas.removeEventListener("pointermove", pointerMove);
+    canvas.removeEventListener("pointerup", pointerUp);
+    canvas.removeEventListener("pointercancel", cancelTap);
+    canvas.removeEventListener("pointerleave", cancelTap);
     gui.destroy();
     info.remove();
     stopEnvironmentSetup();
@@ -327,6 +474,7 @@ export default function (container: HTMLElement) {
     environment?.dispose();
     Object.values(shapes).forEach((geometry) => geometry.dispose());
     tile.dispose();
+    rippleTexture.dispose();
     stripeMaterials.forEach((material) => material.dispose());
     samples.forEach((sample) => sample.material.dispose());
     labels.forEach((label) => {
