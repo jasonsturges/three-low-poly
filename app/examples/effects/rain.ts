@@ -16,7 +16,8 @@ export default function (container: HTMLElement) {
     cameraPosition: [0, 5, 14],
   });
 
-  scene.fog = new Fog(0x050508, 4, 28);
+  const fog = new Fog(0x050508, 4, 28);
+  scene.fog = fog;
 
   controls.target.set(0, 1.5, 0);
   controls.update();
@@ -33,6 +34,7 @@ export default function (container: HTMLElement) {
     width: 0.009,
     windDirection: 0.8,
     windStrength: 0,
+    disableFog: false,
     showReference: true,
   };
 
@@ -81,6 +83,12 @@ export default function (container: HTMLElement) {
     .name("Direction")
     .onChange(rebuild);
   windFolder.open();
+  gui
+    .add(params, "disableFog")
+    .name("Disable Fog")
+    .onChange((disabled: boolean) => {
+      scene.fog = disabled ? null : fog;
+    });
   gui
     .add(params, "showReference")
     .name("Ground / Grid")
