@@ -1,11 +1,11 @@
 import GUI from "lil-gui";
 import { ExtrudeGeometry, Group, Mesh, MeshStandardMaterial, Sprite } from "three";
 import { ArchedSlabShape, ArchStyle, GroundGrid } from "three-low-poly";
-import { createScene } from "../../framework/createScene";
-import { createTextSprite } from "../../framework/createTextSprite";
+import { createScene } from "../../../framework/createScene";
+import { createTextSprite } from "../../../framework/createTextSprite";
 
 export const meta = {
-  title: "Arch Profiles",
+  title: "Arch Profile Gallery",
   description:
     "The named arches — square, semicircle, segmental, horseshoe, elliptical, pointed, ogee. " +
     "One vocabulary, shared by doors, doorways, windows and headstones.",
@@ -99,7 +99,7 @@ export default function (container: HTMLElement) {
   rebuild();
 
   const gui = new GUI();
-  gui.title("Arch Profiles");
+  gui.title("Arch Profile Gallery");
 
   // The control that matters, and it always bites. Drag it to half the span and watch the whole row
   // converge on one semicircle; push it past half and each style shows what it actually is.
