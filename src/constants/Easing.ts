@@ -64,14 +64,16 @@ export const Easing = {
   // Circular
   circIn: (t: number) => 1 - Math.sqrt(1 - Math.pow(t, 2)),
   circOut: (t: number) => Math.sqrt(1 - Math.pow(t - 1, 2)),
-  circInOut: (t: number) => t < 0.5 ? (1 - Math.sqrt(1 - Math.pow(2 * t, 2))) / 2 : (Math.sqrt(1 - Math.pow(-2 * t + 2, 2)) + 1) / 2,
+  circInOut: (t: number) =>
+    t < 0.5 ? (1 - Math.sqrt(1 - Math.pow(2 * t, 2))) / 2 : (Math.sqrt(1 - Math.pow(-2 * t + 2, 2)) + 1) / 2,
 
   // Special
   linear: (t: number) => t,
   smoothstep: (t: number) => t * t * (3 - 2 * t),
   concave: (t: number) => 1 - Math.pow(1 - t, 0.3),
   convex: (t: number) => Math.pow(t, 0.3),
-  logarithmic: (t: number) => Math.log(Math.max(0.01, t)) / Math.log(2),
+  // Shift the logarithm to start at zero and normalize its value at t = 1.
+  logarithmic: (t: number) => Math.log1p(t) / Math.LN2,
   squareRoot: (t: number) => Math.sqrt(t),
   inverse: (t: number) => 1 - t,
   gaussian: (t: number) => {
