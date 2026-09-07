@@ -1,14 +1,6 @@
 import GUI from "lil-gui";
-import { ExtrudeGeometry, Mesh, MeshStandardMaterial } from "three";
-import {
-  ArchStyle,
-  createWindow,
-  GroundGrid,
-  wallOpeningTop,
-  WallShape,
-  WindowAssembly,
-  type WallOpeningOptions,
-} from "three-low-poly";
+import { ExtrudeGeometry, Mesh, MeshStandardMaterial, Shape } from "three";
+import { GroundGrid, type WindowAssembly, createWindow, type ArchStyle, type WallOpeningOptions, wallOpeningTop } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -31,7 +23,7 @@ const ARCHES: ArchStyle[] = [
 /** Masonry the wall must keep above the opening's crown, however tall the arch gets. */
 const HEADROOM = 0.5;
 
-export default function (container: HTMLElement) {
+const mount = (container: HTMLElement) => {
   const { scene, controls, dispose } = createScene(container, {
     background: 0x2a3138,
     cameraPosition: [1.6, 2, 3.4],
@@ -89,22 +81,10 @@ export default function (container: HTMLElement) {
     };
 
     // A window that pokes out of the top of its wall is not a window, it is a doorway with extra steps.
-    // `wallOpeningTop` reports the crown, so the wall can simply refuse to be shorter than the hole it
+    // `archedTop` reports the crown, so the wall can simply refuse to be shorter than the hole it
     // has to carry — drag the arch rise up and the wall grows to keep its head above it.
     const crown = wallOpeningTop(opening, params.wallWidth);
     const height = Math.max(params.wallHeight, crown + HEADROOM);
-
-    wall = new Mesh(
-      new ExtrudeGeometry(new WallShape({ width: params.wallWidth, height, windows: [opening] }), {
-        depth: params.thickness,
-        bevelEnabled: false,
-        curveSegments: 32,
-      }),
-      stone,
-    );
-    wall.castShadow = true;
-    wall.receiveShadow = true;
-    scene.add(wall);
 
     window = createWindow({
       opening,
@@ -125,6 +105,30 @@ export default function (container: HTMLElement) {
       jamb: params.jamb ? { width: params.jambWidth } : false,
       wallThickness: params.thickness,
     });
+
+    // The wall is a rectangle with the window's own cutout punched out of it — no wall entity involved.
+    // The window is built first because it is what knows the hole it needs; the wall just cuts it.
+    const half = params.wallWidth / 2;
+    const wallShape = new Shape();
+    wallShape.moveTo(-half, 0);
+    wallShape.lineTo(half, 0);
+    wallShape.lineTo(half, height);
+    wallShape.lineTo(-half, height);
+    wallShape.closePath();
+    wallShape.holes.push(window.cutout);
+
+    wall = new Mesh(
+      new ExtrudeGeometry(wallShape, {
+        depth: params.thickness,
+        bevelEnabled: false,
+        curveSegments: 32,
+      }),
+      stone,
+    );
+    wall.castShadow = true;
+    wall.receiveShadow = true;
+    scene.add(wall);
+
     // Anchored at its sill and centered on X, so hanging it is one line: the opening's own x and y, and
     // the face of the wall it sits on.
     window.position.set(opening.x!, opening.y!, params.thickness);
@@ -205,4 +209,6 @@ export default function (container: HTMLElement) {
     floor.dispose();
     dispose();
   };
-}
+};
+
+export default mount;

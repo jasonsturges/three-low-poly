@@ -4,6 +4,7 @@ import {
   ColorRepresentation,
   DoubleSide,
   Group,
+  type Path,
   Material,
   Mesh,
   MeshStandardMaterial,
@@ -13,7 +14,7 @@ import {
   WindowFrameGeometry,
   type WindowFrameGeometryOptions,
 } from "../geometry/architecture/WindowFrameGeometry";
-import { wallOpeningTop, type WallOpeningOptions } from "../shapes/WallShape";
+import { openingCutout, wallOpeningTop, type WallOpeningOptions } from "../shapes/WallShape";
 
 /** Match the jamb's inner edge (WindowFrameGeometry's INNER_MITER) so the glass fits it exactly. */
 const JAMB_INNER_MITER = 2;
@@ -93,6 +94,8 @@ export interface WindowOptions extends Omit<WindowFrameGeometryOptions, "opening
 
 /** A window: glass, the frame ringing it, the jamb lining the reveal, and the sill under it. */
 export interface WindowAssembly extends Group {
+  /** Clockwise hole at opening.x/y; independent of subsequent assembly transforms. */
+  readonly cutout: Path;
   /** The pane. Flat, and `DoubleSide`, so it survives being looked at from behind. */
   glass?: Mesh;
   /** The decorative ring on the wall's face. */
@@ -161,7 +164,7 @@ export function createWindow({
   glassColor = "#9fb6c4",
   glassOpacity = 0.35,
 }: WindowOptions): WindowAssembly {
-  const window = new Group() as WindowAssembly;
+  const window = Object.assign(new Group(), { cutout: openingCutout(opening) }) as WindowAssembly;
 
   // At the origin, so the assembly can be dropped into any opening of this shape.
   const centered: WallOpeningOptions = { ...opening, x: 0, y: 0 };

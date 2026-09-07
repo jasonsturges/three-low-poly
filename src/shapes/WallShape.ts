@@ -113,7 +113,7 @@ export class WallShape extends Shape {
     this.closePath();
 
     // Windows never touch an edge, so these are genuine holes and `holes` is exactly right for them.
-    for (const window of windows ?? []) this.holes.push(windowPath(window, width));
+    for (const window of windows ?? []) this.holes.push(openingCutout(window, width));
     if (holes) this.holes.push(...holes);
   }
 }
@@ -133,7 +133,7 @@ function archOf(opening: WallOpeningOptions, half: number, springing: number) {
  * A window, as a hole. Wound CLOCKWISE — the reverse of the wall's outline, which is what tells the
  * triangulator this is a void rather than another island of material.
  */
-function windowPath(opening: WallOpeningOptions, wallWidth: number): Path {
+export function openingCutout(opening: WallOpeningOptions, wallWidth = Infinity): Path {
   const { half, springing, x, sill } = resolve(opening, wallWidth);
   const profile = archOf(opening, half, springing);
 

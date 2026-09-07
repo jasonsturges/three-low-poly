@@ -1,31 +1,28 @@
 import GUI from "lil-gui";
-import { ExtrudeGeometry, Group, Mesh, MeshStandardMaterial } from "three";
+import { ExtrudeGeometry, Group, Mesh, MeshStandardMaterial, Shape } from "three";
 import {
-  type ArchStyle,
   archRise,
+  type ArchStyle,
+  type WallOpeningOptions,
   DiamondLatticeWindow,
   GregorianLatticeWindow,
   GroundGrid,
-  type WallOpeningOptions,
-  WallShape,
 } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
   title: "Wall And Window",
   description:
-    "STUDY — the smallest complete example: a wall, a hole, and a window in it. The point is the FIRST " +
-    "line. One `WallOpeningOptions` object punches the wall and builds the window, so the hole and the " +
-    "thing in it cannot disagree — no matching numbers in two places, no separate arched code path, and " +
-    "changing the arch changes both at once. `arch: \"square\"` is in the list because a flat head is an " +
-    "arch-shaped hole with no curve in it. Read the `buildEverything` function; it is eight lines, and " +
-    "everything else in this file is knobs.",
+    "Build the window first, then push window.cutout into a plain Shape's holes and extrude the wall. " +
+    "The cutout includes the opening's x and sill height; position the window at those same coordinates. " +
+    "Switch arch styles and lattice patterns to see the opening and window stay aligned. " +
+    "Keep the hole inside the wall: a doorway touching the floor needs a notch in the outer outline.",
 };
 
 /** How much wall has to remain above the opening's head for it to still be a hole. */
 const MARGIN = 0.25;
 
-export default function (container: HTMLElement) {
+const mount = (container: HTMLElement) => {
   const { scene, controls, dispose } = createScene(container, {
     background: 0x8792a0,
     cameraPosition: [2.2, 2.1, 4.2],
@@ -34,7 +31,7 @@ export default function (container: HTMLElement) {
   controls.target.set(0, 1.5, 0);
   controls.update();
 
-  const floor = new GroundGrid({ size: 10, planeColor: 0x3f4954, gridColor: 0x4c5866 });
+  const floor = new GroundGrid({ size: 10 });
   scene.add(floor);
 
   const stone = new MeshStandardMaterial({ color: 0x9a958c, roughness: 0.95, flatShading: true });
@@ -71,10 +68,12 @@ export default function (container: HTMLElement) {
       y: params.sill,
     };
 
-    // A window is punched as a HOLE, which means it has to float CLEAR of every edge — one that reaches
-    // the top is not a window at all, it is a notch, and `WallShape` would have to carve the outline
-    // instead. So the wall is never allowed to be shorter than the opening needs. `archRise` reports what
-    // the head will actually add, which is not `width / 2` for every style.
+    // A window is punched as a HOLE, so it has to float CLEAR of every edge. One that reaches the top is
+    // not a window at all — it is a notch, and a notch belongs in the OUTLINE, because `ExtrudeGeometry`
+    // builds side walls along every contour including holes, and a hole touching the boundary lays a face
+    // across the gap. So the wall is never allowed to be shorter than the opening needs.
+    //
+    // `archRise` reports what the head will actually add, which is not `width / 2` for every style.
     // `y` is the springing line and `archRise` does not read it, but the type asks for it.
     const rise = archRise({
       style: params.arch,
@@ -92,21 +91,37 @@ export default function (container: HTMLElement) {
     const headroom = params.sill + params.openingHeight + rise;
     params.wallHeight = Math.max(params.wallHeight, headroom + MARGIN);
 
-    // 1. The wall, with that opening punched through it as a HOLE.
-    const wall = new Mesh(
-      new ExtrudeGeometry(
-        new WallShape({ width: params.wallWidth, height: params.wallHeight, windows: [opening] }),
-        { depth: params.wallThickness, bevelEnabled: false },
-      ),
-      stone,
-    );
+    // 1. The window. Built FIRST, because it is the thing that knows what hole it needs.
+    const window = params.lattice === "diamond" ? new DiamondLatticeWindow({ opening }) : new GregorianLatticeWindow({ opening });
 
-    // 2. The window, from the SAME object. It normalizes the opening's `x` and `y` away and anchors
-    //    itself sill-at-zero, so it is placed at exactly the coordinates the hole was punched at.
-    const window =
-      params.lattice === "diamond"
-        ? new DiamondLatticeWindow({ opening })
-        : new GregorianLatticeWindow({ opening });
+    // 2. The wall. Four corners — there is no wall class, because a wall with a window in it does not
+    //    need one. Wound counter-clockwise from the bottom-left.
+    const half = params.wallWidth / 2;
+    const wallShape = new Shape();
+    wallShape.moveTo(-half, 0);
+    wallShape.lineTo(half, 0);
+    wallShape.lineTo(half, params.wallHeight);
+    wallShape.lineTo(-half, params.wallHeight);
+    wallShape.closePath();
+
+    // 3. THE CUT — the whole point of the study. The wall is not told how to draw a window; it ASKS THE
+    //    WINDOW FOR ITS CUTOUT and punches that. Already positioned at the opening's own x and sill, and
+    //    already wound clockwise against the wall's counter-clockwise outline, so it drops in with no
+    //    transform and no fixup.
+    //
+    //    Note you could not have guessed this curve by looking at the window: the frame stands PROUD of
+    //    the hole and the jamb lines it from inside, so neither visible edge is the cut. The window
+    //    traced it to build itself and hands back the one it used.
+    //
+    //    That is the entire relationship between a window and a wall. No wall entity is required, and
+    //    none should be: a wall that knew what a window was would grow a doorway, then a windows list,
+    //    then a way to say "this one is a notch" — which is how a shape becomes a super-component.
+    wallShape.holes.push(window.cutout);
+
+    const wall = new Mesh(new ExtrudeGeometry(wallShape, { depth: params.wallThickness, bevelEnabled: false }), stone);
+
+    // 4. Hang it. The assembly anchors itself sill-at-zero and centered on x, so it lands at exactly
+    //    the coordinates its own cutout was punched at.
     window.position.set(opening.x!, opening.y!, params.wallThickness / 2);
 
     return { wall, window };
@@ -136,15 +151,7 @@ export default function (container: HTMLElement) {
   const opening = gui.addFolder("Opening");
   // Changing this changes the HOLE and the WINDOW together, because they read the same object.
   opening
-    .add(params, "arch", [
-      "square",
-      "segmental",
-      "semicircle",
-      "horseshoe",
-      "elliptical",
-      "pointed",
-      "ogee",
-    ])
+    .add(params, "arch", ["square", "segmental", "semicircle", "horseshoe", "elliptical", "pointed", "ogee"])
     .name("Arch")
     .onChange(rebuild);
   opening.add(params, "openingWidth", 0.6, 2.4, 0.02).name("Width").onChange(rebuild);
@@ -161,10 +168,7 @@ export default function (container: HTMLElement) {
 
   const fill = gui.addFolder("Window");
   // Both factories take the same `opening`, so they are interchangeable at the call site.
-  fill
-    .add(params, "lattice", { Diamond: "diamond", Gregorian: "gregorian" })
-    .name("Lattice")
-    .onChange(rebuild);
+  fill.add(params, "lattice", { Diamond: "diamond", Gregorian: "gregorian" }).name("Lattice").onChange(rebuild);
   fill.open();
 
   const wall = gui.addFolder("Wall");
@@ -184,4 +188,6 @@ export default function (container: HTMLElement) {
     floor.dispose();
     dispose();
   };
-}
+};
+
+export default mount;
