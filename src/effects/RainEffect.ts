@@ -1,6 +1,6 @@
 import {
   BufferGeometry,
-  CanvasTexture,
+  DataTexture,
   Color,
   ColorRepresentation,
   DoubleSide,
@@ -11,9 +11,9 @@ import {
   Object3D,
   PlaneGeometry,
   Quaternion,
-  SRGBColorSpace,
   Vector3,
 } from "three";
+import { createLinearGradientTexture } from "../textures/linearGradient";
 import { randomFloat } from "../utils/RandomNumberUtils";
 
 export interface RainEffectOptions {
@@ -61,25 +61,16 @@ export interface RainEffectOptions {
   intensity?: number;
 }
 
-function createStreakTexture(): CanvasTexture {
-  // TODO: replace this canvas with a DataTexture to drop the DOM dependency. Unlike the fog and glow
-  // ramps this streak is *linear*, not radial, so it needs a `createLinearGradientTexture` helper
-  // rather than `createRadialGradientTexture`. The material already tints a white gradient correctly,
-  // so only the texture source changes.
-  const canvas = document.createElement("canvas");
-  canvas.width = 8;
-  canvas.height = 64;
-  const ctx = canvas.getContext("2d")!;
-  const gradient = ctx.createLinearGradient(0, 0, 0, 64);
-  gradient.addColorStop(0, "rgba(255,255,255,0)");
-  gradient.addColorStop(0.42, "rgba(255,255,255,0.55)");
-  gradient.addColorStop(0.58, "rgba(255,255,255,0.55)");
-  gradient.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 8, 64);
-  const texture = new CanvasTexture(canvas);
-  texture.colorSpace = SRGBColorSpace;
-  return texture;
+function createStreakTexture(): DataTexture {
+  return createLinearGradientTexture({
+    size: 64,
+    stops: [
+      { offset: 0, color: 0xffffff, alpha: 0 },
+      { offset: 0.42, color: 0xffffff, alpha: 0.55 },
+      { offset: 0.58, color: 0xffffff, alpha: 0.55 },
+      { offset: 1, color: 0xffffff, alpha: 0 },
+    ],
+  });
 }
 
 /**
@@ -126,7 +117,7 @@ export class RainEffect extends InstancedMesh {
   private readonly topY: Float32Array;
   private readonly len: Float32Array;
   private readonly speed: Float32Array;
-  private readonly streakTexture?: CanvasTexture;
+  private readonly streakTexture?: DataTexture;
   private readonly dummy = new Object3D();
   private clock = 0;
 
