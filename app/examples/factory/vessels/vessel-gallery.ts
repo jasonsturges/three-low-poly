@@ -14,10 +14,10 @@ import {
   createLiquidFill,
   type FillOptions,
 } from "three-low-poly";
-import { createScene } from "../../framework/createScene";
-import { createTextSprite } from "../../framework/createTextSprite";
-import { frameObject } from "../../framework/frameObject";
-import { gradientBackdrop } from "../../framework/gradientBackdrop";
+import { createScene } from "../../../framework/createScene";
+import { createTextSprite } from "../../../framework/createTextSprite";
+import { frameObject } from "../../../framework/frameObject";
+import { gradientBackdrop } from "../../../framework/gradientBackdrop";
 
 export const meta = { title: "Glassware" };
 
