@@ -1,6 +1,5 @@
 import {
   Color,
-  CylinderGeometry,
   Group,
   Mesh,
   MeshStandardMaterial,
@@ -9,6 +8,7 @@ import {
   type BufferGeometry,
   type Material,
 } from "three";
+import { createHewnTimberGeometry } from "../geometry/timber/HewnTimberGeometry";
 
 export interface RusticFenceOptions {
   /** Number of bays between posts. */
@@ -29,31 +29,6 @@ function randomGenerator(seed: number): () => number {
     state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
     return state / 0x100000000;
   };
-}
-
-/**
- * A low-poly timber with an uneven, hand-hewn silhouette. It is authored one
- * unit tall on +Y; callers stretch and orient it between their own endpoints.
- */
-function createHewnTimberGeometry(): CylinderGeometry {
-  const geometry = new CylinderGeometry(0.5, 0.55, 1, 6, 3, false);
-  const position = geometry.attributes.position;
-
-  for (let i = 0; i < position.count; i++) {
-    const x = position.getX(i);
-    const y = position.getY(i);
-    const z = position.getZ(i);
-    if (Math.hypot(x, z) < 0.01) continue;
-
-    // The perturbation is derived from the existing vertex, keeping the asset
-    // deterministic and its end caps watertight while breaking the lathed look.
-    const irregularity = 1 + Math.sin(x * 17.3 + y * 11.7 + z * 23.1) * 0.075;
-    position.setXYZ(i, x * irregularity, y, z * irregularity);
-  }
-
-  position.needsUpdate = true;
-  geometry.computeVertexNormals();
-  return geometry;
 }
 
 /**
