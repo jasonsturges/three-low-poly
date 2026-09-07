@@ -7,6 +7,8 @@ import {
   Group,
   Mesh,
   MeshStandardMaterial,
+  type Path,
+  Shape,
 } from "three";
 import GUI from "lil-gui";
 import {
@@ -15,7 +17,6 @@ import {
   LightningEffect,
   PaneGeometry,
   type WallOpeningOptions,
-  WallShape,
 } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
@@ -57,23 +58,22 @@ const CAME_WIDTH = 0.05;
 const CAME_DEPTH = 0.11;
 
 /** One solid slab, extruded +Z, with an arched opening punched per window. */
-function buildWall() {
+function buildWall(cutouts: Path[]) {
   const wallMaterial = new MeshStandardMaterial({
     color: 0x2a3038,
     roughness: 0.92,
     metalness: 0.04,
   });
 
-  // The windows float clear of every edge, so they are genuine HOLES and `WallShape` punches them as
-  // such. (A doorway would have to be a notch in the outline instead — see WallShape.) `archHeight`
-  // here is exactly half the width, which makes the arch a semicircle: the same circle the lattice
-  // frame is built from, so the aperture lands on the frame's outer edge and the ring stays visible,
-  // with the slab thickness reading as a reveal behind it.
-  const shape = new WallShape({
-    width: WALL_WIDTH,
-    height: WALL_HEIGHT,
-    windows: WINDOW_X.map((x) => ({ ...OPENING, x, y: SILL_Y })),
-  });
+  // Each window supplies its positioned hole in the wall's local coordinates.
+  const halfWidth = WALL_WIDTH / 2;
+  const shape = new Shape();
+  shape.moveTo(-halfWidth, 0);
+  shape.lineTo(halfWidth, 0);
+  shape.lineTo(halfWidth, WALL_HEIGHT);
+  shape.lineTo(-halfWidth, WALL_HEIGHT);
+  shape.closePath();
+  shape.holes.push(...cutouts);
 
   const geo = new ExtrudeGeometry(shape, { depth: WALL_THICKNESS, bevelEnabled: false });
   const wall = new Mesh(geo, wallMaterial);
@@ -113,8 +113,6 @@ export default function (container: HTMLElement) {
   });
 
   const architecture = new Group();
-  const { wall, wallMaterial } = buildWall();
-  architecture.add(wall);
 
   // One pane, reused across every opening by positioning each mesh at its own x and sill. It fills the
   // same outline the wall punches, from the same object — three things, one curve, nothing to drift.
@@ -130,7 +128,7 @@ export default function (container: HTMLElement) {
     architecture.add(pane);
 
     const window = new DiamondLatticeWindow({
-      opening: OPENING,
+      opening: { ...OPENING, x, y: SILL_Y },
       cellsX: 6,
       cellsY: 10,
       cameWidth: CAME_WIDTH,
@@ -144,6 +142,8 @@ export default function (container: HTMLElement) {
     windows.push(window);
   }
 
+  const { wall, wallMaterial } = buildWall(windows.map((window) => window.cutout));
+  architecture.add(wall);
   scene.add(architecture);
 
   const configureBoltShadow = (bolt: DirectionalLight) => {

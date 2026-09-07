@@ -3,6 +3,7 @@ import {
   type ColorRepresentation,
   DoubleSide,
   Group,
+  type Path,
   Mesh,
   MeshPhysicalMaterial,
   MeshStandardMaterial,
@@ -10,7 +11,7 @@ import {
 import { GregorianLatticeGeometry } from "../geometry/architecture/GregorianLatticeGeometry";
 import { PaneGeometry } from "../geometry/architecture/PaneGeometry";
 import { WindowFrameGeometry } from "../geometry/architecture/WindowFrameGeometry";
-import type { WallOpeningOptions } from "../shapes/WallShape";
+import { openingCutout, type WallOpeningOptions } from "../shapes/WallShape";
 
 export interface GregorianLatticeWindowOptions {
   /**
@@ -79,6 +80,9 @@ export interface GregorianLatticeWindowOptions {
  * ```
  */
 export class GregorianLatticeWindow extends Group {
+  /** Clockwise hole at opening.x/y; independent of subsequent assembly transforms. */
+  readonly cutout: Path;
+
   readonly bars: Mesh<GregorianLatticeGeometry, MeshStandardMaterial>;
   readonly frame?: Mesh<WindowFrameGeometry, MeshStandardMaterial>;
   readonly glass?: Mesh<PaneGeometry, MeshPhysicalMaterial>;
@@ -106,6 +110,8 @@ export class GregorianLatticeWindow extends Group {
     glassEmissiveIntensity = 0,
   }: GregorianLatticeWindowOptions = {}) {
     super();
+
+    this.cutout = openingCutout(opening);
 
     const width = opening.width ?? 1.2;
     const springing = opening.height ?? 1.4;

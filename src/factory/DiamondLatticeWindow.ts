@@ -3,6 +3,7 @@ import {
   type ColorRepresentation,
   DoubleSide,
   Group,
+  type Path,
   MathUtils,
   Mesh,
   MeshPhysicalMaterial,
@@ -11,7 +12,7 @@ import {
 import { DiamondLatticeGeometry } from "../geometry/architecture/DiamondLatticeGeometry";
 import { PaneGeometry } from "../geometry/architecture/PaneGeometry";
 import { WindowFrameGeometry } from "../geometry/architecture/WindowFrameGeometry";
-import type { WallOpeningOptions } from "../shapes/WallShape";
+import { openingCutout, type WallOpeningOptions } from "../shapes/WallShape";
 
 export interface DiamondLatticeWindowOptions {
   /**
@@ -87,6 +88,9 @@ export interface DiamondLatticeWindowOptions {
  * ```
  */
 export class DiamondLatticeWindow extends Group {
+  /** Clockwise hole at opening.x/y; independent of subsequent assembly transforms. */
+  readonly cutout: Path;
+
   readonly lattice: Mesh<DiamondLatticeGeometry, MeshStandardMaterial>;
   readonly frame?: Mesh<WindowFrameGeometry, MeshStandardMaterial>;
   readonly glass?: Mesh<PaneGeometry, MeshPhysicalMaterial>;
@@ -114,6 +118,8 @@ export class DiamondLatticeWindow extends Group {
     glassEmissiveIntensity = 0,
   }: DiamondLatticeWindowOptions = {}) {
     super();
+
+    this.cutout = openingCutout(opening);
 
     const width = opening.width ?? 1.2;
     const springing = opening.height ?? 1.4;
