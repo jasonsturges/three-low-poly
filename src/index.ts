@@ -424,6 +424,7 @@ export { StrapHingeShape, type StrapHingeShapeOptions } from "./shapes/StrapHing
 export {
   WallShape,
   openingOutline,
+  openingCutout,
   wallOpeningTop,
   type WallOpeningOptions,
   type WallShapeOptions,
@@ -543,3 +544,7 @@ export * from "./utils/SphericalCurve";
 export * from "./utils/SphericalGeometryUtils";
 export * from "./utils/UVUtils";
 export * from "./utils/VertexUtils";
+
+export { pushMiteredPrism, wallNormal, type PrismEnd } from "./geometry/primitives/MiteredPrism";
+
+export { createHewnTimberGeometry, type HewnTimberGeometryOptions } from "./geometry/timber/HewnTimberGeometry";
