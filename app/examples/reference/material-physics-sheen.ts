@@ -1,62 +1,35 @@
-import { Mesh, MeshPhysicalMaterial, SphereGeometry } from "three";
-import { createScene } from "../../framework/createScene";
-import { createTextSprite } from "../../framework/createTextSprite";
+import { MeshPhysicalMaterial } from "three";
+import { materialMatrix } from "../../framework/materialMatrix";
 
-export const meta = { title: "Material Sheen" };
-
+export const meta = {
+  title: "Material Sheen",
+  description:
+    "Sheen strength across columns, sheen roughness down rows. Blue with yellow sheen distinguishes the layers; the fabric preset offers a subtler combination. Base roughness remains 1. Direct lighting only; no environment map.",
+};
 export default function (container: HTMLElement) {
-  const { scene, camera, controls, dispose } = createScene(container);
-  camera.position.set(0, 24, 0);
-  controls.target.set(0, 0, 0);
-  controls.update();
-
-  const rows = 10;
-  const cols = 10;
-  const spacing = 2.5;
-  const sphereGeometry = new SphereGeometry(1, 32, 32);
-
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const sheenRoughness = row / (rows - 1);
-      const sheen = col / (cols - 1);
-      const x = col * spacing - (cols * spacing) / 2 + spacing / 2;
-      const z = row * spacing - (rows * spacing) / 2 + spacing / 2;
-
-      const sphere = new Mesh(
-        sphereGeometry,
-        new MeshPhysicalMaterial({
-          color: 0x0077ff,
-          sheenColor: 0xffff00,
-          sheen,
-          sheenRoughness,
-        }),
-      );
-      sphere.position.set(x, 0, z);
-      scene.add(sphere);
-      scene.add(
-        createTextSprite(`${sheenRoughness.toFixed(1)}, ${sheen.toFixed(1)}`, {
-          size: 24,
-          x,
-          y: 0.5,
-          z: z + 1.75,
-        }),
-      );
-    }
-  }
-
-  scene.add(createTextSprite("SHEEN", { x: (cols * spacing) / 2 + 3, y: 0, z: -(rows * spacing) / 2 - 1 }));
-  scene.add(createTextSprite("SHEEN ROUGHNESS", { x: -(cols * spacing) / 2 - 3, y: 0, z: (rows * spacing) / 2 + 2 }));
-  scene.add(createTextSprite("0,0", { x: -(cols * spacing) / 2 - 3, y: 0, z: -(rows * spacing) / 2 - 1 }));
-  scene.add(createTextSprite("1,1", { x: (cols * spacing) / 2 + 3, y: 0, z: (rows * spacing) / 2 + 2 }));
-
-  return () => {
-    sphereGeometry.dispose();
-    scene.traverse((object) => {
-      if (object instanceof Mesh) {
-        const materials = Array.isArray(object.material) ? object.material : [object.material];
-        materials.forEach((material) => material.dispose());
-      }
-    });
-    dispose();
-  };
+  return materialMatrix(container, {
+    title: meta.title,
+    columns: { name: "Sheen" },
+    rows: { name: "Sheen Roughness" },
+    makeMaterial: (sheen, sheenRoughness) =>
+      new MeshPhysicalMaterial({ color: 0x0077ff, metalness: 0, roughness: 1, sheenColor: 0xffff00, sheen, sheenRoughness }),
+    controls(gui, materials) {
+      const settings = { color: "#0077ff", sheenColor: "#ffff00", preset: "Contrasting Layers" };
+      const apply = () =>
+        materials.forEach((m) => {
+          m.color.set(settings.color);
+          m.sheenColor.set(settings.sheenColor);
+        });
+      gui
+        .add(settings, "preset", ["Contrasting Layers", "Burgundy Fabric"])
+        .name("Palette")
+        .onChange((v: string) => {
+          settings.color = v === "Burgundy Fabric" ? "#601b38" : "#0077ff";
+          settings.sheenColor = v === "Burgundy Fabric" ? "#dca2b8" : "#ffff00";
+          apply();
+        });
+      gui.addColor(settings, "color").name("Base Color").listen().onChange(apply);
+      gui.addColor(settings, "sheenColor").name("Sheen Color").listen().onChange(apply);
+    },
+  });
 }
