@@ -285,6 +285,20 @@ export default function (container: HTMLElement) {
         inspector.add(volume, "distance", 0.05, 5, 0.05).name("Attenuation Distance").onChange(updateAbsorption);
       }
     }
+    inspector
+      .add(
+        {
+          reset: () => {
+            const defaults = recipe.make();
+            material.copy(defaults);
+            material.needsUpdate = true;
+            defaults.dispose();
+            inspect();
+          },
+        },
+        "reset",
+      )
+      .name("Reset Selected Material");
     inspector.open();
     if (params.isolate) updateLayout();
   };
@@ -296,21 +310,6 @@ export default function (container: HTMLElement) {
     )
     .name("Inspect Sample")
     .onChange(inspect);
-  gui
-    .add(
-      {
-        reset: () => {
-          const sample = selected();
-          const defaults = sample.recipe.make();
-          sample.material.copy(defaults);
-          sample.material.needsUpdate = true;
-          defaults.dispose();
-          inspect();
-        },
-      },
-      "reset",
-    )
-    .name("Reset Selected Material");
   inspect();
   frame();
   onFrame((delta) => {
