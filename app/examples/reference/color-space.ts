@@ -3,6 +3,7 @@ import {
   BoxGeometry,
   CanvasTexture,
   ConeGeometry,
+  ColorManagement,
   DirectionalLight,
   Mesh,
   MeshBasicMaterial,
@@ -13,13 +14,20 @@ import {
   LinearSRGBColorSpace,
 } from "three";
 import GUI from "lil-gui";
+import { DisplayP3ColorSpace, DisplayP3ColorSpaceImpl } from "three/addons/math/ColorSpaces.js";
 import { clearDefaultLights } from "../../framework/clearDefaultLights";
 import { createScene } from "../../framework/createScene";
 
-export const meta = { title: "Color Space" };
+export const meta = {
+  title: "Color Space",
+  description:
+    "Compare sRGB, Linear-sRGB, and Display-P3 output. P3 requires a compatible browser and display. " +
+    "Existing sRGB colors should retain their appearance in P3; a wider gamut does not by itself reduce gradient banding. " +
+    "Linear-sRGB output is included for comparison and appears darker on a normal display.",
+};
 
 export default function (container: HTMLElement) {
-  const { scene, camera, renderer, dispose } = createScene(container, {
+  const { scene, camera, renderer, onFrame, dispose } = createScene(container, {
     background: 0x222222,
     cameraPosition: [0, 5, 30],
   });
@@ -49,7 +57,9 @@ export default function (container: HTMLElement) {
     gradient.addColorStop(1, "#ffffff");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    return new CanvasTexture(canvas);
+    const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
+    return texture;
   }
 
   const gradientTexture1 = createGradientTexture(false);
@@ -84,31 +94,74 @@ export default function (container: HTMLElement) {
     scene.add(swatch);
   });
 
-  const colorSpaceSettings = { colorSpace: "sRGB" as "sRGB" | "Linear-sRGB" };
-  const colorSpaceTypes = { sRGB: SRGBColorSpace, "Linear-sRGB": LinearSRGBColorSpace };
+  // Register an additional definition without changing the shared working color space.
+  ColorManagement.define({ [DisplayP3ColorSpace]: DisplayP3ColorSpaceImpl });
+  const colorSpaceTypes = {
+    sRGB: SRGBColorSpace,
+    "Linear-sRGB": LinearSRGBColorSpace,
+    "Display-P3": DisplayP3ColorSpace,
+  };
+  const colorSpaceSettings = {
+    colorSpace: "sRGB" as keyof typeof colorSpaceTypes,
+    p3Status: "Checking support…",
+  };
+  let configureOutput: ((space: "srgb" | "display-p3") => void) | undefined;
 
   const updateColorSpace = () => {
     const space = colorSpaceTypes[colorSpaceSettings.colorSpace];
-    renderer.outputColorSpace = space;
-    gradientTexture1.colorSpace = space;
-    gradientTexture1.needsUpdate = true;
-    scene.traverse((object) => {
-      if (object instanceof Mesh) {
-        const materials = Array.isArray(object.material) ? object.material : [object.material];
-        materials.forEach((material) => {
-          material.needsUpdate = true;
-        });
-      }
-    });
+    try {
+      // Reconfigure the same canvas, preserving its device, format, and alpha settings.
+      configureOutput?.(space === DisplayP3ColorSpace ? "display-p3" : "srgb");
+      renderer.outputColorSpace = space;
+    } catch {
+      configureOutput?.("srgb");
+      renderer.outputColorSpace = SRGBColorSpace;
+      colorSpaceSettings.colorSpace = "sRGB";
+      colorSpaceSettings.p3Status = "P3 unavailable; using sRGB";
+      outputControl.options(["sRGB", "Linear-sRGB"]);
+      outputControl.updateDisplay();
+    }
   };
 
   const gui = new GUI();
   const colorSpaceFolder = gui.addFolder("Color Space");
-  colorSpaceFolder
-    .add(colorSpaceSettings, "colorSpace", Object.keys(colorSpaceTypes))
+  const outputControl = colorSpaceFolder
+    .add(colorSpaceSettings, "colorSpace", ["sRGB", "Linear-sRGB"])
     .name("Output Color Space")
     .onChange(updateColorSpace);
+  colorSpaceFolder.add(colorSpaceSettings, "p3Status").name("P3 Support").listen().disable();
   colorSpaceFolder.open();
+
+  // The harness initializes asynchronously. Wait until its first render configures
+  // the context; no framework changes or renderer/backend overrides are needed.
+  const stopChecking = onFrame(() => {
+    const context = renderer.domElement.getContext("webgpu") as unknown as GPUCanvasContext | null;
+    if (!context || typeof context.getConfiguration !== "function") {
+      colorSpaceSettings.p3Status = "Unavailable in this renderer/browser";
+      stopChecking();
+      return;
+    }
+    const configuration = context.getConfiguration();
+    if (!configuration) return;
+    stopChecking();
+    configureOutput = (colorSpace) => context.configure({ ...configuration, colorSpace });
+    try {
+      configureOutput("display-p3");
+      const supported = context.getConfiguration()?.colorSpace === "display-p3";
+      configureOutput("srgb");
+      if (!supported) {
+        colorSpaceSettings.p3Status = "Unavailable in this browser";
+        return;
+      }
+      outputControl.options(Object.keys(colorSpaceTypes));
+      colorSpaceSettings.p3Status = window.matchMedia("(color-gamut: p3)").matches
+        ? "Available — P3 display detected"
+        : "Available — display may limit gamut";
+    } catch {
+      configureOutput("srgb");
+      colorSpaceSettings.p3Status = "Unavailable in this browser";
+    }
+  });
 
   const cameraFolder = gui.addFolder("Camera Position");
   cameraFolder.add(camera.position, "x", -50, 50).name("X");
