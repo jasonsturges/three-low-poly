@@ -427,7 +427,7 @@ Plots
 
 tbd.
 
-### units
+### Units
 
 - Localization: EN-US
 - Radians
@@ -439,10 +439,10 @@ Separation of shape, geometric intent, and construction of cohesive entities.
 
 - **Geometry**: intrinsic renderable shape
 - **Profiles**: reusable computational shape or boundary
-- **Factories**: construction knowledge - composition, relationships, variation, batching
-- **assemblies**: relationships between independent parts
-- **options**: local definitions composed through ownership
-- **variation**
+- **Factories**: spatial or relational composition, variation, batching
+- **Assemblies**: relationships between independent parts
+- **Options**: local definitions composed through ownership
+- **Variation**:
 
 This separation keeps individual geometry APIs small while allowing complex assets and large procedural assemblies to
 remain cohesive from the caller's perspective.
