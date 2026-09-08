@@ -50,35 +50,58 @@ export * from "./effects/WispEffect";
 //  Factories
 //------------------------------
 
-export * from "./factory/ApothecaryJar";
-export * from "./factory/AppleTree";
-export * from "./factory/BookFactory";
-export * from "./factory/BoulderFactory";
-export * from "./factory/DeciduousTree";
-export * from "./factory/DiamondLatticeWindow";
-export * from "./factory/DoorFactory";
-export * from "./factory/FenceFactory";
-export * from "./factory/FlagstoneFloor";
-export * from "./factory/FlorenceFlaskStand";
-export * from "./factory/GregorianLatticeWindow";
-export * from "./factory/HardwoodFloor";
-export * from "./factory/HeadstoneFactory";
-export * from "./factory/HexagonalTileFactory";
-export * from "./factory/PlankFloor";
-export * from "./factory/PlankFloorLayout";
-export * from "./factory/PotionBottle";
-export * from "./factory/ProudStones";
-export * from "./factory/PumpkinPatch";
-export * from "./factory/RockFactory";
-export * from "./factory/RusticFence";
-export * from "./factory/StaircaseFactory";
-export * from "./factory/StoneWall";
-export * from "./factory/TestTubeRack";
-export * from "./factory/VotiveRack";
-export * from "./factory/WindowFactory";
-export * from "./factory/WineBottle";
-export * from "./factory/corkStopper";
-export * from "./factory/liquidFill";
+// Architecture
+export * from "./factory/architecture/DiamondLatticeWindow";
+export * from "./factory/architecture/DoorFactory";
+export * from "./factory/architecture/GregorianLatticeWindow";
+export * from "./factory/architecture/StaircaseFactory";
+export * from "./factory/architecture/WindowFactory";
+
+// Books
+export * from "./factory/books/BookFactory";
+
+// Cemetery
+export * from "./factory/cemetery/HeadstoneFactory";
+
+// Fence
+export * from "./factory/fence/FenceFactory";
+export * from "./factory/fence/RusticFence";
+
+// Floors
+export * from "./factory/floors/FlagstoneFloor";
+export * from "./factory/floors/HardwoodFloor";
+export * from "./factory/floors/HexagonalTileFactory";
+export * from "./factory/floors/PlankFloor";
+export * from "./factory/floors/PlankFloorLayout";
+
+// Flora
+export * from "./factory/flora/PumpkinPatch";
+
+// Lighting
+export * from "./factory/lighting/VotiveRack";
+
+// Masonry
+export * from "./factory/masonry/ProudStones";
+export * from "./factory/masonry/StoneWall";
+
+// Rocks
+export * from "./factory/rocks/BoulderFactory";
+export * from "./factory/rocks/RockFactory";
+
+// Science
+export * from "./factory/science/FlorenceFlaskStand";
+export * from "./factory/science/TestTubeRack";
+
+// Trees
+export * from "./factory/trees/AppleTree";
+export * from "./factory/trees/DeciduousTree";
+
+// Vessels
+export * from "./factory/vessels/ApothecaryJar";
+export * from "./factory/vessels/PotionBottle";
+export * from "./factory/vessels/WineBottle";
+export * from "./factory/vessels/corkStopper";
+export * from "./factory/vessels/liquidFill";
 
 //------------------------------
 //  Geometries
