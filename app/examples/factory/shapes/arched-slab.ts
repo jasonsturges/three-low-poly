@@ -3,7 +3,13 @@ import { Color, Mesh, MeshStandardMaterial } from "three";
 import { ArchedSlabGeometry, ArchStyle, centerObject } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
-export const meta = { title: "Arched Slab" };
+export const meta = {
+  title: "Arched Slab",
+  description:
+    "A reusable filled arch outline, extruded into a slab. Explore arch styles, span, rise, " +
+    "shoulders, and depth—the same shape can become a door, window, or headstone. " +
+    "See Arch Profile Gallery for the styles side by side.",
+};
 
 const ARCHES: ArchStyle[] = [
   "square",

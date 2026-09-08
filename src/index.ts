@@ -109,7 +109,6 @@ export * from "./factory/vessels/liquidFill";
 
 // Architecture
 export * from "./geometry/architecture/ArchGeometry";
-export * from "./geometry/architecture/ArchedSlabGeometry";
 export * from "./geometry/architecture/DiamondLatticeGeometry";
 export * from "./geometry/architecture/GregorianLatticeGeometry";
 export * from "./geometry/architecture/MoldingGeometry";
@@ -184,6 +183,7 @@ export * from "./geometry/science/TeslaCoilGeometry";
 
 // Shapes
 export * from "./geometry/shapes/AnnulusGeometry";
+export * from "./geometry/shapes/ArchedSlabGeometry";
 export * from "./geometry/shapes/BurstGeometry";
 export * from "./geometry/shapes/ClubGeometry";
 export * from "./geometry/shapes/DiamondGeometry";
