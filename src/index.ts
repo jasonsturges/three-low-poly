@@ -8,362 +8,208 @@
  *   1 -------- 2
  */
 
+// Public modules forward all named exports, including types.
+// Keep internal imports direct; do not import this barrel from within src.
+
 //------------------------------
 //  Animators
 //------------------------------
 
-export { CameraPlayback } from "./animators/CameraPlayback";
-export {
-  applySnapshot,
-  captureSnapshot,
-  type CameraClip,
-  type CameraSnapshot,
-  type ClipPhase,
-  type ClipRuntime,
-} from "./animators/cameraClip";
-export {
-  createDollyClip,
-  createFlythroughClip,
-  createOrbitClip,
-  createPendulumClip,
-  createSpiralClip,
-  createWobbleClip,
-  createZoomClip,
-  type DollyClipOptions,
-  type FlythroughClipOptions,
-  type OrbitClipOptions,
-  type PendulumClipOptions,
-  type SpiralClipOptions,
-  type WobbleClipOptions,
-  type ZoomClipOptions,
-} from "./animators/cameraClips";
+export * from "./animators/CameraPlayback";
+export * from "./animators/cameraClip";
+export * from "./animators/cameraClips";
 
 //------------------------------
 //  Constants
 //------------------------------
 
-export { Axis } from "./constants/Axis";
-export { BoxSide } from "./constants/BoxSide";
-export { ColorPalette } from "./constants/ColorPalette";
-export { Direction } from "./constants/Direction";
-export { Easing, type EasingFunction } from "./constants/Easing";
-export { Falloff, type FalloffFunction } from "./constants/Falloff";
-export { ParametricCurve } from "./constants/ParametricCurve";
+export * from "./constants/Axis";
+export * from "./constants/BoxSide";
+export * from "./constants/ColorPalette";
+export * from "./constants/Direction";
+export * from "./constants/Easing";
+export * from "./constants/Falloff";
+export * from "./constants/ParametricCurve";
 
 //------------------------------
 //  Effects
 //------------------------------
 
-export { DustMotesEffect, type DustMotesEffectOptions } from "./effects/DustMotesEffect";
-export { EffervescenceEffect, type EffervescenceEffectOptions } from "./effects/EffervescenceEffect";
-export {
-  EmissivePulseEffect,
-  type EmissivePulseEffectOptions,
-  type EmissivePulseMaterial,
-} from "./effects/EmissivePulseEffect";
-export {
-  flameFlicker,
-  FlameFlickerEffect,
-  type FlameFlickerEffectOptions,
-} from "./effects/FlameFlickerEffect";
-export { glowFalloffTexture, GlowHalo, type GlowHaloOptions } from "./effects/GlowHalo";
-export { GroundFogEffect, type GroundFogEffectOptions } from "./effects/GroundFogEffect";
-export { LightningEffect, type LightningEffectOptions } from "./effects/LightningEffect";
-export { PetalDriftEffect, type PetalDriftEffectOptions } from "./effects/PetalDriftEffect";
-export { RainEffect, type RainEffectOptions } from "./effects/RainEffect";
-export { WispEffect, type WispEffectOptions } from "./effects/WispEffect";
+export * from "./effects/DustMotesEffect";
+export * from "./effects/EffervescenceEffect";
+export * from "./effects/EmissivePulseEffect";
+export * from "./effects/FlameFlickerEffect";
+export * from "./effects/GlowHalo";
+export * from "./effects/GroundFogEffect";
+export * from "./effects/LightningEffect";
+export * from "./effects/PetalDriftEffect";
+export * from "./effects/RainEffect";
+export * from "./effects/WispEffect";
 
 //------------------------------
-//  Factory
+//  Factories
 //------------------------------
 
+export * from "./factory/ApothecaryJar";
+export * from "./factory/AppleTree";
 export * from "./factory/BookFactory";
 export * from "./factory/BoulderFactory";
-export * from "./factory/DoorFactory";
+export * from "./factory/DeciduousTree";
 export * from "./factory/DiamondLatticeWindow";
-export * from "./factory/GregorianLatticeWindow";
+export * from "./factory/DoorFactory";
 export * from "./factory/FenceFactory";
-export * from "./factory/ApothecaryJar";
-export * from "./factory/PotionBottle";
-export * from "./factory/WineBottle";
-export * from "./factory/corkStopper";
+export * from "./factory/FlagstoneFloor";
 export * from "./factory/FlorenceFlaskStand";
-export * from "./factory/TestTubeRack";
-export * from "./factory/liquidFill";
+export * from "./factory/GregorianLatticeWindow";
+export * from "./factory/HardwoodFloor";
 export * from "./factory/HeadstoneFactory";
 export * from "./factory/HexagonalTileFactory";
-export * from "./factory/AppleTree";
-export * from "./factory/DeciduousTree";
-export * from "./factory/FlagstoneFloor";
-export * from "./factory/HardwoodFloor";
 export * from "./factory/PlankFloor";
 export * from "./factory/PlankFloorLayout";
+export * from "./factory/PotionBottle";
 export * from "./factory/ProudStones";
 export * from "./factory/PumpkinPatch";
-export * from "./factory/RusticFence";
-export * from "./factory/VotiveRack";
 export * from "./factory/RockFactory";
+export * from "./factory/RusticFence";
 export * from "./factory/StaircaseFactory";
 export * from "./factory/StoneWall";
+export * from "./factory/TestTubeRack";
+export * from "./factory/VotiveRack";
 export * from "./factory/WindowFactory";
+export * from "./factory/WineBottle";
+export * from "./factory/corkStopper";
+export * from "./factory/liquidFill";
 
 //------------------------------
 //  Geometries
 //------------------------------
 
 // Architecture
-export { ArchGeometry, type ArchGeometryOptions } from "./geometry/architecture/ArchGeometry";
-export {
-  GregorianLatticeGeometry,
-  type GregorianLatticeGeometryOptions,
-} from "./geometry/architecture/GregorianLatticeGeometry";
-export {
-  DiamondLatticeGeometry,
-  type DiamondLatticeGeometryOptions,
-} from "./geometry/architecture/DiamondLatticeGeometry";
-export { PaneGeometry, type PaneGeometryOptions } from "./geometry/architecture/PaneGeometry";
-export {
-  MoldingGeometry,
-  type MoldingGeometryOptions,
-  type MoldingFacing,
-  type MoldingRun,
-} from "./geometry/architecture/MoldingGeometry";
-export {
-  PanelDoorGeometry,
-  type PanelDoorGeometryOptions,
-} from "./geometry/architecture/PanelDoorGeometry";
-export {
-  WindowFrameGeometry,
-  type WindowFrameGeometryOptions,
-} from "./geometry/architecture/WindowFrameGeometry";
-export {
-  SpiralStaircaseGeometry,
-  type SpiralStaircaseGeometryOptions,
-} from "./geometry/architecture/SpiralStaircaseGeometry";
-export {
-  StaircaseGeometry,
-  type StaircaseGeometryOptions,
-} from "./geometry/architecture/StaircaseGeometry";
+export * from "./geometry/architecture/ArchGeometry";
+export * from "./geometry/architecture/ArchedSlabGeometry";
+export * from "./geometry/architecture/DiamondLatticeGeometry";
+export * from "./geometry/architecture/GregorianLatticeGeometry";
+export * from "./geometry/architecture/MoldingGeometry";
+export * from "./geometry/architecture/PaneGeometry";
+export * from "./geometry/architecture/PanelDoorGeometry";
+export * from "./geometry/architecture/SpiralStaircaseGeometry";
+export * from "./geometry/architecture/StaircaseGeometry";
+export * from "./geometry/architecture/WindowFrameGeometry";
 
 // Atmosphere
-export {
-  SmokeCurlGeometry,
-  type SmokeCurlGeometryOptions,
-} from "./geometry/atmosphere/SmokeCurlGeometry";
+export * from "./geometry/atmosphere/SmokeCurlGeometry";
 
 // Books
-export {
-  BOOK_COVER_MATERIAL,
-  BOOK_PAGES_MATERIAL,
-  BookGeometry,
-  type BookGeometryOptions,
-} from "./geometry/books/BookGeometry";
+export * from "./geometry/books/BookGeometry";
 
 // Cemetery
-export {
-  CelticCrossHeadstoneGeometry,
-  type CelticCrossHeadstoneGeometryOptions,
-} from "./geometry/cemetery/CelticCrossHeadstoneGeometry";
-export {
-  CrossHeadstoneGeometry,
-  type CrossHeadstoneGeometryOptions,
-} from "./geometry/cemetery/CrossHeadstoneGeometry";
-export { MausoleumGeometry } from "./geometry/cemetery/MausoleumGeometry";
-export { ObeliskGeometry, type ObeliskGeometryOptions } from "./geometry/cemetery/ObeliskGeometry";
-export {
-  ObeliskHeadstoneGeometry,
-  type ObeliskHeadstoneGeometryOptions,
-} from "./geometry/cemetery/ObeliskHeadstoneGeometry";
-export {
-  RoundedHeadstoneGeometry,
-  type RoundedHeadstoneGeometryOptions,
-} from "./geometry/cemetery/RoundedHeadstoneGeometry";
-export { SquareHeadstoneGeometry } from "./geometry/cemetery/SquareHeadstoneGeometry";
+export * from "./geometry/cemetery/CelticCrossHeadstoneGeometry";
+export * from "./geometry/cemetery/CrossHeadstoneGeometry";
+export * from "./geometry/cemetery/MausoleumGeometry";
+export * from "./geometry/cemetery/ObeliskGeometry";
+export * from "./geometry/cemetery/ObeliskHeadstoneGeometry";
+export * from "./geometry/cemetery/RoundedHeadstoneGeometry";
+export * from "./geometry/cemetery/SquareHeadstoneGeometry";
 
 // Fence
-export {
-  StoneFencePostGeometry,
-  type StoneFencePostGeometryOptions,
-} from "./geometry/fence/StoneFencePostGeometry";
-export {
-  WoodPicketGeometry,
-  type WoodPicketGeometryOptions,
-} from "./geometry/fence/WoodPicketGeometry";
-export { WoodPostGeometry, type WoodPostGeometryOptions } from "./geometry/fence/WoodPostGeometry";
-export {
-  WroughtIronPicketGeometry,
-  type WroughtIronPicketGeometryOptions,
-} from "./geometry/fence/WroughtIronPicketGeometry";
-export {
-  WroughtIronPostGeometry,
-  type WroughtIronPostGeometryOptions,
-} from "./geometry/fence/WroughtIronPostGeometry";
-export {
-  WroughtIronScrollGeometry,
-  type WroughtIronScrollGeometryOptions,
-} from "./geometry/fence/WroughtIronScrollGeometry";
+export * from "./geometry/fence/StoneFencePostGeometry";
+export * from "./geometry/fence/WoodPicketGeometry";
+export * from "./geometry/fence/WoodPostGeometry";
+export * from "./geometry/fence/WroughtIronPicketGeometry";
+export * from "./geometry/fence/WroughtIronPostGeometry";
+export * from "./geometry/fence/WroughtIronScrollGeometry";
 
 // Flora
-export {
-  createPumpkinGeometry,
-  createPumpkinRindGeometry,
-  createPumpkinStemGeometry,
-  pumpkinStemMatrix,
-  PumpkinGeometry,
-  type PumpkinAssemblyOptions,
-  type PumpkinGeometryOptions,
-  type PumpkinRindGeometryOptions,
-  type PumpkinStemGeometryOptions,
-} from "./geometry/flora/PumpkinGeometry";
+export * from "./geometry/flora/PumpkinGeometry";
+
+// Foliage
+export * from "./geometry/foliage/EllipticLeafGeometry";
+export * from "./geometry/foliage/LeafGeometry";
 
 // Furniture
-export { BookshelfGeometry, type BookshelfGeometryOptions } from "./geometry/furniture/BookshelfGeometry";
-export { DeskGeometry } from "./geometry/furniture/DeskGeometry";
+export * from "./geometry/furniture/BookshelfGeometry";
+export * from "./geometry/furniture/DeskGeometry";
 
-// Masonry
-export {
-  QuoinStackGeometry,
-  type QuoinPattern,
-  type QuoinStackGeometryOptions,
-} from "./geometry/masonry/QuoinStackGeometry";
-
-// Leafs
-export { EllipticLeafGeometry } from "./geometry/foliage/EllipticLeafGeometry";
-export { LeafGeometry, type LeafGeometryOptions } from "./geometry/foliage/LeafGeometry";
+// Gears
+export * from "./geometry/gears/BevelGearGeometry";
+export * from "./geometry/gears/CrossedWheelGeometry";
+export * from "./geometry/gears/GearGeometry";
+export * from "./geometry/gears/InternalGearGeometry";
+export * from "./geometry/gears/RackGeometry";
 
 // Lighting
-export {
-  CoachLanternGeometry,
-  type CoachLanternGeometryOptions,
-} from "./geometry/lighting/CoachLanternGeometry";
-export {
-  HangingLanternGeometry,
-  type HangingLanternGeometryOptions,
-} from "./geometry/lighting/HangingLanternGeometry";
-export {
-  WallSconceGeometry,
-  type WallSconceGeometryOptions,
-} from "./geometry/lighting/WallSconceGeometry";
+export * from "./geometry/lighting/CoachLanternGeometry";
+export * from "./geometry/lighting/HangingLanternGeometry";
+export * from "./geometry/lighting/WallSconceGeometry";
+
+// Masonry
+export * from "./geometry/masonry/QuoinStackGeometry";
 
 // Primitives
-export {
-  EdgedBoxGeometry,
-  type EdgedBoxGeometryOptions,
-  type EdgeAxis,
-  type EdgeEnds,
-  type EdgeStyle,
-} from "./geometry/primitives/EdgedBoxGeometry";
+export * from "./geometry/primitives/EdgedBoxGeometry";
 
 // Rocks
-export { BoulderGeometry, type BoulderGeometryOptions } from "./geometry/rocks/BoulderGeometry";
-export { MossyRockGeometry, type MossyRockGeometryOptions } from "./geometry/rocks/MossyRockGeometry";
-export { RockGeometry, type RockGeometryOptions } from "./geometry/rocks/RockGeometry";
-
-// Shapes
-export {
-  ArchedSlabGeometry,
-  type ArchedSlabGeometryOptions,
-} from "./geometry/architecture/ArchedSlabGeometry";
-export { BurstGeometry, type BurstGeometryOptions } from "./geometry/shapes/BurstGeometry";
-export { ClubGeometry, type ClubGeometryOptions } from "./geometry/shapes/ClubGeometry";
-export { DiamondGeometry, type DiamondGeometryOptions } from "./geometry/shapes/DiamondGeometry";
-export {
-  AnnulusGeometry,
-  type AnnulusGeometryOptions,
-} from "./geometry/shapes/AnnulusGeometry";
-export { GearGeometry, type GearGeometryOptions } from "./geometry/gears/GearGeometry";
-export {
-  CrossedWheelGeometry,
-  type CrossedWheelGeometryOptions,
-} from "./geometry/gears/CrossedWheelGeometry";
-export { BevelGearGeometry, type BevelGearGeometryOptions } from "./geometry/gears/BevelGearGeometry";
-export {
-  InternalGearGeometry,
-  type InternalGearGeometryOptions,
-} from "./geometry/gears/InternalGearGeometry";
-export { RackGeometry, type RackGeometryOptions } from "./geometry/gears/RackGeometry";
-export { HeartGeometry, type HeartGeometryOptions } from "./geometry/shapes/HeartGeometry";
-export { PolygonGeometry, type PolygonGeometryOptions } from "./geometry/shapes/PolygonGeometry";
-export { SpadeGeometry, type SpadeGeometryOptions } from "./geometry/shapes/SpadeGeometry";
-export { StarGeometry, type StarGeometryOptions } from "./geometry/shapes/StarGeometry";
-
-// Skeleton
-export { BoneGeometry } from "./geometry/skeleton/BoneGeometry";
+export * from "./geometry/rocks/BoulderGeometry";
+export * from "./geometry/rocks/MossyRockGeometry";
+export * from "./geometry/rocks/RockGeometry";
 
 // Science
-export { MortarGeometry, type MortarGeometryOptions } from "./geometry/science/MortarGeometry";
-export { PestleGeometry, type PestleGeometryOptions } from "./geometry/science/PestleGeometry";
-export { RingStandGeometry, type RingStandGeometryOptions } from "./geometry/science/RingStandGeometry";
-export { TeslaCoilGeometry } from "./geometry/science/TeslaCoilGeometry";
+export * from "./geometry/science/MortarGeometry";
+export * from "./geometry/science/PestleGeometry";
+export * from "./geometry/science/RingStandGeometry";
+export * from "./geometry/science/TeslaCoilGeometry";
+
+// Shapes
+export * from "./geometry/shapes/AnnulusGeometry";
+export * from "./geometry/shapes/BurstGeometry";
+export * from "./geometry/shapes/ClubGeometry";
+export * from "./geometry/shapes/DiamondGeometry";
+export * from "./geometry/shapes/HeartGeometry";
+export * from "./geometry/shapes/PolygonGeometry";
+export * from "./geometry/shapes/SpadeGeometry";
+export * from "./geometry/shapes/StarGeometry";
+
+// Skeleton
+export * from "./geometry/skeleton/BoneGeometry";
 
 // Terrain
-export { TerrainMoundGeometry, type TerrainMoundGeometryOptions } from "./geometry/terrain/TerrainMoundGeometry";
-export { TerrainPlaneGeometry, type TerrainPlaneGeometryOptions } from "./geometry/terrain/TerrainPlaneGeometry";
+export * from "./geometry/terrain/TerrainMoundGeometry";
+export * from "./geometry/terrain/TerrainPlaneGeometry";
+
+// Textile
+export * from "./geometry/textile/CascadeGeometry";
+export * from "./geometry/textile/CurtainPanelGeometry";
+export * from "./geometry/textile/SwagGeometry";
 
 // Timber
-export {
-  CurtainPanelGeometry,
-  type CurtainPanelGeometryOptions,
-  type CurtainPleat,
-} from "./geometry/textile/CurtainPanelGeometry";
-export {
-  CascadeGeometry,
-  type CascadeGeometryOptions,
-  type CascadePleat,
-} from "./geometry/textile/CascadeGeometry";
-export {
-  SwagGeometry,
-  type SwagGeometryOptions,
-  type SwagSagCurve,
-} from "./geometry/textile/SwagGeometry";
-export {
-  WeatheredPlankGeometry,
-  type WeatheredPlankGeometryOptions,
-} from "./geometry/timber/WeatheredPlankGeometry";
+export * from "./geometry/timber/HewnTimberGeometry";
+export * from "./geometry/timber/WeatheredPlankGeometry";
 
 // Trees
-export {
-  GnarledTreeGeometry,
-  type GnarledTreeGeometryOptions,
-} from "./geometry/trees/GnarledTreeGeometry";
-export {
-  ClearingTreeGeometry,
-  type ClearingTreeGeometryOptions,
-} from "./geometry/trees/ClearingTreeGeometry";
+export * from "./geometry/trees/ClearingTreeGeometry";
+export * from "./geometry/trees/GnarledTreeGeometry";
 
 // Vessels
-export { BeakerGeometry, type BeakerGeometryOptions } from "./geometry/vessels/BeakerGeometry";
-export {
-  ErlenmeyerFlaskGeometry,
-  type ErlenmeyerFlaskGeometryOptions,
-} from "./geometry/vessels/ErlenmeyerFlaskGeometry";
-export {
-  FlorenceFlaskGeometry,
-  type FlorenceFlaskGeometryOptions,
-} from "./geometry/vessels/FlorenceFlaskGeometry";
-export {
-  GraduatedCylinderGeometry,
-  type GraduatedCylinderGeometryOptions,
-} from "./geometry/vessels/GraduatedCylinderGeometry";
-export {
-  ApothecaryJarGeometry,
-  type ApothecaryJarGeometryOptions,
-} from "./geometry/vessels/ApothecaryJarGeometry";
-export { CorkGeometry, type CorkGeometryOptions } from "./geometry/vessels/CorkGeometry";
-export { PipetteGeometry, type PipetteGeometryOptions } from "./geometry/vessels/PipetteGeometry";
-export { PotionBottleGeometry, type PotionBottleGeometryOptions } from "./geometry/vessels/PotionBottleGeometry";
-export { TestTubeGeometry, type TestTubeGeometryOptions } from "./geometry/vessels/TestTubeGeometry";
-export { LiquidFillGeometry, type LiquidFillGeometryOptions } from "./geometry/vessels/LiquidFillGeometry";
+export * from "./geometry/vessels/ApothecaryJarGeometry";
+export * from "./geometry/vessels/BeakerGeometry";
+export * from "./geometry/vessels/CorkGeometry";
+export * from "./geometry/vessels/ErlenmeyerFlaskGeometry";
+export * from "./geometry/vessels/FlorenceFlaskGeometry";
+export * from "./geometry/vessels/GraduatedCylinderGeometry";
+export * from "./geometry/vessels/LiquidFillGeometry";
+export * from "./geometry/vessels/PipetteGeometry";
+export * from "./geometry/vessels/PotionBottleGeometry";
+export * from "./geometry/vessels/TestTubeGeometry";
+export * from "./geometry/vessels/VaseGeometry";
+export * from "./geometry/vessels/WineBottleGeometry";
 export * from "./geometry/vessels/vesselProfiles";
-export { VaseGeometry, type VaseGeometryOptions } from "./geometry/vessels/VaseGeometry";
-export { WineBottleGeometry, type WineBottleGeometryOptions } from "./geometry/vessels/WineBottleGeometry";
 
 //------------------------------
 //  Helpers
 //------------------------------
 
-export { Cyclorama, type CycloramaOptions } from "./helpers/Cyclorama";
-export { GroundGrid, type GroundGridOptions } from "./helpers/GroundGrid";
+export * from "./helpers/Cyclorama";
+export * from "./helpers/GroundGrid";
 
 //------------------------------
 //  Modeling
@@ -371,148 +217,81 @@ export { GroundGrid, type GroundGridOptions } from "./helpers/GroundGrid";
 
 // Mesh
 export * from "./modeling/mesh/GeometryBuffers";
+export * from "./modeling/mesh/MiteredPrism";
 export * from "./modeling/mesh/UVUtils";
 export * from "./modeling/mesh/VertexUtils";
-export { pushMiteredPrism, wallNormal, type PrismEnd } from "./modeling/mesh/MiteredPrism";
 
 // Profiles
-export {
-  archRise,
-  traceArch,
-  type ArchEnd,
-  type ArchProfileOptions,
-  type ArchStyle,
-} from "./modeling/profiles/ArchProfile";
-export {
-  moldingProfile,
-  type MoldingProfileOptions,
-  type MoldingStyle,
-} from "./modeling/profiles/MoldingProfiles";
-export { circleProfile, rectProfile } from "./modeling/profiles/Profiles";
-export {
-  surfaceProfile,
-  type SurfaceProfileOptions,
-  type SurfaceStyle,
-} from "./modeling/profiles/SurfaceProfiles";
-export * from "./modeling/profiles/OffsetLoop";
+export * from "./modeling/profiles/ArchProfile";
 export * from "./modeling/profiles/InterpolateCurve";
+export * from "./modeling/profiles/MoldingProfiles";
+export * from "./modeling/profiles/OffsetLoop";
 export * from "./modeling/profiles/ParametricCurveUtils";
+export * from "./modeling/profiles/Profiles";
 export * from "./modeling/profiles/SphericalCurve";
+export * from "./modeling/profiles/SurfaceProfiles";
 
 // Paths
-export { arcPath, type ArcPathOptions } from "./modeling/paths/ArcPath";
-export { curvePath } from "./modeling/paths/CurvePath";
-export { helixPath, type HelixPathOptions } from "./modeling/paths/HelixPath";
-export { linePath } from "./modeling/paths/LinePath";
-export { type PathPoint } from "./modeling/paths/PathPoint";
-export { joinPaths, reversePath, transformPath } from "./modeling/paths/PathUtils";
-export { spiralPath, type SpiralPathOptions } from "./modeling/paths/SpiralPath";
-export {
-  measurePath,
-  type MeasurePathOptions,
-  type PathMeasure,
-  pointAtDistance,
-  slicePath,
-} from "./modeling/paths/PathMeasure";
-export {
-  type PathRepeat,
-  repeatAlongPath,
-  type RepeatAlongPathOptions,
-  type RepeatAnchor,
-} from "./modeling/paths/RepeatAlongPath";
+export * from "./modeling/paths/ArcPath";
+export * from "./modeling/paths/CurvePath";
+export * from "./modeling/paths/HelixPath";
+export * from "./modeling/paths/LinePath";
+export * from "./modeling/paths/PathMeasure";
+export * from "./modeling/paths/PathPoint";
+export * from "./modeling/paths/PathUtils";
+export * from "./modeling/paths/RepeatAlongPath";
+export * from "./modeling/paths/SpiralPath";
 
 // Surfaces
-export {
-  alignRings,
-  bestRingOffset,
-  correspondLoops,
-  type CorrespondOptions,
-  resampleLoop,
-  type ResampleMethod,
-  rotateRing,
-} from "./modeling/surfaces/Correspondence";
-export { loft, type LoftOptions } from "./modeling/surfaces/Loft";
-export { surfaceGrid, type SurfaceGridOptions } from "./modeling/surfaces/SurfaceGrid";
-export {
-  miterCuts,
-  type MiterCutsOptions,
-  miterFrames,
-  type MiterFramesOptions,
-} from "./modeling/surfaces/MiterFrames";
-export {
-  cutEnd,
-  cutEndGeometry,
-  cutSegment,
-  miterPlane,
-  type SegmentBounds,
-  type CutPlane,
-  type CutPoint,
-  type CutEndOptions,
-} from "./modeling/surfaces/EndCut";
-export { sweep, transportFrames, type Station, type SweepOptions } from "./modeling/surfaces/Sweep";
+export * from "./modeling/surfaces/Correspondence";
+export * from "./modeling/surfaces/EndCut";
+export * from "./modeling/surfaces/Loft";
+export * from "./modeling/surfaces/MiterFrames";
+export * from "./modeling/surfaces/SurfaceGrid";
+export * from "./modeling/surfaces/Sweep";
 
 // Brushes
-export { displacementBrush } from "./modeling/brushes/DisplacementBrush";
-export { flattenBrush } from "./modeling/brushes/FlattenBrush";
-export { noiseBrush } from "./modeling/brushes/NoiseBrush";
-export { smoothBrush } from "./modeling/brushes/SmoothBrush";
-export { spikeBrush } from "./modeling/brushes/SpikeBrush";
-export { twistBrush } from "./modeling/brushes/TwistBrush";
+export * from "./modeling/brushes/DisplacementBrush";
+export * from "./modeling/brushes/FlattenBrush";
+export * from "./modeling/brushes/NoiseBrush";
+export * from "./modeling/brushes/SmoothBrush";
+export * from "./modeling/brushes/SpikeBrush";
+export * from "./modeling/brushes/TwistBrush";
 
 //------------------------------
 //  Shapes
 //------------------------------
 
-export { ArchedSlabShape, type ArchedSlabHalf, type ArchedSlabShapeOptions } from "./shapes/ArchedSlabShape";
-export { BurstShape, type BurstShapeOptions } from "./shapes/BurstShape";
-export { ClubShape, type ClubShapeOptions } from "./shapes/ClubShape";
-export { DiamondShape, type DiamondShapeOptions } from "./shapes/DiamondShape";
-export { GearShape, type GearShapeOptions } from "./shapes/GearShape";
-export { CrossedWheelShape, type CrossedWheelShapeOptions } from "./shapes/CrossedWheelShape";
-export { InternalGearShape, type InternalGearShapeOptions } from "./shapes/InternalGearShape";
-export { RackShape, type RackShapeOptions } from "./shapes/RackShape";
-export { HeartShape, type HeartShapeOptions } from "./shapes/HeartShape";
-export { PolygonShape, type PolygonShapeOptions } from "./shapes/PolygonShape";
-export { SpadeShape, type SpadeShapeOptions } from "./shapes/SpadeShape";
-export { StarShape, type StarShapeOptions } from "./shapes/StarShape";
-export { StrapHingeShape, type StrapHingeShapeOptions } from "./shapes/StrapHingeShape";
-export {
-  WallShape,
-  openingOutline,
-  openingCutout,
-  wallOpeningTop,
-  type WallOpeningOptions,
-  type WallShapeOptions,
-} from "./shapes/WallShape";
+export * from "./shapes/ArchedSlabShape";
+export * from "./shapes/BurstShape";
+export * from "./shapes/ClubShape";
+export * from "./shapes/CrossedWheelShape";
+export * from "./shapes/DiamondShape";
+export * from "./shapes/GearShape";
+export * from "./shapes/HeartShape";
+export * from "./shapes/InternalGearShape";
+export * from "./shapes/PolygonShape";
+export * from "./shapes/RackShape";
+export * from "./shapes/SpadeShape";
+export * from "./shapes/StarShape";
+export * from "./shapes/StrapHingeShape";
+export * from "./shapes/WallShape";
 
 //------------------------------
 //  Sky
 //------------------------------
 
-export { lockToViewer } from "./sky/LockToViewer";
-export { FullMoon, type FullMoonHaloOptions, type FullMoonOptions } from "./sky/FullMoon";
-export {
-  StarField,
-  type StarBurstShapeOptions,
-  type StarFieldOptions,
-  type StarFieldOrientation,
-} from "./sky/StarField";
+export * from "./sky/FullMoon";
+export * from "./sky/LockToViewer";
+export * from "./sky/StarField";
 
 //------------------------------
 //  Textures
 //------------------------------
 
-export { createCheckerboardTexture, type CheckerboardTextureOptions } from "./textures/checkerboard";
-export {
-  createRadialGradientTexture,
-  type RadialGradientStop,
-  type RadialGradientTextureOptions,
-} from "./textures/radialGradient";
-export {
-  createLinearGradientTexture,
-  type LinearGradientStop,
-  type LinearGradientTextureOptions,
-} from "./textures/linearGradient";
+export * from "./textures/checkerboard";
+export * from "./textures/linearGradient";
+export * from "./textures/radialGradient";
 
 //------------------------------
 //  Utils
@@ -524,23 +303,8 @@ export * from "./utils/AlignToSurface";
 export * from "./utils/Center";
 export * from "./utils/ColorUtils";
 export * from "./utils/FindClosestPoint";
-
 export * from "./utils/LineEquations";
-
-export {
-  Random,
-  createRandom,
-  deriveSubSeed,
-  mulberry32,
-  randomPick,
-  randomRange,
-  splitmix32,
-  type RandomSource,
-  type RandomStream,
-} from "./utils/Random";
+export * from "./utils/Random";
 export * from "./utils/RandomNumberUtils";
 export * from "./utils/RandomTimer";
-
 export * from "./utils/SphericalGeometryUtils";
-
-export { createHewnTimberGeometry, type HewnTimberGeometryOptions } from "./geometry/timber/HewnTimberGeometry";
