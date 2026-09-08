@@ -17,7 +17,7 @@ import { ObeliskGeometry } from "../geometry/cemetery/ObeliskGeometry";
 import { ObeliskHeadstoneGeometry } from "../geometry/cemetery/ObeliskHeadstoneGeometry";
 import { RoundedHeadstoneGeometry } from "../geometry/cemetery/RoundedHeadstoneGeometry";
 import { SquareHeadstoneGeometry } from "../geometry/cemetery/SquareHeadstoneGeometry";
-import { ArchStyle } from "../shapes/ArchProfile";
+import { ArchStyle } from "../modeling/profiles/ArchProfile";
 import { createRandom } from "../utils/Random";
 
 /**

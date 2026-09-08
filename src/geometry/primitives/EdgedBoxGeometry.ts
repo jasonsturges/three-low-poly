@@ -5,8 +5,8 @@ import {
   pushTriangle,
   toBufferGeometry,
   type Vec3,
-} from "../../utils/GeometryBuffers";
-import { offsetLoop } from "../../utils/OffsetLoop";
+} from "../../modeling/mesh/GeometryBuffers";
+import { offsetLoop } from "../../modeling/profiles/OffsetLoop";
 
 /**
  * How an edge is worked.

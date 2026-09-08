@@ -1,6 +1,6 @@
 import { BufferGeometry, Quaternion, Vector3 } from "three";
-import { Direction } from "../constants/Direction";
-import { Falloff } from "../constants/Falloff";
+import { Direction } from "../../constants/Direction";
+import { Falloff } from "../../constants/Falloff";
 
 /**
  * Applies a twisting force to the vertices, rotating them around the direction defined by the target position.

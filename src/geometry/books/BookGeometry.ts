@@ -6,7 +6,7 @@ import {
   toBufferGeometry,
   type Vec2,
   type Vec3,
-} from "../../utils/GeometryBuffers";
+} from "../../modeling/mesh/GeometryBuffers";
 
 export interface BookGeometryOptions {
   /** Cover width, spine to fore-edge. Defaults to `1`. */

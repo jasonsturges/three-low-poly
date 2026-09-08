@@ -1,5 +1,5 @@
 import { BufferGeometry } from "three";
-import { createGeometryBuffers, toBufferGeometry } from "../../utils/GeometryBuffers";
+import { createGeometryBuffers, toBufferGeometry } from "../../modeling/mesh/GeometryBuffers";
 import { pushRiser, pushTread } from "./staircaseQuad";
 
 export interface StaircaseGeometryOptions {

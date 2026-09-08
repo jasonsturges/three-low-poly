@@ -1,9 +1,9 @@
 import { BoxGeometry, BufferGeometry, Vector2, Vector3 } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { miterFrames } from "../../sweep/MiterFrames";
-import { sweep } from "../../sweep/Sweep";
-import { createGeometryBuffers, pushQuad, pushTriangle, toBufferGeometry, type Vec2, type Vec3 } from "../../utils/GeometryBuffers";
-import { offsetLoop } from "../../utils/OffsetLoop";
+import { miterFrames } from "../../modeling/surfaces/MiterFrames";
+import { sweep } from "../../modeling/surfaces/Sweep";
+import { createGeometryBuffers, pushQuad, pushTriangle, toBufferGeometry, type Vec2, type Vec3 } from "../../modeling/mesh/GeometryBuffers";
+import { offsetLoop } from "../../modeling/profiles/OffsetLoop";
 
 /** One panel's aperture in the frame, before the groove is taken into account. */
 interface Opening {

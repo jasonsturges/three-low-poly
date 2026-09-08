@@ -1,5 +1,5 @@
 import { BufferGeometry } from "three";
-import { createGeometryBuffers, pushQuad, pushTriangle, toBufferGeometry, type Vec3 } from "../../utils/GeometryBuffers";
+import { createGeometryBuffers, pushQuad, pushTriangle, toBufferGeometry, type Vec3 } from "../../modeling/mesh/GeometryBuffers";
 
 export interface ObeliskGeometryOptions {
   /** Width of the shaft at its foot. Defaults to `0.5`. */

@@ -1,17 +1,15 @@
 import { BufferGeometry, Vector3 } from "three";
-import { Direction } from "../constants/Direction";
-import { Falloff } from "../constants/Falloff";
+import { Falloff } from "../../constants/Falloff";
 
 /**
- * Flattens vertices to a given plane defined by a target height or normal direction.
+ * Creates spikes or depressions centered on the target position, pushing vertices away or pulling them towards the center.
  */
-export const flattenBrush = <T extends BufferGeometry>(
+export const spikeBrush = <T extends BufferGeometry>(
   geometry: T,
   position: Vector3,
   radius: number,
-  targetHeight: number,
   strength: number,
-  direction: Vector3 = Direction.UP,
+  inward: boolean = false,
   falloffFn: (distance: number, radius: number) => number = Falloff.linear
 ): void => {
   const positions = geometry.attributes.position;
@@ -21,14 +19,14 @@ export const flattenBrush = <T extends BufferGeometry>(
     const distance = vertex.distanceTo(position);
 
     if (distance < radius) {
+      // Calculate falloff
       const falloff = falloffFn(distance, radius);
-      const influence = falloff * strength;
+      const influence = falloff * strength * (inward ? -1 : 1);
 
-      // Project vertex onto flatten plane
-      const projectedHeight = vertex.dot(direction.normalize());
-      const delta = targetHeight - projectedHeight;
+      // Move the vertex along the direction from the center
+      const direction = vertex.clone().sub(position).normalize();
+      vertex.add(direction.multiplyScalar(influence));
 
-      vertex.add(direction.clone().multiplyScalar(delta * influence));
       positions.setXYZ(i, vertex.x, vertex.y, vertex.z);
     }
   }

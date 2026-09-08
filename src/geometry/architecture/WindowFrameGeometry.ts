@@ -1,6 +1,6 @@
 import { ExtrudeGeometry, Path, Shape } from "three";
 import { openingOutline, type WallOpeningOptions } from "../../shapes/WallShape";
-import { offsetLoop } from "../../utils/OffsetLoop";
+import { offsetLoop } from "../../modeling/profiles/OffsetLoop";
 
 /** The frame's outer silhouette follows the arch to a point — a finial on an ogee. */
 const OUTER_MITER = 6;

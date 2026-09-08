@@ -39,17 +39,6 @@ export {
 } from "./animators/cameraClips";
 
 //------------------------------
-//  Brushes
-//------------------------------
-
-export { displacementBrush } from "./brushes/DisplacementBrush";
-export { flattenBrush } from "./brushes/FlattenBrush";
-export { noiseBrush } from "./brushes/NoiseBrush";
-export { smoothBrush } from "./brushes/SmoothBrush";
-export { spikeBrush } from "./brushes/SpikeBrush";
-export { twistBrush } from "./brushes/TwistBrush";
-
-//------------------------------
 //  Constants
 //------------------------------
 
@@ -377,9 +366,62 @@ export { Cyclorama, type CycloramaOptions } from "./helpers/Cyclorama";
 export { GroundGrid, type GroundGridOptions } from "./helpers/GroundGrid";
 
 //------------------------------
-//  Loft
+//  Modeling
 //------------------------------
 
+// Mesh
+export * from "./modeling/mesh/GeometryBuffers";
+export * from "./modeling/mesh/UVUtils";
+export * from "./modeling/mesh/VertexUtils";
+export { pushMiteredPrism, wallNormal, type PrismEnd } from "./modeling/mesh/MiteredPrism";
+
+// Profiles
+export {
+  archRise,
+  traceArch,
+  type ArchEnd,
+  type ArchProfileOptions,
+  type ArchStyle,
+} from "./modeling/profiles/ArchProfile";
+export {
+  moldingProfile,
+  type MoldingProfileOptions,
+  type MoldingStyle,
+} from "./modeling/profiles/MoldingProfiles";
+export { circleProfile, rectProfile } from "./modeling/profiles/Profiles";
+export {
+  surfaceProfile,
+  type SurfaceProfileOptions,
+  type SurfaceStyle,
+} from "./modeling/profiles/SurfaceProfiles";
+export * from "./modeling/profiles/OffsetLoop";
+export * from "./modeling/profiles/InterpolateCurve";
+export * from "./modeling/profiles/ParametricCurveUtils";
+export * from "./modeling/profiles/SphericalCurve";
+
+// Paths
+export { arcPath, type ArcPathOptions } from "./modeling/paths/ArcPath";
+export { curvePath } from "./modeling/paths/CurvePath";
+export { helixPath, type HelixPathOptions } from "./modeling/paths/HelixPath";
+export { linePath } from "./modeling/paths/LinePath";
+export { type PathPoint } from "./modeling/paths/PathPoint";
+export { joinPaths, reversePath, transformPath } from "./modeling/paths/PathUtils";
+export { spiralPath, type SpiralPathOptions } from "./modeling/paths/SpiralPath";
+export {
+  measurePath,
+  type MeasurePathOptions,
+  type PathMeasure,
+  pointAtDistance,
+  slicePath,
+} from "./modeling/paths/PathMeasure";
+export {
+  type PathRepeat,
+  repeatAlongPath,
+  type RepeatAlongPathOptions,
+  type RepeatAnchor,
+} from "./modeling/paths/RepeatAlongPath";
+
+// Surfaces
 export {
   alignRings,
   bestRingOffset,
@@ -388,21 +430,34 @@ export {
   resampleLoop,
   type ResampleMethod,
   rotateRing,
-} from "./loft/Correspondence";
-export { loft, type LoftOptions } from "./loft/Loft";
-export { surfaceGrid, type SurfaceGridOptions } from "./loft/SurfaceGrid";
+} from "./modeling/surfaces/Correspondence";
+export { loft, type LoftOptions } from "./modeling/surfaces/Loft";
+export { surfaceGrid, type SurfaceGridOptions } from "./modeling/surfaces/SurfaceGrid";
+export {
+  miterCuts,
+  type MiterCutsOptions,
+  miterFrames,
+  type MiterFramesOptions,
+} from "./modeling/surfaces/MiterFrames";
+export {
+  cutEnd,
+  cutEndGeometry,
+  cutSegment,
+  miterPlane,
+  type SegmentBounds,
+  type CutPlane,
+  type CutPoint,
+  type CutEndOptions,
+} from "./modeling/surfaces/EndCut";
+export { sweep, transportFrames, type Station, type SweepOptions } from "./modeling/surfaces/Sweep";
 
-//------------------------------
-//  Paths
-//------------------------------
-
-export { arcPath, type ArcPathOptions } from "./paths/ArcPath";
-export { curvePath } from "./paths/CurvePath";
-export { helixPath, type HelixPathOptions } from "./paths/HelixPath";
-export { linePath } from "./paths/LinePath";
-export { type PathPoint } from "./paths/PathPoint";
-export { joinPaths, reversePath, transformPath } from "./paths/PathUtils";
-export { spiralPath, type SpiralPathOptions } from "./paths/SpiralPath";
+// Brushes
+export { displacementBrush } from "./modeling/brushes/DisplacementBrush";
+export { flattenBrush } from "./modeling/brushes/FlattenBrush";
+export { noiseBrush } from "./modeling/brushes/NoiseBrush";
+export { smoothBrush } from "./modeling/brushes/SmoothBrush";
+export { spikeBrush } from "./modeling/brushes/SpikeBrush";
+export { twistBrush } from "./modeling/brushes/TwistBrush";
 
 //------------------------------
 //  Shapes
@@ -429,13 +484,6 @@ export {
   type WallOpeningOptions,
   type WallShapeOptions,
 } from "./shapes/WallShape";
-export {
-  archRise,
-  traceArch,
-  type ArchEnd,
-  type ArchProfileOptions,
-  type ArchStyle,
-} from "./shapes/ArchProfile";
 
 //------------------------------
 //  Sky
@@ -448,52 +496,6 @@ export {
   type StarFieldOptions,
   type StarFieldOrientation,
 } from "./sky/StarField";
-
-//------------------------------
-//  Sweep
-//------------------------------
-
-export {
-  miterCuts,
-  type MiterCutsOptions,
-  miterFrames,
-  type MiterFramesOptions,
-} from "./sweep/MiterFrames";
-export {
-  moldingProfile,
-  type MoldingProfileOptions,
-  type MoldingStyle,
-} from "./sweep/MoldingProfiles";
-export {
-  measurePath,
-  type MeasurePathOptions,
-  type PathMeasure,
-  pointAtDistance,
-  slicePath,
-} from "./sweep/PathMeasure";
-export {
-  cutEnd,
-  cutEndGeometry,
-  cutSegment,
-  miterPlane,
-  type SegmentBounds,
-  type CutPlane,
-  type CutPoint,
-  type CutEndOptions,
-} from "./sweep/EndCut";
-export { circleProfile, rectProfile } from "./sweep/Profiles";
-export {
-  type PathRepeat,
-  repeatAlongPath,
-  type RepeatAlongPathOptions,
-  type RepeatAnchor,
-} from "./sweep/RepeatAlongPath";
-export {
-  surfaceProfile,
-  type SurfaceProfileOptions,
-  type SurfaceStyle,
-} from "./sweep/SurfaceProfiles";
-export { sweep, transportFrames, type Station, type SweepOptions } from "./sweep/Sweep";
 
 //------------------------------
 //  Textures
@@ -521,12 +523,10 @@ export * from "./utils/AlignToSurface";
 export * from "./utils/Center";
 export * from "./utils/ColorUtils";
 export * from "./utils/FindClosestPoint";
-export * from "./utils/GeometryBuffers";
-export * from "./utils/OffsetLoop";
-export * from "./utils/InterpolateCurve";
+
 export * from "./utils/LineEquations";
 export { lockToViewer } from "./utils/LockToViewer";
-export * from "./utils/ParametricCurveUtils";
+
 export {
   Random,
   createRandom,
@@ -540,11 +540,7 @@ export {
 } from "./utils/Random";
 export * from "./utils/RandomNumberUtils";
 export * from "./utils/RandomTimer";
-export * from "./utils/SphericalCurve";
-export * from "./utils/SphericalGeometryUtils";
-export * from "./utils/UVUtils";
-export * from "./utils/VertexUtils";
 
-export { pushMiteredPrism, wallNormal, type PrismEnd } from "./geometry/primitives/MiteredPrism";
+export * from "./utils/SphericalGeometryUtils";
 
 export { createHewnTimberGeometry, type HewnTimberGeometryOptions } from "./geometry/timber/HewnTimberGeometry";

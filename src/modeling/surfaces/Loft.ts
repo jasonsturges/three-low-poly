@@ -6,7 +6,7 @@ import {
   toBufferGeometry,
   type GeometryBuffers,
   type Vec3,
-} from "../utils/GeometryBuffers";
+} from "../mesh/GeometryBuffers";
 
 export interface LoftOptions {
   /**

@@ -1,5 +1,5 @@
 import { Vector2 } from "three";
-import { thetaLengthForRadius } from "./SphericalGeometryUtils";
+import { thetaLengthForRadius } from "../../utils/SphericalGeometryUtils";
 
 /**
  * Generates spherical curve profile points, for use with geometry.

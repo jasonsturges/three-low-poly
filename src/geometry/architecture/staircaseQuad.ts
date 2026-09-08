@@ -1,4 +1,4 @@
-import { pushQuad, UNIT_QUAD_UV, type GeometryBuffers } from "../../utils/GeometryBuffers";
+import { pushQuad, UNIT_QUAD_UV, type GeometryBuffers } from "../../modeling/mesh/GeometryBuffers";
 
 /**
  * Stair vocabulary over the {@link pushQuad} primitive — a riser, a tread, a landing.

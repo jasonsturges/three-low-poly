@@ -1,5 +1,5 @@
 import { BufferGeometry, Vector3 } from "three";
-import { surfaceGrid } from "../../loft/SurfaceGrid";
+import { surfaceGrid } from "../../modeling/surfaces/SurfaceGrid";
 import { samplesPerPleat, solveAmplitude, type PleatShape } from "./pleatWave";
 
 /**

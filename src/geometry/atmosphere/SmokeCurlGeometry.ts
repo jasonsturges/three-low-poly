@@ -1,7 +1,7 @@
 import { BufferGeometry, Vector3 } from "three";
-import type { PathPoint } from "../../paths/PathPoint";
-import { circleProfile } from "../../sweep/Profiles";
-import { sweep, transportFrames } from "../../sweep/Sweep";
+import type { PathPoint } from "../../modeling/paths/PathPoint";
+import { circleProfile } from "../../modeling/profiles/Profiles";
+import { sweep, transportFrames } from "../../modeling/surfaces/Sweep";
 
 export interface SmokeCurlGeometryOptions {
   /** How far the curl swings out from its axis by the top. Defaults to `0.7`. */

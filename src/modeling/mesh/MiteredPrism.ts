@@ -1,5 +1,5 @@
 import { Vector2 } from "three";
-import { type GeometryBuffers, pushQuad, type Vec3 } from "../../utils/GeometryBuffers";
+import { type GeometryBuffers, pushQuad, type Vec3 } from "./GeometryBuffers";
 
 /** Where a member's end lands, and how it is cut there. */
 export interface PrismEnd {

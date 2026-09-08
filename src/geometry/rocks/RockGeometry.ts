@@ -1,6 +1,6 @@
 import { BufferGeometry, SphereGeometry } from "three";
 import { Axis } from "../../constants/Axis";
-import { randomTransformVertices } from "../../utils/VertexUtils";
+import { randomTransformVertices } from "../../modeling/mesh/VertexUtils";
 
 export interface RockGeometryOptions {
   /** Base sphere radius before vertex noise. Defaults to `1`. */

@@ -8,7 +8,7 @@ import {
   type Material,
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { createGeometryBuffers, pushQuad, pushTriangle, toBufferGeometry, type Vec3 } from "../utils/GeometryBuffers";
+import { createGeometryBuffers, pushQuad, pushTriangle, toBufferGeometry, type Vec3 } from "../modeling/mesh/GeometryBuffers";
 import { mulberry32 } from "../utils/Random";
 import { layPlankFloor, type PlankFloorLayoutOptions } from "./PlankFloorLayout";
 

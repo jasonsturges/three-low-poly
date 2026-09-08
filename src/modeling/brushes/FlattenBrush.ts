@@ -1,34 +1,34 @@
 import { BufferGeometry, Vector3 } from "three";
-import { Direction } from "../constants/Direction";
-import { Falloff } from "../constants/Falloff";
+import { Direction } from "../../constants/Direction";
+import { Falloff } from "../../constants/Falloff";
 
 /**
- * Moves vertices within a specified radius around a target position along a given direction
+ * Flattens vertices to a given plane defined by a target height or normal direction.
  */
-export const displacementBrush = <T extends BufferGeometry>(
+export const flattenBrush = <T extends BufferGeometry>(
   geometry: T,
   position: Vector3,
   radius: number,
+  targetHeight: number,
   strength: number,
   direction: Vector3 = Direction.UP,
-  falloffFn: (distance: number, radius: number) => number = Falloff.linear,
+  falloffFn: (distance: number, radius: number) => number = Falloff.linear
 ): void => {
   const positions = geometry.attributes.position;
   for (let i = 0; i < positions.count; i++) {
     const vertex = new Vector3();
     vertex.fromBufferAttribute(positions, i);
-
     const distance = vertex.distanceTo(position);
 
     if (distance < radius) {
-      // Calculate falloff
       const falloff = falloffFn(distance, radius);
       const influence = falloff * strength;
 
-      // Apply the effect (e.g., pulling the vertex upwards)
-      vertex.add(direction.clone().multiplyScalar(influence));
+      // Project vertex onto flatten plane
+      const projectedHeight = vertex.dot(direction.normalize());
+      const delta = targetHeight - projectedHeight;
 
-      // Update the vertex position
+      vertex.add(direction.clone().multiplyScalar(delta * influence));
       positions.setXYZ(i, vertex.x, vertex.y, vertex.z);
     }
   }

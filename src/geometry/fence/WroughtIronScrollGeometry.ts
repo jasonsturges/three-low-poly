@@ -1,7 +1,7 @@
 import { BufferGeometry } from "three";
-import { spiralPath } from "../../paths/SpiralPath";
-import { rectProfile } from "../../sweep/Profiles";
-import { sweep, transportFrames } from "../../sweep/Sweep";
+import { spiralPath } from "../../modeling/paths/SpiralPath";
+import { rectProfile } from "../../modeling/profiles/Profiles";
+import { sweep, transportFrames } from "../../modeling/surfaces/Sweep";
 
 export interface WroughtIronScrollGeometryOptions {
   /** Radius at the open end, before the bar winds in. Defaults to `1.4`. */

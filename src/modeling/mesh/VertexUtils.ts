@@ -1,4 +1,4 @@
-import { Axis } from "../constants/Axis";
+import { Axis } from "../../constants/Axis";
 import { BufferGeometry, Vector3 } from "three";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 

@@ -1,4 +1,4 @@
-import { ParametricCurve } from "../constants/ParametricCurve";
+import { ParametricCurve } from "../../constants/ParametricCurve";
 import { Vector2 } from "three";
 
 /**

@@ -1,5 +1,5 @@
 import { Shape } from "three";
-import { ArchStyle, archRise, traceArch } from "./ArchProfile";
+import { ArchStyle, archRise, traceArch } from "../modeling/profiles/ArchProfile";
 
 /** One side of a slab, split down the middle — see {@link ArchedSlabShapeOptions.half}. */
 export type ArchedSlabHalf = "left" | "right";

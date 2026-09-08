@@ -1,8 +1,8 @@
 import { BufferGeometry, Vector3 } from "three";
-import { miterFrames } from "../../sweep/MiterFrames";
-import { moldingProfile, type MoldingStyle } from "../../sweep/MoldingProfiles";
-import { sweep } from "../../sweep/Sweep";
-import type { Vec2 } from "../../utils/GeometryBuffers";
+import { miterFrames } from "../../modeling/surfaces/MiterFrames";
+import { moldingProfile, type MoldingStyle } from "../../modeling/profiles/MoldingProfiles";
+import { sweep } from "../../modeling/surfaces/Sweep";
+import type { Vec2 } from "../../modeling/mesh/GeometryBuffers";
 
 /** Which corner the molding sits in, and therefore which way its face runs. */
 export type MoldingRun = "crown" | "base";

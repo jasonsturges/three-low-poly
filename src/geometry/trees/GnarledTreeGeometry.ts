@@ -1,8 +1,8 @@
 import { BufferGeometry, CatmullRomCurve3, Vector3 } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import type { PathPoint } from "../../paths/PathPoint";
-import { circleProfile } from "../../sweep/Profiles";
-import { sweep, transportFrames } from "../../sweep/Sweep";
+import type { PathPoint } from "../../modeling/paths/PathPoint";
+import { circleProfile } from "../../modeling/profiles/Profiles";
+import { sweep, transportFrames } from "../../modeling/surfaces/Sweep";
 import { createRandom, type RandomSource } from "../../utils/Random";
 
 const UP = new Vector3(0, 1, 0);

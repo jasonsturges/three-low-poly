@@ -1,6 +1,6 @@
 import { Shape, ShapeGeometry, Vector2 } from "three";
 import { openingOutline, type WallOpeningOptions } from "../../shapes/WallShape";
-import { offsetLoop } from "../../utils/OffsetLoop";
+import { offsetLoop } from "../../modeling/profiles/OffsetLoop";
 
 export interface PaneGeometryOptions {
   /**

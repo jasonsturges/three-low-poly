@@ -6,7 +6,7 @@ import {
   pushTriangle,
   toBufferGeometry,
   type Vec3,
-} from "../../utils/GeometryBuffers";
+} from "../../modeling/mesh/GeometryBuffers";
 
 export interface BevelGearGeometryOptions extends GearShapeOptions {
   /**

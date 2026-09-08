@@ -1,7 +1,7 @@
 import { BufferGeometry, Vector2, Vector3 } from "three";
-import { linePath } from "../../paths/LinePath";
+import { linePath } from "../../modeling/paths/LinePath";
 import { openingOutline, type WallOpeningOptions } from "../../shapes/WallShape";
-import { miterFrames } from "../../sweep/MiterFrames";
+import { miterFrames } from "../../modeling/surfaces/MiterFrames";
 import {
   createGeometryBuffers,
   pushQuad,
@@ -9,7 +9,7 @@ import {
   toBufferGeometry,
   type Vec2,
   type Vec3,
-} from "../../utils/GeometryBuffers";
+} from "../../modeling/mesh/GeometryBuffers";
 
 /**
  * Bars spanning an opening, each cut into its boundary at BOTH ends.

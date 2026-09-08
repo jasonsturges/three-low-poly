@@ -1,5 +1,5 @@
 import { Path, Shape } from "three";
-import { ArchStyle, archRise, traceArch } from "./ArchProfile";
+import { ArchStyle, archRise, traceArch } from "../modeling/profiles/ArchProfile";
 
 /** An opening in a wall — a doorway or a window. The same description; a different way in. */
 export interface WallOpeningOptions {

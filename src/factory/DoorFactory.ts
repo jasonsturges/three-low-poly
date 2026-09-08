@@ -12,7 +12,7 @@ import {
   SphereGeometry,
 } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { ArchStyle } from "../shapes/ArchProfile";
+import { ArchStyle } from "../modeling/profiles/ArchProfile";
 import { ArchedSlabHalf, ArchedSlabShape } from "../shapes/ArchedSlabShape";
 import { ClubShape } from "../shapes/ClubShape";
 import { SpadeShape } from "../shapes/SpadeShape";

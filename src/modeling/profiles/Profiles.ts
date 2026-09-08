@@ -1,4 +1,4 @@
-import type { Vec2 } from "../utils/GeometryBuffers";
+import type { Vec2 } from "../mesh/GeometryBuffers";
 
 /**
  * Cross-sections to carry along a path.

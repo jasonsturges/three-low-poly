@@ -1,8 +1,8 @@
 import { BufferGeometry } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import type { WallOpeningOptions } from "../../shapes/WallShape";
-import { circleProfile } from "../../sweep/Profiles";
-import type { Vec2 } from "../../utils/GeometryBuffers";
+import { circleProfile } from "../../modeling/profiles/Profiles";
+import type { Vec2 } from "../../modeling/mesh/GeometryBuffers";
 import { buildLatticeBars, openingBoundary } from "./latticeBars";
 
 export interface DiamondLatticeGeometryOptions {

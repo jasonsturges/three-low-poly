@@ -1,9 +1,9 @@
 import { BufferGeometry, Path, Vector3 } from "three";
-import type { PathPoint } from "../../paths/PathPoint";
-import { ArchStyle, archRise, traceArch } from "../../shapes/ArchProfile";
-import { circleProfile, rectProfile } from "../../sweep/Profiles";
-import { sweep, transportFrames } from "../../sweep/Sweep";
-import type { Vec2 } from "../../utils/GeometryBuffers";
+import type { PathPoint } from "../../modeling/paths/PathPoint";
+import { ArchStyle, archRise, traceArch } from "../../modeling/profiles/ArchProfile";
+import { circleProfile, rectProfile } from "../../modeling/profiles/Profiles";
+import { sweep, transportFrames } from "../../modeling/surfaces/Sweep";
+import type { Vec2 } from "../../modeling/mesh/GeometryBuffers";
 
 export interface ArchGeometryOptions {
   /** Opening width, outer leg to outer leg. Defaults to `4`. */

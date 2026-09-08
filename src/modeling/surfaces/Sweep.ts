@@ -7,7 +7,7 @@ import {
   toBufferGeometry,
   type Vec2,
   type Vec3,
-} from "../utils/GeometryBuffers";
+} from "../mesh/GeometryBuffers";
 
 /** A station on the path: where we are, how the cross-section is oriented there, and how big it is. */
 export interface Station {

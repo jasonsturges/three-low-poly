@@ -1,10 +1,10 @@
 import { BufferGeometry, ConeGeometry, CylinderGeometry, TorusGeometry, Vector3 } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { linePath } from "../../paths/LinePath";
-import { circleProfile } from "../../sweep/Profiles";
-import { miterFrames } from "../../sweep/MiterFrames";
-import { sweep } from "../../sweep/Sweep";
-import { createGeometryBuffers, pushQuad, toBufferGeometry, type Vec3 } from "../../utils/GeometryBuffers";
+import { linePath } from "../../modeling/paths/LinePath";
+import { circleProfile } from "../../modeling/profiles/Profiles";
+import { miterFrames } from "../../modeling/surfaces/MiterFrames";
+import { sweep } from "../../modeling/surfaces/Sweep";
+import { createGeometryBuffers, pushQuad, toBufferGeometry, type Vec3 } from "../../modeling/mesh/GeometryBuffers";
 
 const UP = /*@__PURE__*/ new Vector3(0, 1, 0);
 /** The cage's own axis — the glass panes face ±X and ±Z, so a square bar squares up to this. */

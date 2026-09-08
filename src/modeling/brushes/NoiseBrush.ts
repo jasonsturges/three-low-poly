@@ -1,6 +1,6 @@
 import { BufferGeometry, MathUtils, Vector3 } from "three";
-import { Direction } from "../constants/Direction";
-import { Falloff } from "../constants/Falloff";
+import { Direction } from "../../constants/Direction";
+import { Falloff } from "../../constants/Falloff";
 
 /**
  * Adds random noise to the vertices within the specified radius to create a more rugged or natural look.
