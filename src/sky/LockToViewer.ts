@@ -7,6 +7,8 @@ const viewerPosition = new Vector3();
  * be approached, dollied toward, or placed behind anything. Call once at construction; the layer
  * then needs nothing per frame, so consumers only ever `scene.add(layer)`.
  *
+ * This follows camera translation only; it does not rotate the layer to face the camera.
+ *
  * Each renderable's `onBeforeRender` re-snaps the layer to the active camera. The renderer invokes
  * that hook before it derives the object's model-view matrix, so the move lands in the same frame.
  * Working on the container rather than in a shader is what makes this safe for `InstancedMesh`:

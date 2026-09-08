@@ -1,12 +1,17 @@
 import { Mesh, Vector3 } from "three";
 
 /**
- * Get the closest point on a mesh to a specified point.
+ * Select the nearest stored vertex using geometry-local distances, then return it in world space.
  *
- * Example usage:
+ * `point` must be in the mesh geometry's local coordinate space. This searches the position
+ * attribute only; it does not find the closest point on triangle faces or edges. Under nonuniform
+ * world scaling, the selected vertex need not be the nearest vertex by world-space distance.
+ * An empty position attribute returns the mesh's local origin transformed to world space.
+ *
+ * @example
  * ```ts
- * const point = new Vector3(5, 2, 1); // The point to check against the mesh
- * const closestPoint = getClosestPointOnMesh(point, targetMesh);
+ * const localPoint = new Vector3(5, 2, 1);
+ * const worldVertex = findClosestPoint(localPoint, targetMesh);
  * ```
  */
 export function findClosestPoint(point: Vector3, mesh: Mesh) {

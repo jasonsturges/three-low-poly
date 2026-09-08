@@ -10,7 +10,7 @@ import {
   Vector3,
 } from "three";
 import { createRadialGradientTexture, type RadialGradientStop } from "../textures/radialGradient";
-import { lockToViewer } from "../utils/LockToViewer";
+import { lockToViewer } from "./LockToViewer";
 
 /** Cool blue-white haze: hot core, quick falloff, long faint tail. */
 const DEFAULT_HALO_STOPS: RadialGradientStop[] = [

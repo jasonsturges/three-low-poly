@@ -489,6 +489,7 @@ export {
 //  Sky
 //------------------------------
 
+export { lockToViewer } from "./sky/LockToViewer";
 export { FullMoon, type FullMoonHaloOptions, type FullMoonOptions } from "./sky/FullMoon";
 export {
   StarField,
@@ -525,7 +526,6 @@ export * from "./utils/ColorUtils";
 export * from "./utils/FindClosestPoint";
 
 export * from "./utils/LineEquations";
-export { lockToViewer } from "./utils/LockToViewer";
 
 export {
   Random,

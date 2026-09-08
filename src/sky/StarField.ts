@@ -16,7 +16,7 @@ import {
 import { instancedBufferAttribute, instancedDynamicBufferAttribute } from "three/tsl";
 import { PointsNodeMaterial } from "three/webgpu";
 import { BurstGeometry, type BurstGeometryOptions } from "../geometry/shapes/BurstGeometry";
-import { lockToViewer } from "../utils/LockToViewer";
+import { lockToViewer } from "./LockToViewer";
 
 /** How each star is turned to face the viewer. */
 export type StarFieldOrientation = "points" | "radial";
