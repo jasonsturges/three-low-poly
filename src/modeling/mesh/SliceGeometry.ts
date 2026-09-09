@@ -1,6 +1,17 @@
 import { Box3, BufferGeometry, Float32BufferAttribute, Plane, ShapeUtils, Vector2, Vector3 } from "three";
 
+export interface SliceCapUVOptions {
+  /** Units keeps planar distances; fit maps the combined cap bounds to 0–1. Default units. */
+  mode?: "units" | "fit";
+  /** Positive source units per repeat in units mode. Default 1. */
+  unitsPerRepeat?: number;
+  /** Rotation in the cap plane, in radians. Default 0. */
+  rotation?: number;
+  offset?: Vector2;
+}
 export interface SliceGeometryOptions {
+  /** Only new caps; both halves share the same mapping. Existing UVs are interpolated unchanged. */
+  capUV?: SliceCapUVOptions;
   /** Seal both cut surfaces. Defaults to true. */
   cap?: boolean;
   /** Relative to the source bounding-box diagonal. Default 1e-7; range (0, 0.001]. */
@@ -149,10 +160,20 @@ function validateContours(loops: Vector2[][], epsilon: number): void {
 export function sliceGeometry(
   source: BufferGeometry,
   cuttingPlane: Plane,
-  { cap = true, tolerance = 1e-7 }: SliceGeometryOptions = {},
+  { cap = true, tolerance = 1e-7, capUV = {} }: SliceGeometryOptions = {},
 ): SliceGeometryResult {
   if (!Number.isFinite(tolerance) || tolerance <= 0 || tolerance > 1e-3)
     throw new RangeError("sliceGeometry: tolerance must be in (0, 0.001].");
+  const uvMode = capUV.mode ?? "units",
+    uvUnits = capUV.unitsPerRepeat ?? 1,
+    uvRotation = capUV.rotation ?? 0,
+    uvOffset = capUV.offset ?? new Vector2();
+  if (
+    !["units", "fit"].includes(uvMode) ||
+    !(Number.isFinite(uvUnits) && uvUnits > 0) ||
+    ![uvRotation, uvOffset.x, uvOffset.y].every(Number.isFinite)
+  )
+    throw new RangeError("sliceGeometry: invalid cap UV options.");
   validateAttributes(source);
   const position = source.getAttribute("position"),
     normals = source.getAttribute("normal"),
@@ -399,6 +420,32 @@ export function sliceGeometry(
         }
       }
     });
+  const capCoords = halves.flatMap((faces) =>
+    faces.filter((f) => f.material === capMaterialIndex).flatMap((f) => f.v.map((c) => c.uv)),
+  );
+  const cosine = Math.cos(uvRotation),
+    sine = Math.sin(uvRotation);
+  let minU = Infinity,
+    minV = Infinity,
+    maxU = -Infinity,
+    maxV = -Infinity;
+  for (const uv of capCoords) {
+    const x = uv.x,
+      y = uv.y;
+    uv.set(x * cosine - y * sine, x * sine + y * cosine);
+    minU = Math.min(minU, uv.x);
+    minV = Math.min(minV, uv.y);
+    maxU = Math.max(maxU, uv.x);
+    maxV = Math.max(maxV, uv.y);
+  }
+  for (const uv of capCoords) {
+    uv.set(
+      uvMode === "fit" ? (uv.x - minU) / (maxU - minU || 1) : uv.x / uvUnits,
+      uvMode === "fit" ? (uv.y - minV) / (maxV - minV || 1) : uv.y / uvUnits,
+    ).add(uvOffset);
+    if (![uv.x, uv.y].every((v) => Number.isFinite(Math.fround(v))))
+      throw new RangeError("sliceGeometry: cap UVs exceed Float32 range.");
+  }
   const build = (faces: Face[]) => {
     const geometry = new BufferGeometry(),
       p: number[] = [],
