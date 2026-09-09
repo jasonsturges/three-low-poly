@@ -9,12 +9,11 @@ import {
   LineSegments,
   Mesh,
   MeshStandardMaterial,
-  Plane,
   Vector3,
   WireframeGeometry,
 } from "three";
 import { ConvexGeometry } from "three/addons/geometries/ConvexGeometry.js";
-import { inspectGeometry, sliceGeometry } from "three-low-poly";
+import { convexEdges, chamferConvexGeometry } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
 
@@ -24,7 +23,7 @@ export const meta = {
     "STUDY — select an edge, an adjacent pair, or a corner on a convex mesh. A plane clips each selected edge to create a one-segment chamfer. Width is setback measured along each adjacent face. Blue surfaces are retained source faces; gold surfaces are new chamfers. Adjacent cuts meet through plane intersections; they do not produce the spherical corners of Convex Bevel. Selection refers to the original source edges, with coplanar triangle diagonals excluded. Closed-mesh inspection runs on the result. This is a convex planar experiment, not selective rounded beveling or concave mesh editing. Original tools remain unchanged.",
 };
 export type SelectiveShape = "Box" | "Wedge";
-export type EdgeSelection = "Single edge" | "Adjacent pair" | "Corner" | "All edges";
+export type EdgeSelection = "Single edge" | "Adjacent pair" | "Corner" | "All edges" | "Angle threshold";
 export function selectiveSource(shape: SelectiveShape): BufferGeometry {
   const source =
     shape === "Box"
@@ -41,73 +40,36 @@ export function selectiveSource(shape: SelectiveShape): BufferGeometry {
   source.addGroup(0, source.index?.count ?? source.getAttribute("position").count, 0);
   return source;
 }
-export function selectiveEdges(source: BufferGeometry) {
-  const r = inspectGeometry(source);
-  if (r.components.length !== 1 || !r.components[0].closed || !(r.components[0].signedVolume! > 0))
-    throw new Error("Expected one outward closed solid.");
-  const map = new Map<string, { a: number; b: number; normals: Vector3[] }>();
-  for (const tri of r.triangles) {
-    const [a, b, c] = tri.map((i) => r.points[i]),
-      n = b.clone().sub(a).cross(c.clone().sub(a)).normalize();
-    if (r.points.some((p) => p.clone().sub(a).dot(n) > r.tolerance * 4)) throw new Error("This study requires a convex source.");
-    for (let k = 0; k < 3; k++) {
-      const a = Math.min(tri[k], tri[(k + 1) % 3]),
-        b = Math.max(tri[k], tri[(k + 1) % 3]),
-        key = `${a},${b}`;
-      const e = map.get(key) ?? { a, b, normals: [] };
-      e.normals.push(n);
-      map.set(key, e);
-    }
-  }
-  return {
-    points: r.points,
-    edges: [...map.values()].filter((e) => e.normals.length === 2 && e.normals[0].dot(e.normals[1]) < 1 - 1e-6),
-  };
-}
-export function selectiveBevelStudy(source: BufferGeometry, width: number, selection: EdgeSelection, edgeIndex: number) {
-  if (!Number.isFinite(width) || width < 0) throw new Error("Width must be nonnegative.");
-  const topology = selectiveEdges(source),
-    { edges, points } = topology;
-  if (!Number.isInteger(edgeIndex) || !edges[edgeIndex]) throw new Error("Invalid edge ID.");
-  const picked = edges[edgeIndex],
-    incident = edges
-      .map((e, i) => ({ e, i }))
-      .filter(({ e }) => e.a === picked.a || e.b === picked.a)
-      .map(({ i }) => i);
-  const selected =
-    selection === "All edges"
-      ? edges.map((_, i) => i)
-      : selection === "Corner"
-        ? incident
-        : selection === "Adjacent pair"
-          ? [edgeIndex, incident.find((i) => i !== edgeIndex)!]
-          : [edgeIndex];
-  let geometry = source.clone();
-  try {
-    if (width > 0)
-      for (const id of selected) {
-        const e = edges[id],
-          dot = e.normals[0].dot(e.normals[1]),
-          normal = e.normals[0].clone().add(e.normals[1]).normalize();
-        const setback = width * Math.sqrt((1 - dot) / 2);
-        const cut = sliceGeometry(geometry, new Plane(normal, -normal.dot(points[e.a]) + setback));
-        cut.positive.dispose();
-        geometry.dispose();
-        geometry = cut.negative;
-        if (!geometry.getAttribute("position").count) throw new Error("Width consumes the solid; reduce it.");
-      }
-    // Retained face groups stay blue; every new clipping cap uses the shared chamfer material.
-    geometry.groups.forEach((g) => {
-      if (g.materialIndex !== 0) g.materialIndex = 1;
-    });
-    const report = inspectGeometry(geometry);
-    if (report.components.length !== 1 || !report.components[0].closed || !(report.components[0].signedVolume! > 0))
-      throw new Error("Result failed closed-solid inspection.");
-    return { geometry, report, selected, ...topology };
-  } catch (error) {
-    geometry.dispose();
-    throw error;
-  }
+/** Presentation presets translate to explicit SDK edge IDs. */
+export function selectiveBevelStudy(
+  source: BufferGeometry,
+  width: number,
+  selection: EdgeSelection,
+  edgeIndex: number,
+  angle = 0,
+) {
+  const topology = convexEdges(source),
+    { edges } = topology;
+  const picked = edges[edgeIndex];
+  if (!picked) throw new Error("Invalid edge ID.");
+  const incident = edges
+    .map((e, i) => ({ e, i }))
+    .filter(({ e }) => e.a === picked.a || e.b === picked.a)
+    .map(({ i }) => i);
+  const edgeIds =
+    selection === "Angle threshold"
+      ? edges
+          .map((e, i) => ({ e, i }))
+          .filter(({ e }) => e.angle >= angle)
+          .map(({ i }) => i)
+      : selection === "All edges"
+        ? edges.map((_, i) => i)
+        : selection === "Corner"
+          ? incident
+          : selection === "Adjacent pair"
+            ? [edgeIndex, incident.find((i) => i !== edgeIndex)!]
+            : [edgeIndex];
+  return chamferConvexGeometry(source, { width, edgeIds });
 }
 export default function (container: HTMLElement) {
   const handle = createScene(container, { background: 0x161a21, cameraPosition: [3, 2.5, 4] });
@@ -127,6 +89,7 @@ export default function (container: HTMLElement) {
     selection: "Single edge" as EdgeSelection,
     edge: 0,
     width: 0.2,
+    angle: 60,
     original: true,
     selected: true,
     wireframe: false,
@@ -164,7 +127,7 @@ export default function (container: HTMLElement) {
     clear();
     const source = selectiveSource(params.shape);
     try {
-      const result = selectiveBevelStudy(source, params.width, params.selection, params.edge);
+      const result = selectiveBevelStudy(source, params.width, params.selection, params.edge, (params.angle * Math.PI) / 180);
       stage.add(new Mesh(result.geometry, materials));
       if (params.wireframe) stage.add(new LineSegments(new WireframeGeometry(result.geometry), wire));
       const lines = (ids: number[], material: LineBasicMaterial) =>
@@ -195,14 +158,18 @@ export default function (container: HTMLElement) {
     .onChange(() => {
       params.edge = 0;
       const s = selectiveSource(params.shape);
-      edgeControl.max(selectiveEdges(s).edges.length - 1);
+      edgeControl.max(convexEdges(s).edges.length - 1);
       s.dispose();
       edgeControl.updateDisplay();
       rebuild();
       frame();
     });
-  gui.add(params, "selection", ["Single edge", "Adjacent pair", "Corner", "All edges"]).name("Selection").onChange(rebuild);
+  gui
+    .add(params, "selection", ["Single edge", "Adjacent pair", "Corner", "All edges", "Angle threshold"])
+    .name("Selection")
+    .onChange(rebuild);
   const edgeControl = gui.add(params, "edge", 0, 11, 1).name("Original edge ID").onChange(rebuild);
+  gui.add(params, "angle", 0, 180, 1).name("Min normal angle (deg)").onChange(rebuild);
   gui.add(params, "width", 0, 0.4, 0.01).name("Chamfer width").onChange(rebuild);
   const view = gui.addFolder("Inspect — single sided");
   view.add(params, "original").name("Original edges").onChange(rebuild);

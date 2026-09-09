@@ -242,6 +242,7 @@ export * from "./helpers/GroundGrid";
 // Mesh
 export * from "./modeling/deformation/BendGeometry";
 export * from "./modeling/mesh/BevelConvexGeometry";
+export * from "./modeling/mesh/ChamferConvexGeometry";
 export * from "./modeling/mesh/GeometryBuffers";
 export * from "./modeling/mesh/InspectGeometry";
 export * from "./modeling/mesh/MiteredPrism";
