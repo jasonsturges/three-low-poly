@@ -142,6 +142,7 @@ export * from "./geometry/fence/WroughtIronPostGeometry";
 export * from "./geometry/fence/WroughtIronScrollGeometry";
 
 // Flora
+export * from "./geometry/flora/JackOLanternGeometry";
 export * from "./geometry/flora/PumpkinGeometry";
 
 // Foliage
@@ -241,6 +242,7 @@ export * from "./helpers/GroundGrid";
 // Mesh
 export * from "./modeling/mesh/GeometryBuffers";
 export * from "./modeling/mesh/MiteredPrism";
+export * from "./modeling/mesh/TriangulateRegion";
 export * from "./modeling/mesh/UVUtils";
 export * from "./modeling/mesh/VertexUtils";
 
