@@ -377,6 +377,27 @@ export function sliceGeometry(
         }
         return ids;
       });
+      // Restore only points removed from this actual contour segment. Searching every contour
+      // point near every triangulation edge can pull unrelated points onto an internal diagonal,
+      // producing overlapping cap fans after repeated cuts.
+      const boundaryChains = new Map<string, number[]>();
+      let loopBase = 0;
+      [contour, ...holes].forEach((loop, loopIndex) => {
+        const ids = simplified[loopIndex];
+        for (let k = 0; k < ids.length; k++) {
+          const a = ids[k],
+            b = ids[(k + 1) % ids.length],
+            chain = [a];
+          let cursor = (a - loopBase + 1) % loop.length;
+          while (cursor + loopBase !== b) {
+            chain.push(cursor + loopBase);
+            cursor = (cursor + 1) % loop.length;
+          }
+          boundaryChains.set(`${a}:${b}`, chain);
+          boundaryChains.set(`${b}:${a}`, [b, ...chain.slice(1).reverse()]);
+        }
+        loopBase += loop.length;
+      });
       const active = simplified.flat();
       const triangles = ShapeUtils.triangulateShape(
         simplified[0].map((j) => all[j].clone()),
@@ -386,16 +407,8 @@ export function sliceGeometry(
         const ring: number[] = [];
         for (let k = 0; k < 3; k++) {
           const a = face[k],
-            b = face[(k + 1) % 3],
-            delta = all[b].clone().sub(all[a]),
-            length = delta.lengthSq();
-          const split = all
-            .map((p, j) => ({ j, t: p.clone().sub(all[a]).dot(delta) / length }))
-            .filter(
-              ({ j, t }) => t >= 0 && t < 1 && Math.abs(all[j].clone().sub(all[a]).cross(delta)) <= epsilon * Math.sqrt(length),
-            );
-          split.sort((a, b) => a.t - b.t);
-          ring.push(...split.map((s) => s.j));
+            b = face[(k + 1) % 3];
+          ring.push(...(boundaryChains.get(`${a}:${b}`) ?? [a]));
         }
         const center = new Vector3().add(world[face[0]]).add(world[face[1]]).add(world[face[2]]).divideScalar(3);
         for (let k = 0; k < ring.length; k++) {

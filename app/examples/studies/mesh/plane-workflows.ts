@@ -14,7 +14,7 @@ import {
   Vector3,
   WireframeGeometry,
 } from "three";
-import { inspectGeometry, sliceGeometry } from "three-low-poly";
+import { clipGeometryByPlanes, inspectGeometry, sectionGeometry } from "three-low-poly";
 import { slicingSource, type SlicePreset } from "./plane-slicing";
 import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
@@ -102,60 +102,36 @@ export function planeWorkflow(source: BufferGeometry, settings: PlaneWorkflowSet
   )
     throw new Error("Invalid workflow settings.");
   const planes = workflowPlanes(settings),
-    cuts: WorkflowCut[] = [],
-    offcuts: BufferGeometry[] = [],
     sourceVolume = workflowVolume(source);
-  let geometry = source.clone();
-  geometry.clearGroups();
-  geometry.addGroup(0, geometry.index?.count ?? geometry.getAttribute("position").count, 0);
+  // A single source color is a study presentation choice; the SDK preserves material groups.
+  const displaySource = source.clone();
+  displaySource.clearGroups();
+  displaySource.addGroup(0, displaySource.index?.count ?? displaySource.getAttribute("position").count, 0);
   try {
     if (settings.mode === "Sections") {
-      for (const plane of planes) {
-        const cut = (() => {
-          try {
-            return sliceGeometry(geometry, plane);
-          } catch (error) {
-            throw new Error(`Plane ${cuts.length + 1}: ${(error as Error).message}`);
-          }
-        })();
-        cuts.push({ plane: plane.clone(), loops: cut.loops, holes: cut.holes, area: cut.capArea, removedVolume: null });
-        cut.positive.dispose();
-        cut.negative.dispose();
-      }
-    } else {
-      for (const plane of planes.slice(0, settings.steps)) {
-        if (!geometry.getAttribute("position").count) break;
-        const cut = (() => {
-          try {
-            return sliceGeometry(geometry, plane);
-          } catch (error) {
-            throw new Error(`Plane ${cuts.length + 1}: ${(error as Error).message}`);
-          }
-        })();
-        const step = cuts.length + 1;
-        for (const part of [cut.negative, cut.positive])
-          part.groups.forEach((g) => {
-            if (g.materialIndex === cut.capMaterialIndex) g.materialIndex = step;
-          });
-        offcuts.push(cut.positive);
-        geometry.dispose();
-        geometry = cut.negative;
-        cuts.push({
-          plane: plane.clone(),
-          loops: cut.loops,
-          holes: cut.holes,
-          area: cut.capArea,
-          removedVolume: workflowVolume(cut.positive),
-        });
-      }
+      const cuts: WorkflowCut[] = planes.map((plane) => ({ ...sectionGeometry(displaySource, plane), removedVolume: null }));
+      return {
+        geometry: displaySource.clone(),
+        offcuts: [] as BufferGeometry[],
+        cuts,
+        planes,
+        sourceVolume,
+        remainingVolume: sourceVolume,
+      };
     }
-    return { geometry, offcuts, cuts, planes, sourceVolume, remainingVolume: workflowVolume(geometry) };
-  } catch (error) {
-    geometry.dispose();
-    offcuts.forEach((g) => g.dispose());
-    throw error;
+    const result = clipGeometryByPlanes(displaySource, planes.slice(0, settings.steps));
+    return {
+      ...result,
+      planes,
+      sourceVolume,
+      remainingVolume: workflowVolume(result.geometry),
+      cuts: result.cuts.map((cut, i) => ({ ...cut, removedVolume: workflowVolume(result.offcuts[i]) })),
+    };
+  } finally {
+    displaySource.dispose();
   }
 }
+
 const palette = [
   0x79adc4, 0xd6b473, 0xc68b82, 0x8ebf9b, 0x9f9bcf, 0x67bbc6, 0xd99dc0, 0xb7c574, 0xa2b2c5, 0xd29864, 0x9bbfa1, 0xab8fae,
   0x78afbd, 0xc2b07b, 0xc9919c, 0x8eaed2,

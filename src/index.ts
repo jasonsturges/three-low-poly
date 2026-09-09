@@ -247,6 +247,7 @@ export * from "./modeling/mesh/GeometryBuffers";
 export * from "./modeling/mesh/InspectGeometry";
 export * from "./modeling/mesh/MiteredPrism";
 export * from "./modeling/mesh/SliceGeometry";
+export * from "./modeling/mesh/PlaneWorkflows";
 export * from "./modeling/mesh/TriangulateRegion";
 export * from "./modeling/mesh/UVUtils";
 export * from "./modeling/mesh/VertexUtils";
