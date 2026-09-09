@@ -1,6 +1,8 @@
 import GUI from "lil-gui";
 import {
   Box3,
+  Curve,
+  CatmullRomCurve3,
   BoxGeometry,
   BufferGeometry,
   DirectionalLight,
@@ -9,16 +11,14 @@ import {
   Group,
   LineBasicMaterial,
   LineSegments,
-  Matrix3,
   Matrix4,
   Mesh,
   MeshStandardMaterial,
-  Quaternion,
   Vector2,
   Vector3,
   WireframeGeometry,
 } from "three";
-import { EdgedBoxGeometry, thickenSurface, transportFrames, triangulateRegion } from "three-low-poly";
+import { EdgedBoxGeometry, thickenSurface, bendGeometry, deformAlongCurve, triangulateRegion } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
 
@@ -35,12 +35,12 @@ export const meta = {
     "inverse transpose of a numerical derivative, while Facet normals follow the rendered triangles. " +
     "All materials are single-sided. Nonpositive sampled determinants indicate local folding or collapse; " +
     "the study reports these cases for inspection and does not certify global non-intersection. " +
-    "Everything here remains experimental and local to the study.",
+    "Deformation uses the core SDK; source refinement and guide presets remain study fixtures. Spline uses Catmull-Rom control points.",
 };
 export type BendSource = "Beam" | "Edged box" | "Perforated panel";
 export type BendAxis = "X" | "Y" | "Z";
 export interface BendSettings {
-  guide: "Arc" | "S curve" | "Spatial curve";
+  guide: "Arc" | "S curve" | "Spatial curve" | "Spline";
   angle: number;
   roll?: number;
   amplitude: number;
@@ -122,174 +122,37 @@ export function bendStudySource(kind: BendSource, refinement: number, axis: Bend
   return geometry;
 }
 
-type Frame = { p: Vector3; q: Quaternion };
-/** Maps local source positions; guide evaluation and source tessellation are deliberately independent. */
-export function bendStudyMap(source: BufferGeometry, settings: BendSettings) {
-  const [a, b, c] = basis(settings.axis),
-    bounds = new Box3().setFromBufferAttribute(source.getAttribute("position") as Float32BufferAttribute);
-  const center = bounds.getCenter(new Vector3()),
-    size = bounds.getSize(new Vector3()),
-    length = Math.abs(size.dot(a));
-  if (!(length > 0)) throw new Error("The source axis must have positive length.");
-  const start = center.dot(a) - length / 2,
-    anchor = settings.anchor === "Start" ? 0 : settings.anchor === "End" ? 1 : 0.5;
-  const anchorX = start + anchor * length,
-    guideLengthTarget = length * settings.guideScale;
-  let guideLength = guideLengthTarget;
-  let evaluate: (s: number) => Frame;
-  if (settings.guide === "Arc") {
-    const curvature = settings.angle / guideLength;
-    evaluate = (s) => {
-      const at = Math.max(0, Math.min(guideLength, s)),
-        theta = curvature * at;
-      const p =
-        Math.abs(curvature) < 1e-10
-          ? new Vector3(at, 0, 0)
-          : new Vector3(Math.sin(theta) / curvature, (2 * Math.sin(theta / 2) ** 2) / curvature, 0);
-      p.addScaledVector(new Vector3(Math.cos(theta), Math.sin(theta), 0), s - at);
-      return { p, q: new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), theta) };
-    };
-  } else {
-    const samples = 256;
-    const positions = Array.from({ length: samples + 1 }, (_, i) => {
-      const t = i / samples;
-      return new Vector3(
+/** Study-only guide fixtures; all deformation is implemented in the SDK. */
+export function bendStudyCurve(settings: BendSettings, length: number): Curve<Vector3> {
+  if (settings.guide === "Spline")
+    return new CatmullRomCurve3([
+      new Vector3(0, 0, 0),
+      new Vector3(length / 3, settings.amplitude * 0.45, 0),
+      new Vector3((2 * length) / 3, -settings.amplitude * 0.25, settings.amplitude * 0.25),
+      new Vector3(length, 0, 0),
+    ]);
+  return new (class extends Curve<Vector3> {
+    constructor() {
+      super();
+    }
+    getPoint(t: number, target = new Vector3()) {
+      return target.set(
         length * t,
         settings.amplitude * 0.7 * Math.sin(2 * Math.PI * t),
         settings.guide === "Spatial curve" ? settings.amplitude * 0.6 * Math.sin(Math.PI * t) : 0,
       );
-    });
-    const path = positions.map((p, i) => ({
-      position: p,
-      tangent: positions[Math.min(samples, i + 1)]
-        .clone()
-        .sub(positions[Math.max(0, i - 1)])
-        .normalize(),
-    }));
-    const stations = transportFrames(path, new Vector3(0, 1, 0));
-    const distances = [0];
-    for (let i = 1; i < positions.length; i++) distances.push(distances[i - 1] + positions[i].distanceTo(positions[i - 1]));
-    const factor = guideLengthTarget / distances[samples];
-    positions.forEach((p) => p.multiplyScalar(factor));
-    distances.forEach((d, i) => (distances[i] = d * factor));
-    const rotations = stations.map((f) =>
-      new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(f.tangent, f.normal, f.binormal)),
-    );
-    evaluate = (s) => {
-      if (s < 0 || s > guideLength) {
-        const i = s < 0 ? 0 : samples;
-        return { p: positions[i].clone().addScaledVector(stations[i].tangent, s - distances[i]), q: rotations[i].clone() };
-      }
-      let lo = 0,
-        hi = samples;
-      while (hi - lo > 1) {
-        const m = (lo + hi) >> 1;
-        if (distances[m] <= s) lo = m;
-        else hi = m;
-      }
-      const t = (s - distances[lo]) / (distances[hi] - distances[lo]);
-      return { p: positions[lo].clone().lerp(positions[hi], t), q: rotations[lo].clone().slerp(rotations[hi], t) };
-    };
-  }
-  const anchorDistance = anchor * guideLength,
-    originFrame = evaluate(anchorDistance),
-    inverse = originFrame.q.clone().invert();
-  const anchorPoint = center.clone().addScaledVector(a, anchorX - center.dot(a));
-  const toWorld = (p: Vector3) => anchorPoint.clone().addScaledVector(a, p.x).addScaledVector(b, p.y).addScaledVector(c, p.z);
-  const sFor = (x: number) =>
-    settings.fit === "Fit guide" ? ((x - start) / length) * guideLength : anchorDistance + x - anchorX;
-  const roll = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), settings.roll ?? 0);
-  const unroll = roll.clone().invert();
-  const map = (point: Vector3) => {
-    const frame = evaluate(sFor(point.dot(a)));
-    const transverse = new Vector3(0, point.clone().sub(center).dot(b), point.clone().sub(center).dot(c))
-      .applyQuaternion(unroll)
-      .applyQuaternion(frame.q);
-    return toWorld(frame.p.clone().sub(originFrame.p).add(transverse).applyQuaternion(inverse).applyQuaternion(roll));
-  };
-  const s0 = sFor(start),
-    s1 = sFor(start + length);
-  const guide = Array.from({ length: 257 }, (_, i) =>
-    toWorld(
-      evaluate((i / 256) * guideLength)
-        .p.clone()
-        .sub(originFrame.p)
-        .applyQuaternion(inverse)
-        .applyQuaternion(roll),
-    ),
-  );
-  return {
-    map,
-    guide,
-    length,
-    guideLength,
-    usedLength: s1 - s0,
-    extension: Math.max(0, -s0) + Math.max(0, s1 - guideLength),
-    anchorPoint,
-  };
-}
-
-export function deformStudyGeometry(source: BufferGeometry, settings: BendSettings) {
-  const mapping = bendStudyMap(source, settings),
-    geometry = source.clone(),
-    position = source.getAttribute("position"),
-    output = geometry.getAttribute("position"),
-    normals = source.getAttribute("normal");
-  const transformed: number[] = [],
-    epsilon = mapping.length * 1e-5;
-  let minDet = Infinity,
-    folded = 0;
-  const axes = [new Vector3(1, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 1)];
-  for (let i = 0; i < position.count; i++) {
-    const p = new Vector3().fromBufferAttribute(position, i),
-      mapped = mapping.map(p);
-    output.setXYZ(i, mapped.x, mapped.y, mapped.z);
-    const derivative = axes.map((axis) =>
-      mapping
-        .map(p.clone().addScaledVector(axis, epsilon))
-        .sub(mapping.map(p.clone().addScaledVector(axis, -epsilon)))
-        .divideScalar(2 * epsilon),
-    );
-    const matrix = new Matrix3().set(
-      derivative[0].x,
-      derivative[1].x,
-      derivative[2].x,
-      derivative[0].y,
-      derivative[1].y,
-      derivative[2].y,
-      derivative[0].z,
-      derivative[1].z,
-      derivative[2].z,
-    );
-    const determinant = matrix.determinant();
-    minDet = Math.min(minDet, determinant);
-    if (determinant <= 1e-6) folded++;
-    const normal = normals ? new Vector3().fromBufferAttribute(normals, i) : new Vector3();
-    if (Math.abs(determinant) > 1e-8) normal.applyMatrix3(matrix.invert().transpose()).normalize();
-    else normal.set(0, 0, 0);
-    transformed.push(...normal.toArray());
-  }
-  if (settings.normals === "Facet") geometry.computeVertexNormals();
-  else geometry.setAttribute("normal", new Float32BufferAttribute(transformed, 3));
-  output.needsUpdate = true;
-  geometry.computeBoundingBox();
-  geometry.computeBoundingSphere();
-  // Chord error evaluates the deformation at edge midpoints, where the mesh has no new vertex.
-  let chordError = 0;
-  const index = source.index,
-    count = index?.count ?? position.count;
-  for (let i = 0; i < count; i += 3)
-    for (let k = 0; k < 3; k++) {
-      const j = index ? index.getX(i + k) : i + k,
-        l = index ? index.getX(i + ((k + 1) % 3)) : i + ((k + 1) % 3);
-      const a = new Vector3().fromBufferAttribute(position, j),
-        b = new Vector3().fromBufferAttribute(position, l);
-      chordError = Math.max(
-        chordError,
-        mapping.map(a.clone().add(b).multiplyScalar(0.5)).distanceTo(mapping.map(a).add(mapping.map(b)).multiplyScalar(0.5)),
-      );
     }
-  return { geometry, ...mapping, minDet, folded, chordError };
+  })();
+}
+export function deformStudyGeometry(source: BufferGeometry, settings: BendSettings) {
+  const bounds = new Box3().setFromBufferAttribute(source.getAttribute("position") as Float32BufferAttribute);
+  const length = bounds.getSize(new Vector3()).dot(basis(settings.axis)[0]);
+  const options = { ...settings, guideLength: length * settings.guideScale, onInvalid: "report" as const };
+  const result =
+    settings.guide === "Arc"
+      ? bendGeometry(source, options)
+      : deformAlongCurve(source, bendStudyCurve(settings, length), options);
+  return { ...result, ...result.diagnostics };
 }
 
 export default function (container: HTMLElement) {
@@ -408,7 +271,7 @@ export default function (container: HTMLElement) {
   shape.add(params, "refinement", 0, 3, 1).name("Refinement").onChange(rebuild);
   shape.add(params, "axis", ["X", "Y", "Z"]).name("Source axis").onChange(rebuild);
   const curve = gui.addFolder("Deformation");
-  curve.add(params, "guide", ["Arc", "S curve", "Spatial curve"]).name("Guide").onChange(rebuild);
+  curve.add(params, "guide", ["Arc", "S curve", "Spatial curve", "Spline"]).name("Guide").onChange(rebuild);
   curve.add(params, "roll", -Math.PI, Math.PI, 0.05).name("Bend plane rotation").onChange(rebuild);
   curve.add(params, "angle", -4, 4, 0.05).name("Arc angle (rad)").onChange(rebuild);
   curve.add(params, "amplitude", 0, 1.5, 0.05).name("Curve amplitude").onChange(rebuild);
