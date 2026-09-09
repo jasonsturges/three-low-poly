@@ -16,6 +16,8 @@ import { createWebGPURenderer } from "./createWebGPURenderer";
 export interface SceneOptions {
   /** Scene background color. Left transparent/black if omitted. */
   background?: ColorRepresentation;
+  /** Let an example coordinate controls with camera animation itself. */
+  manualControls?: boolean;
   /** Initial camera position. Defaults to `[0, 0, 5]`. */
   cameraPosition?: [number, number, number];
 }
@@ -104,7 +106,7 @@ export function createScene(container: HTMLElement, options: SceneOptions = {}):
   const clock = new Clock();
   const renderFrame = () => {
     const delta = clock.getDelta();
-    controls.update();
+    if (!options.manualControls) controls.update();
     handlers.forEach((handler) => handler(delta));
     renderer.render(scene, camera);
   };

@@ -4,7 +4,7 @@ import type { EasingFunction } from "../constants/Easing";
 
 export type ClipPhase = "running" | "complete";
 
-/** Rest pose captured when playback is constructed or reset. */
+/** A camera view captured explicitly for later restoration. */
 export interface CameraSnapshot {
   position: Vector3;
   quaternion: Quaternion;
@@ -25,11 +25,15 @@ export interface ClipRuntime {
 }
 
 export interface CameraClip {
+  /** Effects are temporary offsets evaluated after the movement/transition. */
+  readonly kind?: "movement" | "transition" | "effect";
   readonly label: string;
   readonly duration: number;
   start(runtime: ClipRuntime): void;
-  update(runtime: ClipRuntime, dt: number): ClipPhase;
-  /** Called when playback is canceled mid-clip. */
+  /** Evaluate the current time, including the endpoint. Playback owns completion.
+   * Legacy phase returns are accepted but no longer control the clock. */
+  update(runtime: ClipRuntime, dt: number): ClipPhase | void;
+  /** Cleanup on interruption. Must preserve the base camera pose. */
   cancel?(runtime: ClipRuntime): void;
 }
 
@@ -40,10 +44,7 @@ export interface CameraClipTiming {
   ease?: EasingFunction;
 }
 
-export function captureSnapshot(
-  camera: PerspectiveCamera,
-  controls?: OrbitControls,
-): CameraSnapshot {
+export function captureSnapshot(camera: PerspectiveCamera, controls?: OrbitControls): CameraSnapshot {
   const target = controls?.target.clone() ?? new Vector3();
   if (!controls) {
     const dir = new Vector3();
@@ -58,22 +59,17 @@ export function captureSnapshot(
   };
 }
 
-export function applySnapshot(
-  camera: PerspectiveCamera,
-  controls: OrbitControls | undefined,
-  snapshot: CameraSnapshot,
-): void {
+export function applySnapshot(camera: PerspectiveCamera, controls: OrbitControls | undefined, snapshot: CameraSnapshot): void {
   camera.position.copy(snapshot.position);
   camera.quaternion.copy(snapshot.quaternion);
   camera.fov = snapshot.fov;
   camera.updateProjectionMatrix();
   if (controls) {
     controls.target.copy(snapshot.target);
-    controls.update();
   }
 }
 
 export function normalizedTime(runtime: ClipRuntime, ease: EasingFunction): number {
   const t = Math.min(1, runtime.elapsed / runtime.duration);
-  return ease(t);
+  return t === 0 || t === 1 ? t : ease(t);
 }
