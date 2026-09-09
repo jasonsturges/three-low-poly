@@ -23,7 +23,7 @@ import { frameObject } from "../../../framework/frameObject";
 export const meta = {
   title: "UV Continuity",
   description:
-    "STUDY — compare SDK defaults, per-region fitting, and physical texture scale using uv-grid.jpg. Thickness preserves source face UVs but fits each rim loop to 0–1; slice caps use planar coordinates in source units. Units per repeat gives faces, rims, and caps comparable texture density. Magenta lines mark UV discontinuities across geometrically shared edges; these can be intentional unwrap seams. The back retains the source parameterization, so text can read mirrored from outside. Cap rotation changes cap orientation, not source UVs. All surfaces are single-sided. Mapping policies remain study-local experiments; geometry comes from the SDK.",
+    "STUDY — compare SDK defaults, per-region fitting, and physical texture scale using uv-grid.jpg. Thickness preserves source face UVs but fits each rim loop to 0–1; slice caps use planar coordinates in source units. Units per repeat gives faces, rims, and caps comparable texture density. Magenta lines mark UV discontinuities across geometrically shared edges; these can be intentional unwrap seams. The back retains the source parameterization, so text can read mirrored from outside. Cap rotation changes cap orientation, not source UVs. All surfaces are single-sided. Rim and cap mapping use SDK options; comparison controls and seam rendering remain in the study.",
 };
 export interface UVStudySettings {
   operation: "Thickness" | "Plane slicing";
@@ -76,72 +76,32 @@ export function uvStudyBuild(settings: UVStudySettings) {
     {
       points: region.points.map((p) => new Vector3(p.x, p.y, 0)),
       triangles: region.triangles,
-      uv: region.points.map((p) => new Vector2(p.x / width + 0.5, p.y / height + 0.5)),
+      uv: region.points.map((p) =>
+        settings.mapping === "Units per repeat"
+          ? new Vector2((p.x + width / 2) / units, (p.y + height / 2) / units)
+          : new Vector2(p.x / width + 0.5, p.y / height + 0.5),
+      ),
     },
-    { thickness },
+    { thickness, rimUV: settings.mapping === "Units per repeat" ? { unitsPerRepeat: units } : undefined },
   ).geometry;
-  const p = source.getAttribute("position"),
-    uv = source.getAttribute("uv");
-  if (settings.mapping === "Units per repeat") {
-    for (const group of source.groups)
-      for (let i = group.start; i < group.start + group.count; i += 3) {
-        if (group.materialIndex !== 2) {
-          for (let j = i; j < i + 3; j++) uv.setXY(j, (p.getX(j) + width / 2) / units, (p.getY(j) + height / 2) / units);
-          continue;
-        }
-        // In this planar fixture, rim u is cumulative perimeter / loop perimeter. Recover the
-        // loop perimeter from a triangle edge, without relying on the SDK's triangle ordering.
-        let perimeter = 0;
-        for (let a = i; a < i + 3; a++)
-          for (let b = a + 1; b < i + 3; b++) {
-            const du = Math.abs(uv.getX(a) - uv.getX(b));
-            if (du > 1e-8) {
-              perimeter = Math.hypot(p.getX(a) - p.getX(b), p.getY(a) - p.getY(b)) / du;
-              break;
-            }
-          }
-        for (let j = i; j < i + 3; j++) uv.setXY(j, (uv.getX(j) * perimeter) / units, (uv.getY(j) * thickness) / units);
-      }
-  }
   if (settings.operation === "Thickness") return { parts: [source], normal: new Vector3(0, 0, 1), capMaterialIndex: -1 };
   const normal = new Vector3(Math.sin(settings.cutAngle), 0, Math.cos(settings.cutAngle));
   let cut: ReturnType<typeof sliceGeometry>;
   try {
-    cut = sliceGeometry(source, new Plane(normal, -settings.cutOffset));
+    cut = sliceGeometry(source, new Plane(normal, -settings.cutOffset), {
+      capUV:
+        settings.mapping === "SDK defaults"
+          ? undefined
+          : {
+              mode: settings.mapping === "Units per repeat" ? "units" : "fit",
+              unitsPerRepeat: units,
+              rotation: settings.capRotation,
+            },
+    });
   } finally {
     source.dispose();
   }
   const parts = [cut.positive, cut.negative];
-  if (settings.mapping !== "SDK defaults") {
-    const coords: { geometry: BufferGeometry; index: number; u: number; v: number }[] = [];
-    const c = Math.cos(settings.capRotation),
-      s = Math.sin(settings.capRotation);
-    for (const geometry of parts) {
-      const attr = geometry.getAttribute("uv");
-      for (const group of geometry.groups)
-        if (group.materialIndex === cut.capMaterialIndex)
-          for (let i = group.start; i < group.start + group.count; i++)
-            coords.push({ geometry, index: i, u: attr.getX(i) * c - attr.getY(i) * s, v: attr.getX(i) * s + attr.getY(i) * c });
-    }
-    let u0 = Infinity,
-      v0 = Infinity,
-      u1 = -Infinity,
-      v1 = -Infinity;
-    coords.forEach((p) => {
-      u0 = Math.min(u0, p.u);
-      v0 = Math.min(v0, p.v);
-      u1 = Math.max(u1, p.u);
-      v1 = Math.max(v1, p.v);
-    });
-    for (const q of coords)
-      q.geometry
-        .getAttribute("uv")
-        .setXY(
-          q.index,
-          settings.mapping === "Units per repeat" ? q.u / units : (q.u - u0) / Math.max(1e-10, u1 - u0),
-          settings.mapping === "Units per repeat" ? q.v / units : (q.v - v0) / Math.max(1e-10, v1 - v0),
-        );
-  }
   return { parts, normal, capMaterialIndex: cut.capMaterialIndex };
 }
 /** Find UV discontinuities, not mere triangle edges or repeated-texture grid lines. */

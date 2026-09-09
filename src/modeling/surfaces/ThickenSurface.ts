@@ -8,7 +8,15 @@ export interface IndexedSurface {
   readonly uv?: readonly Vector2[];
 }
 
+export interface RimUVOptions {
+  /** Omit for the existing 0–1 loop fit; positive value uses source boundary distance per repeat. */
+  unitsPerRepeat?: number;
+  /** Texture-coordinate offset, applied independently to each boundary loop. */
+  offset?: Vector2;
+}
 export interface ThickenSurfaceOptions {
+  /** Mapping of new rim walls only. Front/back retain caller UVs. */
+  rimUV?: RimUVOptions;
   /** Positive distance in the input coordinate system. */
   thickness: number;
   /** Defaults to centered. Front follows input winding; back faces the opposite way. */
@@ -124,11 +132,18 @@ export function surfaceFromGrid(
  */
 export function thickenSurface(
   surface: IndexedSurface,
-  { thickness, placement = "centered", offset = "normal", onInvalid = "throw" }: ThickenSurfaceOptions,
+  { thickness, placement = "centered", offset = "normal", onInvalid = "throw", rimUV = {} }: ThickenSurfaceOptions,
 ): ThickenSurfaceResult {
   if (!Number.isFinite(thickness) || thickness <= 0) fail("thickness must be positive and finite.");
   if (!["front", "centered", "back"].includes(placement)) fail("unknown placement.");
   if (!["throw", "report"].includes(onInvalid)) fail("unknown onInvalid policy.");
+  const rimUnits = rimUV.unitsPerRepeat,
+    rimOffset = rimUV.offset ?? new Vector2();
+  if (
+    (rimUnits !== undefined && !(Number.isFinite(rimUnits) && rimUnits > 0)) ||
+    ![rimOffset.x, rimOffset.y].every(Number.isFinite)
+  )
+    fail("invalid rim UV options.");
   const fixed = typeof offset !== "string";
   if (fixed ? !finite(offset) || offset.length() === 0 : !["normal", "crease-compensated"].includes(offset))
     fail("invalid offset.");
@@ -303,17 +318,18 @@ export function thickenSurface(
     const perimeter = lengths.reduce((a, b) => a + b, 0);
     let distance = 0;
     loop.forEach((e, i) => {
-      const u0 = distance / perimeter;
+      const u0 = rimUnits === undefined ? distance / perimeter : (distance * scale) / rimUnits;
       distance += lengths[i];
-      const u1 = distance / perimeter;
-      const a = new Vector2(u0, 1),
-        b = new Vector2(u1, 1),
-        c = new Vector2(u0, 0),
-        d = new Vector2(u1, 0);
+      const u1 = rimUnits === undefined ? distance / perimeter : (distance * scale) / rimUnits;
+      const a = new Vector2(u0, rimUnits === undefined ? 1 : front[e.a].distanceTo(back[e.a]) / rimUnits).add(rimOffset),
+        b = new Vector2(u1, rimUnits === undefined ? 1 : front[e.b].distanceTo(back[e.b]) / rimUnits).add(rimOffset),
+        c = new Vector2(u0, 0).add(rimOffset),
+        d = new Vector2(u1, 0).add(rimOffset);
       emit([front[e.b], front[e.a], back[e.a]], [b, a, c], component[e.faces[0]]);
       emit([front[e.b], back[e.a], back[e.b]], [b, c, d], component[e.faces[0]]);
     });
   }
+  if (uvs.some((v) => !Number.isFinite(Math.fround(v)))) fail("UVs exceed Float32 range.");
   const geometry = new BufferGeometry();
   const buffer = new Float32BufferAttribute(positions, 3);
   if (Array.from(buffer.array).some((n) => !Number.isFinite(n))) fail("output exceeds Float32 coordinate range.");
