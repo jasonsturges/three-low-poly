@@ -3,7 +3,6 @@ import {
   BoxGeometry,
   BufferGeometry,
   DirectionalLight,
-  Float32BufferAttribute,
   FrontSide,
   Group,
   LineBasicMaterial,
@@ -11,7 +10,6 @@ import {
   Mesh,
   MeshStandardMaterial,
   Plane,
-  ShapeUtils,
   SphereGeometry,
   TorusGeometry,
   Vector2,
@@ -19,14 +17,14 @@ import {
   WireframeGeometry,
 } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { thickenSurface, triangulateRegion } from "three-low-poly";
+import { sliceGeometry, thickenSurface, triangulateRegion } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Plane Slicing",
   description:
-    "STUDY — split a closed triangle mesh with a movable plane. Blue is the positive half, terracotta " +
+    "SDK-backed STUDY — split a closed triangle mesh with a movable plane. Blue is the positive half, terracotta " +
     "the negative half, and gold marks new caps. Every mesh material is single-sided. Separation moves " +
     "the finished halves for inspection; it does not change the cut. Try Perforated panel with the " +
     "default Z plane: the cap must retain the hole. Torus and Two boxes exercise multiple contours. " +
@@ -39,8 +37,6 @@ export const meta = {
     "can collapse. Volume and edge checks are measurements, not a global validity certificate.",
 };
 
-type Corner = { p: Vector3; n: Vector3; uv: Vector2 };
-type Face = { v: Corner[]; material: number };
 export type SlicePreset = "Box" | "Sphere" | "Torus" | "Perforated panel" | "Two boxes";
 
 export function slicingSource(preset: SlicePreset): BufferGeometry {
@@ -69,271 +65,6 @@ export function slicingSource(preset: SlicePreset): BufferGeometry {
     },
     { thickness: 0.7 },
   ).geometry;
-}
-
-/** Local experiment: normalized coordinates and canonical plane vertices join shading/UV seams. */
-export function sliceStudyGeometry(source: BufferGeometry, cuttingPlane: Plane, cap = true) {
-  const position = source.getAttribute("position"),
-    normals = source.getAttribute("normal"),
-    uv = source.getAttribute("uv");
-  if (
-    !position ||
-    !Number.isFinite(cuttingPlane.constant) ||
-    !Number.isFinite(cuttingPlane.normal.length()) ||
-    cuttingPlane.normal.length() === 0
-  )
-    throw new Error("Invalid geometry or plane.");
-  source.computeBoundingBox();
-  const origin = source.boundingBox!.getCenter(new Vector3()),
-    scale = source.boundingBox!.getSize(new Vector3()).length();
-  if (!(scale > 0) || !Number.isFinite(scale)) throw new Error("Invalid geometry extent.");
-  const normal = cuttingPlane.normal.clone().normalize();
-  const plane = new Plane(normal, (cuttingPlane.constant / cuttingPlane.normal.length() + normal.dot(origin)) / scale);
-  const epsilon = 1e-7;
-  const key = (p: Vector3) => [p.x, p.y, p.z].map((v) => Math.round(v / epsilon)).join(":");
-  const canonical = new Map<string, Vector3>();
-  const onPlane = (p: Vector3) => {
-    const projected = plane.projectPoint(p, new Vector3()),
-      id = key(projected);
-    if (!canonical.has(id)) canonical.set(id, projected);
-    return canonical.get(id)!.clone();
-  };
-  const index = source.index,
-    count = index?.count ?? position.count;
-  if (count % 3) throw new Error("Expected triangles.");
-  const halves: Face[][] = [[], []];
-  const area = (v: Corner[]) => v[1].p.clone().sub(v[0].p).cross(v[2].p.clone().sub(v[0].p)).length();
-  const emit = (out: Face[], v: Corner[], material: number) => {
-    for (let i = 1; i < v.length - 1; i++) {
-      const tri = [v[0], v[i], v[i + 1]];
-      if (area(tri) > epsilon * epsilon) out.push({ v: tri, material });
-    }
-  };
-  for (let at = 0; at < count; at += 3) {
-    const vertices = [0, 1, 2].map((k) => {
-      const i = index ? index.getX(at + k) : at + k;
-      const p = new Vector3().fromBufferAttribute(position, i).sub(origin).divideScalar(scale);
-      if (!p.toArray().every(Number.isFinite)) throw new Error("Nonfinite source coordinates.");
-      if (Math.abs(plane.distanceToPoint(p)) <= epsilon) p.copy(onPlane(p));
-      return {
-        p,
-        n: normals ? new Vector3().fromBufferAttribute(normals, i) : new Vector3(),
-        uv: uv ? new Vector2(uv.getX(i), uv.getY(i)) : new Vector2(),
-      };
-    });
-    if (area(vertices) <= epsilon * epsilon) continue; // Sphere primitives contain collapsed polar triangles.
-    const faceNormal = vertices[1].p.clone().sub(vertices[0].p).cross(vertices[2].p.clone().sub(vertices[0].p)).normalize();
-    if (!normals) vertices.forEach((v) => v.n.copy(faceNormal));
-    const material = source.groups.find((g) => at >= g.start && at < g.start + g.count)?.materialIndex ?? 0;
-    const distances = vertices.map((v) => plane.distanceToPoint(v.p));
-    if (distances.every((d) => Math.abs(d) <= epsilon)) {
-      emit(halves[faceNormal.dot(normal) > 0 ? 1 : 0], vertices, material);
-      continue;
-    }
-    for (let half = 0; half < 2; half++) {
-      const sign = half === 0 ? 1 : -1,
-        polygon: Corner[] = [];
-      for (let k = 0; k < 3; k++) {
-        const a = vertices[k],
-          b = vertices[(k + 1) % 3],
-          da = distances[k] * sign,
-          db = distances[(k + 1) % 3] * sign;
-        if (da >= -epsilon) polygon.push(a);
-        if ((da > epsilon && db < -epsilon) || (da < -epsilon && db > epsilon)) {
-          const t = da / (da - db);
-          polygon.push({
-            p: onPlane(a.p.clone().lerp(b.p, t)),
-            n: a.n.clone().lerp(b.n, t).normalize(),
-            uv: a.uv.clone().lerp(b.uv, t),
-          });
-        }
-      }
-      const clean = polygon.filter((v, i) => i === 0 || v.p.distanceToSquared(polygon[i - 1].p) > epsilon * epsilon);
-      if (clean.length > 1 && clean[0].p.distanceToSquared(clean[clean.length - 1].p) <= epsilon * epsilon) clean.pop();
-      emit(halves[half], clean, material);
-    }
-  }
-  // Find the actual open boundary of the clipped skin. This handles cuts through existing edges
-  // and coplanar exterior faces without adding duplicate caps.
-  const boundary = (faces: Face[]) => {
-    const edges = new Map<string, { a: Vector3; b: Vector3; count: number; balance: number }>();
-    for (const face of faces)
-      for (let i = 0; i < 3; i++) {
-        const a = face.v[i].p,
-          b = face.v[(i + 1) % 3].p;
-        if (Math.abs(plane.distanceToPoint(a)) > epsilon * 2 || Math.abs(plane.distanceToPoint(b)) > epsilon * 2) continue;
-        const ka = key(a),
-          kb = key(b);
-        if (ka === kb) continue;
-        const id = ka < kb ? `${ka}|${kb}` : `${kb}|${ka}`,
-          e = edges.get(id) ?? { a, b, count: 0, balance: 0 };
-        e.count++;
-        e.balance += ka < kb ? 1 : -1;
-        edges.set(id, e);
-      }
-    if ([...edges.values()].some((e) => e.count > 2 || (e.count === 2 && e.balance !== 0)))
-      throw new Error("Ambiguous plane boundary: non-manifold or inconsistent winding.");
-    return [...edges.values()].filter((e) => e.count === 1);
-  };
-  const edges = boundary(halves[0]);
-  const outgoing = new Map<string, (typeof edges)[number]>(),
-    incoming = new Map<string, number>();
-  for (const e of edges) {
-    if (outgoing.has(key(e.a))) throw new Error("Contours touch or branch at a cut vertex. Move the plane slightly.");
-    outgoing.set(key(e.a), e);
-    incoming.set(key(e.b), (incoming.get(key(e.b)) ?? 0) + 1);
-  }
-  if (edges.some((e) => !outgoing.has(key(e.b)) || incoming.get(key(e.a)) !== 1))
-    throw new Error("Open cut contour; source may not be closed.");
-  const loops: Vector3[][] = [],
-    visited = new Set<(typeof edges)[number]>();
-  for (const start of edges) {
-    if (visited.has(start)) continue;
-    const loop: Vector3[] = [];
-    let e = start;
-    do {
-      if (visited.has(e)) throw new Error("Ambiguous contour cycle.");
-      visited.add(e);
-      loop.push(e.a);
-      e = outgoing.get(key(e.b))!;
-    } while (e !== start);
-    if (loop.length < 3) throw new Error("Collapsed cut loop.");
-    loops.push(loop);
-  }
-  const seed = Math.abs(normal.x) < 0.8 ? new Vector3(1, 0, 0) : new Vector3(0, 1, 0);
-  const u = seed.addScaledVector(normal, -seed.dot(normal)).normalize(),
-    v = normal.clone().cross(u);
-  const contours = loops.map((loop) => loop.map((p) => new Vector2(p.dot(u), p.dot(v))));
-  const inside = (p: Vector2, loop: Vector2[]) => {
-    let hit = false;
-    for (let i = 0, j = loop.length - 1; i < loop.length; j = i++) {
-      const a = loop[i],
-        b = loop[j];
-      if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) hit = !hit;
-    }
-    return hit;
-  };
-  const parents = contours.map((loop, i) => {
-    let parent = -1,
-      best = Infinity;
-    contours.forEach((other, j) => {
-      const a = Math.abs(ShapeUtils.area(other));
-      if (i !== j && a > Math.abs(ShapeUtils.area(loop)) && a < best && inside(loop[0], other)) {
-        parent = j;
-        best = a;
-      }
-    });
-    return parent;
-  });
-  const depth = (i: number): number => (parents[i] === -1 ? 0 : 1 + depth(parents[i]));
-  const capMaterialIndex = Math.max(0, ...source.groups.map((g) => g.materialIndex ?? 0)) + 1;
-  let capArea = 0;
-  if (cap)
-    contours.forEach((contour, i) => {
-      if (depth(i) % 2) return;
-      const holes = contours.filter((_, j) => parents[j] === i),
-        world = [...loops[i], ...loops.filter((_, j) => parents[j] === i).flat()];
-      // ShapeUtils can omit collinear boundary points. Subdivide each cap triangle's boundary edges
-      // at those points, then fan around an interior centroid to avoid T-junctions in the final shell.
-      const all = [...contour, ...holes.flat()];
-      let base = 0;
-      const simplified = [contour, ...holes].map((loop) => {
-        const ids = loop.map((_, k) => base + k);
-        base += loop.length;
-        let changed = true;
-        while (changed && ids.length > 3) {
-          changed = false;
-          for (let k = 0; k < ids.length; k++) {
-            const a = all[ids[(k + ids.length - 1) % ids.length]],
-              b = all[ids[k]],
-              c = all[ids[(k + 1) % ids.length]],
-              ac = c.clone().sub(a),
-              ab = b.clone().sub(a);
-            if (Math.abs(ab.cross(ac)) <= epsilon * ac.length() && ab.dot(ac) >= 0 && ab.dot(ac) <= ac.lengthSq()) {
-              ids.splice(k, 1);
-              changed = true;
-              break;
-            }
-          }
-        }
-        return ids;
-      });
-      const active = simplified.flat();
-      const triangles = ShapeUtils.triangulateShape(
-        simplified[0].map((j) => all[j].clone()),
-        simplified.slice(1).map((loop) => loop.map((j) => all[j].clone())),
-      ).map((face) => face.map((j) => active[j]));
-      for (const face of triangles) {
-        const ring: number[] = [];
-        for (let k = 0; k < 3; k++) {
-          const a = face[k],
-            b = face[(k + 1) % 3],
-            delta = all[b].clone().sub(all[a]),
-            length = delta.lengthSq();
-          const split = all
-            .map((p, j) => ({ j, t: p.clone().sub(all[a]).dot(delta) / length }))
-            .filter(
-              ({ j, t }) => t >= 0 && t < 1 && Math.abs(all[j].clone().sub(all[a]).cross(delta)) <= epsilon * Math.sqrt(length),
-            );
-          split.sort((a, b) => a.t - b.t);
-          ring.push(...split.map((s) => s.j));
-        }
-        const center = new Vector3().add(world[face[0]]).add(world[face[1]]).add(world[face[2]]).divideScalar(3);
-        for (let k = 0; k < ring.length; k++) {
-          const a = world[ring[k]],
-            b = world[ring[(k + 1) % ring.length]];
-          const cross = a.clone().sub(center).cross(b.clone().sub(center));
-          if (cross.length() <= epsilon * epsilon) continue;
-          capArea += cross.length() * 0.5 * scale * scale;
-          const positive = cross.dot(normal) > 0 ? [center, b, a] : [center, a, b];
-          for (let half = 0; half < 2; half++) {
-            const ordered = half === 0 ? positive : [...positive].reverse();
-            emit(
-              halves[half],
-              ordered.map((p) => ({
-                p,
-                n: normal.clone().multiplyScalar(half === 0 ? -1 : 1),
-                uv: new Vector2(p.dot(u) * scale, p.dot(v) * scale),
-              })),
-              capMaterialIndex,
-            );
-          }
-        }
-      }
-    });
-  const build = (faces: Face[]) => {
-    const geometry = new BufferGeometry(),
-      p: number[] = [],
-      n: number[] = [],
-      tex: number[] = [];
-    const materials = [...new Set(faces.map((f) => f.material))].sort((a, b) => a - b);
-    for (const material of materials) {
-      const start = p.length / 3;
-      for (const face of faces)
-        if (face.material === material)
-          for (const corner of face.v) {
-            const point = corner.p.clone().multiplyScalar(scale).add(origin);
-            p.push(...point.toArray());
-            n.push(...corner.n.toArray());
-            tex.push(...corner.uv.toArray());
-          }
-      geometry.addGroup(start, p.length / 3 - start, material);
-    }
-    geometry.setAttribute("position", new Float32BufferAttribute(p, 3));
-    geometry.setAttribute("normal", new Float32BufferAttribute(n, 3));
-    geometry.setAttribute("uv", new Float32BufferAttribute(tex, 2));
-    geometry.computeBoundingBox();
-    geometry.computeBoundingSphere();
-    return geometry;
-  };
-  return {
-    positive: build(halves[0]),
-    negative: build(halves[1]),
-    loops: loops.map((loop) => loop.map((p) => p.clone().multiplyScalar(scale).add(origin))),
-    holes: contours.filter((_, i) => depth(i) % 2 === 1).length,
-    capArea,
-    capMaterialIndex,
-  };
 }
 
 export function slicingVolume(geometry: BufferGeometry): number {
@@ -398,7 +129,7 @@ export default function (container: HTMLElement) {
     );
     const plane = new Plane(n, -params.distance);
     try {
-      const result = sliceStudyGeometry(source, plane, params.caps);
+      const result = sliceGeometry(source, plane, { cap: params.caps });
       const total = slicingVolume(source),
         remaining = slicingVolume(result.positive) + slicingVolume(result.negative);
       params.volume = params.caps
