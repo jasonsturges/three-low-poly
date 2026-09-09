@@ -2,9 +2,7 @@ import { BufferGeometry, Vector3 } from "three";
 import { Direction } from "../../constants/Direction";
 import { Falloff } from "../../constants/Falloff";
 
-/**
- * Moves vertices within a specified radius around a target position along a given direction
- */
+/** Displace positions in place within radius; direction magnitude scales strength. Normals and bounds remain stale. */
 export const displacementBrush = <T extends BufferGeometry>(
   geometry: T,
   position: Vector3,
@@ -21,14 +19,12 @@ export const displacementBrush = <T extends BufferGeometry>(
     const distance = vertex.distanceTo(position);
 
     if (distance < radius) {
-      // Calculate falloff
+
       const falloff = falloffFn(distance, radius);
       const influence = falloff * strength;
 
-      // Apply the effect (e.g., pulling the vertex upwards)
       vertex.add(direction.clone().multiplyScalar(influence));
 
-      // Update the vertex position
       positions.setXYZ(i, vertex.x, vertex.y, vertex.z);
     }
   }

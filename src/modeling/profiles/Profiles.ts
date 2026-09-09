@@ -1,13 +1,8 @@
 import type { Vec2 } from "../mesh/GeometryBuffers";
 
-/**
- * Cross-sections to carry along a path.
- *
- * A profile lives in the station's own `(normal, binormal)` plane, wound counter-clockwise. Swap one
- * for another and a masonry arch becomes a wrought iron tube — the path never knows.
- */
 
-/** A rectangular cross-section, centered on the station. Flat bar, a masonry band, a stringer. */
+
+/** Centered CCW rectangle: thickness along station normal, width along binormal. */
 export function rectProfile(width: number, thickness: number): Vec2[] {
   const hw = width / 2;
   const ht = thickness / 2;
@@ -21,11 +16,8 @@ export function rectProfile(width: number, thickness: number): Vec2[] {
 }
 
 /**
- * A circular cross-section. `segments` is the low-poly knob — `4` gives square tubing, `24` a round bar.
- *
- * The ring starts at a half-segment offset so the flats face outward rather than the corners. Without
- * it, four segments would put vertices on the axes and you would get a diamond, not a square — the same
- * trap `CylinderGeometry` has, because it starts its ring at θ=0.
+ * CCW circle in the station (normal, binormal) plane; rotation sets the seam angle in radians.
+ * A half-segment offset aligns flats with the axes; θ=0 aligns vertices.
  */
 export function circleProfile(radius: number, segments: number, rotation = Math.PI / segments): Vec2[] {
   return Array.from({ length: segments }, (_, i) => {

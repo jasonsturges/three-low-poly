@@ -9,33 +9,14 @@ import {
 } from "../mesh/GeometryBuffers";
 
 export interface SurfaceGridOptions {
-  /**
-   * Flip the surface's facing. Defaults to `false`.
-   *
-   * The normal comes out on the side a viewer sees the grid wound counter-clockwise from — `+Z` for a
-   * grid laid out with `u` running `+X` and `v` running `+Y`. Set this when the natural parameterization
-   * of a shape happens to face away from where it is meant to be seen from.
-   */
+  /** Reverse winding and normals; u along +X and v along +Y ordinarily faces +Z. */
   flip?: boolean;
 }
 
 /**
- * Skin an open grid of points — the sheet counterpart to {@link loft}.
+ * Skin rectangular grid[v][u] without wrapping, using whole-sheet UVs.
+ * Fewer than two rows or columns returns empty geometry; otherwise ragged rows throw.
  *
- * **This is not `loft`, and the difference is topological rather than cosmetic.** A loft's sections are
- * closed RINGS and it wraps the last point of each back onto the first; run an open sheet through it and
- * the surface folds over on itself along a seam that was never there. This stitches a rectangular grid
- * with no wrapping in either direction, which is what every parametric surface wants: a curtain, a vault
- * web, a sail, a NURBS patch evaluated on a grid, any `f(u, v)` at all.
- *
- * `grid[v][u]` — the outer array runs down the surface, the inner across it. Every row must be the same
- * length; a ragged grid throws rather than skinning something arbitrary.
- *
- * UVs are laid out across the whole sheet rather than per quad, so a texture maps over the surface as one
- * image. That is the one place this differs in substance from the hand-rolled versions it replaces, which
- * all took `pushQuad`'s per-quad default and would tile a texture once per face.
- *
- * @example
  * ```ts
  * // Any f(u, v). Here, a hanging sheet.
  * const grid = Array.from({ length: rows + 1 }, (_, j) =>
@@ -72,13 +53,7 @@ export function surfaceGrid(grid: Vector3[][], { flip = false }: SurfaceGridOpti
       const c = grid[j + 1]![i + 1]!;
       const d = grid[j + 1]![i]!;
 
-      // THE NORMAL COMES FROM THE DIAGONALS, `(c − a) × (d − b)`, and not from three of the corners.
-      //
-      // Wherever a parametric surface pinches — a swag cinched to its horns, a vault cell closing on its
-      // boss, a cone approaching its apex — three consecutive corners go very nearly collinear while the
-      // quad still has area. The three-corner form then divides by a vanishing cross product and hands
-      // back a zero normal, which shades black rather than failing loudly. The diagonals survive any
-      // three corners lining up, and cost the same arithmetic.
+      // Diagonal normal (c − a) × (d − b) remains usable when three corners are collinear.
       normal.copy(edge.subVectors(c, a).cross(other.subVectors(d, b)));
 
       // Genuinely no area: the tip of the pinch, where every row has arrived at one point.
@@ -88,14 +63,12 @@ export function surfaceGrid(grid: Vector3[][], { flip = false }: SurfaceGridOpti
 
       const face: Vec3 = [normal.x, normal.y, normal.z];
 
-      // UVs across the WHOLE sheet, so a texture is one image rather than one per face.
       const u0 = i / (columns - 1);
       const u1 = (i + 1) / (columns - 1);
       const v0 = j / (rows - 1);
       const v1 = (j + 1) / (rows - 1);
 
-      // A collapsed side is a triangle, not a zero-area quad. Two wasted vertices is the smaller cost;
-      // the real one is that a degenerate quad's winding is undefined.
+      // Emit one triangle when either u-boundary edge collapses.
       const ad = a.distanceToSquared(d) < 1e-14;
       const bc = b.distanceToSquared(c) < 1e-14;
 

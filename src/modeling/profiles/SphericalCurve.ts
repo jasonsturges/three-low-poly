@@ -2,12 +2,9 @@ import { Vector2 } from "three";
 import { thetaLengthForRadius } from "../../utils/SphericalGeometryUtils";
 
 /**
- * Generates spherical curve profile points, for use with geometry.
- * Enables connective geometry via holes at the top and bottom of the sphere.
+ * Sample a bottom-to-top ellipsoidal lathe profile centered at sphereStartY.
+ * Hole radii truncate the ends; radii must fit within sphereRadiusX.
  *
- * Example usage:
- *
- * Tube that connect with a sphere on the bottom:
  * ```
  *    const points: Vector2[] = [
  *       new Vector2(1, 0),
@@ -24,7 +21,6 @@ import { thetaLengthForRadius } from "../../utils/SphericalGeometryUtils";
  *     const latheGeometry = new LatheGeometry(points, 32);
  * ```
  *
- * Tube that connect with a sphere on the top:
  * ```
  *    const points: Vector2[] = [
  *       ...appendSphericalCurve(
@@ -52,15 +48,13 @@ export function appendSphericalCurve(
   const thetaTop = holeTopRadius ? thetaLengthForRadius(sphereRadiusX, holeTopRadius) : 0;
   const thetaBottom = holeBottomRadius ? Math.PI - thetaLengthForRadius(sphereRadiusX, holeBottomRadius) : Math.PI;
 
-  // Generate sphere points (from bottom to top)
   const spherePoints = [];
   for (let i = 0; i <= segments; i++) {
-    const theta = thetaBottom - ((thetaBottom - thetaTop) / segments) * i; // Bottom to top
+    const theta = thetaBottom - ((thetaBottom - thetaTop) / segments) * i;
     const x = sphereRadiusX * Math.sin(theta);
-    const y = sphereRadiusY * Math.cos(theta) + sphereStartY; // Offset by sphereStartY
+    const y = sphereRadiusY * Math.cos(theta) + sphereStartY;
     spherePoints.push(new Vector2(x, y));
   }
 
-  // Combine base points and sphere points
   return [...spherePoints];
 }

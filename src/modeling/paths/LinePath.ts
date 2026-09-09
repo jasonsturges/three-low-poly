@@ -1,12 +1,7 @@
 import { Vector3 } from "three";
 import type { PathPoint } from "./PathPoint";
 
-/**
- * A straight run.
- *
- * Zero curvature — which is precisely where Frenet frames are undefined, and where parallel transport
- * simply carries the frame on without rotating it. A straight leg under an arch is this.
- */
+/** Sample a straight segment including both endpoints; from and to must differ for a usable tangent. */
 export function linePath(from: Vector3, to: Vector3, segments = 1): PathPoint[] {
   const tangent = new Vector3().subVectors(to, from).normalize();
 

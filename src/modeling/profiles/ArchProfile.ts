@@ -1,8 +1,7 @@
 import { Path } from "three";
 
 /**
- * The named arches. Every one answers the same question — *from one springing, over the crown, down to
- * the other* — which is why they are interchangeable, and why this list can grow without breaking anyone.
+ * Arch outlines traced between springings and crown.
  *
  * ```
  *   square        semicircle      segmental       horseshoe
@@ -17,84 +16,62 @@ import { Path } from "three";
  * ```
  */
 export type ArchStyle =
-  /** No arch at all — a flat lintel. It occupies the same SLOT in an outline, so it belongs here. */
+  /** Flat lintel at the springing height. */
   | "square"
-  /** A true half-circle. `rise` is forced to `halfSpan`. The one you want unless you want otherwise. */
+  /** Half-circle; rise equals halfSpan. */
   | "semicircle"
-  /** A circular arc through the springings and the crown, flatter than a half-circle. It meets the jamb at an ANGLE — a real segmental arch has that kink, and it springs from an impost. */
+  /** Circular arc with rise limited to halfSpan; meets the jamb at an angle. */
   | "segmental"
-  /** The Moorish arch: the same circle carried PAST the half-circle, so it bulges wider than its span and pinches back in. Wants `rise > halfSpan`. */
+  /** Circular arc with rise at least halfSpan; can extend beyond the springing span. */
   | "horseshoe"
-  /** An ellipse. Unlike the circular family it springs VERTICALLY at any rise, so it flows out of the jamb with no corner. */
+  /** Elliptical arc with vertical tangents at the springings. */
   | "elliptical"
-  /** Two arcs meeting at a point — lancet, gothic. At `rise = halfSpan * √3` it is the classic equilateral arch. */
+  /** Two circular arcs meeting at an apex; rise = halfSpan * √3 gives an equilateral arch. */
   | "pointed"
-  /** The Persian arch: an S-curve on each side, concave low and convex high, meeting at a sharp point. */
+  /** Two tangent-continuous quadratic segments per side, meeting at a pointed crown. */
   | "ogee";
 
-/** Where along the arch a trace starts or ends. The crown is the top — for `pointed` and `ogee`, the point. */
+/** Named endpoints for a partial or complete arch trace. */
 export type ArchEnd = "left" | "crown" | "right";
 
 export interface ArchProfileOptions {
-  /** Which arch. Defaults to `elliptical`. */
+  /** Arch shape; determines the curve and permitted rise. */
   style?: ArchStyle;
-  /** Centerline of the arch. Defaults to `0`. */
+  /** Arch centerline X coordinate. */
   x?: number;
   /** The springing line — the Y where the arch leaves the jambs. */
   y: number;
   /** Half the arch's span. */
   halfSpan: number;
-  /**
-   * Rise above the springing. Defaults to `halfSpan` — a half-circle.
-   *
-   * **This is a RADIUS, not an angle**, and it does not follow the span: resize an opening and the arch
-   * keeps whatever rise it had, quietly changing character. `rise === halfSpan` is the semicircle.
-   */
+  /** Rise above the springing, in coordinate units; archRise applies style-specific limits. */
   rise?: number;
-  /** Where the path already is. Defaults to `right`. */
+  /** Endpoint where the existing path ends. */
   from?: ArchEnd;
-  /** Where to trace to. Defaults to `left`. */
+  /** Endpoint where the appended trace ends. */
   to?: ArchEnd;
 }
 
-/**
- * The rise an arch will ACTUALLY have — `0` for a square head, `halfSpan` for a semicircle, and the
- * requested rise otherwise. Use it for bounds, so a caller never has to re-derive the crown.
- */
+/** Resolved rise: square 0; semicircle halfSpan; segmental ≤ halfSpan; horseshoe and pointed ≥ halfSpan. */
 export function archRise({ style = "elliptical", halfSpan, rise = halfSpan }: ArchProfileOptions): number {
   if (style === "square") return 0;
   if (style === "semicircle") return halfSpan;
 
-  // The circular family is ONE curve, and `rise` picks which member of it you get. So the names have to
-  // hold their own ground, or they lie: a segmental arch carried past `halfSpan` is not a segmental arch
-  // at all, it IS a horseshoe, and vice versa. The semicircle is the wall between them.
+  // Style limits meet at the semicircle:
   //
   //   segmental  <--- halfSpan --->  horseshoe
   //              (the semicircle)
   if (style === "segmental") return Math.min(rise, halfSpan);
   if (style === "horseshoe") return Math.max(rise, halfSpan);
 
-  // A pointed arch cannot rise less than its half-span either. Its two arcs each pass through a springing
-  // and the apex, and below that rise they BULGE ABOVE the apex on the way there — you get two humps and
-  // a dip where the point should be. The semicircle is the floor of the style, not an arbitrary limit.
+  // Below halfSpan, the pointed arcs rise above the apex before meeting it.
   if (style === "pointed") return Math.max(rise, halfSpan);
 
   return rise;
 }
 
 /**
- * **The circular family — `semicircle`, `segmental` and `horseshoe` are one arc.**
- *
- * Given the two springings and a crown, exactly one circle passes through all three, and its radius is
- * `(halfSpan² + rise²) / 2·rise`. What changes is where that puts the center relative to the springing
- * line:
- *
- * - `rise < halfSpan` → center BELOW it. The arc reaches the jamb at an angle: a segmental arch.
- * - `rise === halfSpan` → center ON it. Radius collapses to `halfSpan`: a semicircle.
- * - `rise > halfSpan` → center ABOVE it. The arc sweeps past its widest point and pinches back in to
- *   meet the jambs: a horseshoe.
- *
- * One formula, three arches. The names are intent, not implementation.
+ * Circle through both springings and crown: radius = (halfSpan² + rise²) / (2·rise).
+ * Center is below/on/above springing for rise < / = / > halfSpan, respectively.
  */
 function circle(halfSpan: number, rise: number): { radius: number; cy: number } {
   const radius = (halfSpan * halfSpan + rise * rise) / (2 * rise);
@@ -102,32 +79,23 @@ function circle(halfSpan: number, rise: number): { radius: number; cy: number } 
 }
 
 /**
- * The two arcs of a `pointed` arch. Each is centered ON the springing line, offset so it passes through
- * one springing and the apex. At `rise === halfSpan` the offset vanishes and both arcs become the same
- * circle — a semicircle. At `rise = halfSpan·√3` each center lands exactly on the OPPOSITE springing,
- * which is the equilateral arch every gothic window is drawn from.
+ * Pointed-arch arc centers lie on the springing line. At rise === halfSpan both arcs form a semicircle;
+ * at rise = halfSpan·√3 each center is the opposite springing.
  */
 function pointedArc(halfSpan: number, rise: number): { offset: number; radius: number } {
   const offset = (halfSpan * halfSpan - rise * rise) / (2 * halfSpan);
   return { offset, radius: halfSpan - offset };
 }
 
-/** Fractions that shape the ogee's S. The inflection is where it stops bulging out and starts pointing in. */
+/** Normalized ogee control-point fractions. */
 const OGEE_SPRING_HANDLE = 0.4;
 const OGEE_INFLECT_X = 0.45;
 const OGEE_INFLECT_Y = 0.55;
 const OGEE_TANGENT = 0.5;
 
 /**
- * Trace an arch onto a path you already own.
+ * Append an arch to an existing Path whose current point is at from. Jambs remain caller-owned.
  *
- * **It does not own your shape — it appends a curve to it.** That is deliberate: a slab, a wall, a
- * window and a door all want the same arc but entirely different outlines (shoulders, notches, hinges,
- * holes), so the arc is the only thing worth sharing. Everything else stays where it belongs.
- *
- * The path must already be AT `from` — this only draws the arc itself, never the jambs.
- *
- * @example
  * ```ts
  * // A door's silhouette: up the right side, over the top, down the left.
  * const shape = new Shape();
@@ -138,7 +106,6 @@ const OGEE_TANGENT = 0.5;
  * shape.closePath();
  * ```
  *
- * @example
  * ```ts
  * // Half an arch — one leaf of a double door, split at the crown.
  * traceArch(shape, { style: "ogee", y: h, halfSpan: hw, rise, from: "crown", to: "left" });
@@ -150,7 +117,6 @@ export function traceArch(path: Path, options: ArchProfileOptions): void {
 
   if (from === to) return;
 
-  // A flat head is still an arch-shaped hole in the outline — it just has no curve in it.
   if (style === "square" || rise <= 0) {
     path.lineTo(x + endX(to, halfSpan), y);
     return;
@@ -161,9 +127,7 @@ export function traceArch(path: Path, options: ArchProfileOptions): void {
     return;
   }
 
-  // The circular family and the ellipse are both a single sweep between two parametric angles, so they
-  // never need splitting at the crown — which matters, because splitting would double the curve count
-  // and quietly double `curveSegments` too.
+  // Keep a single ellipse segment; splitting at the crown changes curve-based sampling density.
   const [cy, xRadius, yRadius] = ellipseOf(style, halfSpan, rise);
   const springAngle = Math.atan2(-cy, halfSpan);
   const angle = (end: ArchEnd) =>
@@ -186,11 +150,7 @@ function endX(end: ArchEnd, halfSpan: number): number {
   return end === "crown" ? 0 : end === "right" ? halfSpan : -halfSpan;
 }
 
-/**
- * `pointed` and `ogee` are genuinely TWO curves that meet at the apex, so they are traced half at a time.
- * The crown is that meeting point, which is why a half-arch — one leaf of a double door — splits cleanly
- * for these styles too.
- */
+/** Trace pointed and ogee arches one side at a time, splitting at the crown. */
 function tracePointy(
   path: Path,
   style: "pointed" | "ogee",
@@ -240,14 +200,12 @@ function half(
     return;
   }
 
-  // Ogee: two quadratics per side, sharing a tangent at the inflection so the S is smooth there. The
-  // curve leaves the springing vertically, bulges out, reverses, and arrives at the apex still steep —
-  // which is what makes the point a POINT rather than a dome.
+  // Two quadratics share a tangent at the inflection and meet the apex with a nonhorizontal tangent.
   const spring = { x: x + sign * halfSpan, y };
   const apex = { x, y: y + rise };
   const handle = { x: spring.x, y: y + OGEE_SPRING_HANDLE * rise };
   const inflect = { x: x + sign * OGEE_INFLECT_X * halfSpan, y: y + OGEE_INFLECT_Y * rise };
-  // Continue straight through the inflection, so the second curve picks up exactly where the first aimed.
+  // Collinear handles preserve the tangent through the inflection.
   const carry = {
     x: inflect.x + OGEE_TANGENT * (inflect.x - handle.x),
     y: inflect.y + OGEE_TANGENT * (inflect.y - handle.y),

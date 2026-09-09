@@ -1,8 +1,8 @@
 import { BufferAttribute, BufferGeometry } from "three";
 
-/** A position in 3D, as a plain tuple — no allocation, no wrapper object. */
+/** 3D coordinate tuple. */
 export type Vec3 = [number, number, number];
-/** A UV coordinate, as a plain tuple. */
+/** 2D coordinate tuple, used for profiles and UVs. */
 export type Vec2 = [number, number];
 
 /** The four flat arrays a `BufferGeometry` is assembled from. */
@@ -13,12 +13,12 @@ export interface GeometryBuffers {
   indices: number[];
 }
 
-/** Fresh, empty buffers. */
+
 export function createGeometryBuffers(): GeometryBuffers {
   return { positions: [], normals: [], uvs: [], indices: [] };
 }
 
-/** UVs for a quad whose corners are given counter-clockwise from the bottom-left. */
+/** Per-corner UV order: (0,0), (0,1), (1,1), (1,0). */
 export const UNIT_QUAD_UV: [Vec2, Vec2, Vec2, Vec2] = [
   [0, 0],
   [0, 1],
@@ -27,19 +27,9 @@ export const UNIT_QUAD_UV: [Vec2, Vec2, Vec2, Vec2] = [
 ];
 
 /**
- * Append one quad — two triangles — to a set of geometry buffers. Corners must be counter-clockwise
- * when viewed along `normal`.
+ * Append four face-local vertices and triangles (0,1,2), (0,2,3). Corners must face outward by winding.
+ * An omitted normal uses the first three corners; supplied normals are copied unchanged.
  *
- * This is the library's geometry primitive, and it is deliberately *just a function*. It does not
- * own your data, invent a vertex type, or ask you to build inside a session: it takes the flat
- * arrays you already have and pushes onto them. Write a quad with it, hand-write the next one, mix
- * it with merged primitives — it does not care. Utilities that own your data structure get
- * abandoned; utilities that operate on it get used.
- *
- * Every quad carries its own four vertices with a single face normal, which is what gives low-poly
- * geometry its faceted read. Vertices are not shared between quads, and that is on purpose.
- *
- * @example
  * ```ts
  * const buffers = createGeometryBuffers();
  *
@@ -72,13 +62,9 @@ export function pushQuad(
 }
 
 /**
- * Append one triangle. Corners must be counter-clockwise when viewed along `normal`.
+ * Append three face-local vertices and one triangle, counter-clockwise as seen from the outward side.
+ * An omitted normal is derived from winding; supplied normals are copied unchanged.
  *
- * The companion to {@link pushQuad}, and you need it wherever a surface closes to a point — the cap
- * of an obelisk, the tip of a spire, the apex of a roof. Faking those with a quad means duplicating
- * a corner, which buys you a wasted vertex and a zero-area triangle.
- *
- * @example
  * ```ts
  * // One face of a pyramid cap: two shoulder corners rising to the apex.
  * pushTriangle(
@@ -111,13 +97,7 @@ export function pushTriangle(
   buffers.indices.push(base, base + 1, base + 2);
 }
 
-/**
- * Face normal of the triangle `a → b → c`, from the cross product of its edges. Points toward a
- * viewer for whom the corners wind counter-clockwise.
- *
- * Pass a normal to {@link pushQuad} when you already know it — you usually do, and it is exact.
- * Reach for this when you don't: when the face was computed, swept, or lofted rather than authored.
- */
+/** Normalized (b − a) × (c − a), facing the viewer of CCW corners; degenerate triangles return a zero vector. */
 export function faceNormal(a: Vec3, b: Vec3, c: Vec3): Vec3 {
   const ux = b[0] - a[0];
   const uy = b[1] - a[1];
@@ -135,9 +115,8 @@ export function faceNormal(a: Vec3, b: Vec3, c: Vec3): Vec3 {
 }
 
 /**
- * Assemble buffers into a {@link BufferGeometry} — indexed, with position, normal, and uv.
+ * Copy arrays into an indexed BufferGeometry with position, normal and UV attributes and a bounding sphere.
  *
- * @example
  * ```ts
  * const buffers = createGeometryBuffers();
  * pushQuad(buffers, corners, [0, 1, 0]);

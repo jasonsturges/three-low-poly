@@ -2,9 +2,8 @@ import { ParametricCurve } from "../../constants/ParametricCurve";
 import { Vector2 } from "three";
 
 /**
- * Function to create cubic Bezier curve points
+ * Sample a cubic Bézier in XY, including both endpoints; segments must be positive.
  *
- * Example:
  * ```
  * const points = [
  *   ...ParametricCurveUtils.createCubicCurvePoints(
@@ -29,9 +28,8 @@ export const createCubicCurvePoints = (start: Vector2, control1: Vector2, contro
 };
 
 /**
- * Function to create damped curve points
+ * Sample damped radius x and linear height y; the scalar damping function determines endpoint x values.
  *
- * Example:
  * ```
  * const points = [
  *   ...ParametricCurveUtils.createDampedCurvePoints(
@@ -55,9 +53,8 @@ export const createDampedCurvePoints = (start: Vector2, end: Vector2, damping: n
 };
 
 /**
- * Function to create exponential curve points
+ * Sample exponential x and linear y; x is scaled by end.x - start.x without endpoint normalization.
  *
- * Example:
  * ```
  * const points = [
  *   ...ParametricCurveUtils.createExponentialCurvePoints(
@@ -82,9 +79,8 @@ export const createExponentialCurvePoints = (start: Vector2, end: Vector2, base:
 };
 
 /**
- * Function to create logarithmic curve points
+ * Sample logarithmic x and linear y; scalar parameters must produce finite values over t ∈ [0, 1].
  *
- * Example:
  * ```
  * const points = [
  *   ...ParametricCurveUtils.createLogarithmicCurvePoints(
@@ -109,9 +105,8 @@ export const createLogarithmicCurvePoints = (start: Vector2, end: Vector2, base:
 };
 
 /**
- * Function to create parabolic curve points
+ * Sample x = start.x + a·t² + b·t + c and linear y; end.x is unused.
  *
- * Example:
  * ```
  * const points = [
  *   ...ParametricCurveUtils.createParabolicCurvePoints(
@@ -137,9 +132,8 @@ export const createParabolicCurvePoints = (start: Vector2, end: Vector2, a: numb
 };
 
 /**
- * Function to create quadratic Bezier curve points
+ * Sample a quadratic Bézier in XY, including both endpoints; segments must be positive.
  *
- * Example:
  * ```
  * const points = [
  *   ...ParametricCurveUtils.createQuadraticCurvePoints(
@@ -163,9 +157,8 @@ export const createQuadraticCurvePoints = (start: Vector2, control: Vector2, end
 };
 
 /**
- * Function to create sigmoid curve points
+ * Sample sigmoid x and linear y; sigmoid endpoint values need not equal 0 and 1.
  *
- * Example:
  * ```
  * const points = [
  *   ...ParametricCurveUtils.createSigmoidCurvePoints(
@@ -175,6 +168,7 @@ export const createQuadraticCurvePoints = (start: Vector2, control: Vector2, end
  *     24,                           // Resolution of the sigmoid curve
  *   ),
  * ]
+ * ```
  */
 export const createSigmoidCurvePoints = (start: Vector2, end: Vector2, a: number, segments = 24) => {
   let curvePoints = [];

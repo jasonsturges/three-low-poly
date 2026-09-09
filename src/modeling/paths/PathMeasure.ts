@@ -1,38 +1,25 @@
 import { Vector3 } from "three";
 
-/**
- * A polyline with its arc lengths worked out, so positions along it can be asked for by DISTANCE rather
- * than by vertex index.
- *
- * Produced by {@link measurePath}. Treat it as immutable — it caches distances that would be wrong if the
- * points moved underneath it.
- */
+/** Cached polyline distances; points remain caller-owned and must stay fixed while the measure is used. */
 export interface PathMeasure {
   /** The vertices, in order. Not copied: the caller still owns them. */
   points: Vector3[];
   /** Whether the last vertex joins back to the first. */
   closed: boolean;
-  /**
-   * Arc length at each vertex, with ONE EXTRA entry holding the total — so `distances[i + 1] -
-   * distances[i]` is always segment `i`'s length, including the closing segment of a closed run.
-   */
+  /** Cumulative vertex distances plus a final total: distances[i + 1] - distances[i] is segment i length. */
   distances: number[];
   /** Total arc length. The perimeter, for a closed run. */
   length: number;
 }
 
 export interface MeasurePathOptions {
-  /** Join the last vertex back to the first. Defaults to `false`. */
+  /** Include the closing segment from last point to first. */
   closed?: boolean;
 }
 
 /**
- * Work out the arc lengths along a polyline.
+ * Cache cumulative chord distances for at least two points. Closed-path sampling requires positive total length.
  *
- * Everything else here needs this first, because a run is laid out by DISTANCE — a pitch is a distance, an
- * item's width is a distance — and a list of vertices does not know where any distance falls.
- *
- * @example
  * ```ts
  * const plan = measurePath(footprint, { closed: true });
  * plan.length; // the perimeter
@@ -49,12 +36,7 @@ export function measurePath(points: Vector3[], { closed = false }: MeasurePathOp
   return { points, closed, distances, length: distances[distances.length - 1]! };
 }
 
-/**
- * The position a given distance along the path.
- *
- * On a **closed** path the distance wraps, so `-0.1` and `length - 0.1` are the same place — which is what
- * lets an item straddle the seam without special handling. On an **open** path it clamps to the ends.
- */
+/** Return a point at distance; closed paths wrap (-0.1 equals length - 0.1), open paths clamp. */
 export function pointAtDistance({ points, closed, distances, length }: PathMeasure, distance: number): Vector3 {
   const target = closed
     ? ((distance % length) + length) % length
@@ -70,17 +52,9 @@ export function pointAtDistance({ points, closed, distances, length }: PathMeasu
 }
 
 /**
- * The stretch of path between two distances, **including any vertices it crosses**.
+ * Return endpoints and crossed vertices in distance order; to must exceed from.
+ * Closed ranges can cross the seam; each source vertex is included at most once, even over multiple laps.
  *
- * That inclusion is the whole point, and it is what makes an item sitting on a corner cost nothing extra.
- * A slice that stays on one segment comes back as two points; one that spans a corner comes back as
- * three, and {@link miterFrames} then miters the middle exactly as it would on a long run. So a merlon or
- * a dentil landing on a corner is an L in plan without a line of code that knows what a corner is.
- *
- * `to` must be greater than `from`. Both may fall outside `[0, length]` on a closed path — `slicePath(m,
- * -0.05, 0.05)` is the slice straddling the start, which is exactly what a corner-anchored item asks for.
- *
- * @example
  * ```ts
  * // One merlon, wherever it happens to land.
  * const merlon = sweep(section, miterFrames(
@@ -96,8 +70,7 @@ export function slicePath(measure: PathMeasure, from: number, to: number): Vecto
   const span = to - from;
   const out = [pointAtDistance(measure, from)];
 
-  // Every vertex, expressed as how far past `from` it sits — wrapped on a closed run so the seam is not a
-  // special case. Only those strictly inside the span count; one exactly on an end is already there.
+  // Include only vertices strictly inside the interval; endpoint samples already exist.
   const crossed: { at: number; point: Vector3 }[] = [];
   for (let i = 0; i < points.length; i++) {
     let at = distances[i]! - from;

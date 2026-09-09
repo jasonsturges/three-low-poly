@@ -1,15 +1,11 @@
 import { Vector2 } from "three";
 import { type GeometryBuffers, pushQuad, type Vec3 } from "./GeometryBuffers";
 
-/** Where a member's end lands, and how it is cut there. */
+/** End extension and cut normal for a rectangular XZ member. */
 export interface PrismEnd {
-  /** Extend past the endpoint along the run, so the end buries itself in whatever it lands in. */
+  /** Outward extension from this endpoint, along the member run. */
   reach?: number;
-  /**
-   * The plane to cut the end into, as that surface's normal in plan. Omit for a square end.
-   *
-   * A miter is this and nothing else: slide each corner ALONG the run until it lands in the plane.
-   */
+  /** Cut-plane normal in XZ plan; omitted normal gives a square end. */
   wall?: Vector2;
 }
 

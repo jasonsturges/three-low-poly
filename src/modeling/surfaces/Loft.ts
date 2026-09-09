@@ -9,31 +9,13 @@ import {
 } from "../mesh/GeometryBuffers";
 
 export interface LoftOptions {
-  /**
-   * Cap the two ends. Defaults to `true`.
-   *
-   * Ear-clipped against the ring's own best-fit plane, so a concave section caps correctly. Turn it off
-   * for a run that dies into a wall, or for a skin whose ends are closed by something else.
-   */
+  /** Triangulate each end after projection onto its Newell-normal plane. */
   cap?: boolean;
-  /**
-   * Close the sequence — skin the last ring back to the first, and emit no caps.
-   *
-   * A closed sequence has no ends, so capping it would put a disc inside it. Do not repeat the first ring
-   * at the end: the wrap is what closes it. This is the section-sequence closing on itself, which is a
-   * different thing from any individual ring being closed — every ring is always closed.
-   */
+  /** Stitch the final ring to the first and omit caps; do not repeat the first ring. */
   closed?: boolean;
 }
 
-/**
- * Newell's normal for a ring — the best-fit plane's direction, from every edge rather than from three
- * chosen points.
- *
- * Three points would do for a triangle and are a coin flip for anything else: pick three that happen to
- * be nearly colinear and the normal is noise. A lofted ring is routinely non-planar and frequently has
- * colinear runs, so the robust construction is the one to use.
- */
+/** Newell’s area-weighted normal accumulated from every ring edge; degenerate rings return zero. */
 function ringNormal(ring: Vector3[]): Vector3 {
   const normal = new Vector3();
 
@@ -48,14 +30,7 @@ function ringNormal(ring: Vector3[]): Vector3 {
   return normal.normalize();
 }
 
-/**
- * Cap one end, facing away from `outward`.
- *
- * Ear-clipped, not fanned. A fan tiles a section only when it is star-shaped from its own first corner,
- * which every convex section is and several real ones are not — the same trap `sweep` documents on its
- * own caps. Projecting to the ring's best-fit plane first is what lets `ShapeUtils` do the work on a ring
- * that is sitting in an arbitrary plane in space.
- */
+/** Project a ring onto its Newell-normal plane, triangulate it, and orient the cap toward outward. */
 function capRing(buffers: GeometryBuffers, ring: Vector3[], outward: Vector3): void {
   if (ring.length < 3) return;
 
@@ -94,8 +69,7 @@ function capRing(buffers: GeometryBuffers, ring: Vector3[], outward: Vector3): v
     return;
   }
 
-  // Ear clipping gives up on a degenerate outline. A fan is wrong for a concave one, but a missing cap is
-  // a hole — so fall back rather than leave the end open.
+  // Fan fallback can cross a concave outline; callers must validate the resulting cap.
   for (let i = 1; i < ring.length - 1; i++) {
     const [i1, i2] = flip ? [i + 1, i] : [i, i + 1];
     pushTriangle(buffers, [at(ring[0]!), at(ring[i1]!), at(ring[i2]!)], undefined);
@@ -103,26 +77,11 @@ function capRing(buffers: GeometryBuffers, ring: Vector3[], outward: Vector3): v
 }
 
 /**
- * Skin a sequence of cross-sections — the second surface primitive, and the sibling of {@link sweep}.
+ * Skin closed rings with equal point counts and corresponding indices; inputs remain unchanged.
+ * Fewer than two rings returns empty geometry; unequal point counts throw.
  *
- * A SWEEP carries one profile along a path: the section never changes shape, and the path generates the
- * frames. A LOFT skins a sequence of rings that need not match, and there is no path at all — the
- * sections themselves say where the surface goes. So a sweep is a special CASE of a loft, and `sweep`
- * contains one: its ring-stitching loop is this function, with the frames-and-profile half generating the
- * sections first. What a loft can do that no sweep can is change the section — a square into a circle.
- *
- * The name is literal. Lofting is shipbuilding: full-size cross-sections chalked on the floor of a mould
- * LOFT, with a fair surface passed through them. `Station` is the same word from the same trade.
- *
- * **Every ring must already correspond** — same length, and aligned so that index `i` in one ring pairs
- * with index `i` in the next. That is not this function's job and deliberately so: correspondence is
- * where every judgment call lives, exactly as framing is for a sweep, and it is worth choosing
- * explicitly. {@link correspondLoops} and {@link alignRings} are the tools for it. Rings of differing
- * length throw rather than silently skinning garbage, because there is no correct thing to assume.
- *
- * @example
  * ```ts
- * // A square carried into a circle — the thing a sweep provably cannot do.
+ * // Transition from a square section to a circle.
  * const loops = correspondLoops([squareOutline, circleOutline]);
  * const rings = loops.map((loop, i) => loop.map((p) => new Vector3(p.x, i * 2, p.y)));
  * const geometry = loft(alignRings(rings));
@@ -151,14 +110,12 @@ export function loft(rings: Vector3[][], { cap = true, closed = false }: LoftOpt
 
     for (let i = 0; i < width; i++) {
       const j = (i + 1) % width;
-      // The normal is derived from the winding rather than supplied: a lofted band between two
-      // differently-shaped sections is generally not planar, and no caller knows its normal in advance.
+      // Quad normals come from the first three corners; warped bands remain faceted.
       pushQuad(buffers, [at(lower[j]!), at(lower[i]!), at(upper[i]!), at(upper[j]!)], undefined);
     }
   }
 
-  // Each cap faces AWAY from the ring next to it, which is the only direction available that comes from
-  // the loft itself rather than from a convention the caller has to remember.
+  // Neighboring ring centroids determine outward cap orientation.
   if (cap && !closed) {
     const first = rings[0]!;
     const second = rings[1]!;

@@ -1,52 +1,26 @@
 import type { Vec2 } from "../mesh/GeometryBuffers";
 
 /**
- * Molding sections that sit on a SINGLE face.
- *
- * The other half of the vocabulary. A cornice bridges two surfaces; a chair rail, a bead, an astragal all
- * sit flat on one wall. The classical ELEMENT names are shared with {@link MoldingStyle} — `ovolo`,
- * `ogee`, `fillet` name a curve, and a curve does not care what it is attached to — but the SECTIONS are
- * different polygons, because the closure differs. See {@link surfaceProfile}.
- *
- * - `fillet` — a plain flat band. A carpenter would call it a batten or a listel. The thing everything
- *   else is built up from, and a legitimate molding on its own.
- * - `bead` — a half-round standing proud of the surface. Large, it is a TORUS; the shape is the same and
- *   the size is a parameter, so there is one entry rather than two.
- * - `astragal` — a bead with a fillet each side, so it rides on a shallow step. That step is what gives
- *   it a shadow line top *and* bottom, which a bare bead has only at its edges.
- * - `reed` — several beads side by side. REEDING stands proud; FLUTING is its negative, cut in, and is
- *   not this.
- * - `ovolo` — square at the top, a convex quarter dying into the wall.
- * - `ogee` — an S: square at the top, hollow, then a bulge returning to the wall.
- * - `lip` — a crest that OVERHANGS, undercut beneath into a throat. What makes a picture rail work: the
- *   hook's tip goes up into the undercut and catches. A `bead` and an `astragal` have undercuts too, but
- *   shallow ones at mid-height; this puts a single deep one high on the section, where a hook reaches.
- *
- * **Chair rail, dado rail and picture rail are not styles, and that is deliberate** — they are heights on
- * a wall, not shapes. Any of these becomes one by being run at the right height; `lip` is named for its
- * overhang rather than for the rail people usually cut it into.
+ * Single-surface profiles: fillet band, bead half-round, astragal stepped bead, reed repeated beads,
+ * ovolo quarter, ogee S-curve, and lip overhang with an undercut throat.
  */
 export type SurfaceStyle = "fillet" | "bead" | "astragal" | "reed" | "ovolo" | "ogee" | "lip";
 
 export interface SurfaceProfileOptions {
-  /** Which section. Defaults to `"bead"`. */
+  /** Exposed contour projecting from the flat back. */
   style?: SurfaceStyle;
-  /** How far the section runs ALONG the surface. Defaults to `0.07`. */
+  /** Extent along the supporting surface. */
   height?: number;
-  /** How far it stands OUT from the surface. Defaults to `0.028`. */
+  /** Projection from the supporting surface. */
   projection?: number;
-  /** How finely a curved face is cut — the low-poly knob. Defaults to `6`. */
+  /** Curve subdivision count. */
   segments?: number;
-  /** How many beads a `reed` carries. Ignored by every other style. Defaults to `4`. */
+  /** Bead count for reed; ignored by other styles. */
   reeds?: number;
 }
 
 /**
- * A molding section that sits on ONE surface, as a closed profile ready for {@link sweep}.
- *
- * **The closure is the whole difference.** A corner section has two flat backs meeting at the origin, and
- * its face runs from one to the *other*. A surface section has ONE back, and its face leaves that surface
- * and comes back to it:
+ * Closed CCW profile with one flat back from (0, 0) to (height, 0); projection is the outward y extent.
  *
  * ```
  *   CORNER (moldingProfile)              SURFACE (this)
@@ -58,18 +32,6 @@ export interface SurfaceProfileOptions {
  *       drop                              height
  * ```
  *
- * So the two cannot share a signature: there is no second surface for a `drop` to run along, and the size
- * that matters is the section's `height` along the wall. The classical element NAMES are shared, because
- * they name curves rather than closures — a surface `ovolo` is the same quarter as a corner `ovolo`,
- * finished differently.
- *
- * Nothing downstream needs to know which family a section belongs to. `MoldingGeometry` takes a `profile`
- * directly, and the miter never sees it — a corner is a property of the PATH.
- *
- * The section is a closed polygon wound counter-clockwise, with the back running from `(0, 0)` to
- * `(height, 0)`.
- *
- * @example
  * ```ts
  * // A chair rail: an astragal, run along a wall at chair height.
  * const rail = new MoldingGeometry({
@@ -88,7 +50,7 @@ export function surfaceProfile({
   reeds = 4,
 }: SurfaceProfileOptions = {}): Vec2[] {
   const steps = Math.max(1, Math.round(segments));
-  // The flat back, always. Everything after this is the face.
+  // Begin with the flat back.
   const points: Vec2[] = [
     [0, 0],
     [height, 0],
@@ -114,8 +76,7 @@ export function surfaceProfile({
       break;
 
     case "astragal": {
-      // The bead rides on a shallow fillet, top and bottom. That step is the point of an astragal — it
-      // casts a shadow line at both edges, which a bare bead does not.
+      // Fillets border both sides of the bead.
       const fillet = height * 0.18;
       const step = projection * 0.3;
       points.push([height, step], [height - fillet, step]);
@@ -163,10 +124,7 @@ export function surfaceProfile({
     }
 
     case "lip": {
-      // The one section here that OVERHANGS. Everything else runs monotonically back to the wall; this
-      // crests, then cuts back IN to a throat, leaving a lip a hook can hang from. That undercut is the
-      // entire function of a picture rail, and it is why the shape earns an entry of its own rather than
-      // being an ogee run high on the wall.
+      // The crest overhangs an undercut throat.
       //
       //         ╭──╮   ← crest, at full projection
       //        ╱   │
@@ -187,8 +145,7 @@ export function surfaceProfile({
           projection * 0.45 + projection * 0.55 * Math.sin(t),
         ]);
       }
-      // Straight back in, under the crest. A curve here would soften exactly the edge that has to be
-      // crisp for the shadow — and for the hook.
+      // A straight segment preserves the sharp undercut.
       points.push(throat);
       // Below the throat, a plain ovolo dying into the wall.
       for (let i = 1; i <= steps; i++) {
@@ -199,10 +156,7 @@ export function surfaceProfile({
     }
   }
 
-  // The helpers re-emit their start point, and a face returning to the wall re-emits the origin. A
-  // repeated point in a sweep profile is a zero-length edge — it costs a degenerate band and reads as a
-  // self-intersection to anything auditing the polygon. Drop them once here rather than making every
-  // branch remember.
+  // Remove repeated adjacent/closing points to avoid zero-length sweep edges.
   const distinct = points.filter(
     (p, i) => i === 0 || Math.hypot(p[0] - points[i - 1]![0], p[1] - points[i - 1]![1]) > 1e-12,
   );

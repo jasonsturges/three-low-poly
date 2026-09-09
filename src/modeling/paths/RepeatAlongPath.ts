@@ -1,61 +1,30 @@
 import type { PathMeasure } from "./PathMeasure";
 
-/**
- * Where the layout is allowed to give, when a run does not divide evenly by the pitch.
- *
- * - `"corners"` — every VERTEX gets an item, and the pitch shifts to make that true. Each segment is
- *   divided into a whole number of steps independently, so unequal sides each solve themselves. This is
- *   how a course is really set out: a battlement has a merlon on every corner, a balustrade has a newel
- *   there, and neither is a sliced one. On an open run the two ends count as corners too.
- * - `"pitch"` — the requested pitch is held exactly and the run is walked from its start. Whatever fails
- *   to divide evenly piles into the final gap, and the corners land wherever they land.
- *
- * Nothing else can absorb it. The slack has to go into the pitch, into a gap, or into the items, and the
- * items are atomic — a half dentil is not a dentil.
- */
+/** corners adjusts spacing per segment to place an item at each vertex; pitch keeps fixed spacing from the start. */
 export type RepeatAnchor = "corners" | "pitch";
 
 export interface RepeatAlongPathOptions {
-  /**
-   * Center to center, as a distance. **The invariant a course is designed around** — not the gap, which
-   * is a consequence of the pitch and the item's width.
-   */
+  /** Requested center-to-center distance, greater than zero. */
   pitch: number;
-  /** What gives when the run does not divide evenly. Defaults to `"corners"`. See {@link RepeatAnchor}. */
+  /** How spacing handles a remainder along the measured path. */
   anchor?: RepeatAnchor;
 }
 
 export interface PathRepeat {
   /** Item centers, as distances along the path. Feed each to `slicePath` or `pointAtDistance`. */
   centers: number[];
-  /**
-   * The pitch actually used. Equal to the request only when the run happened to divide evenly — with
-   * `"corners"` this is the average across segments, which may differ per segment when the sides do.
-   */
+  /** Actual pitch; corners reports total spanned length / step count, an average across segments. */
   pitch: number;
-  /** What could not be divided evenly and was dumped into one gap. Always `0` under `"corners"`. */
+  /** Unallocated distance under pitch anchoring; zero under corners anchoring. */
   slack: number;
   /** Whether every vertex ended up with an item on it. */
   anchored: boolean;
 }
 
 /**
- * Space repeated items along a path, and report what the spacing cost.
+ * Return item-center distances and spacing metadata. Use pointAtDistance for placement or
+ * slicePath(center ± width / 2) for an item spanning multiple segments.
  *
- * **This returns numbers, not geometry** — deliberately. What you do with a center decides which family
- * you are building, and the layout is identical either way:
- *
- * - a **notched band** (merlon/crenel, dentil/interdentil) uses each item's INTERVAL: pass
- *   `center ± width / 2` to {@link slicePath} and sweep the result. The gap is a real member, which is
- *   why those courses have a word for it.
- * - an **applied repeat** (baluster, modillion) uses only the CENTER: {@link pointAtDistance} and place
- *   an object there. There is no gap member, because there is nothing between the items but air.
- *
- * That split also decides how to bake them. A notched band's items DIFFER — the corner one spans two
- * segments — so they merge into one geometry and cannot be instanced. An applied repeat's items are
- * identical, so instancing is right and merging would only duplicate them.
- *
- * @example
  * ```ts
  * const plan = measurePath(footprint, { closed: true });
  * const { centers } = repeatAlongPath(plan, { pitch: 1.2 });
@@ -105,8 +74,7 @@ export function repeatAlongPath(
     spanned += segment;
     steps += count;
 
-    // Stop one short: this segment's far end is the NEXT segment's start, and on a closed run the last
-    // one is the first. Emitting it would stack two items on every corner.
+    // Emit shared corners once; only the last open segment includes its far endpoint.
     const emit = closed || i < segments - 1 ? count : count + 1;
     for (let k = 0; k < emit; k++) centers.push(distances[i]! + k * actual);
   }

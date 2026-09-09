@@ -2,9 +2,8 @@ import { BufferGeometry, Quaternion, Vector3 } from "three";
 import { Direction } from "../../constants/Direction";
 import { Falloff } from "../../constants/Falloff";
 
-/**
- * Applies a twisting force to the vertices, rotating them around the direction defined by the target position.
- */
+/** Rotate positions in place about a unit direction through the target; strength is radians before falloff.
+ * Normals and bounds remain stale. */
 export const twistBrush = <T extends BufferGeometry>(
   geometry: T,
   position: Vector3,
@@ -22,14 +21,12 @@ export const twistBrush = <T extends BufferGeometry>(
     const distance = vertex.distanceTo(position);
 
     if (distance < radius) {
-      // Calculate falloff and rotation angle
+
       const falloff = falloffFn(distance, radius);
       const angle = falloff * strength;
 
-      // Create quaternion for rotation around the axis
       quaternion.setFromAxisAngle(direction, angle);
 
-      // Apply twist rotation
       vertex.sub(position).applyQuaternion(quaternion).add(position);
       positions.setXYZ(i, vertex.x, vertex.y, vertex.z);
     }

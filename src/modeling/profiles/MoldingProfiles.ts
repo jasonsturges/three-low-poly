@@ -1,61 +1,25 @@
 import type { Vec2 } from "../mesh/GeometryBuffers";
 
 /**
- * The classical molding sections, by their own names.
- *
- * Each is the FACE that spans between two flat backs — one against the wall, one against the ceiling or
- * floor. They differ only in how that face travels between them.
- *
- * - `cove` (cavetto) — hollow. The face curves back TOWARD the corner. The commonest ceiling trim, and
- *   what a run of plaster coving is.
- * - `ovolo` — the opposite: a convex quarter, bulging out into the room.
- * - `chamfer` — a straight splay, corner to corner. The degenerate case, and the one that stays a single
- *   flat facet no matter how `segments` is set.
- * - `ogee` (cyma recta) — an S: hollow at the ceiling flowing into a bulge at the wall. The classical
- *   cornice, and the section most people picture when they picture molding.
- * - `cyma` (cyma reversa) — the same S the other way up: a bulge at the ceiling over a hollow at the wall.
- *   Reads heavier than an `ogee`, because the mass sits high.
- * - `scotia` — a hollow of TWO radii rather than one, so it is deeper on one side than the other. The
- *   asymmetry is the whole point; a symmetric hollow is just a `cove`.
- * - `fillet` — no face at all: a plain square band filling the corner. A listel. On its own it is the
- *   cheapest possible trim, and it is what the members of a built-up cornice are separated by.
- * - `step` — a corbelled two-step block, oversailing as it rises. Stone and brick rather than plaster or
- *   timber, and the lowest-poly section here.
- *
- * **These are CORNER sections**, every one — they bridge two surfaces. Beads, astragals and the sections a
- * chair rail is run from sit on a SINGLE face instead, and are {@link surfaceProfile}.
- *
- * The two families share the classical ELEMENT names — `ovolo`, `ogee` and `fillet` appear in both — and
- * that is not a collision. Those words name a CURVE, and a curve does not care what it is attached to: a
- * surface `ovolo` is the same convex quarter as this one, finished against one wall instead of two. What
- * cannot be shared is the SECTION, because the closure differs, which is why there are two unions and two
- * functions rather than one of each.
+ * Solid-backed corner-section styles: cove/scotia hollows, ovolo convex quarter, ogee/cyma S-curves,
+ * chamfer splay, fillet rectangle, and step polygon.
  */
 export type MoldingStyle = "cove" | "ovolo" | "chamfer" | "ogee" | "cyma" | "scotia" | "fillet" | "step";
 
 export interface MoldingProfileOptions {
-  /** Which section. Defaults to `"cove"`. */
+  /** Exposed contour between the wall and ceiling or floor backs. */
   style?: MoldingStyle;
-  /** How far the molding runs along the WALL from the corner. Defaults to `0.09`. */
+  /** Distance along the wall from the corner. */
   drop?: number;
-  /** How far it stands OUT from the wall, along the ceiling or floor. Defaults to `0.09`. */
+  /** Distance along the ceiling or floor from the wall. */
   projection?: number;
-  /**
-   * How finely the face is cut — the low-poly knob. Defaults to `6`.
-   *
-   * `1` collapses every curved style to its chord, which is a chamfer; `16` reads as run plaster. Like
-   * `segments` everywhere else in this library it changes TESSELLATION, never the silhouette's extent:
-   * the face always meets the two backs at exactly `drop` and `projection`.
-   */
+  /** Curve subdivisions; endpoints remain at drop and projection. Chamfer, fillet and step use fixed polygons. */
   segments?: number;
 }
 
 /**
- * A molding section, as a closed profile ready for {@link sweep}.
- *
- * **Molding lives in a CORNER**, which is what makes it different from bar stock, and what the whole
- * convention here follows from. Every section has two flat backs meeting at the corner line, and a
- * decorative face spanning between them:
+ * Closed CCW corner profile in (normal, binormal) coordinates, with backs meeting at (0, 0).
+ * The x extent is drop; the y extent is projection.
  *
  * ```
  *          ceiling
@@ -67,19 +31,6 @@ export interface MoldingProfileOptions {
  *        drop  (the profile's `x`, and the sweep's normal)
  * ```
  *
- * So the corner sits at the profile's origin, one back runs out along `x` to `drop`, the other along `y`
- * to `projection`, and the face closes the triangle between them. `drop` and `projection` are the two
- * numbers molding is actually sold in — a "3½ inch crown with 2¼ projection" — rather than a width and a
- * height that would have to be explained.
- *
- * These are SOLID-BACKED sections: they sit flush in the corner with no void behind, which is exactly
- * what plaster coving is. Sprung crown, which bridges the corner on two narrow flats and leaves a
- * triangular void, is a different family and not yet here.
- *
- * The section is a closed polygon wound counter-clockwise, so it can be handed to `sweep` directly, or
- * to {@link MoldingGeometry} by name.
- *
- * @example
  * ```ts
  * const cornice = sweep(moldingProfile({ style: "ogee", drop: 0.12, projection: 0.09 }), stations, {
  *   closed: true,
@@ -93,14 +44,11 @@ export function moldingProfile({
   segments = 6,
 }: MoldingProfileOptions = {}): Vec2[] {
   const steps = Math.max(1, Math.round(segments));
-  // The corner itself, where the two backs meet. Everything else is the face, running from the wall's
-  // edge round to the ceiling's.
+  // Start at the intersection of the two backs.
   const points: Vec2[] = [[0, 0]];
 
   switch (style) {
     case "chamfer":
-      // A single facet, corner to corner. Not affected by `segments` — a chamfer that got smoother would
-      // not be a chamfer.
       points.push([drop, 0], [0, projection]);
       break;
 
@@ -154,15 +102,8 @@ export function moldingProfile({
     }
 
     case "scotia": {
-      // A hollow of two different radii — deeper against the wall than against the ceiling, which is the
-      // whole difference from a `cove`. As ONE cubic curve rather than two arcs: two arcs of unequal
-      // radius only meet smoothly if their centers share a normal at the join, and getting that wrong
-      // gives a 90° crease at the waist instead of a hollow.
-      //
-      // The control points sit ON the two backs, so the curve leaves each one tangentially, exactly as a
-      // cove does. Pulling them in by different amounts is what makes it asymmetric — and because a
-      // Bézier stays inside its control points' hull, the section is guaranteed to stay inside
-      // `drop × projection` however they are set.
+      // A cubic with control points on the backs preserves endpoint tangents and an asymmetric hollow.
+      // The Bézier control hull bounds it within drop × projection.
       const p0: Vec2 = [drop, 0];
       const p1: Vec2 = [drop * (1 - SCOTIA_WALL_PULL), 0];
       const p2: Vec2 = [0, projection * (1 - SCOTIA_CEILING_PULL)];
@@ -183,13 +124,11 @@ export function moldingProfile({
     }
 
     case "fillet":
-      // The corner filled square. No face — this IS the band.
       points.push([drop, 0], [drop, projection], [0, projection]);
       break;
 
     case "step":
-      // A corbel: out, up, out again. Fixed at two steps rather than driven by `segments`, because more
-      // steps would be a different SILHOUETTE and `segments` may only change tessellation.
+      // Two steps; segments does not alter this polygon.
       points.push(
         [drop, 0],
         [drop, projection * STEP_FRACTION],
@@ -203,12 +142,9 @@ export function moldingProfile({
   return points;
 }
 
-/** Where a `step`'s riser lands, as a fraction of each dimension. Even-ish, and it reads as masonry. */
+/** Step riser position as a fraction of each dimension. */
 const STEP_FRACTION = 0.45;
 
-/**
- * How far a `scotia`'s hollow is drawn in along each back. Unequal on purpose — equal pulls would give a
- * symmetric hollow, which is a `cove`.
- */
+/** Unequal Bézier control-point fractions for the scotia hollow. */
 const SCOTIA_WALL_PULL = 0.85;
 const SCOTIA_CEILING_PULL = 0.35;

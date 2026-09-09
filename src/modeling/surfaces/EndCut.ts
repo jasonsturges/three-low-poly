@@ -1,23 +1,19 @@
 import { BufferAttribute, BufferGeometry, Vector3 } from "three";
 
 /**
- * A plane bounding a member's end. `normal` points INTO the region the member is allowed to occupy.
- *
- * At a joint these are not arbitrary: the plane mitering member `i` against member `j` passes through the
- * shared point with normal `normalize(a_i - a_j)`, both axes pointing AWAY down their own member. Handing
- * `j` the same plane with the arguments swapped gives exactly the opposite normal, so two neighbors are
- * bounded by ONE surface from opposite sides and cannot leave a gap between them.
+ * Member-end plane whose normal points into the allowed region. For unit outward member axes,
+ * a shared miter normal is normalize(a_i - a_j); swapping axes reverses it.
  */
 export interface CutPlane {
   point: Vector3;
   normal: Vector3;
 }
 
-/** One ring point, where it landed, and which bounding plane claimed it. */
+/** Original ring point, projected endpoint, and selected bounding-plane index. */
 export interface CutPoint {
-  /** Where this point started, on the member's own ring. */
+  /** Source ring position. */
   start: Vector3;
-  /** Where it came to rest against the bounds. */
+  /** Projected endpoint. */
   end: Vector3;
   /** `0` or `1` for the plane it met, or `-1` for a point sitting exactly on the crease between them. */
   owner: number;
@@ -25,20 +21,9 @@ export interface CutPoint {
 
 export interface CutEndOptions {
   /**
-   * Which plane stops a ring point — the FIRST one met, or the LAST. Defaults to `"first"`.
-   *
-   * This single word is the whole difference between the two kinds of corner, and it is worth getting
-   * right rather than guessing:
-   *
-   * - `"first"` — the member is landing INSIDE a corner, so it is bounded by whichever surface it reaches
-   *   soonest and its end comes to a point reaching into the joint. The ARROWHEAD. A roof HIP, and any
-   *   member mitered against its neighbors at a junction.
-   * - `"last"` — the member wraps the OUTSIDE of a corner and may continue until it is behind both
-   *   surfaces, so the end is notched instead of pointed. A roof VALLEY, and any reentrant corner.
-   *
-   * Geometrically the discriminator is whether the material is the INTERSECTION of the two half-spaces
-   * (convex, `"first"`) or their UNION (reflex, `"last"`).
-   */
+ * first selects the smaller axis parameter (intersection of halfspaces); last selects the larger (union).
+ * Use finite forward hits from ring points inside both bounds.
+ */
   stopAt?: "first" | "last";
 }
 
@@ -52,24 +37,9 @@ const hitDistance = (p: Vector3, axis: Vector3, plane: CutPlane): number => {
 };
 
 /**
- * Cut a member's end against TWO bounding planes — the general joint cut.
+ * Project an ordered ring along axis to two bounding planes, inserting points where plane ownership changes.
+ * Hit-distance differences are linear along an edge, so crease fraction is f0 / (f0 - f1); avoid parallel axes.
  *
- * Framing cannot reach this: one station is one ring is one plane, so a swept member can only ever be cut
- * square or by a single bevel. Lofting can. Every point of the member's ring runs along `axis` until it
- * meets a bounding plane, and each point takes whichever it meets first (or last — see
- * {@link CutEndOptions.stopAt}).
- *
- * **The crease is split exactly.** Where consecutive ring points disagree about which plane they meet, the
- * edge between them is divided precisely on the crossing. Without that split the band spanning the
- * disagreement is a single quad straddling both planes, and the ridge between the two facets comes out
- * smeared into a rounded band instead of a sharp line. The division is not searched for: with the axis
- * fixed, each distance is a linear function of position, so their difference is linear along a ring edge
- * and its root is one division.
- *
- * Returned points are in ring order with any crease points inserted, so consecutive entries are always
- * adjacent around the section — which is what {@link cutEndGeometry} relies on.
- *
- * @example
  * ```ts
  * // Two hips meeting at a roof apex: each cap is cut against its two neighbors.
  * const bound = (mine: Vector3, theirs: Vector3): CutPlane => ({
@@ -117,14 +87,8 @@ export function cutEnd(
 }
 
 /**
- * The member itself, from one list of cut points: its square start, its sides, and its cut end.
- *
- * Non-indexed, so every facet keeps its own normal and shades flat.
- *
- * **The end is fanned ONE FAN PER FACET.** Fanning the whole loop would span both planes and emit
- * non-planar triangles — the crease is exactly where the cap has to be cut in two. A fan is safe within a
- * facet because each is the intersection of the member's convex section with one plane, and therefore
- * convex itself.
+ * Build flat-shaded, nonindexed sides and caps from CutPoints; requires a convex source section.
+ * Each planar end facet is fanned separately; axis is accepted but unused.
  */
 export function cutEndGeometry(points: CutPoint[], axis: Vector3): BufferGeometry {
   const triangles: Vector3[][] = [];
@@ -166,9 +130,7 @@ export function cutEndGeometry(points: CutPoint[], axis: Vector3): BufferGeometr
     }
   }
 
-  // A joint can consume a whole facet — a member fully overrun by a neighbor leaves coincident points.
-  // A zero-area triangle contributes a zero-length normal, which lights as solid black rather than as
-  // nothing at all, so they are dropped rather than emitted.
+  // Discard collapsed triangles before computing face normals.
   const solid = triangles.filter(
     ([a, b, c]) => new Vector3().subVectors(b!, a!).cross(new Vector3().subVectors(c!, a!)).length() > 1e-12,
   );
@@ -183,15 +145,8 @@ export function cutEndGeometry(points: CutPoint[], axis: Vector3): BufferGeometr
 }
 
 /**
- * The plane mitering one member against another at a shared point.
- *
- * Both axes point AWAY from the joint, down their own member. The normal `normalize(a - b)` points into
- * `a`'s territory, since `(a - b) . a = 1 - a . b` is positive for any two members that are not parallel.
- *
- * **A miter closes only when this plane is a MIRROR of the whole member — axis, roll AND section.** Equal
- * angles are not enough and neither is equal size: two members of different WIDTH can still be mitered
- * cleanly, but not by this plane — that cut runs from the joint's outer corner to its inner corner
- * instead. Bisecting the axes is necessary, never sufficient.
+ * For unit axes pointing away from joint, normal = normalize(a - b), with (a - b) · a = 1 - a · b > 0.
+ * A closing joint requires mirrored section and roll as well as axes; distinct axes are required.
  */
 export function miterPlane(joint: Vector3, a: Vector3, b: Vector3): CutPlane {
   return { point: joint.clone(), normal: a.clone().sub(b).normalize() };
@@ -204,19 +159,8 @@ export interface SegmentBounds {
 }
 
 /**
- * A member cut at BOTH ends — the general case {@link cutEnd} does not cover.
- *
- * Any member with a joint at each end needs this: a roof RIDGE running between two junctions, a rail
- * between two posts, a lattice bar crossing two others. Cutting one end and squaring the other is not a
- * substitute, because the two ends can disagree at DIFFERENT places around the ring.
- *
- * **That disagreement is the whole reason this cannot be two calls to {@link cutEnd}.** Each end splits
- * the ring where its own bounding planes swap over, and those splits generally fall on different edges. A
- * ring split for only one end leaves the other's crease straddling a quad, which rounds it off. So every
- * crossing from BOTH ends is collected first, and the whole ring is evaluated at all of them.
- *
- * The ring is positioned wherever the caller put it; both ends are lofted from there, forward along
- * `axis` and backward against it.
+ * Project a convex ring to two bounds at each end, along ±axis, splitting at both ends’ crease crossings.
+ * Returns a flat-shaded nonindexed solid; selected hits must be finite and lie in the intended direction.
  */
 export function cutSegment(
   ring: Vector3[],
@@ -270,9 +214,7 @@ export function cutSegment(
     );
   }
 
-  // Each end, ONE FAN PER FACET. A run that wraps past index 0 is one facet, not two, and each facet is
-  // closed by the crease ending the PREVIOUS run — that point lies on both planes, so it is the only
-  // vertex that can close the polygon without leaving its own plane.
+  // Merge owner runs across the seam; the previous run’s crease closes each planar facet.
   const fan = (landings: { point: Vector3; owner: number }[], flip: boolean) => {
     const runs: number[][] = [];
     for (let i = 0; i < count; i++) {

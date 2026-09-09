@@ -1,8 +1,6 @@
 /**
- * Planar UV Mapping
- * Projects UVs onto the geometry from a single direction (like shining a projector onto a surface).
+ * Project by dropping the named coordinate; output remains in source units.
  *
- * Example:
  * ```
  * const vertices = [
  *   [-1, -1, 1],
@@ -12,6 +10,7 @@
  * ];
  *
  * const uvs = planarUVMapping(vertices, 'z'); // Project onto the Z-axis
+ * ```
  */
 export function planarUVMapping(vertices: [number, number, number][], axis: 'x' | 'y' | 'z'): [number, number][] {
   return vertices.map(([x, y, z]) => {
@@ -25,10 +24,8 @@ export function planarUVMapping(vertices: [number, number, number][], axis: 'x' 
 }
 
 /**
- * Cubic UV Mapping
- * Applies a texture by projecting UVs along each face of a cube.
+ * Choose a coordinate projection from the largest absolute position component; this does not use face normals.
  *
- * Example usage:
  * ```
  * const cubeVertices = [
  *   [-1, -1, 1],
@@ -58,10 +55,8 @@ export function cubicUVMappingBatch(vertices: [number, number, number][]): [numb
 }
 
 /**
- * Spherical UV Mapping
- * Wraps UVs around the geometry as if the texture were projected from a globe.
+ * Map directions about the origin to spherical UVs around Y; zero-length positions produce undefined coordinates.
  *
- * Example usage:
  * ```
  * const sphereVertices = [
  *   [1, 0, 0],
@@ -83,11 +78,8 @@ export function sphericalUVMapping(vertices: [number, number, number][]): [numbe
 }
 
 /**
- * Cylindrical UV Mapping
- * Projects UV coordinates onto the surface as though the texture is
- * wrapped around the cylinder's height and circumference.
+ * Map angle around Y to u and raw height y to v; no height normalization or seam splitting.
  *
- * Example usage:
  * ```
  * const cylinderVertices = [
  *   [1, 0, 0],   // Vertex on the "equator"
@@ -109,10 +101,7 @@ export function cylindricalUVMapping(vertices: [number, number, number][]): [num
 }
 
 /**
- * Polar UV Mapping
- * Map textures onto circular or radial geometries, such as discs or dome-like structures.
- * Maps the radial distance from the center of the geometry to the v coordinate
- * and the angular position to the u coordinate.
+ * Map angle around Y to u and XZ radius to v, in source units.
  *
  * const discVertices = [
  *   [1, 0, 0],   // Vertex at (1, 0, 0)
@@ -135,15 +124,8 @@ export function polarUVMapping(vertices: [number, number, number][]): [number, n
 }
 
 /**
- * Generic Normalization Function
- * This function will normalize 2D UV coordinates based on given bounds.
+ * Normalize UVs using supplied bounds; each axis must have nonzero extent.
  *
- * Full pipeline:
- * - Compute UVs
- * - Calculate bounds
- * - Normalize UVs
- *
- * Example usage:
  * ```
  * const planarMapping = (vertex: [number, number, number]) => [vertex[0], vertex[1]];
  * const uvs = vertices.map(mappingFunction);
@@ -164,10 +146,7 @@ export function normalizeUV(
   ];
 }
 
-/**
- * Batch Normalization for Multiple UVs
- * If you have multiple UVs, normalize them all based on the overall min/max bounds.
- */
+/** Normalize each UV using common nonzero-extent bounds. */
 export function normalizeUVBatch(
   uvs: [number, number][],
   minBounds: [number, number],
@@ -179,10 +158,7 @@ export function normalizeUVBatch(
   return uvs.map((uv) => normalizeUV(uv, minU, maxU, minV, maxV));
 }
 
-/**
- * Finding Bounds for a List of UVs
- * calculate the min and max values dynamically.
- */
+/** Componentwise UV bounds; an empty input returns infinite bounds. */
 export function calculateUVBounds(uvs: [number, number][]): { minBounds: [number, number]; maxBounds: [number, number] } {
   const minU = Math.min(...uvs.map((uv) => uv[0]));
   const maxU = Math.max(...uvs.map((uv) => uv[0]));

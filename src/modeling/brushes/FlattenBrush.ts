@@ -2,9 +2,8 @@ import { BufferGeometry, Vector3 } from "three";
 import { Direction } from "../../constants/Direction";
 import { Falloff } from "../../constants/Falloff";
 
-/**
- * Flattens vertices to a given plane defined by a target height or normal direction.
- */
+/** Move positions toward dot(vertex, direction) = targetHeight; normalizes the supplied direction in place.
+ * Normals and bounds remain stale. */
 export const flattenBrush = <T extends BufferGeometry>(
   geometry: T,
   position: Vector3,
@@ -24,7 +23,6 @@ export const flattenBrush = <T extends BufferGeometry>(
       const falloff = falloffFn(distance, radius);
       const influence = falloff * strength;
 
-      // Project vertex onto flatten plane
       const projectedHeight = vertex.dot(direction.normalize());
       const delta = targetHeight - projectedHeight;
 

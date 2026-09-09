@@ -2,9 +2,8 @@ import { BufferGeometry, MathUtils, Vector3 } from "three";
 import { Direction } from "../../constants/Direction";
 import { Falloff } from "../../constants/Falloff";
 
-/**
- * Adds random noise to the vertices within the specified radius to create a more rugged or natural look.
- */
+/** Perturb positions in place with independent random components weighted by normalized direction.
+ * Normals and bounds remain stale. */
 export const noiseBrush = <T extends BufferGeometry>(
   geometry: T,
   position: Vector3,
@@ -23,7 +22,6 @@ export const noiseBrush = <T extends BufferGeometry>(
       const falloff = falloffFn(distance, radius);
       const noiseStrength = strength * falloff;
 
-      // Generate random noise in the direction specified
       const noise = direction.clone().normalize();
       vertex.x += MathUtils.randFloatSpread(noiseStrength) * noise.x;
       vertex.y += MathUtils.randFloatSpread(noiseStrength) * noise.y;

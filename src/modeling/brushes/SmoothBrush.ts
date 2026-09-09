@@ -1,8 +1,7 @@
 import { BufferGeometry, Vector3 } from "three";
 
-/**
- * Smooths out the vertices by averaging their positions with neighboring vertices within a given radius.
- */
+/** Average positions in place within radius; sequential updates make results vertex-order dependent.
+ * Normals and bounds remain stale; neighbor search is O(n²). */
 export const smoothBrush = <T extends BufferGeometry>(
   geometry: T,
   position: Vector3,
@@ -20,7 +19,6 @@ export const smoothBrush = <T extends BufferGeometry>(
       let averagePosition = new Vector3();
       let count = 0;
 
-      // Average position of nearby vertices
       for (let j = 0; j < positions.count; j++) {
         tempPosition.fromBufferAttribute(positions, j);
         if (tempPosition.distanceTo(vertex) < radius) {
@@ -31,7 +29,7 @@ export const smoothBrush = <T extends BufferGeometry>(
 
       if (count > 0) {
         averagePosition.divideScalar(count);
-        vertex.lerp(averagePosition, strength); // Blend between current and average
+        vertex.lerp(averagePosition, strength);
         positions.setXYZ(i, vertex.x, vertex.y, vertex.z);
       }
     }

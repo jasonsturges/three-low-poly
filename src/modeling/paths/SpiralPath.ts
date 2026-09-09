@@ -2,22 +2,17 @@ import { Vector3 } from "three";
 import type { PathPoint } from "./PathPoint";
 
 export interface SpiralPathOptions {
-  /** Radius at the open end, before it winds in. Defaults to `1`. */
+  /** Radius at the first point. */
   startRadius?: number;
-  /** How many turns it makes. Defaults to `1.5`. */
+  /** Number of turns. */
   turns?: number;
-  /** How fast it winds in. `0` gives a plain circle; higher closes the curl faster. Defaults to `0.22`. */
+  /** Exponential decay coefficient; zero gives a circle. */
   tightness?: number;
-  /** Stations along the spiral. Defaults to `96`. */
+  /** Number of spiral intervals. */
   segments?: number;
 }
 
-/**
- * A logarithmic spiral — `r = r₀·e^(−kθ)` — in the XY plane.
- *
- * This is what a real wrought iron scroll follows. An Archimedean spiral (constant spacing) reads as
- * mechanical; a logarithmic one tightens as it winds, the way hot iron curls under a scroll jig.
- */
+/** Logarithmic spiral r = r₀·e^(−kθ) in XY. Tangents carry derivative direction, with the positive r factor omitted. */
 export function spiralPath({
   startRadius = 1,
   turns = 1.5,
