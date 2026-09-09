@@ -274,6 +274,7 @@ export * from "./modeling/surfaces/Loft";
 export * from "./modeling/surfaces/MiterFrames";
 export * from "./modeling/surfaces/SurfaceGrid";
 export * from "./modeling/surfaces/Sweep";
+export * from "./modeling/surfaces/ThickenSurface";
 
 // Brushes
 export * from "./modeling/brushes/DisplacementBrush";

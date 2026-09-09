@@ -13,14 +13,14 @@ import {
   Vector3,
   WireframeGeometry,
 } from "three";
-import { triangulateRegion } from "three-low-poly";
+import { triangulateRegion, thickenSurface, surfaceFromGrid, type IndexedSurface } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
   title: "Surface Thickness",
   description:
-    "STUDY — give an oriented sheet a front, a back, and walls around every boundary, including holes. " +
+    "SDK-backed STUDY — give an oriented sheet a front, a back, and walls around every boundary, including holes. " +
     "Blue is the front, terracotta the back, and gold the rim; all three use single-sided materials. " +
     "Orbit underneath, or isolate a part, to inspect winding. Source Overlay marks the original sheet. " +
     "Placement keeps the source at the front, center, or back of the thickness. " +
@@ -33,14 +33,9 @@ export const meta = {
     "large thickness can still overlap. No general offset-surface or collision solver is implied.",
 };
 
-type Triangle = [number, number, number];
 export type ThicknessPreset = "Panel" | "Panel with hole" | "Barrel" | "Saddle" | "Fold";
 export type OffsetMethod = "Normal" | "Crease compensated" | "Fixed Z";
-export interface StudySheet {
-  points: Vector3[];
-  triangles: Triangle[];
-  uv: Vector2[];
-}
+export type StudySheet = IndexedSurface;
 
 /** Explicit topology stays separate from the duplicated render vertices used for flat shading. */
 export function thicknessSheet(preset: ThicknessPreset, segments: number, bend: number): StudySheet {
@@ -57,129 +52,31 @@ export function thicknessSheet(preset: ThicknessPreset, segments: number, bend: 
       triangles: region.triangles,
     };
   }
-  // Even columns land exactly on the fold, independently of sampling density.
+  // Even columns land exactly on the fold at every resolution.
   const columns = segments * 2,
     rows = segments;
-  const points: Vector3[] = [],
-    uv: Vector2[] = [],
-    triangles: Triangle[] = [];
-  for (let j = 0; j <= rows; j++)
-    for (let i = 0; i <= columns; i++) {
-      const u = i / columns,
-        v = j / rows,
-        x = (u - 0.5) * 3,
-        y = (v - 0.5) * 2;
-      let p = new Vector3(x, y, 0);
-      if (preset === "Barrel") {
+  const grid = Array.from({ length: rows + 1 }, (_, j) =>
+    Array.from({ length: columns + 1 }, (_, i) => {
+      const x = (i / columns - 0.5) * 3,
+        y = (j / rows - 0.5) * 2;
+      if (preset === "Barrel" && bend > 1e-8) {
         const angle = (x * bend) / 1.5;
-        p = bend < 1e-8 ? p : new Vector3((Math.sin(angle) * 1.5) / bend, y, ((Math.cos(angle) - 1) * 1.5) / bend);
-      } else if (preset === "Saddle") p.z = bend * ((x * x) / 2.25 - y * y) * 0.4;
-      else if (preset === "Fold") p = new Vector3(x * Math.cos(bend), y, -Math.abs(x) * Math.sin(bend));
-      points.push(p);
-      uv.push(new Vector2(u, v));
-    }
-  for (let j = 0; j < rows; j++)
-    for (let i = 0; i < columns; i++) {
-      const a = j * (columns + 1) + i,
-        b = a + 1,
-        d = a + columns + 1,
-        c = d + 1;
-      triangles.push([a, b, c], [a, c, d]);
-    }
-  return { points, uv, triangles };
-}
-
-function triangleNormal(points: Vector3[], [a, b, c]: Triangle): Vector3 {
-  return points[b].clone().sub(points[a]).cross(points[c].clone().sub(points[a]));
-}
-
-/** Edge incidence uses source IDs, never a position weld that might join unrelated touching sheets. */
-function sheetEdges(triangles: Triangle[]) {
-  const edges = new Map<string, { a: number; b: number; count: number; balance: number }>();
-  for (const face of triangles)
-    for (let i = 0; i < 3; i++) {
-      const a = face[i],
-        b = face[(i + 1) % 3],
-        key = `${Math.min(a, b)}:${Math.max(a, b)}`;
-      const edge = edges.get(key) ?? { a, b, count: 0, balance: 0 };
-      edge.count++;
-      edge.balance += a < b ? 1 : -1;
-      edges.set(key, edge);
-    }
-  return [...edges.values()];
-}
-
-/** Study-local shell construction. No self-intersection repair or arbitrary mesh import. */
-export function thickenStudySheet(sheet: StudySheet, thickness: number, placement: number, method: OffsetMethod) {
-  if (!(thickness > 0) || !Number.isFinite(thickness) || Math.abs(placement) > 1 || !Number.isFinite(placement)) {
-    throw new RangeError("Thickness must be positive; placement must be between -1 and 1.");
-  }
-  const { points, triangles } = sheet;
-  const edges = sheetEdges(triangles);
-  if (edges.some((e) => e.count > 2 || (e.count === 2 && e.balance !== 0))) {
-    throw new Error("Expected a consistently oriented manifold sheet.");
-  }
-  const incident = points.map(() => [] as { normal: Vector3; weight: number }[]);
-  for (const face of triangles) {
-    const normal = triangleNormal(points, face);
-    if (normal.lengthSq() < 1e-20) throw new Error("Degenerate source triangle.");
-    normal.normalize();
-    for (let k = 0; k < 3; k++) {
-      const center = points[face[k]];
-      const a = points[face[(k + 1) % 3]].clone().sub(center).normalize();
-      const b = points[face[(k + 2) % 3]].clone().sub(center).normalize();
-      const weight = Math.acos(Math.max(-1, Math.min(1, a.dot(b))));
-      incident[face[k]].push({ normal, weight });
-    }
-  }
-  const offsets = incident.map((faces) => {
-    if (method === "Fixed Z") return new Vector3(0, 0, 1);
-    const direction = new Vector3();
-    for (const { normal, weight } of faces) direction.addScaledVector(normal, weight);
-    if (direction.lengthSq() < 1e-20) throw new Error("Undefined offset direction.");
-    direction.normalize();
-    if (method === "Crease compensated") {
-      // One-dimensional weighted least-squares fit: minimize Σ w (s n·d − 1)².
-      let numerator = 0,
-        denominator = 0;
-      for (const { normal, weight } of faces) {
-        const dot = normal.dot(direction);
-        numerator += weight * dot;
-        denominator += weight * dot * dot;
+        return new Vector3((Math.sin(angle) * 1.5) / bend, y, ((Math.cos(angle) - 1) * 1.5) / bend);
       }
-      if (denominator < 1e-12) throw new Error("Offset is singular at this crease.");
-      direction.multiplyScalar(numerator / denominator);
-    }
-    return direction;
-  });
-  const front = points.map((p, i) => p.clone().addScaledVector(offsets[i], (thickness * (placement + 1)) / 2));
-  const back = points.map((p, i) => p.clone().addScaledVector(offsets[i], (thickness * (placement - 1)) / 2));
-  const count = points.length,
-    vertices = [...front, ...back];
-  const frontFaces = triangles.map((t) => [...t] as Triangle);
-  const backFaces = triangles.map(([a, b, c]) => [c + count, b + count, a + count] as Triangle);
-  const rimFaces: Triangle[] = [];
-  for (const { a, b, count: uses } of edges)
-    if (uses === 1) {
-      // Reverse the front boundary edge; reverse again where the rim meets the back.
-      rimFaces.push([b, a, a + count], [b, a + count, b + count]);
-    }
-  let faceError = 0;
-  for (const face of triangles) {
-    const normal = triangleNormal(points, face).normalize();
-    for (const i of face) faceError = Math.max(faceError, Math.abs(offsets[i].dot(normal) - 1) * thickness);
-  }
-  let inverted = 0;
-  triangles.forEach((face, i) => {
-    const sourceNormal = triangleNormal(points, face);
-    if (triangleNormal(vertices, frontFaces[i]).dot(sourceNormal) <= 0) inverted++;
-    if (triangleNormal(vertices, backFaces[i]).dot(sourceNormal) >= 0) inverted++;
-  });
-  return { vertices, frontFaces, backFaces, rimFaces, faceError, inverted };
+      if (preset === "Saddle") return new Vector3(x, y, bend * ((x * x) / 2.25 - y * y) * 0.4);
+      if (preset === "Fold") return new Vector3(x * Math.cos(bend), y, -Math.abs(x) * Math.sin(bend));
+      return new Vector3(x, y, 0);
+    }),
+  );
+  return surfaceFromGrid(grid);
 }
 
 /** Flat triangle normals are derived from winding, rather than supplied independently. */
-function renderFaces(points: Vector3[], triangles: Triangle[], uv?: Vector2[]): BufferGeometry {
+function renderFaces(
+  points: readonly Vector3[],
+  triangles: readonly (readonly [number, number, number])[],
+  uv?: readonly Vector2[],
+): BufferGeometry {
   const positions: number[] = [],
     uvs: number[] = [];
   for (const face of triangles)
@@ -193,23 +90,6 @@ function renderFaces(points: Vector3[], triangles: Triangle[], uv?: Vector2[]): 
   geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
   geometry.computeVertexNormals();
   return geometry;
-}
-
-export function inspectThickness(vertices: Vector3[], faces: Triangle[]) {
-  const edges = sheetEdges(faces);
-  let volume = 0,
-    degenerate = 0;
-  for (const face of faces) {
-    const normal = triangleNormal(vertices, face);
-    if (normal.lengthSq() < 1e-20) degenerate++;
-    volume += vertices[face[0]].dot(normal) / 6;
-  }
-  return {
-    open: edges.filter((e) => e.count === 1).length,
-    bad: edges.filter((e) => e.count > 2 || (e.count === 2 && e.balance !== 0)).length,
-    degenerate,
-    volume,
-  };
 }
 
 export default function (container: HTMLElement) {
@@ -251,30 +131,37 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     clear();
     const sheet = thicknessSheet(params.preset, params.segments, params.bend);
-    const shell = thickenStudySheet(sheet, params.thickness, params.placement, params.method);
-    const { vertices, frontFaces, backFaces, rimFaces } = shell;
-    const faces = [...frontFaces, ...backFaces, ...rimFaces];
-    const uv = [...sheet.uv, ...sheet.uv];
-    const parts = [
-      { name: "Front", faces: frontFaces, material: frontMat },
-      { name: "Back", faces: backFaces, material: backMat },
-      { name: "Rim", faces: rimFaces, material: rimMat },
-    ];
-    for (const part of parts) {
-      if (params.view !== "All" && params.view !== part.name) continue;
-      const geometry = renderFaces(vertices, part.faces, uv);
-      stage.add(new Mesh(geometry, part.material));
-      if (params.wireframe) stage.add(new LineSegments(new WireframeGeometry(geometry), wireMat));
-      if (params.normals) {
-        const lines: Vector3[] = [];
-        const stride = Math.max(1, Math.ceil(part.faces.length / 80));
-        for (let i = 0; i < part.faces.length; i += stride) {
-          const face = part.faces[i];
-          const center = vertices[face[0]].clone().add(vertices[face[1]]).add(vertices[face[2]]).divideScalar(3);
-          lines.push(center, center.clone().addScaledVector(triangleNormal(vertices, face).normalize(), 0.12));
-        }
-        stage.add(new LineSegments(new BufferGeometry().setFromPoints(lines), normalMat));
+    const { geometry, diagnostics } = thickenSurface(sheet, {
+      thickness: params.thickness,
+      placement: params.placement === -1 ? "front" : params.placement === 1 ? "back" : "centered",
+      offset: params.method === "Fixed Z" ? new Vector3(0, 0, 1) : params.method === "Normal" ? "normal" : "crease-compensated",
+      onInvalid: "report",
+    });
+    const selected = ["Front", "Back", "Rim"].indexOf(params.view);
+    const group = selected === -1 ? { start: 0, count: geometry.getAttribute("position").count } : geometry.groups[selected];
+    geometry.setDrawRange(group.start, group.count);
+    stage.add(new Mesh(geometry, [frontMat, backMat, rimMat]));
+    const position = geometry.getAttribute("position"),
+      normal = geometry.getAttribute("normal");
+    if (params.wireframe) {
+      const selectedGeometry = new BufferGeometry();
+      selectedGeometry.setAttribute(
+        "position",
+        new Float32BufferAttribute(Array.from(position.array).slice(group.start * 3, (group.start + group.count) * 3), 3),
+      );
+      stage.add(new LineSegments(new WireframeGeometry(selectedGeometry), wireMat));
+      selectedGeometry.dispose();
+    }
+    if (params.normals) {
+      const lines: Vector3[] = [];
+      const stride = Math.max(1, Math.ceil(group.count / 3 / 80)) * 3;
+      for (let i = group.start; i < group.start + group.count; i += stride) {
+        const center = new Vector3();
+        for (let k = 0; k < 3; k++) center.add(new Vector3().fromBufferAttribute(position, i + k));
+        center.divideScalar(3);
+        lines.push(center, center.clone().addScaledVector(new Vector3().fromBufferAttribute(normal, i), 0.12));
       }
+      stage.add(new LineSegments(new BufferGeometry().setFromPoints(lines), normalMat));
     }
     if (params.source) {
       const geometry = renderFaces(sheet.points, sheet.triangles);
@@ -283,12 +170,13 @@ export default function (container: HTMLElement) {
       stage.add(overlay);
       geometry.dispose();
     }
-    const check = inspectThickness(vertices, faces);
-    params.topology = `${check.open} open · ${check.bad} bad · ${check.degenerate} degenerate`;
-    params.validity = shell.inverted ? `${shell.inverted} inverted faces — reduce thickness` : "No local face inversions";
-    params.volume = check.volume.toFixed(5);
-    params.error = `${((shell.faceError / params.thickness) * 100).toFixed(2)}% of thickness`;
-    params.built = `${faces.length} triangles · ${rimFaces.length / 2} boundary edges`;
+    params.topology = `${diagnostics.boundaryEdges} sealed edges · ${diagnostics.degenerateFaces} degenerate`;
+    params.validity = diagnostics.invertedFaces
+      ? `${diagnostics.invertedFaces} inverted faces — reduce thickness`
+      : "No local face inversions";
+    params.volume = diagnostics.signedVolume.toFixed(5);
+    params.error = `${((diagnostics.maxFaceThicknessError / params.thickness) * 100).toFixed(2)}% of thickness`;
+    params.built = `${position.count / 3} triangles · ${diagnostics.boundaryEdges} boundary edges`;
   };
   rebuild();
   frameObject(handle, stage, { fit: 1.15 });
