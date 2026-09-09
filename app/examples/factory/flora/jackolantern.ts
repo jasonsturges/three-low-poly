@@ -1,7 +1,8 @@
 import GUI from "lil-gui";
-import { CylinderGeometry, DirectionalLight, Mesh, MeshStandardMaterial, PlaneGeometry, PointLight } from "three";
-import { JackOLanternGeometry } from "three-low-poly";
+import { CylinderGeometry, DirectionalLight, Mesh, MeshStandardMaterial, PointLight } from "three";
+import { GroundGrid, JackOLanternGeometry } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
+import { gradientBackdrop } from "../../../framework/gradientBackdrop";
 
 export const meta = {
   title: "Jack-o’-lantern",
@@ -12,8 +13,8 @@ export const meta = {
 export default function (container: HTMLElement) {
   const { scene, controls, onFrame, dispose } = createScene(container, {
     cameraPosition: [1.25, 1.55, 3.1],
-    background: "#14131b",
   });
+  const disposeBackdrop = gradientBackdrop(scene);
   const keyLight = new DirectionalLight("#ffe0be", 1.8);
   keyLight.position.set(-3, 5, 4);
   scene.add(keyLight);
@@ -39,6 +40,7 @@ export default function (container: HTMLElement) {
   shell.castShadow = true;
   shell.receiveShadow = false;
   scene.add(shell);
+  // Presentation only: the library geometry contains the carved rind and stem, with no light.
   const candleMaterial = new MeshStandardMaterial({ color: "#fff0bf", emissive: "#ff992d", emissiveIntensity: 1 });
   const candle = new Mesh(new CylinderGeometry(0.11, 0.12, 0.27, 12), candleMaterial);
   candle.position.y = 0.3;
@@ -51,12 +53,8 @@ export default function (container: HTMLElement) {
   light.shadow.bias = -0.0002;
   shell.add(light);
 
-  const floorMaterial = new MeshStandardMaterial({ color: "#302c37", roughness: 1 });
-  const floor = new Mesh(new PlaneGeometry(200, 200), floorMaterial);
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -0.005;
-  floor.receiveShadow = true;
-  scene.add(floor);
+  const grid = new GroundGrid({ size: 10, divisions: 10, planeColor: 0x0f141b });
+  scene.add(grid);
 
   const stats = { triangles: shell.geometry.getAttribute("position").count / 3 };
   const rebuild = () => {
@@ -99,8 +97,9 @@ export default function (container: HTMLElement) {
     gui.destroy();
     shell.geometry.dispose();
     candle.geometry.dispose();
-    floor.geometry.dispose();
-    for (const material of [rind, inside, cut, stemMaterial, candleMaterial, floorMaterial]) material.dispose();
+    grid.dispose();
+    disposeBackdrop();
+    for (const material of [rind, inside, cut, stemMaterial, candleMaterial]) material.dispose();
     light.dispose();
     dispose();
   };
