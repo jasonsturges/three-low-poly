@@ -53,7 +53,7 @@ export function modelingLabView(
   status.setAttribute("role", "status");
   status.setAttribute("aria-label", "Experiment measurements");
   status.style.cssText = "padding:12px;white-space:pre-line;line-height:1.5;max-height:240px;overflow:auto;font-size:12px";
-  const view = { grid: false, wire: false, guides: true, problems: true, contours: true };
+  const view = { grid: false, wire: false, guides: true, problems: true, contours: true, opacity: 1 };
   let owned: BufferGeometry[] = [],
     overlay: ReturnType<typeof meshInspectionOverlay> | undefined;
   const clear = () => {
@@ -63,15 +63,21 @@ export function modelingLabView(
     owned = [];
     stage.clear();
   };
+  const updateMaterials = () => {
+    materials.forEach((m) => {
+      m.map = view.grid ? texture : null;
+      m.opacity = view.opacity;
+      m.transparent = view.opacity < 1;
+      m.depthWrite = view.opacity === 1;
+      m.needsUpdate = true;
+    });
+  };
   const rebuild = () => {
     clear();
     try {
       const result = build();
       owned.push(result.geometry, ...(result.guides ?? []), ...(result.contours ?? []));
-      materials.forEach((m) => {
-        m.map = view.grid ? texture : null;
-        m.needsUpdate = true;
-      });
+      updateMaterials();
       stage.add(new Mesh(result.geometry, materials));
       if (view.wire) {
         const g = new WireframeGeometry(result.geometry);
@@ -104,6 +110,7 @@ export function modelingLabView(
   };
   controls(gui, rebuild);
   const folder = gui.addFolder("Inspect");
+  folder.add(view, "opacity", 0.1, 1, 0.05).name("Result opacity").onChange(updateMaterials);
   folder.add(view, "grid").name("UV grid").onChange(rebuild);
   folder.add(view, "wire").name("Triangle edges").onChange(rebuild);
   folder.add(view, "guides").name("Source wireframes").onChange(rebuild);

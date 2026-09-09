@@ -1,8 +1,27 @@
 import { Box3, BufferGeometry, Float32BufferAttribute, Vector2, Vector3 } from "three";
-import { inspectGeometry } from "three-low-poly";
+import { inspectGeometry, type GeometryInspection } from "./InspectGeometry";
 
-/** Study-local BSP experiment. No SDK export or external Boolean engine. */
+/** Bounded BSP Boolean operations on closed triangle meshes. */
 export type BooleanOperation = "Union" | "Intersection" | "Subtract";
+export interface BooleanGeometryOptions {
+  /** Default throw disposes output that fails topology checks; report returns it for inspection. */
+  onInvalid?: "throw" | "report";
+  /** Optional operand colors. Otherwise A indices are preserved and B indices are offset above A. */
+  materialIndices?: { a: number; b: number };
+}
+export interface BooleanGeometryResult {
+  /** Caller-owned geometry, possibly empty. Inputs remain unchanged. */
+  geometry: BufferGeometry;
+  /** Add this to B's source material indices. Null when materialIndices overrides both operands. */
+  materialOffsetB: number | null;
+  diagnostics: {
+    /** Closure, winding, degeneracy and volume checks only; not a global solid certificate. */
+    topologyValid: boolean;
+    /** Null for an empty result. */
+    inspection: GeometryInspection | null;
+    selfIntersectionsChecked: false;
+  };
+}
 const EPS = 1e-6;
 type Vertex = { p: Vector3; n: Vector3; uv: Vector2 };
 type Polygon = { vertices: Vertex[]; normal: Vector3; w: number; material: number };
@@ -125,27 +144,69 @@ class Tree {
     return this.faces.concat(this.front?.all() ?? [], this.back?.all() ?? []);
   }
 }
-function inputPolygons(g: BufferGeometry, material: number, center: Vector3, scale: number) {
+function validateInput(g: BufferGeometry): void {
+  const positions = g.getAttribute("position");
+  const count = g.index?.count ?? positions?.count ?? 0;
+  if (!positions || positions.itemSize !== 3 || !positions.count || count % 3 || count > 4500)
+    throw new RangeError("booleanGeometry: expected 1–1500 complete input triangles per operand.");
   if (
     Object.keys(g.attributes).some((k) => !["position", "normal", "uv"].includes(k)) ||
     Object.keys(g.morphAttributes).length ||
     g.drawRange.start !== 0 ||
-    g.drawRange.count !== Infinity
+    (g.drawRange.count !== Infinity && g.drawRange.count !== count)
   )
-    throw new Error("Only complete position/normal/UV meshes are supported.");
+    throw new RangeError("booleanGeometry: only complete position/normal/UV meshes are supported.");
+  for (const name of ["position", "normal", "uv"] as const) {
+    const attribute = g.getAttribute(name);
+    if (!attribute) continue;
+    const size = name === "uv" ? 2 : 3;
+    if (attribute.itemSize !== size || attribute.count !== positions.count)
+      throw new RangeError("booleanGeometry: mismatched attribute size/count.");
+    for (let i = 0; i < attribute.count; i++) {
+      for (let j = 0; j < size; j++)
+        if (!Number.isFinite(attribute.getComponent(i, j))) throw new RangeError("booleanGeometry: nonfinite attribute.");
+      if (name === "normal" && Math.hypot(attribute.getX(i), attribute.getY(i), attribute.getZ(i)) === 0)
+        throw new RangeError("booleanGeometry: zero source normal.");
+    }
+  }
+  let end = 0;
+  for (const group of [...g.groups].sort((a, b) => a.start - b.start)) {
+    if (
+      !Number.isInteger(group.start) ||
+      !Number.isInteger(group.count) ||
+      group.start < end ||
+      group.count <= 0 ||
+      group.start % 3 ||
+      group.count % 3 ||
+      group.start + group.count > count ||
+      !Number.isSafeInteger(group.materialIndex ?? 0) ||
+      (group.materialIndex ?? 0) < 0
+    )
+      throw new RangeError("booleanGeometry: invalid or overlapping material groups.");
+    end = group.start + group.count;
+  }
   const report = inspectGeometry(g);
   if (
     !report.components.length ||
-    report.boundary.length ||
-    report.winding.length ||
-    report.nonManifold.length ||
-    report.nonManifoldVertices.length ||
-    report.degenerate.length ||
-    report.duplicate.length ||
-    report.components.some((c) => !c.closed || c.signedVolume === null || c.signedVolume <= 0)
+    !cleanTopology(report) ||
+    report.components.some((c) => c.signedVolume === null || c.signedVolume <= 0)
   )
-    throw new Error("Operands must be closed, outward-wound, nondegenerate shells.");
-  if (report.triangles.length > 1500) throw new Error("Study limit: 1500 input triangles per operand.");
+    throw new Error(
+      "booleanGeometry: operands must be closed, outward-wound, nondegenerate shells; inward cavity shells are unsupported as inputs.",
+    );
+}
+function cleanTopology(report: GeometryInspection): boolean {
+  return (
+    !report.boundary.length &&
+    !report.winding.length &&
+    !report.nonManifold.length &&
+    !report.nonManifoldVertices.length &&
+    !report.degenerate.length &&
+    !report.duplicate.length &&
+    report.components.every((c) => c.closed && c.signedVolume !== null)
+  );
+}
+function inputPolygons(g: BufferGeometry, materialAt: (triangleOffset: number) => number, center: Vector3, scale: number) {
   const positions = g.getAttribute("position"),
     normals = g.getAttribute("normal"),
     uv = g.getAttribute("uv");
@@ -155,11 +216,11 @@ function inputPolygons(g: BufferGeometry, material: number, center: Vector3, sca
       const j = g.index ? g.index.getX(i + k) : i + k;
       return {
         p: new Vector3().fromBufferAttribute(positions, j).sub(center).divideScalar(scale),
-        n: normals ? new Vector3().fromBufferAttribute(normals, j) : new Vector3(),
+        n: normals ? new Vector3().fromBufferAttribute(normals, j).normalize() : new Vector3(),
         uv: uv ? new Vector2(uv.getX(j), uv.getY(j)) : new Vector2(),
       };
     });
-    const p = polygon(vertices, material);
+    const p = polygon(vertices, materialAt(i));
     if (p) {
       if (!normals) p.vertices.forEach((v) => v.n.copy(p.normal));
       result.push(p);
@@ -168,7 +229,7 @@ function inputPolygons(g: BufferGeometry, material: number, center: Vector3, sca
   return result;
 }
 function render(polygons: Polygon[], center: Vector3, scale: number) {
-  if (polygons.length > 12000) throw new Error("Study polygon limit exceeded.");
+  if (polygons.length > 12000) throw new Error("booleanGeometry: polygon limit exceeded.");
   // Splits on one face can terminate on a neighboring unsplit edge. Insert those shared
   // boundary vertices before triangulating, avoiding render-only T-junctions.
   const points = new Map<string, Vector3>();
@@ -184,12 +245,12 @@ function render(polygons: Polygon[], center: Vector3, scale: number) {
   );
   const candidates = [...points.values()];
   if (candidates.length * polygons.reduce((s, p) => s + p.vertices.length, 0) > 12000000)
-    throw new Error("Study boundary reconciliation budget exceeded.");
+    throw new Error("booleanGeometry: boundary reconciliation budget exceeded.");
   const positions: number[] = [],
     normals: number[] = [],
     uvs: number[] = [];
   const geometry = new BufferGeometry();
-  for (const face of polygons) {
+  for (const face of polygons.sort((a, b) => a.material - b.material)) {
     const ring: Vertex[] = [];
     for (let i = 0; i < face.vertices.length; i++) {
       const a = face.vertices[i],
@@ -224,16 +285,43 @@ function render(polygons: Polygon[], center: Vector3, scale: number) {
         normals.push(...(v.n.lengthSq() ? v.n : face.normal).toArray());
         uvs.push(v.uv.x, v.uv.y);
       }
-    geometry.addGroup(start, positions.length / 3 - start, face.material);
+    const count = positions.length / 3 - start;
+    const previous = geometry.groups[geometry.groups.length - 1];
+    if (previous?.materialIndex === face.material) previous.count += count;
+    else geometry.addGroup(start, count, face.material);
   }
   geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
   geometry.setAttribute("normal", new Float32BufferAttribute(normals, 3));
   geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
   return geometry;
 }
-/** Both operands use the same local coordinates. Material 0 is A; material 1 is B (including cavity walls). */
-export function experimentalBoolean(a: BufferGeometry, b: BufferGeometry, operation: BooleanOperation) {
-  if (!["Union", "Intersection", "Subtract"].includes(operation)) throw new Error("Unknown Boolean operation.");
+/**
+ * Union, intersection or A-minus-B in a shared geometry-local frame. No external CSG dependency.
+ * A bounded, tolerance-based BSP solver for small meshes (1500 triangles per input), not exact CSG.
+ * Empty results are supported; empty inputs and inward cavity shells as inputs are rejected.
+ * Output normals/UVs interpolate source attributes; new cavity faces inherit B and reverse winding.
+ * Caller disposes result.geometry. Default failure mode never returns known-invalid topology.
+ */
+export function booleanGeometry(
+  a: BufferGeometry,
+  b: BufferGeometry,
+  operation: BooleanOperation,
+  { onInvalid = "throw", materialIndices }: BooleanGeometryOptions = {},
+): BooleanGeometryResult {
+  if (!["Union", "Intersection", "Subtract"].includes(operation)) throw new RangeError("booleanGeometry: unknown operation.");
+  if (!["throw", "report"].includes(onInvalid)) throw new RangeError("booleanGeometry: invalid onInvalid mode.");
+  if (materialIndices && ![materialIndices.a, materialIndices.b].every((i) => Number.isSafeInteger(i) && i >= 0))
+    throw new RangeError("booleanGeometry: invalid operand material indices.");
+  validateInput(a);
+  validateInput(b);
+  const materialOffsetB = materialIndices ? null : Math.max(0, ...a.groups.map((g) => g.materialIndex ?? 0)) + 1;
+  if (
+    materialOffsetB !== null &&
+    !Number.isSafeInteger(materialOffsetB + Math.max(0, ...b.groups.map((g) => g.materialIndex ?? 0)))
+  )
+    throw new RangeError("booleanGeometry: material indices exceed safe integers.");
+  const materialAt = (source: BufferGeometry, offset: number, override?: number) => (i: number) =>
+    override ?? (source.groups.find((g) => i >= g.start && i < g.start + g.count)?.materialIndex ?? 0) + offset;
   const bounds = new Box3();
   for (const g of [a, b]) {
     const p = g.getAttribute("position");
@@ -244,8 +332,8 @@ export function experimentalBoolean(a: BufferGeometry, b: BufferGeometry, operat
     scale = bounds.getSize(new Vector3()).length();
   if (!Number.isFinite(scale) || scale <= 0) throw new Error("Invalid operand extent.");
   const budget = { splits: 0 },
-    left = new Tree(budget, inputPolygons(a, 0, center, scale)),
-    right = new Tree(budget, inputPolygons(b, 1, center, scale));
+    left = new Tree(budget, inputPolygons(a, materialAt(a, 0, materialIndices?.a), center, scale)),
+    right = new Tree(budget, inputPolygons(b, materialAt(b, materialOffsetB ?? 0, materialIndices?.b), center, scale));
   if (operation === "Union") {
     left.clipTo(right);
     right.clipTo(left);
@@ -271,5 +359,24 @@ export function experimentalBoolean(a: BufferGeometry, b: BufferGeometry, operat
     left.build(right.all());
     left.invert();
   }
-  return render(left.all(), center, scale);
+  const geometry = render(left.all(), center, scale);
+  try {
+    for (const name of ["position", "normal", "uv"] as const) {
+      const attribute = geometry.getAttribute(name);
+      for (let i = 0; i < attribute.count; i++)
+        for (let j = 0; j < attribute.itemSize; j++)
+          if (!Number.isFinite(attribute.getComponent(i, j)))
+            throw new Error("booleanGeometry: output exceeds finite Float32 storage.");
+    }
+    const inspection = geometry.getAttribute("position").count ? inspectGeometry(geometry) : null;
+    const topologyValid =
+      inspection === null ||
+      (cleanTopology(inspection) && inspection.components.reduce((sum, c) => sum + (c.signedVolume ?? 0), 0) > 0);
+    if (!topologyValid && onInvalid === "throw")
+      throw new Error("booleanGeometry: result failed topology validation; use onInvalid: report to inspect it.");
+    return { geometry, materialOffsetB, diagnostics: { topologyValid, inspection, selfIntersectionsChecked: false } };
+  } catch (error) {
+    geometry.dispose();
+    throw error;
+  }
 }
