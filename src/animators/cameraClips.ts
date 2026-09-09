@@ -528,3 +528,241 @@ export function createFovPulseClip(options: FovPulseClipOptions): CameraClip {
     },
   };
 }
+
+export interface PullAwayClipOptions extends CameraClipTiming {
+  /** Retreat along the starting view axis, in world units. */
+  distance: number;
+  /** Additional rise along world Y. Defaults to 0. */
+  height?: number;
+}
+
+/**
+ * Retreat from the current view with optional ascent, keeping the starting orientation.
+ * The focus moves with the camera, so resuming manual controls preserves the view.
+ *
+ * @example
+ * ```ts
+ * playback.play(createPullAwayClip({ distance: 12, height: 4, duration: 6 }));
+ * ```
+ */
+export function createPullAwayClip(options: PullAwayClipOptions): CameraClip {
+  const { distance, height = 0, duration, ease = Easing.smoothstep } = options;
+  const origin = new Vector3();
+  const focus = new Vector3();
+  const displacement = new Vector3();
+  return {
+    label: "Pull-away",
+    kind: "transition",
+    duration,
+    start(runtime) {
+      origin.copy(runtime.camera.position);
+      focus.copy(runtime.focus);
+      runtime.camera.getWorldDirection(displacement);
+      displacement.multiplyScalar(-distance);
+      displacement.y += height;
+    },
+    update(runtime) {
+      const t = normalizedTime(runtime, ease);
+      runtime.camera.position.copy(origin).addScaledVector(displacement, t);
+      runtime.focus.copy(focus).addScaledVector(displacement, t);
+    },
+  };
+}
+
+export interface FocusTransferClipOptions extends CameraClipTiming {
+  /** New subject to frame. This changes orientation, not optical focus or FOV. */
+  target: Vector3;
+}
+
+/**
+ * Turn smoothly toward another subject while holding the camera position and FOV.
+ * Uses a rotation blend so even a subject behind the camera has a defined turn.
+ *
+ * @example
+ * ```ts
+ * playback.play(createFocusTransferClip({ target: new Vector3(3, 0.5, -4), duration: 3 }));
+ * ```
+ */
+export function createFocusTransferClip(options: FocusTransferClipOptions): CameraClip {
+  const { target, duration, ease = Easing.smoothstep } = options;
+  const startRotation = new Quaternion();
+  const endRotation = new Quaternion();
+  const direction = new Vector3();
+  let distance = 1;
+  return {
+    label: "Focus Transfer",
+    kind: "transition",
+    duration,
+    start(runtime) {
+      startRotation.copy(runtime.camera.quaternion);
+      distance = runtime.camera.position.distanceTo(target);
+      if (distance < 1e-6) {
+        distance = 1;
+        endRotation.copy(startRotation);
+      } else {
+        runtime.camera.lookAt(target);
+        endRotation.copy(runtime.camera.quaternion);
+        runtime.camera.quaternion.copy(startRotation);
+      }
+    },
+    update(runtime) {
+      const t = normalizedTime(runtime, ease);
+      runtime.camera.quaternion.slerpQuaternions(startRotation, endRotation, t);
+      runtime.camera.getWorldDirection(direction);
+      runtime.focus.copy(runtime.camera.position).addScaledVector(direction, distance);
+      // Match the camera's up convention throughout, including controls handoff.
+      runtime.camera.lookAt(runtime.focus);
+    },
+  };
+}
+
+export interface PassThroughClipOptions extends CameraClipTiming {
+  /** Point to travel through. Choose a clear path above or beside solid geometry. */
+  target: Vector3;
+  /** Distance to continue beyond the point, in world units. Defaults to 5. */
+  beyond?: number;
+}
+
+/**
+ * Travel through a point and continue beyond it, retaining the starting orientation.
+ * The camera never turns back toward the point after passing it. Collision handling,
+ * fades, and switching scenes belong to the host; completion keeps the endpoint.
+ * If already at the target, travel along the current view direction instead.
+ *
+ * @example
+ * ```ts
+ * playback.play(createPassThroughClip({ target: new Vector3(0, 2.5, 0), beyond: 6, duration: 5 }));
+ * // The host can switch scenes once playback.isMoving becomes false.
+ * ```
+ */
+export function createPassThroughClip(options: PassThroughClipOptions): CameraClip {
+  const { target, beyond = 5, duration, ease = Easing.linear } = options;
+  const origin = new Vector3();
+  const focus = new Vector3();
+  const displacement = new Vector3();
+  return {
+    label: "Pass-through",
+    kind: "transition",
+    duration,
+    start(runtime) {
+      origin.copy(runtime.camera.position);
+      focus.copy(runtime.focus);
+      displacement.subVectors(target, origin);
+      const distance = displacement.length();
+      if (distance < 1e-6) runtime.camera.getWorldDirection(displacement);
+      else displacement.divideScalar(distance);
+      displacement.multiplyScalar(distance + beyond);
+    },
+    update(runtime) {
+      const t = normalizedTime(runtime, ease);
+      runtime.camera.position.copy(origin).addScaledVector(displacement, t);
+      runtime.focus.copy(focus).addScaledVector(displacement, t);
+    },
+  };
+}
+
+export interface RecoilClipOptions extends CameraClipTiming {
+  /** Peak backward displacement along camera-local +Z. Defaults to 0.15 world units. */
+  distance?: number;
+  /** Peak upward pitch in radians. Defaults to 0.06. */
+  pitch?: number;
+}
+
+/**
+ * Quick backward and upward kick, followed by smooth recovery to the animated base pose.
+ *
+ * @example
+ * ```ts
+ * playback.play(createRecoilClip({ distance: 0.2, pitch: 0.08, duration: 0.45 }));
+ * ```
+ */
+export function createRecoilClip(options: RecoilClipOptions): CameraClip {
+  const { distance = 0.15, pitch = 0.06, duration, ease = Easing.linear } = options;
+  const offset = new Vector3();
+  return {
+    label: "Recoil",
+    kind: "effect",
+    duration,
+    start() {},
+    update(runtime) {
+      const t = normalizedTime(runtime, ease);
+      const envelope = t < 0.2 ? Easing.smoothstep(t / 0.2) : 1 - Easing.smoothstep((t - 0.2) / 0.8);
+      offset.set(0, 0, distance * envelope).applyQuaternion(runtime.camera.quaternion);
+      runtime.camera.position.add(offset);
+      runtime.camera.rotateX(pitch * envelope);
+    },
+  };
+}
+
+export interface LandingBumpClipOptions extends CameraClipTiming {
+  /** Initial dip scale along camera-local -Y, in world units. Defaults to 0.3. */
+  intensity?: number;
+}
+
+/**
+ * Vertical landing dip followed by a damped rebound. The offset follows camera-local Y.
+ *
+ * @example
+ * ```ts
+ * playback.play(createLandingBumpClip({ intensity: 0.4, duration: 0.8 }));
+ * ```
+ */
+export function createLandingBumpClip(options: LandingBumpClipOptions): CameraClip {
+  const { intensity = 0.3, duration, ease = Easing.linear } = options;
+  const offset = new Vector3();
+  return {
+    label: "Landing Bump",
+    kind: "effect",
+    duration,
+    start() {},
+    update(runtime) {
+      const t = normalizedTime(runtime, ease);
+      const envelope = t === 0 || t === 1 ? 0 : -Math.sin(t * Math.PI * 3) * Math.exp(-3 * t) * (1 - t);
+      offset.set(0, intensity * envelope, 0).applyQuaternion(runtime.camera.quaternion);
+      runtime.camera.position.add(offset);
+    },
+  };
+}
+
+export interface HandheldDriftClipOptions extends CameraClipTiming {
+  /** Positional drift scale in world units. Defaults to 0.04. */
+  intensity?: number;
+  /** Pitch/yaw drift scale in radians. Defaults to 0.008. */
+  rotation?: number;
+  /** Base frequency in cycles per playback second. Defaults to 0.6. */
+  frequency?: number;
+}
+
+/**
+ * Gentle deterministic handheld motion, fading in and out over a finite duration.
+ * Layers camera-local translation and pitch/yaw over the moving base without accumulating drift.
+ * Frequency follows playback time, so timeScale slows the entire effect coherently.
+ *
+ * @example
+ * ```ts
+ * playback.play(createOrbitClip({ target: new Vector3(), duration: 20 }));
+ * playback.play(createHandheldDriftClip({ intensity: 0.04, rotation: 0.008, duration: 20 }));
+ * ```
+ */
+export function createHandheldDriftClip(options: HandheldDriftClipOptions): CameraClip {
+  const { intensity = 0.04, rotation = 0.008, frequency = 0.6, duration, ease = Easing.linear } = options;
+  const offset = new Vector3();
+  return {
+    label: "Handheld Drift",
+    kind: "effect",
+    duration,
+    start() {},
+    update(runtime) {
+      const t = normalizedTime(runtime, ease);
+      const envelope = Easing.smoothstep(Math.min(1, t / 0.15)) * Easing.smoothstep(Math.min(1, (1 - t) / 0.15));
+      const phase = runtime.elapsed * Math.PI * 2 * frequency;
+      offset
+        .set(Math.sin(phase), Math.sin(phase * 0.73) * 0.6, Math.sin(phase * 1.17) * 0.3)
+        .multiplyScalar(intensity * envelope)
+        .applyQuaternion(runtime.camera.quaternion);
+      runtime.camera.position.add(offset);
+      runtime.camera.rotateX(Math.sin(phase * 0.83) * rotation * envelope);
+      runtime.camera.rotateY(Math.sin(phase * 0.61) * rotation * envelope);
+    },
+  };
+}

@@ -15,8 +15,16 @@ import {
 import GUI from "lil-gui";
 import {
   CameraPlayback,
+  Easing,
+  type EasingFunction,
   GroundGrid,
   createDollyClip,
+  createPullAwayClip,
+  createFocusTransferClip,
+  createPassThroughClip,
+  createRecoilClip,
+  createLandingBumpClip,
+  createHandheldDriftClip,
   createCraneRevealClip,
   createImpactKickClip,
   createFovPulseClip,
@@ -36,7 +44,8 @@ export const meta = {
   description:
     "Movement establishes a view; transitions carry it away; effects add temporary motion. " +
     "Play starts from the current view. Stop keeps it. Restore Example View explicitly returns home. " +
-    "Trigger effects during movement to combine them. Speed scales both clocks; 0 freezes playback.",
+    "Trigger effects during movement to combine them. Speed scales both clocks; 0 freezes playback. " +
+    "Easing applies to the next movement or transition; effects keep their own recovery curves.",
 };
 
 const FOCUS = new Vector3(0, 0.5, 0);
@@ -44,13 +53,18 @@ const FOCUS = new Vector3(0, 0.5, 0);
 const CLIP_NAMES = ["Orbit", "Pendulum", "Flythrough", "Dolly", "Spiral", "Zoom", "Wobble"] as const;
 type ClipName = (typeof CLIP_NAMES)[number];
 
-function buildClip(name: ClipName): CameraClip {
+// These curves progress from 0 to 1. Inverse and Gaussian are effect shapes,
+// rather than continuous start-to-end progress curves.
+const EASING_NAMES = (Object.keys(Easing) as (keyof typeof Easing)[]).filter((name) => name !== "inverse" && name !== "gaussian");
+
+function buildClip(name: ClipName, ease?: EasingFunction): CameraClip {
   switch (name) {
     case "Orbit":
-      return createOrbitClip({ target: FOCUS, duration: 10, revolutions: 1 });
+      return createOrbitClip({ target: FOCUS, ease, duration: 10, revolutions: 1 });
     case "Pendulum":
       return createPendulumClip({
         target: FOCUS,
+        ease,
         duration: 24,
         oscillations: 2,
         azimuthAmplitude: 0.12,
@@ -60,20 +74,22 @@ function buildClip(name: ClipName): CameraClip {
         // Each destination has a corresponding subject to frame on arrival.
         waypoints: [new Vector3(4, 3, 0), new Vector3(-5, 2.5, -4), new Vector3(0, 2, 5)],
         lookAt: [FOCUS, new Vector3(-3, 0.75, -2.5), new Vector3(1.5, 0.5, 2)],
+        ease,
         duration: 12,
       });
     case "Dolly":
-      return createDollyClip({ distance: -4, duration: 4 });
+      return createDollyClip({ distance: -4, ease, duration: 4 });
     case "Spiral":
       return createSpiralClip({
         target: FOCUS,
         endRadius: 12,
         height: 28,
         revolutions: 1,
+        ease,
         duration: 12,
       });
     case "Zoom":
-      return createZoomClip({ target: FOCUS, endFov: 35, duration: 3 });
+      return createZoomClip({ target: FOCUS, endFov: 35, ease, duration: 3 });
     case "Wobble":
       return createWobbleClip({ intensity: 0.35, duration: 0.8 });
   }
@@ -167,7 +183,9 @@ export default function (container: HTMLElement) {
     playback.update(dt);
   });
 
-  const params = { movement: "Orbit", status: "Idle" };
+  const params = { movement: "Orbit", status: "Idle", easing: "Default" as "Default" | keyof typeof Easing };
+  // Resolve when Play is clicked: changing the selection never jumps an active clip.
+  const selectedEase = () => (params.easing === "Default" ? undefined : Easing[params.easing]);
   const gui = new GUI();
   gui.title("Camera Animators");
   const movement = gui.addFolder("Movement · keep final view");
@@ -179,26 +197,54 @@ export default function (container: HTMLElement) {
       {
         play() {
           const name = params.movement;
-          if (name.startsWith("Dolly")) playback.play(createDollyClip({ distance: name === "Dolly In" ? -3 : 3, duration: 4 }));
+          if (name.startsWith("Dolly"))
+            playback.play(createDollyClip({ distance: name === "Dolly In" ? -3 : 3, ease: selectedEase(), duration: 4 }));
           else if (name.startsWith("Zoom"))
             playback.play(
               createZoomClip({
                 target: controls.target.clone(),
                 endFov: Math.max(10, Math.min(110, camera.fov + (name === "Zoom In" ? -20 : 20))),
+                ease: selectedEase(),
                 duration: 3,
               }),
             );
-          else playback.play(buildClip(name as ClipName));
+          else playback.play(buildClip(name as ClipName, selectedEase()));
         },
       },
       "play",
     )
     .name("Play from Current View");
   const transitions = gui.addFolder("Transition · reveal or depart");
-  transitions.add({ play: () => playback.play(buildClip("Spiral")) }, "play").name("Spiral Fly Out");
+  transitions.add({ play: () => playback.play(buildClip("Spiral", selectedEase())) }, "play").name("Spiral Fly Out");
   transitions
-    .add({ play: () => playback.play(createCraneRevealClip({ target: FOCUS, height: 6, duration: 5 })) }, "play")
+    .add(
+      { play: () => playback.play(createCraneRevealClip({ ease: selectedEase(), target: FOCUS, height: 6, duration: 5 })) },
+      "play",
+    )
     .name("Crane Reveal");
+  transitions
+    .add(
+      { play: () => playback.play(createPullAwayClip({ ease: selectedEase(), distance: 12, height: 4, duration: 6 })) },
+      "play",
+    )
+    .name("Pull-away");
+  transitions
+    .add(
+      {
+        play: () => playback.play(createFocusTransferClip({ ease: selectedEase(), target: greenCylinder.position, duration: 3 })),
+      },
+      "play",
+    )
+    .name("Focus · Green Cylinder");
+  transitions
+    .add(
+      {
+        play: () =>
+          playback.play(createPassThroughClip({ ease: selectedEase(), target: new Vector3(0, 2.5, 0), beyond: 6, duration: 5 })),
+      },
+      "play",
+    )
+    .name("Pass-through");
   const effects = gui.addFolder("Effect · temporary offset");
   effects.add({ trigger: () => playback.play(buildClip("Wobble")) }, "trigger").name("Trigger Wobble");
   effects
@@ -212,7 +258,17 @@ export default function (container: HTMLElement) {
   effects
     .add({ trigger: () => playback.play(createFovPulseClip({ amplitude: 12, duration: 0.8 })) }, "trigger")
     .name("FOV Pulse");
+  effects
+    .add({ trigger: () => playback.play(createRecoilClip({ distance: 0.2, pitch: 0.08, duration: 0.45 })) }, "trigger")
+    .name("Recoil");
+  effects
+    .add({ trigger: () => playback.play(createLandingBumpClip({ intensity: 0.4, duration: 0.8 })) }, "trigger")
+    .name("Landing Bump");
+  effects
+    .add({ trigger: () => playback.play(createHandheldDriftClip({ intensity: 0.06, rotation: 0.012, duration: 12 })) }, "trigger")
+    .name("Handheld Drift");
   const transport = gui.addFolder("Playback & Example View");
+  transport.add(params, "easing", ["Default", ...EASING_NAMES]).name("Easing (next play)");
   transport.add(playback, "timeScale", 0, 3, 0.1).name("Speed (×)");
   transport.add({ stop: () => playback.stop() }, "stop").name("Stop · Keep View");
   transport.add({ restore: () => playback.reset() }, "restore").name("Restore Example View");
