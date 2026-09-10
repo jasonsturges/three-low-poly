@@ -338,6 +338,7 @@ export * from "./utils/ColorUtils";
 export * from "./utils/FindClosestPoint";
 export * from "./utils/LineEquations";
 export * from "./utils/Random";
+export * from "./utils/RandomColor";
 export * from "./utils/RandomNumberUtils";
 export * from "./utils/RandomTimer";
 export * from "./utils/SphericalGeometryUtils";

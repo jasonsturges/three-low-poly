@@ -18,7 +18,7 @@ export default function (container: HTMLElement) {
   const ground = new GroundGrid({ size: 14, divisions: 14 });
   scene.add(ground);
 
-  const params: Required<DeciduousTreeOptions> = {
+  const params: Required<Omit<DeciduousTreeOptions, "leafColors">> = {
     seed: 0xa711,
     trunkRadius: 0.32,
     segmentLength: 0.66,

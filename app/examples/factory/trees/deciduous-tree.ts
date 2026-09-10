@@ -1,12 +1,13 @@
 import GUI from "lil-gui";
-import { DeciduousTree, type DeciduousTreeOptions, GroundGrid } from "three-low-poly";
+import { DeciduousTree, type DeciduousTreeOptions, GroundGrid, RandomColor, type ColorSampler } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
 import type { ExampleMeta, ExampleMount } from "../../../framework/example";
 
 export const meta: ExampleMeta = {
   title: "Deciduous Tree",
-  description: "A seeded broadleaf tree with seasonal foliage controls. Adjust the trunk, crown, and palette; the original autumn and cherry configurations are preserved in Studies / Trees.",
+  description:
+    "Choose Summer, Autumn, or Cherry Blossom, then choose how its leaf colors are sampled: Factory defaults preserves the original seeded palette assignments, Season palette uses those same colors through RandomColor.pick, and Two endpoints interpolates the season’s editable endpoint pair. Changing coloring does not move clusters. Bare hides leaves without discarding density or color settings. Changing tree type restores its cluster size and bark preset while retaining the coloring method. Original configurations remain in Studies / Trees.",
 };
 
 const mount: ExampleMount = (container) => {
@@ -17,7 +18,7 @@ const mount: ExampleMount = (container) => {
   const grid = new GroundGrid({ size: 12, divisions: 12 });
   handle.scene.add(grid);
 
-  const params: Required<DeciduousTreeOptions> = {
+  const params: Required<Omit<DeciduousTreeOptions, "leafColors">> = {
     seed: 0xa711,
     trunkRadius: 0.32,
     segmentLength: 0.66,
@@ -30,14 +31,63 @@ const mount: ExampleMount = (container) => {
     baseRise: 0.35,
   };
 
-  let tree = new DeciduousTree(params);
+  const seasons = {
+    Summer: {
+      palette: ["#4e5f33", "#5d7142", "#6b8150", "#455a2e", "#7a8a58"],
+      size: 0.38,
+      clusters: 2,
+      bark: "#332419",
+      start: "#455a2e",
+      end: "#7a8a58",
+    },
+    Autumn: {
+      palette: ["#8d3c1d", "#aa5b21", "#c27a28", "#6e3120", "#b68a32"],
+      size: 0.38,
+      clusters: 2,
+      bark: "#332419",
+      start: "#8d3c1d",
+      end: "#b68a32",
+    },
+    "Cherry Blossom": {
+      palette: ["#f7d6dc", "#efb9c5", "#f4c8d2", "#dfa2b2", "#f9e2e4"],
+      size: 0.27,
+      clusters: 3,
+      bark: "#493630",
+      start: "#dfa2b2",
+      end: "#f9e2e4",
+    },
+  };
+  const colorSettings = {
+    season: "Summer" as keyof typeof seasons,
+    mode: "Factory defaults",
+    start: seasons.Summer.start,
+    end: seasons.Summer.end,
+    bare: false,
+  };
+  function leafColors(): ColorSampler | undefined {
+    switch (colorSettings.mode) {
+      case "Season palette":
+        return RandomColor.pick(params.leafPalette);
+      case "Two endpoints":
+        return RandomColor.between(colorSettings.start, colorSettings.end);
+      default:
+        return undefined;
+    }
+  }
+  const makeTree = () => {
+    const result = new DeciduousTree({ ...params, leafColors: leafColors() });
+    // Visibility is independent of palette, density, and the seeded cluster layout.
+    result.leaves.visible = !colorSettings.bare && result.leaves.count > 0;
+    return result;
+  };
+  let tree = makeTree();
   handle.scene.add(tree);
   frameObject(handle, tree, { fit: 1.25 });
 
   function rebuild(): void {
     tree.dispose();
     handle.scene.remove(tree);
-    tree = new DeciduousTree(params);
+    tree = makeTree();
     handle.scene.add(tree);
     // Re-center without re-dollying: the crown grows and shrinks as the dials move, and re-fitting on
     // every change would snap the viewer's zoom back.
@@ -46,6 +96,36 @@ const mount: ExampleMount = (container) => {
 
   const gui = new GUI({ title: "Deciduous Tree" });
   gui.add(params, "seed", 1, 0xffff, 1).name("Seed").onChange(rebuild);
+
+  const colors = gui.addFolder("Leaf colors");
+  colors
+    .add(colorSettings, "season", Object.keys(seasons))
+    .name("Season / tree type")
+    .onChange(() => {
+      const preset = seasons[colorSettings.season];
+      params.leafPalette = [...preset.palette];
+      params.leafSize = preset.size;
+      params.clustersPerPoint = preset.clusters;
+      params.barkColor = preset.bark;
+      colorSettings.start = preset.start;
+      colorSettings.end = preset.end;
+      // Keep the selected coloring method and Bare state while changing season.
+      gui.controllersRecursive().forEach((c) => c.updateDisplay());
+      rebuild();
+    });
+  const method = colors.add(colorSettings, "mode", ["Factory defaults", "Season palette", "Two endpoints"]).name("Coloring");
+  const startControl = colors.addColor(colorSettings, "start").name("Endpoint A").onChange(rebuild);
+  const endControl = colors.addColor(colorSettings, "end").name("Endpoint B").onChange(rebuild);
+  const syncColors = () => {
+    const endpoints = colorSettings.mode === "Two endpoints";
+    startControl.show(endpoints);
+    endControl.show(endpoints);
+  };
+  method.onChange(() => {
+    syncColors();
+    rebuild();
+  });
+  syncColors();
 
   const trunk = gui.addFolder("Trunk");
   trunk.add(params, "trunkRadius", 0.15, 0.6, 0.01).name("Radius").onChange(rebuild);
@@ -57,31 +137,16 @@ const mount: ExampleMount = (container) => {
   trunk.open();
 
   const crown = gui.addFolder("Crown");
+  crown
+    .add(colorSettings, "bare")
+    .name("Bare (hide leaves)")
+    .onChange(() => {
+      tree.leaves.visible = !colorSettings.bare && tree.leaves.count > 0;
+    });
   crown.add(params, "leafDensity", 0, 1, 0.01).name("Density").onChange(rebuild);
   crown.add(params, "leafSize", 0.12, 0.5, 0.01).name("Cluster size").onChange(rebuild);
   crown.add(params, "clustersPerPoint", 1, 5, 1).name("Clusters / point").onChange(rebuild);
   crown.open();
-
-  // The whole argument for one class: each of these is a palette and a couple of numbers. Watch the
-  // branch skeleton stay identical while the tree changes season.
-  const seasons: Record<string, () => void> = {
-    Summer: () => apply(["#4e5f33", "#5d7142", "#6b8150", "#455a2e", "#7a8a58"], 0.38, 2, "#332419"),
-    Autumn: () => apply(["#8d3c1d", "#aa5b21", "#c27a28", "#6e3120", "#b68a32"], 0.38, 2, "#332419"),
-    Cherry: () => apply(["#f7d6dc", "#efb9c5", "#f4c8d2", "#dfa2b2", "#f9e2e4"], 0.27, 3, "#493630"),
-    Bare: () => apply([], 0.38, 0, "#332419"),
-  };
-  function apply(palette: string[], leafSize: number, clustersPerPoint: number, bark: string): void {
-    params.leafPalette = palette.length ? palette : ["#000000"];
-    params.leafDensity = palette.length ? 0.72 : 0;
-    params.leafSize = leafSize;
-    params.clustersPerPoint = Math.max(1, clustersPerPoint);
-    params.barkColor = bark;
-    gui.controllersRecursive().forEach((c) => c.updateDisplay());
-    rebuild();
-  }
-  const season = gui.addFolder("Season");
-  for (const [name, fn] of Object.entries(seasons)) season.add({ [name]: fn }, name);
-  season.open();
 
   return () => {
     gui.destroy();

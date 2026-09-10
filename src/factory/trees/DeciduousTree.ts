@@ -15,7 +15,8 @@ import {
   type Material,
 } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { createRandom } from "../../utils/Random";
+import { createRandom, deriveSubSeed } from "../../utils/Random";
+import type { ColorSampler } from "../../utils/RandomColor";
 
 export interface DeciduousTreeOptions {
   /** Seed for the deterministic stream. Defaults to `0xa711`. Shapes differ from the source scene's. */
@@ -40,6 +41,13 @@ export interface DeciduousTreeOptions {
    * member of it.
    */
   leafPalette?: string[];
+  /**
+   * Optional per-cluster sampler, overriding leafPalette. Writes a working-space Color.
+   * Index follows visible crown-point order, then cluster order. The seeded color stream
+   * is independent of placement; sampling more random values does not move leaf clusters.
+   * Bark remains controlled by barkColor. Omit to preserve the original palette and seeded output.
+   */
+  leafColors?: ColorSampler;
   /** Leaf cluster radius. Defaults to `0.38`. */
   leafSize?: number;
   /** Clusters placed at each crown point. Defaults to `2`. */
@@ -121,6 +129,7 @@ export class DeciduousTree extends Group {
     leafDensity = 0.72,
     barkColor = "#332419",
     leafPalette = ["#4e5f33", "#5d7142", "#6b8150", "#455a2e", "#7a8a58"],
+    leafColors,
     leafSize = 0.38,
     clustersPerPoint = 2,
     baseRise = 0.35,
@@ -136,13 +145,7 @@ export class DeciduousTree extends Group {
     const branchParts: BufferGeometry[] = [];
     const crownPoints: Vector3[] = [];
 
-    const grow = (
-      origin: Vector3,
-      initialDirection: Vector3,
-      radius: number,
-      length: number,
-      depth: number,
-    ): void => {
+    const grow = (origin: Vector3, initialDirection: Vector3, radius: number, length: number, depth: number): void => {
       const steps = Math.max(2, 5 - depth);
       const taper = 0.82;
       let position = origin.clone();
@@ -167,9 +170,7 @@ export class DeciduousTree extends Group {
         branchParts.push(new SphereGeometry(nextRadius * 1.04, 6, 4).translate(next.x, next.y, next.z));
 
         if (depth === 0 && (i === 2 || i === 3)) {
-          const offshoot = direction
-            .clone()
-            .applyAxisAngle(perpendicular(direction, random), 0.72 + random() * 0.42);
+          const offshoot = direction.clone().applyAxisAngle(perpendicular(direction, random), 0.72 + random() * 0.42);
           offshoot.lerp(UP, 0.08).normalize();
           grow(next, offshoot, nextRadius * 0.57, length * 0.76, depth + 1);
         }
@@ -183,9 +184,7 @@ export class DeciduousTree extends Group {
       if (depth < maxDepth && currentRadius > 0.006) {
         const children = depth === 0 ? 4 : depth < 3 ? 2 : random() < 0.6 ? 2 : 1;
         for (let i = 0; i < children; i++) {
-          const childDirection = direction
-            .clone()
-            .applyAxisAngle(perpendicular(direction, random), 0.48 + random() * 0.7);
+          const childDirection = direction.clone().applyAxisAngle(perpendicular(direction, random), 0.48 + random() * 0.7);
           if (depth < 2) childDirection.lerp(UP, 0.12).normalize();
           grow(position, childDirection, currentRadius * 0.69, length * 0.79, depth + 1);
         }
@@ -225,25 +224,28 @@ export class DeciduousTree extends Group {
     leaves.visible = leaves.count > 0;
     const placement = new Object3D();
     const tint = new Color();
+    const colorContext = { index: 0, random: createRandom(deriveSubSeed(seed, 0x1eaf)) };
+    const sampleColor: ColorSampler =
+      leafColors ??
+      ((target) => {
+        target.set(leafPalette[Math.floor(random() * leafPalette.length)]!);
+      });
     let index = 0;
 
     for (const point of visiblePoints) {
       for (let cluster = 0; cluster < clustersPerPoint; cluster++) {
-        placement.position
-          .copy(point)
-          .add(
-            new Vector3(
-              (random() - 0.5) * 0.7,
-              (random() - 0.5) * 0.55,
-              (random() - 0.5) * 0.7,
-            ),
-          );
+        placement.position.copy(point).add(new Vector3((random() - 0.5) * 0.7, (random() - 0.5) * 0.55, (random() - 0.5) * 0.7));
         placement.rotation.set(random() * Math.PI, random() * Math.PI, random() * Math.PI);
         const scale = 0.65 + random() * 0.55;
         placement.scale.set(scale * (0.8 + random() * 0.45), scale, scale * 0.8);
         placement.updateMatrix();
         leaves.setMatrixAt(index, new Matrix4().copy(placement.matrix));
-        leaves.setColorAt(index, tint.set(leafPalette[Math.floor(random() * leafPalette.length)]!));
+        // Preserve the legacy placement stream: palette selection used one draw between
+        // cluster transforms. Custom samplers use only the independent color stream.
+        if (leafColors) random();
+        colorContext.index = index;
+        sampleColor(tint, colorContext);
+        leaves.setColorAt(index, tint);
         index++;
       }
     }

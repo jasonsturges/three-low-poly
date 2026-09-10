@@ -1,15 +1,8 @@
-import {
-  BufferAttribute,
-  BufferGeometry,
-  Color,
-  Group,
-  Mesh,
-  MeshStandardMaterial,
-  type Material,
-} from "three";
+import { BufferAttribute, BufferGeometry, Color, Group, Mesh, MeshStandardMaterial, type Material } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { createGeometryBuffers, pushQuad, pushTriangle, toBufferGeometry, type Vec3 } from "../../modeling/mesh/GeometryBuffers";
-import { mulberry32 } from "../../utils/Random";
+import { createRandom } from "../../utils/Random";
+import type { ColorSampler } from "../../utils/RandomColor";
 import { layPlankFloor, type PlankFloorLayoutOptions } from "./PlankFloorLayout";
 
 export interface HardwoodFloorOptions extends Omit<PlankFloorLayoutOptions, "length" | "depth"> {
@@ -38,6 +31,13 @@ export interface HardwoodFloorOptions extends Omit<PlankFloorLayoutOptions, "len
   color?: string;
   /** Per-board tint spread in HSL, so no two boards match. Defaults to `0.06`. */
   colorVariance?: number;
+  /**
+   * Per-board sampler overriding color and colorVariance. Writes a working-space Color.
+   * Called once per retained board, in layout order after clipping/sliver removal;
+   * index is contiguous from zero. All vertices of that board receive the same color.
+   * The seeded color stream is separate from layout. Omit to preserve the original tint recipe.
+   */
+  colors?: ColorSampler;
   /** A material to use instead of the default. **Must set `vertexColors: true`**, or every board goes white. */
   material?: Material;
 }
@@ -52,11 +52,7 @@ type Point = [number, number];
  * applied one after another and the result stays well-behaved — which is what lets the perimeter boards be
  * fanned rather than ear-clipped.
  */
-const clipHalfPlane = (
-  polygon: Point[],
-  inside: (p: Point) => boolean,
-  cross: (a: Point, b: Point) => Point,
-): Point[] => {
+const clipHalfPlane = (polygon: Point[], inside: (p: Point) => boolean, cross: (a: Point, b: Point) => Point): Point[] => {
   const out: Point[] = [];
   for (let i = 0; i < polygon.length; i++) {
     const a = polygon[i]!;
@@ -71,10 +67,7 @@ const clipHalfPlane = (
 
 /** A board's outline, cut to the room. Empty when the board lies entirely outside. */
 const clipToRoom = (polygon: Point[], halfWidth: number, halfDepth: number): Point[] => {
-  const lerp = (a: Point, b: Point, t: number): Point => [
-    a[0] + (b[0] - a[0]) * t,
-    a[1] + (b[1] - a[1]) * t,
-  ];
+  const lerp = (a: Point, b: Point, t: number): Point => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
   let result = polygon;
   const edges: [(p: Point) => boolean, (a: Point, b: Point) => Point][] = [
     [(p) => p[0] >= -halfWidth, (a, b) => lerp(a, b, (-halfWidth - a[0]) / (b[0] - a[0]))],
@@ -176,6 +169,7 @@ export class HardwoodFloor extends Group {
     minSliverArea = 0.004,
     color = "#6b4b2c",
     colorVariance = 0.06,
+    colors: colorSampler,
     material,
     ...layout
   }: HardwoodFloorOptions = {}) {
@@ -200,10 +194,18 @@ export class HardwoodFloor extends Group {
 
     const seed = layout.seed ?? 0x51ab;
     // A separate stream from the layout's, so changing a color cannot move a board.
-    const random = mulberry32(seed ^ 0x9e3779b9);
+    // Retain the established color seed so the default output stays byte-for-byte compatible.
+    const colorRandom = createRandom(seed ^ 0x9e3779b9);
+    const random = () => colorRandom.next();
     const base = new Color(color);
     const tint = new Color();
     const signed = (spread: number) => (random() * 2 - 1) * spread;
+    const colorContext = { index: 0, random: colorRandom };
+    const sampleColor: ColorSampler =
+      colorSampler ??
+      ((target) => {
+        target.copy(base).offsetHSL(signed(colorVariance) / 3, signed(colorVariance), signed(colorVariance));
+      });
 
     const boards: BufferGeometry[] = [];
     const halfBoard = plankWidth / 2;
@@ -233,9 +235,8 @@ export class HardwoodFloor extends Group {
       }
 
       const board = prism(cut, plankThickness);
-      // Hue drifts a third as far as saturation and lightness: one delivery of timber varies in depth,
-      // not in species.
-      tint.copy(base).offsetHSL(signed(colorVariance) / 3, signed(colorVariance), signed(colorVariance));
+      colorContext.index = boards.length;
+      sampleColor(tint, colorContext);
 
       // One color for the WHOLE board, so it reads as a board rather than a gradient across it.
       const count = board.attributes.position!.count;

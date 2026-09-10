@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
 import { DirectionalLight, MathUtils } from "three";
-import { HardwoodFloor } from "three-low-poly";
+import { HardwoodFloor, RandomColor, type ColorSampler } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -14,7 +14,7 @@ export const meta = {
     "crossing one comes back with five or six sides, which no pair of cut planes could express, while at 0° " +
     "the clip is a no-op and the general case costs nothing. The cut boards at the walls are not a defect — " +
     "a wall is a boundary condition, not the end of the floor, and a carpenter cuts what the room demands. " +
-    "The whole thing bakes to ONE draw call at any size.",
+    "The whole thing bakes to ONE draw call at any size. The example starts with endpoint interpolation and also offers three closely related brown timber families. Changing coloring preserves the board layout. The SDK’s original default remains available to existing callers; the broad HSL recipe can be explored in Studies / Color / Variation.",
 };
 
 export default function (container: HTMLElement) {
@@ -43,8 +43,9 @@ export default function (container: HTMLElement) {
     maxPlankLength: 1.4,
     minStagger: 0.35,
     minSliverArea: 0.004,
-    color: "#6b4b2c",
-    colorVariance: 0.06,
+    colorStrategy: "Two endpoints",
+    endpointA: "#493729",
+    endpointB: "#93714f",
     seed: 0x51ab,
     laid: "",
     perimeter: "",
@@ -53,9 +54,27 @@ export default function (container: HTMLElement) {
 
   let floor: HardwoodFloor;
 
+  function colors(): ColorSampler {
+    switch (params.colorStrategy) {
+      case "Two endpoints":
+        return RandomColor.between(params.endpointA, params.endpointB);
+      case "Timber families":
+        return RandomColor.mix(
+          [
+            RandomColor.between("#60452f", "#896647"),
+            RandomColor.between("#694c34", "#947052"),
+            RandomColor.between("#705239", "#9d7858"),
+          ],
+          [5, 3, 2],
+        );
+      default:
+        return RandomColor.between(params.endpointA, params.endpointB);
+    }
+  }
   const build = () => {
     floor = new HardwoodFloor({
       ...params,
+      colors: colors(),
       rotation: MathUtils.degToRad(params.rotationDegrees),
     });
     scene.add(floor);
@@ -106,9 +125,20 @@ export default function (container: HTMLElement) {
   laying.open();
 
   const color = gui.addFolder("Color");
-  color.addColor(params, "color").name("Timber").onChange(rebuild);
-  // Per board, not per vertex — the whole board takes one tint, so it reads as a board.
-  color.add(params, "colorVariance", 0, 0.25, 0.005).name("Variance").onChange(rebuild);
+  const strategy = color.add(params, "colorStrategy", ["Two endpoints", "Timber families"]).name("Coloring");
+  const endpointA = color.addColor(params, "endpointA").name("Endpoint A").onChange(rebuild);
+  const endpointB = color.addColor(params, "endpointB").name("Endpoint B").onChange(rebuild);
+  const syncColorControls = () => {
+    const endpoints = params.colorStrategy === "Two endpoints";
+    endpointA.show(endpoints);
+    endpointB.show(endpoints);
+  };
+  strategy.onChange(() => {
+    syncColorControls();
+    rebuild();
+  });
+  syncColorControls();
+  color.open();
 
   const readout = gui.addFolder("Readout");
   readout.add(params, "laid").name("Laid").listen().disable();

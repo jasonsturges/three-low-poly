@@ -12,7 +12,7 @@ export const meta = {
  * The cherry specification, lifted from the source scene's grove. Its hero tree is the one isolated here;
  * the grove's other three are the same spec at smaller `trunkRadius`, `leafDensity`, and scale.
  */
-const CHERRY: Required<DeciduousTreeOptions> = {
+const CHERRY: Required<Omit<DeciduousTreeOptions, "leafColors">> = {
   seed: 0xc401,
   trunkRadius: 0.37,
   segmentLength: 0.76,
@@ -33,7 +33,7 @@ export default function (container: HTMLElement) {
   const ground = new GroundGrid({ size: 14, divisions: 14 });
   scene.add(ground);
 
-  const params: Required<DeciduousTreeOptions> = { ...CHERRY };
+  const params: Required<Omit<DeciduousTreeOptions, "leafColors">> = { ...CHERRY };
   const stats = { branchTriangles: 0, blossomClusters: 0, drawCalls: 2, baseY: "" };
 
   let tree = new DeciduousTree(params);
