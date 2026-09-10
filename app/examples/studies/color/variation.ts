@@ -11,7 +11,7 @@ import {
   SRGBColorSpace,
   type Sprite,
 } from "three";
-import { createRandom, hslToRgb } from "three-low-poly";
+import { createRandom, deriveSubSeed, hslToRgb, RandomColor, type ColorSampler } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 import { clearDefaultLights } from "../../../framework/clearDefaultLights";
 import { createTextSprite } from "../../../framework/createTextSprite";
@@ -19,7 +19,7 @@ import { createTextSprite } from "../../../framework/createTextSprite";
 export const meta = {
   title: "Color Variation",
   description:
-    "STUDY — compare color recipes with the same seeded samples. Each row repeats its colors as unlit swatches and shaded boards. Start with Timber, Pumpkin, or Stone; explore channel bounds, endpoints, palette weights, and sampling bias. The hardwood baseline uses Three's working-linear HSL; the controlled rows use sRGB HSL. These are different coordinate systems, neither perceptually uniform. Endpoint interpolation is linear RGB. Analogous is a seeded adaptation of the legacy helper's ±30° / 60–80% / 50–70% recipe, with corrected hue wrapping and explicit sRGB input. Experimental recipes stay in this study.",
+    "STUDY — compare color recipes with the same seeded samples. Each row repeats its colors as unlit swatches and shaded boards. Start with Timber, Pumpkin, or Stone; explore channel bounds, endpoints, palette weights, and sampling bias. The hardwood baseline uses Three's working-linear HSL; the controlled rows use sRGB HSL. These are different coordinate systems, neither perceptually uniform. Endpoint interpolation is linear RGB. Analogous is a seeded adaptation of the legacy helper's ±30° / 60–80% / 50–70% recipe, with corrected hue wrapping and explicit sRGB input. Constant, endpoint, and palette rows use SDK RandomColor samplers; diagnostic HSL recipes stay in the study.",
 };
 
 const presets = {
@@ -128,23 +128,30 @@ export default function (container: HTMLElement) {
 
   const clamp = (value: number, a: number, b: number) => Math.max(Math.min(a, b), Math.min(Math.max(a, b), value));
   function refresh() {
-    // Regenerate a fixed three-sample tuple per item. Controls never advance the seed;
-    // recipes reuse matching samples, independent of how many channels they vary.
-    const rng = createRandom(params.seed);
-    const samples = Array.from({ length: count }, () => [rng.next(), rng.next(), rng.next()]);
+    // Each slot gets an independent stream, reset for each strategy. Different draw
+    // counts cannot shift subsequent slots. This is study matching, not SDK policy.
+    const slotRandom = (index: number) => createRandom(deriveSubSeed(params.seed, index));
+    const samples = Array.from({ length: count }, (_, index) => {
+      const rng = slotRandom(index);
+      return [rng.next(), rng.next(), rng.next()];
+    });
     const shape = (u: number) => 0.5 + 0.5 * Math.sign(u * 2 - 1) * Math.pow(Math.abs(u * 2 - 1), params.bias);
     const base = new Color(params.base);
     const hsl = base.getHSL({ h: 0, s: 0, l: 0 }, SRGBColorSpace);
-    const palette = [params.color1, params.color2, params.color3, params.color4].map((c) => new Color(c));
+    const palette = [params.color1, params.color2, params.color3, params.color4];
     const weights = [params.weight1, params.weight2, params.weight3, params.weight4];
-    const weighted = createRandom(params.seed);
-    const weightedColors = Array.from({ length: count }, () => {
-      const color = weighted.weighted(palette, weights);
-      // Match the first value of each three-sample tuple used by the uniform row.
-      weighted.next();
-      weighted.next();
-      return color;
-    });
+    const constant = RandomColor.constant(params.base);
+    const endpoints = RandomColor.between(params.low, params.high);
+    const uniform = RandomColor.pick(palette);
+    const weighted = RandomColor.pick(palette, weights);
+    const sample = (sampler: ColorSampler, index: number, biased = false) => {
+      const random = slotRandom(index);
+      // between uses next(); this local adapter preserves the overview's bias control.
+      const source = biased ? { ...random, next: () => shape(random.next()) } : random;
+      const target = new Color();
+      sampler(target, { index, random: source });
+      return target;
+    };
     const bounded = (h: number, s: number, l: number) =>
       new Color().setHSL(
         h,
@@ -162,13 +169,13 @@ export default function (container: HTMLElement) {
       const hue = (((hsl.h * 360 + Math.floor(-30 + a * 61)) % 360) + 360) % 360;
       const [r, g, blue] = hslToRgb(hue, Math.floor(60 + b * 21), Math.floor(50 + c * 21));
       const colors = [
-        base,
+        sample(constant, i),
         base.clone().offsetHSL((x * params.variance) / 3, y * params.variance, z * params.variance),
         bounded(hsl.h, hsl.s, lightness),
         bounded(hsl.h + (x * params.hue) / 360, hsl.s + (y * params.saturation) / 100, lightness),
-        new Color(params.low).lerp(new Color(params.high), shape(a)),
-        palette[Math.floor(a * palette.length)],
-        weightedColors[i],
+        sample(endpoints, i, true),
+        sample(uniform, i),
+        sample(weighted, i),
         new Color().setRGB(r / 255, g / 255, blue / 255, SRGBColorSpace),
       ];
       rows.forEach((pair, row) => pair.forEach((mesh) => mesh.setColorAt(i, colors[row])));
