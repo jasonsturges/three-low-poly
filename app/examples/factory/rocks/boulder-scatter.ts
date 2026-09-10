@@ -1,6 +1,6 @@
 import { Group, InstancedMesh, Material } from "three";
 import GUI from "lil-gui";
-import { GroundGrid, scatterBoulders } from "three-low-poly";
+import { RandomColor, GroundGrid, scatterBoulders } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -31,6 +31,8 @@ export default function (container: HTMLElement) {
   scene.add(floor);
 
   const params = {
+    start: "#62676b",
+    end: "#8b8d87",
     useSeed: true,
     seed: 1337,
     count: 24,
@@ -43,7 +45,6 @@ export default function (container: HTMLElement) {
     noiseScale: 1.6,
     scaleMin: 0.6,
     scaleMax: 1.3,
-    color: "#6f6f6f",
   };
 
   const build = () =>
@@ -58,7 +59,7 @@ export default function (container: HTMLElement) {
       noiseScale: params.noiseScale,
       scaleMin: params.scaleMin,
       scaleMax: params.scaleMax,
-      color: params.color,
+      colors: RandomColor.between(params.start, params.end),
       seed: params.useSeed ? params.seed : undefined,
     });
 
@@ -91,7 +92,10 @@ export default function (container: HTMLElement) {
   boulderFolder.add(params, "noiseScale", 0.4, 4, 0.05).name("Noise Scale").onChange(rebuild);
   boulderFolder.add(params, "scaleMin", 0.2, 2, 0.05).name("Scale Min").onChange(rebuild);
   boulderFolder.add(params, "scaleMax", 0.2, 2.5, 0.05).name("Scale Max").onChange(rebuild);
-  boulderFolder.addColor(params, "color").name("Color").onChange(rebuild);
+
+  const colors = gui.addFolder("Colors · between");
+  colors.addColor(params, "start").name("Start").onChange(rebuild);
+  colors.addColor(params, "end").name("End").onChange(rebuild);
 
   return () => {
     gui.destroy();

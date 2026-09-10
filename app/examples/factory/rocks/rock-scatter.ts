@@ -1,5 +1,5 @@
 import GUI from "lil-gui";
-import { GroundGrid, scatterRocks } from "three-low-poly";
+import { RandomColor, GroundGrid, scatterRocks } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -14,6 +14,8 @@ export default function (container: HTMLElement) {
   scene.add(floor);
 
   const params = {
+    start: "#62676b",
+    end: "#969993",
     useSeed: true,
     seed: 1337,
     count: 24,
@@ -31,6 +33,7 @@ export default function (container: HTMLElement) {
     heightJitter: params.heightJitter,
     scaleMin: params.scaleMin,
     scaleMax: params.scaleMax,
+    colors: RandomColor.between(params.start, params.end),
     seed: params.useSeed ? params.seed : undefined,
   });
   scene.add(rocks);
@@ -47,6 +50,7 @@ export default function (container: HTMLElement) {
       heightJitter: params.heightJitter,
       scaleMin: params.scaleMin,
       scaleMax: params.scaleMax,
+      colors: RandomColor.between(params.start, params.end),
       seed: params.useSeed ? params.seed : undefined,
     });
     scene.add(rocks);
@@ -62,6 +66,10 @@ export default function (container: HTMLElement) {
   gui.add(params, "heightJitter", 0, 2, 0.05).name("Height Jitter").onChange(rebuild);
   gui.add(params, "scaleMin", 0.2, 2, 0.05).name("Scale Min").onChange(rebuild);
   gui.add(params, "scaleMax", 0.2, 2, 0.05).name("Scale Max").onChange(rebuild);
+
+  const colors = gui.addFolder("Colors · between");
+  colors.addColor(params, "start").name("Start").onChange(rebuild);
+  colors.addColor(params, "end").name("End").onChange(rebuild);
 
   return () => {
     gui.destroy();

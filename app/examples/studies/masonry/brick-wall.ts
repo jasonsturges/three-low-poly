@@ -12,7 +12,7 @@ import {
   Quaternion,
   Vector3,
 } from "three";
-import { mulberry32 } from "three-low-poly";
+import { createRandom, deriveSubSeed, RandomColor, mulberry32, type ColorSampler } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -85,6 +85,9 @@ export default function (container: HTMLElement) {
     minBat: 0.25,
     positionJitter: 0.004,
     rotationJitter: 0.012,
+    colorMode: "Original clay",
+    start: "#65351f",
+    end: "#b46b46",
     clayColor: "#8b4a2f",
     colorVariance: 0.11,
     seed: 0x2c1a,
@@ -114,18 +117,22 @@ export default function (container: HTMLElement) {
     const random = mulberry32(params.seed);
     const signed = (amount: number) => (random() - 0.5) * 2 * amount;
     const base = new Color(params.clayColor);
+    // Keep the original clay recipe as an application-owned sampler. Its working-HSL
+    // palette remains intentional here; endpoints provide a bounded comparison.
+    const clayRecipe: ColorSampler = (target, { random }) => {
+      const signedColor = () => (random.next() - 0.5) * 2 * params.colorVariance;
+      target.copy(base).offsetHSL(signedColor() / 5, signedColor() / 2, signedColor());
+    };
+    const sampleColor = params.colorMode === "Original clay" ? clayRecipe : RandomColor.between(params.start, params.end);
+    const colorContext = { index: 0, random: createRandom(deriveSubSeed(params.seed, 0x62726963)) };
 
     // THE CONVENTION. `adds` keeps the brick at its manufactured size and lets the wall grow — what a
     // bricklayer does. `subtracts` keeps the pitch and shaves the brick — what a mason dressing stone to
     // a course does. Neither is wrong; they belong to different trades.
-    const pitch =
-      params.mortar === "adds" ? params.brickLength + params.mortarGap : params.brickLength;
-    const cutLength =
-      params.mortar === "adds" ? params.brickLength : Math.max(0.02, params.brickLength - params.mortarGap);
-    const gauge =
-      params.mortar === "adds" ? params.brickHeight + params.mortarGap : params.brickHeight;
-    const cutHeight =
-      params.mortar === "adds" ? params.brickHeight : Math.max(0.02, params.brickHeight - params.mortarGap);
+    const pitch = params.mortar === "adds" ? params.brickLength + params.mortarGap : params.brickLength;
+    const cutLength = params.mortar === "adds" ? params.brickLength : Math.max(0.02, params.brickLength - params.mortarGap);
+    const gauge = params.mortar === "adds" ? params.brickHeight + params.mortarGap : params.brickHeight;
+    const cutHeight = params.mortar === "adds" ? params.brickHeight : Math.max(0.02, params.brickHeight - params.mortarGap);
 
     const courses = Math.max(1, Math.floor(params.height / gauge));
 
@@ -149,16 +156,15 @@ export default function (container: HTMLElement) {
         y + signed(params.positionJitter),
         signed(params.positionJitter),
       );
-      rotation.set(
-        signed(params.rotationJitter),
-        signed(params.rotationJitter),
-        signed(params.rotationJitter),
-      );
+      rotation.set(signed(params.rotationJitter), signed(params.rotationJitter), signed(params.rotationJitter));
       quaternion.setFromEuler(rotation);
       matrix.compose(position, quaternion, scale);
-      tint
-        .copy(base)
-        .offsetHSL(signed(params.colorVariance) / 5, signed(params.colorVariance) / 2, signed(params.colorVariance));
+      // Reserve the old color draws so switching recipes leaves the brick placement intact.
+      random();
+      random();
+      random();
+      sampleColor(tint, colorContext);
+      colorContext.index++;
 
       const cut = params.mortar === "adds" ? length : Math.max(0.02, length - params.mortarGap);
       const bin = Math.round(cut * 10000) / 10000;
@@ -219,11 +225,7 @@ export default function (container: HTMLElement) {
       // whole `mortarGap` short of the run — a core built to full size stands proud at the ends and rings
       // the wall with a pale edge, which is the opposite of what a core is for.
       const inset = (extent: number) => Math.max(extent * 0.15, extent - params.mortarRecess * 2);
-      const core = new BoxGeometry(
-        inset(params.width),
-        inset(courses * gauge),
-        inset(params.brickDepth),
-      );
+      const core = new BoxGeometry(inset(params.width), inset(courses * gauge), inset(params.brickDepth));
       core.translate(0, (courses * gauge) / 2, 0);
       const mesh = new InstancedMesh(core, clay, 1);
       const m = new Matrix4();
@@ -308,9 +310,22 @@ export default function (container: HTMLElement) {
   wobble.add(params, "positionJitter", 0, 0.03, 0.001).name("Position Jitter").onChange(rebuild);
   wobble.add(params, "rotationJitter", 0, 0.08, 0.002).name("Rotation Jitter").onChange(rebuild);
 
-  const color = gui.addFolder("Color");
-  color.addColor(params, "clayColor").name("Clay Color").onChange(rebuild);
-  color.add(params, "colorVariance", 0, 0.35, 0.005).name("Color Variance").onChange(rebuild);
+  const color = gui.addFolder("Brick colors");
+  color
+    .add(params, "colorMode", ["Original clay", "Two endpoints"])
+    .name("Colors")
+    .onChange(() => {
+      recipe.show(params.colorMode === "Original clay");
+      endpoints.show(params.colorMode === "Two endpoints");
+      rebuild();
+    });
+  const recipe = color.addFolder("Original clay recipe");
+  recipe.addColor(params, "clayColor").name("Clay color").onChange(rebuild);
+  recipe.add(params, "colorVariance", 0, 0.35, 0.005).name("HSL variance").onChange(rebuild);
+  const endpoints = color.addFolder("Endpoints");
+  endpoints.addColor(params, "start").name("Start").onChange(rebuild);
+  endpoints.addColor(params, "end").name("End").onChange(rebuild);
+  endpoints.hide();
   color.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
 
   const readout = gui.addFolder("Readout");

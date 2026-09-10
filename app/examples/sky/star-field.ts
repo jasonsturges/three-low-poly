@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
 import { DoubleSide, Mesh, MeshStandardMaterial } from "three";
-import { StarField, StarFieldOrientation, TerrainMoundGeometry } from "three-low-poly";
+import { RandomColor, StarField, StarFieldOrientation, TerrainMoundGeometry } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = {
@@ -31,15 +31,16 @@ export default function (container: HTMLElement) {
     side: DoubleSide,
   });
 
-  const ground = new Mesh(
-    new TerrainMoundGeometry({ radius: 14, height: 1.6, noiseHeight: 0.7, seed: 7 }),
-    groundMaterial,
-  );
+  const ground = new Mesh(new TerrainMoundGeometry({ radius: 14, height: 1.6, noiseHeight: 0.7, seed: 7 }), groundMaterial);
   ground.castShadow = true;
   ground.receiveShadow = true;
   scene.add(ground);
 
   const params = {
+    seed: 1337,
+    colorMode: "Original palette",
+    colorStart: "#cad7ff",
+    colorEnd: "#fff4e0",
     orientation: "points" as StarFieldOrientation,
     count: 2500,
     radius: 480,
@@ -59,6 +60,8 @@ export default function (container: HTMLElement) {
 
   const createStars = () =>
     new StarField({
+      seed: params.seed,
+      colors: params.colorMode === "Two endpoints" ? RandomColor.between(params.colorStart, params.colorEnd) : undefined,
       orientation: params.orientation,
       count: params.count,
       radius: params.radius,
@@ -95,6 +98,20 @@ export default function (container: HTMLElement) {
 
   const gui = new GUI();
   gui.title("Star Field");
+  gui.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
+  const colorFolder = gui.addFolder("Star colors");
+  colorFolder
+    .add(params, "colorMode", ["Original palette", "Two endpoints"])
+    .name("Colors")
+    .onChange(() => {
+      colorEndpoints.show(params.colorMode === "Two endpoints");
+      rebuild();
+    });
+  const colorEndpoints = colorFolder.addFolder("Endpoints");
+  colorEndpoints.addColor(params, "colorStart").name("Start").onChange(rebuild);
+  colorEndpoints.addColor(params, "colorEnd").name("End").onChange(rebuild);
+  colorEndpoints.hide();
+
   gui
     .add(params, "orientation", ["points", "radial"])
     .name("Orientation")
@@ -109,8 +126,14 @@ export default function (container: HTMLElement) {
   // EXPERIMENTAL (points): size is a pixel radius, so shell depth no longer affects apparent size.
   const pixelMin = gui.add(params, "pixelSizeMin", 1, 40, 0.5).name("Pixel Min").onChange(rebuild);
   const pixelMax = gui.add(params, "pixelSizeMax", 1, 40, 0.5).name("Pixel Max").onChange(rebuild);
-  gui.add(params, "rotation", 0, Math.PI * 2, 0.01).name("Rotation").onChange(rebuild);
-  gui.add(params, "rotationJitter", 0, Math.PI * 2, 0.01).name("Rotation Jitter").onChange(rebuild);
+  gui
+    .add(params, "rotation", 0, Math.PI * 2, 0.01)
+    .name("Rotation")
+    .onChange(rebuild);
+  gui
+    .add(params, "rotationJitter", 0, Math.PI * 2, 0.01)
+    .name("Rotation Jitter")
+    .onChange(rebuild);
   gui.add(params, "twinkle").name("Twinkle");
 
   const burstFolder = gui.addFolder("Burst Shape");

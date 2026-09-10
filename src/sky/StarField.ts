@@ -16,6 +16,8 @@ import {
 import { instancedBufferAttribute, instancedDynamicBufferAttribute } from "three/tsl";
 import { PointsNodeMaterial } from "three/webgpu";
 import { BurstGeometry, type BurstGeometryOptions } from "../geometry/shapes/BurstGeometry";
+import { createRandom, deriveSubSeed, type RandomSource } from "../utils/Random";
+import { RandomColor, type ColorSampler } from "../utils/RandomColor";
 import { lockToViewer } from "./LockToViewer";
 
 /** How each star is turned to face the viewer. */
@@ -29,6 +31,10 @@ export interface StarBurstShapeOptions extends BurstGeometryOptions {
 }
 
 export interface StarFieldOptions {
+  /** Optional seed for placement, twinkle phases, and independent color sampling. */
+  seed?: number;
+  /** Per-star working-space color overriding color. Index follows star creation order. */
+  colors?: ColorSampler;
   /**
    * How each star faces the viewer. This also decides which size options apply.
    *
@@ -105,9 +111,9 @@ export interface StarFieldOptions {
 
 const SHELL_CENTER = new Vector3(0, 0, 0);
 
-function randomUnitVector(target: Vector3): Vector3 {
-  const u = Math.random();
-  const v = Math.random();
+function randomUnitVector(target: Vector3, random: () => number): Vector3 {
+  const u = random();
+  const v = random();
   const theta = Math.PI * 2 * u;
   const phi = Math.acos(2 * v - 1);
   const sinPhi = Math.sin(phi);
@@ -185,6 +191,9 @@ function profileRadiusXY(geometry: BufferGeometry): number {
 // `three/webgpu`, since only `points` needs a node material. Do not name the classes after their
 // implementations (`StarFieldInstancedMesh`) — name them for what they are to a consumer.
 export class StarField extends Object3D {
+  private readonly source: RandomSource;
+  private readonly colorSource: RandomSource;
+
   readonly orientation: StarFieldOrientation;
 
   private readonly field: InstancedMesh;
@@ -197,6 +206,8 @@ export class StarField extends Object3D {
 
   constructor(options: StarFieldOptions = {}) {
     super();
+    this.source = createRandom(options.seed);
+    this.colorSource = createRandom(options.seed === undefined ? undefined : deriveSubSeed(options.seed, 0x73746172));
 
     const {
       orientation = "points",
@@ -245,6 +256,7 @@ export class StarField extends Object3D {
       pixelSizeMin,
       pixelSizeMax,
       color,
+      sampler: options.colors,
       fog,
       material,
       geometry: starGeometry,
@@ -252,8 +264,7 @@ export class StarField extends Object3D {
       rotationJitter,
     };
 
-    this.field =
-      orientation === "points" ? this.createPointsField(shared) : this.createRadialField(shared);
+    this.field = orientation === "points" ? this.createPointsField(shared) : this.createRadialField(shared);
 
     this.add(this.field);
     lockToViewer(this, [this.field]);
@@ -342,6 +353,7 @@ export class StarField extends Object3D {
     pixelSizeMin,
     pixelSizeMax,
     color,
+    sampler,
     fog,
     material,
     geometry,
@@ -354,6 +366,7 @@ export class StarField extends Object3D {
     pixelSizeMin: number;
     pixelSizeMax: number;
     color: ColorRepresentation | ColorRepresentation[];
+    sampler?: ColorSampler;
     fog: boolean;
     material?: Material;
     geometry: BufferGeometry;
@@ -361,6 +374,10 @@ export class StarField extends Object3D {
     rotationJitter: number;
   }): InstancedMesh {
     const palette = resolvePalette(color);
+    if (palette.length === 0 && !sampler) throw new Error("StarField requires a non-empty color palette");
+    const sample = sampler ?? RandomColor.pick(palette);
+    const context = { index: 0, random: sampler ? this.colorSource : this.source };
+    const tint = new Color();
     const direction = new Vector3();
     const shellSpan = Math.max(maxRadius - minRadius, 0);
 
@@ -373,25 +390,28 @@ export class StarField extends Object3D {
     const offsets = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
     const rotations = new Float32Array(count);
-    const perStarColor = palette.length > 1;
+    const perStarColor = !!sampler || palette.length > 1;
     const colors = perStarColor ? new Float32Array(count * 3) : null;
 
     for (let i = 0; i < count; i++) {
-      const distance = minRadius + Math.random() * shellSpan;
-      randomUnitVector(direction).multiplyScalar(distance);
+      const distance = minRadius + this.source.next() * shellSpan;
+      randomUnitVector(direction, this.source.next).multiplyScalar(distance);
       offsets[i * 3] = direction.x;
       offsets[i * 3 + 1] = direction.y;
       offsets[i * 3 + 2] = direction.z;
 
       // No distance term — that is what makes shell depth irrelevant to apparent size.
-      sizes[i] = pixelSizeMin + Math.random() * (pixelSizeMax - pixelSizeMin);
-      rotations[i] = rotation + Math.random() * rotationJitter;
+      sizes[i] = pixelSizeMin + this.source.next() * (pixelSizeMax - pixelSizeMin);
+      rotations[i] = rotation + this.source.next() * rotationJitter;
 
       if (this.baseScales) this.baseScales[i] = sizes[i];
-      if (this.twinklePhases) this.twinklePhases[i] = Math.random() * Math.PI * 2;
+      if (this.twinklePhases) this.twinklePhases[i] = this.source.next() * Math.PI * 2;
 
       if (colors) {
-        const starColor = palette[Math.floor(Math.random() * palette.length)]!;
+        if (sampler && palette.length > 1) this.source.next();
+        context.index = i;
+        sample(tint, context);
+        const starColor = tint;
         colors[i * 3] = starColor.r;
         colors[i * 3 + 1] = starColor.g;
         colors[i * 3 + 2] = starColor.b;
@@ -449,6 +469,7 @@ export class StarField extends Object3D {
     sizeMin,
     sizeMax,
     color,
+    sampler,
     fog,
     material,
     geometry,
@@ -461,6 +482,7 @@ export class StarField extends Object3D {
     sizeMin: number;
     sizeMax: number;
     color: ColorRepresentation | ColorRepresentation[];
+    sampler?: ColorSampler;
     fog: boolean;
     material?: Material;
     geometry: BufferGeometry;
@@ -468,6 +490,10 @@ export class StarField extends Object3D {
     rotationJitter: number;
   }): InstancedMesh {
     const palette = resolvePalette(color);
+    if (palette.length === 0 && !sampler) throw new Error("StarField requires a non-empty color palette");
+    const sample = sampler ?? RandomColor.pick(palette);
+    const context = { index: 0, random: sampler ? this.colorSource : this.source };
+    const tint = new Color();
     const direction = new Vector3();
     const shellSpan = Math.max(maxRadius - minRadius, 0);
 
@@ -479,7 +505,7 @@ export class StarField extends Object3D {
     const starMaterial =
       material ??
       new MeshBasicMaterial({
-        color: palette.length === 1 ? palette[0].getHex() : 0xffffff,
+        color: !sampler && palette.length === 1 ? palette[0].getHex() : 0xffffff,
         side: DoubleSide,
         depthWrite: false,
         toneMapped: false,
@@ -491,23 +517,26 @@ export class StarField extends Object3D {
     mesh.renderOrder = 1;
 
     for (let i = 0; i < count; i++) {
-      const distance = minRadius + Math.random() * shellSpan;
-      randomUnitVector(direction).multiplyScalar(distance);
+      const distance = minRadius + this.source.next() * shellSpan;
+      randomUnitVector(direction, this.source.next).multiplyScalar(distance);
 
-      const angular = sizeMin + Math.random() * (sizeMax - sizeMin);
+      const angular = sizeMin + this.source.next() * (sizeMax - sizeMin);
       const scale = (distance * angular) / meshRadius;
       if (this.baseScales) this.baseScales[i] = scale;
-      if (this.twinklePhases) this.twinklePhases[i] = Math.random() * Math.PI * 2;
+      if (this.twinklePhases) this.twinklePhases[i] = this.source.next() * Math.PI * 2;
 
       this.dummy.position.copy(direction);
       this.dummy.lookAt(SHELL_CENTER);
-      this.dummy.rotateZ(rotation + Math.random() * rotationJitter);
+      this.dummy.rotateZ(rotation + this.source.next() * rotationJitter);
       this.dummy.scale.setScalar(scale);
       this.dummy.updateMatrix();
       mesh.setMatrixAt(i, this.dummy.matrix);
 
-      if (palette.length > 1) {
-        mesh.setColorAt(i, palette[Math.floor(Math.random() * palette.length)]);
+      if (sampler || palette.length > 1) {
+        if (sampler && palette.length > 1) this.source.next();
+        context.index = i;
+        sample(tint, context);
+        mesh.setColorAt(i, tint);
       }
     }
 

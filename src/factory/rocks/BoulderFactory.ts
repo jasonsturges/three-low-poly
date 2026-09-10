@@ -11,7 +11,8 @@ import {
   Vector3,
 } from "three";
 import { BoulderGeometry } from "../../geometry/rocks/BoulderGeometry";
-import { createRandom } from "../../utils/Random";
+import type { ColorSampler } from "../../utils/RandomColor";
+import { createRandom, deriveSubSeed } from "../../utils/Random";
 import type { RockScatterPlacementOptions } from "./RockFactory";
 
 export interface ScatterBouldersOptions extends RockScatterPlacementOptions {
@@ -38,6 +39,8 @@ export interface ScatterBouldersOptions extends RockScatterPlacementOptions {
   material?: Material;
   /** Stone tint when `material` is omitted. Defaults to `#6f6f6f`. */
   color?: ColorRepresentation;
+  /** Per-boulder color overriding color. Index follows scatter order before variant batching. Custom material colors still multiply the tint. */
+  colors?: ColorSampler;
 }
 
 /**
@@ -81,12 +84,16 @@ export function scatterBoulders({
   variants = 4,
   material,
   color = "#6f6f6f",
+  colors,
 }: ScatterBouldersOptions = {}): Group {
   const source = createRandom(seed);
+  const context = { index: 0, random: createRandom(seed === undefined ? undefined : deriveSubSeed(seed, 0x626f756c)) };
+  const tint = new Color();
   const variantCount = Math.max(1, Math.min(Math.round(variants), Math.max(1, count)));
 
   const boulderMaterial =
-    material ?? new MeshStandardMaterial({ color: new Color(color), roughness: 1, metalness: 0, flatShading: true });
+    material ??
+    new MeshStandardMaterial({ color: new Color(colors ? 0xffffff : color), roughness: 1, metalness: 0, flatShading: true });
 
   // One distinct geometry per variant, each seeded from the scatter stream so the whole
   // field is reproducible when `seed` is given.
@@ -122,26 +129,25 @@ export function scatterBoulders({
     // Uniform scale keeps the lumped shape from stretching.
     const s = source.float(scaleMin, scaleMax);
     scale.set(s, s, s);
-    rotation.set(
-      source.float(0, Math.PI * 2),
-      source.float(0, Math.PI * 2),
-      source.float(0, Math.PI * 2),
-    );
+    rotation.set(source.float(0, Math.PI * 2), source.float(0, Math.PI * 2), source.float(0, Math.PI * 2));
     quaternion.setFromEuler(rotation);
-    position.set(
-      source.float(-width / 2, width / 2),
-      source.float(0, heightJitter),
-      source.float(-depth / 2, depth / 2),
-    );
+    position.set(source.float(-width / 2, width / 2), source.float(0, heightJitter), source.float(-depth / 2, depth / 2));
     matrix.compose(position, quaternion, scale);
 
     const v = i % variantCount;
-    meshes[v].setMatrixAt(cursors[v]++, matrix);
+    const slot = cursors[v]++;
+    meshes[v].setMatrixAt(slot, matrix);
+    if (colors) {
+      context.index = i;
+      colors(tint, context);
+      meshes[v].setColorAt(slot, tint);
+    }
   }
 
   const group = new Group();
   for (const mesh of meshes) {
     mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     group.add(mesh);

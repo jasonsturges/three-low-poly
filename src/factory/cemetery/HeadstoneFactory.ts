@@ -18,7 +18,8 @@ import { ObeliskHeadstoneGeometry } from "../../geometry/cemetery/ObeliskHeadsto
 import { RoundedHeadstoneGeometry } from "../../geometry/cemetery/RoundedHeadstoneGeometry";
 import { SquareHeadstoneGeometry } from "../../geometry/cemetery/SquareHeadstoneGeometry";
 import { ArchStyle } from "../../modeling/profiles/ArchProfile";
-import { createRandom } from "../../utils/Random";
+import type { ColorSampler } from "../../utils/RandomColor";
+import { createRandom, deriveSubSeed } from "../../utils/Random";
 
 /**
  * One kind of stone in the row's palette.
@@ -91,9 +92,12 @@ export interface HeadstoneSettleOptions {
   scaleMax?: number;
   /** Base stone tint. Defaults to `#777777`. */
   color?: ColorRepresentation;
-  /** How far each stone weathers off the base tint, in lightness. `0` makes them identical. Defaults to `0.09`. */
+  /** Legacy HSL tint spread around the base color. `0` makes them identical. Defaults to `0.09`. */
   weathering?: number;
-  /** Stone material. Omit to build a flat-shaded standard material from `color`. */
+  /** Overrides color/weathering. Index counts retained stones before grouping by silhouette.
+   * Uses an independent seeded stream. The generated material is white; supplied materials still multiply the tint. */
+  colors?: ColorSampler;
+  /** Stone material. Omit for a flat-shaded standard material: white with `colors`, otherwise tinted by `color`. */
   material?: Material;
   /**
    * The palette the row draws from. Defaults to {@link DEFAULT_HEADSTONE_STYLES}.
@@ -240,8 +244,7 @@ function settleStone(
   const leanX = source.float(-s.leanMax, s.leanMax);
   const leanZ = source.float(-s.leanMax, s.leanMax);
 
-  const lifted =
-    halfWidth * uniform * Math.abs(Math.sin(leanZ)) + halfDepth * uniform * Math.abs(Math.sin(leanX));
+  const lifted = halfWidth * uniform * Math.abs(Math.sin(leanZ)) + halfDepth * uniform * Math.abs(Math.sin(leanX));
   const sink = lifted + source.float(0, s.sinkMax);
 
   _rotation.set(leanX, source.skewCenter(s.twistBias, -s.twistMax, s.twistMax), leanZ, "YXZ");
@@ -249,11 +252,13 @@ function settleStone(
   _position.set(x + source.float(-s.driftMax, s.driftMax), -sink, z + source.float(-s.driftMax, s.driftMax));
   _scale.setScalar(uniform);
 
-  const tint = s.base.clone().offsetHSL(
-    source.float(-s.weathering * 0.4, s.weathering * 0.4),
-    source.float(-s.weathering * 0.2, s.weathering * 0.3),
-    source.float(-s.weathering, s.weathering * 0.6),
-  );
+  const tint = s.base
+    .clone()
+    .offsetHSL(
+      source.float(-s.weathering * 0.4, s.weathering * 0.4),
+      source.float(-s.weathering * 0.2, s.weathering * 0.3),
+      source.float(-s.weathering, s.weathering * 0.6),
+    );
 
   return { variant, matrix: new Matrix4().compose(_position, _quaternion, _scale), tint };
 }
@@ -301,19 +306,31 @@ function layStones(
     scaleMax = 1.2,
     color = "#777777",
     weathering = 0.09,
+    colors,
     material,
     styles = DEFAULT_HEADSTONE_STYLES,
     density = 1,
   }: HeadstoneSettleOptions & { density?: number },
 ): Group {
   const source = createRandom(seed);
+  const colorContext = { index: 0, random: createRandom(seed === undefined ? undefined : deriveSubSeed(seed, 0x73746f6e)) };
   const variants = buildPalette(styles);
   const indices = variants.map((_, i) => i);
   const weights = variants.map((variant) => variant.weight);
-  const settle: Settle = { leanMax, twistMax, twistBias, sinkMax, driftMax, scaleMin, scaleMax, weathering, base: new Color(color) };
+  const settle: Settle = {
+    leanMax,
+    twistMax,
+    twistBias,
+    sinkMax,
+    driftMax,
+    scaleMin,
+    scaleMax,
+    weathering,
+    base: new Color(color),
+  };
 
   const stone =
-    material ?? new MeshStandardMaterial({ color: new Color(color), roughness: 0.9, flatShading: true });
+    material ?? new MeshStandardMaterial({ color: new Color(colors ? 0xffffff : color), roughness: 0.9, flatShading: true });
 
   // Draw every stone up front so each silhouette's instance count is known before its mesh is built.
   const plots: Plot[] = [];
@@ -321,7 +338,13 @@ function layStones(
     // An empty plot: rolled only when density < 1, so a full layout draws the exact same sequence a
     // seed always did.
     if (density < 1 && source.next() >= density) continue;
-    plots.push(settleStone(source, variants, indices, weights, center.x, center.z, settle));
+    // settleStone retains legacy tint draws, keeping density, silhouettes and placement stable.
+    const plot = settleStone(source, variants, indices, weights, center.x, center.z, settle);
+    if (colors) {
+      colorContext.index = plots.length;
+      colors(plot.tint, colorContext);
+    }
+    plots.push(plot);
   }
 
   return instancePlots(variants, plots, stone);

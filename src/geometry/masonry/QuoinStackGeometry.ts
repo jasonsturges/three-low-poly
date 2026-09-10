@@ -1,6 +1,7 @@
 import { BoxGeometry, BufferAttribute, BufferGeometry, Color } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { mulberry32 } from "../../utils/Random";
+import type { ColorSampler } from "../../utils/RandomColor";
+import { createRandom, deriveSubSeed, mulberry32 } from "../../utils/Random";
 
 /**
  * How the two returns vary from course to course. Every pattern in the catalog is a rule for two
@@ -59,6 +60,8 @@ export interface QuoinStackGeometryOptions {
   color?: string;
   /** Per-quoin tint spread in HSL. Defaults to `0.025`. A delivery of dressed stone is fairly uniform. */
   colorVariance?: number;
+  /** Per-stone sampler; overrides color/colorVariance/alternateTint. Index counts laid stones, excluding mortar; seeded color draws do not alter geometry. */
+  colors?: ColorSampler;
   /**
    * Shade alternate courses light and dark. Defaults to `false`.
    *
@@ -113,6 +116,7 @@ export class QuoinStackGeometry extends BufferGeometry {
     wallThickness = 0.34,
     proud = 0.032,
     color = "#d6ccb6",
+    colors,
     colorVariance = 0.025,
     alternateTint = false,
     seed = 0x2c1a,
@@ -120,6 +124,7 @@ export class QuoinStackGeometry extends BufferGeometry {
     super();
 
     const random = mulberry32(seed);
+    const colorContext = { index: 0, random: createRandom(deriveSubSeed(seed, 0x71756f69)) };
     const signed = (amount: number) => (random() - 0.5) * 2 * amount;
     const base = new Color(color);
     const tint = new Color();
@@ -159,14 +164,18 @@ export class QuoinStackGeometry extends BufferGeometry {
       const shade = alternateTint && parts.length % 2 === 1 ? -colorVariance : colorVariance;
       tint.copy(base).offsetHSL(signed(colorVariance) / 4, 0, shade * 0.5 + signed(colorVariance) / 2);
 
-      const count = block.attributes.position!.count;
-      const colors = new Float32Array(count * 3);
-      for (let i = 0; i < count; i++) {
-        colors[i * 3] = tint.r;
-        colors[i * 3 + 1] = tint.g;
-        colors[i * 3 + 2] = tint.b;
+      if (colors) {
+        colorContext.index = parts.length;
+        colors(tint, colorContext);
       }
-      block.setAttribute("color", new BufferAttribute(colors, 3));
+      const count = block.attributes.position!.count;
+      const vertexColors = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        vertexColors[i * 3] = tint.r;
+        vertexColors[i * 3 + 1] = tint.g;
+        vertexColors[i * 3 + 2] = tint.b;
+      }
+      block.setAttribute("color", new BufferAttribute(vertexColors, 3));
       parts.push(block);
     }
 

@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
 import { Group, InstancedMesh, Material } from "three";
-import { fieldOfHeadstones, GroundGrid } from "three-low-poly";
+import { fieldOfHeadstones, GroundGrid, RandomColor } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -30,7 +30,8 @@ export default function (container: HTMLElement) {
     twistMax: 0.4,
     sinkMax: 0.08,
     driftMax: 0.05,
-    weathering: 0.09,
+    start: "#62676b",
+    end: "#969993",
   };
 
   const stats = { stones: 0, drawCalls: 0 };
@@ -50,7 +51,7 @@ export default function (container: HTMLElement) {
     floor.dispose();
     scene.remove(floor);
 
-    field = fieldOfHeadstones(params);
+    field = fieldOfHeadstones({ ...params, colors: RandomColor.between(params.start, params.end) });
     field.traverse((child) => {
       if (child instanceof InstancedMesh) {
         child.castShadow = true;
@@ -92,7 +93,9 @@ export default function (container: HTMLElement) {
   age.add(params, "twistMax", 0, 1.2, 0.01).name("Twist").onChange(rebuild);
   age.add(params, "sinkMax", 0, 0.4, 0.005).name("Sink").onChange(rebuild);
   age.add(params, "driftMax", 0, 0.3, 0.005).name("Drift").onChange(rebuild);
-  age.add(params, "weathering", 0, 0.3, 0.005).name("Weathering").onChange(rebuild);
+  const colors = gui.addFolder("Colors · between");
+  colors.addColor(params, "start").name("Start").onChange(rebuild);
+  colors.addColor(params, "end").name("End").onChange(rebuild);
 
   // The whole point, on screen: many stones, few draw calls.
   const perf = gui.addFolder("Cost");

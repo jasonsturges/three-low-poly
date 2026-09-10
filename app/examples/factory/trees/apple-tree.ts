@@ -1,5 +1,5 @@
 import GUI from "lil-gui";
-import { AppleTree, type AppleTreeOptions, GroundGrid } from "three-low-poly";
+import { AppleTree, type AppleTreeOptions, GroundGrid, RandomColor } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
 
@@ -22,7 +22,7 @@ export default function (container: HTMLElement) {
   const ground = new GroundGrid({ size: 10, divisions: 10 });
   scene.add(ground);
 
-  const params: Required<AppleTreeOptions> = {
+  const params: Required<Omit<AppleTreeOptions, "leafColors">> = {
     seed: 0xa991,
     height: 3.4,
     crownRadius: 1.5,
@@ -31,16 +31,22 @@ export default function (container: HTMLElement) {
     baseRise: 0.25,
   };
 
+  const colorSettings = { mode: "Factory palette", start: "#465126", end: "#7d873d" };
+  const makeTree = () =>
+    new AppleTree({
+      ...params,
+      leafColors:
+        colorSettings.mode === "Two endpoints" ? RandomColor.between(colorSettings.start, colorSettings.end) : undefined,
+    });
+
   const stats = { woodTriangles: 0, leafClusters: 0, apples: 0, drawCalls: 3, baseY: "" };
 
-  let tree = new AppleTree(params);
+  let tree = makeTree();
   scene.add(tree);
 
   const refresh = () => {
     const geometry = tree.wood.geometry;
-    stats.woodTriangles = geometry.index
-      ? geometry.index.count / 3
-      : geometry.attributes.position.count / 3;
+    stats.woodTriangles = geometry.index ? geometry.index.count / 3 : geometry.attributes.position.count / 3;
     geometry.computeBoundingBox();
     stats.baseY = geometry.boundingBox!.min.y.toExponential(2);
     stats.leafClusters = tree.leaves.count;
@@ -55,7 +61,7 @@ export default function (container: HTMLElement) {
   const rebuild = () => {
     tree.dispose();
     scene.remove(tree);
-    tree = new AppleTree(params);
+    tree = makeTree();
     scene.add(tree);
     refresh();
   };
@@ -76,6 +82,19 @@ export default function (container: HTMLElement) {
   crown.add(params, "leafDensity", 0.2, 1, 0.01).name("Leaf Density").onChange(rebuild);
   crown.add(params, "appleCount", 0, 48, 1).name("Apples").onChange(rebuild);
   crown.open();
+
+  const colors = gui.addFolder("Leaf colors");
+  colors
+    .add(colorSettings, "mode", ["Factory palette", "Two endpoints"])
+    .name("Colors")
+    .onChange(() => {
+      endpoints.show(colorSettings.mode === "Two endpoints");
+      rebuild();
+    });
+  const endpoints = colors.addFolder("Endpoints");
+  endpoints.addColor(colorSettings, "start").name("Start").onChange(rebuild);
+  endpoints.addColor(colorSettings, "end").name("End").onChange(rebuild);
+  endpoints.hide();
 
   const readout = gui.addFolder("Measured");
   readout.add(stats, "woodTriangles").name("Wood Tris").listen().disable();

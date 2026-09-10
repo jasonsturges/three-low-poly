@@ -11,7 +11,7 @@ import {
   SRGBColorSpace,
   type Sprite,
 } from "three";
-import { createRandom, deriveSubSeed, hslToRgb, RandomColor, type ColorSampler } from "three-low-poly";
+import { createRandom, deriveSubSeed, RandomColor, type ColorSampler } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 import { clearDefaultLights } from "../../../framework/clearDefaultLights";
 import { createTextSprite } from "../../../framework/createTextSprite";
@@ -19,7 +19,7 @@ import { createTextSprite } from "../../../framework/createTextSprite";
 export const meta = {
   title: "Color Variation",
   description:
-    "STUDY — compare color recipes with the same seeded samples. Each row repeats its colors as unlit swatches and shaded boards. Start with Timber, Pumpkin, or Stone; explore channel bounds, endpoints, palette weights, and sampling bias. The hardwood baseline uses Three's working-linear HSL; the controlled rows use sRGB HSL. These are different coordinate systems, neither perceptually uniform. Endpoint interpolation is linear RGB. Analogous is a seeded adaptation of the legacy helper's ±30° / 60–80% / 50–70% recipe, with corrected hue wrapping and explicit sRGB input. Constant, endpoint, and palette rows use SDK RandomColor samplers; diagnostic HSL recipes stay in the study.",
+    "STUDY — compare color recipes with the same seeded samples. Each row repeats its colors as unlit swatches and shaded boards. Start with Timber, Pumpkin, or Stone; explore channel bounds, endpoints, palette weights, and sampling bias. The hardwood baseline uses Three's working-linear HSL; the controlled rows use sRGB HSL. These are different coordinate systems, neither perceptually uniform. Endpoint interpolation is linear RGB. Analogous uses RandomColor.analogous with independent hue, spread, saturation and lightness ranges. Constant, endpoint, and palette rows use SDK RandomColor samplers; diagnostic HSL recipes stay in the study.",
 };
 
 const presets = {
@@ -67,6 +67,12 @@ export default function (container: HTMLElement) {
     maxS: 80,
     minL: 12,
     maxL: 80,
+    analogousHue: 30,
+    analogousSpread: 30,
+    analogousMinS: 60,
+    analogousMaxS: 80,
+    analogousMinL: 50,
+    analogousMaxL: 70,
     lighting: "Neutral",
     nextSeed: () => {
       params.seed = (params.seed + 1) % 65536;
@@ -96,7 +102,7 @@ export default function (container: HTMLElement) {
     "05  Two endpoints · linear RGB interpolation",
     "06  Curated palette · uniform selection",
     "07  Curated palette · weighted selection",
-    "08  Analogous · seeded legacy recipe, sRGB",
+    "08  Analogous · sRGB hue neighborhood + S/L ranges",
   ];
   const count = 24;
   const geometry = new BoxGeometry(0.43, 0.29, 0.16);
@@ -124,7 +130,7 @@ export default function (container: HTMLElement) {
     rows.push(pair);
   });
   label("Center bias: 02–05 · Bounds: 03–04 · Weights: 07", 0, -5.55, 0.3);
-  label("Analogous retains its original ranges. Variance = 0 makes row 02 match the base.", 0, -5.95, 0.3);
+  label("08 has independent sampling ranges. Variance = 0 makes row 02 match the base.", 0, -5.95, 0.3);
 
   const clamp = (value: number, a: number, b: number) => Math.max(Math.min(a, b), Math.min(Math.max(a, b), value));
   function refresh() {
@@ -140,6 +146,12 @@ export default function (container: HTMLElement) {
     const hsl = base.getHSL({ h: 0, s: 0, l: 0 }, SRGBColorSpace);
     const palette = [params.color1, params.color2, params.color3, params.color4];
     const weights = [params.weight1, params.weight2, params.weight3, params.weight4];
+    const analogous = RandomColor.analogous({
+      hue: params.analogousHue,
+      spread: params.analogousSpread,
+      saturation: [params.analogousMinS, params.analogousMaxS],
+      lightness: [params.analogousMinL, params.analogousMaxL],
+    });
     const constant = RandomColor.constant(params.base);
     const endpoints = RandomColor.between(params.low, params.high);
     const uniform = RandomColor.pick(palette);
@@ -164,10 +176,6 @@ export default function (container: HTMLElement) {
         y = shape(b) * 2 - 1,
         z = shape(c) * 2 - 1;
       const lightness = hsl.l + (z * (z < 0 ? params.darker : params.lighter)) / 100;
-      // getAnalogousColors currently hardcodes Math.random and can produce negative
-      // hue remainders. Adapt its recipe locally without mutating global randomness.
-      const hue = (((hsl.h * 360 + Math.floor(-30 + a * 61)) % 360) + 360) % 360;
-      const [r, g, blue] = hslToRgb(hue, Math.floor(60 + b * 21), Math.floor(50 + c * 21));
       const colors = [
         sample(constant, i),
         base.clone().offsetHSL((x * params.variance) / 3, y * params.variance, z * params.variance),
@@ -176,7 +184,7 @@ export default function (container: HTMLElement) {
         sample(endpoints, i, true),
         sample(uniform, i),
         sample(weighted, i),
-        new Color().setRGB(r / 255, g / 255, blue / 255, SRGBColorSpace),
+        sample(analogous, i),
       ];
       rows.forEach((pair, row) => pair.forEach((mesh) => mesh.setColorAt(i, colors[row])));
     });
@@ -240,6 +248,31 @@ export default function (container: HTMLElement) {
     paletteFolder.add(params, `weight${n}`, 0, 10, 1).name(`Weight ${n} (07)`).onChange(refresh);
   }
   paletteFolder.close();
+  const analogousFolder = gui.addFolder("08 · Analogous / sRGB ranges");
+  analogousFolder.add(params, "analogousHue", 0, 360, 1).name("Hue degrees").onChange(refresh);
+  analogousFolder.add(params, "analogousSpread", 0, 180, 1).name("Spread ±degrees").onChange(refresh);
+  for (const [lower, upper, title] of [
+    ["analogousMinS", "analogousMaxS", "Saturation"],
+    ["analogousMinL", "analogousMaxL", "Lightness"],
+  ] as const) {
+    analogousFolder
+      .add(params, lower, 0, 100, 1)
+      .name(`${title} lower %`)
+      .onChange(() => {
+        params[upper] = Math.max(params[lower], params[upper]);
+        analogousFolder.controllers.forEach((c) => c.updateDisplay());
+        refresh();
+      });
+    analogousFolder
+      .add(params, upper, 0, 100, 1)
+      .name(`${title} upper %`)
+      .onChange(() => {
+        params[lower] = Math.min(params[lower], params[upper]);
+        analogousFolder.controllers.forEach((c) => c.updateDisplay());
+        refresh();
+      });
+  }
+  analogousFolder.close();
   function fit() {
     const aspect = container.clientWidth / Math.max(1, container.clientHeight);
     const distance = Math.max(7.2, 7.2 / aspect) / Math.tan((camera.fov * Math.PI) / 360);

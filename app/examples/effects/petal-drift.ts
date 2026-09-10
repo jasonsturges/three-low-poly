@@ -1,12 +1,11 @@
 import { Fog } from "three";
 import GUI from "lil-gui";
-import { GroundGrid, PetalDriftEffect } from "three-low-poly";
+import { GroundGrid, RandomColor, PetalDriftEffect } from "three-low-poly";
 import { createScene } from "../../framework/createScene";
 
 export const meta = {
   title: "Petal Drift",
-  description:
-    "Soft petals drifting downward with gentle flutter — cherry-blossom float, not stiff tumble.",
+  description: "Soft petals drifting downward with gentle flutter — cherry-blossom float, not stiff tumble.",
 };
 
 const FOG_COLOR = 0x1a1420;
@@ -33,6 +32,10 @@ export default function (container: HTMLElement) {
   scene.add(floor);
 
   const params = {
+    seed: 1337,
+    colorMode: "Original palette",
+    colorStart: "#f0b8d0",
+    colorEnd: "#fff5fa",
     count: 100,
     width: 14,
     height: 8,
@@ -47,6 +50,8 @@ export default function (container: HTMLElement) {
 
   const createPetals = () =>
     new PetalDriftEffect({
+      seed: params.seed,
+      colors: params.colorMode === "Two endpoints" ? RandomColor.between(params.colorStart, params.colorEnd) : undefined,
       count: params.count,
       width: params.width,
       height: params.height,
@@ -73,6 +78,20 @@ export default function (container: HTMLElement) {
 
   const gui = new GUI();
   gui.title("Petal Drift");
+  gui.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
+  const colorFolder = gui.addFolder("Petal colors");
+  colorFolder
+    .add(params, "colorMode", ["Original palette", "Two endpoints"])
+    .name("Colors")
+    .onChange(() => {
+      colorEndpoints.show(params.colorMode === "Two endpoints");
+      rebuild();
+    });
+  const colorEndpoints = colorFolder.addFolder("Endpoints");
+  colorEndpoints.addColor(params, "colorStart").name("Start").onChange(rebuild);
+  colorEndpoints.addColor(params, "colorEnd").name("End").onChange(rebuild);
+  colorEndpoints.hide();
+
   gui.add(params, "count", 10, 400, 1).name("Count").onChange(rebuild);
   gui.add(params, "width", 4, 24, 0.5).name("Width").onChange(rebuild);
   gui.add(params, "height", 2, 16, 0.5).name("Height").onChange(rebuild);

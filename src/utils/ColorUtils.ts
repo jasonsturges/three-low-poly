@@ -1,3 +1,9 @@
+/**
+ * Numeric color utilities: RGB channels use 0–255, HSL uses degrees / percentages.
+ * These functions do not perform sRGB transfer-function conversion. normalizeRgb
+ * changes scale only. Use Three Color with explicit SRGBColorSpace when rendering
+ * byte RGB values. Distance helpers are numeric RGB metrics, not perceptual Delta E.
+ */
 //------------------------------
 //  Hex
 //------------------------------
@@ -6,12 +12,12 @@
  * Convert hex color code color string to RGB array
  */
 export function parseHexCode(hex: string): [number, number, number] {
-  const bigint = parseInt(hex.slice(1), 16);
-  return [
-    (bigint >> 16) & 255,  // r
-    (bigint >> 8) & 255,   // g
-    bigint & 255,          // b
-  ];
+  if (!/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)) {
+    throw new Error("parseHexCode expects #RGB or #RRGGBB (without alpha)");
+  }
+  const digits = hex.slice(1);
+  const expanded = digits.length === 3 ? [...digits].map((digit) => digit + digit).join("") : digits;
+  return hexToRgb(Number.parseInt(expanded, 16));
 }
 
 export function hexToHsl(hex: number): [number, number, number] {
@@ -24,6 +30,7 @@ export function hexToHsl(hex: number): [number, number, number] {
  * @param hex
  */
 export function hexToRgb(hex: number): [number, number, number] {
+  if (!Number.isInteger(hex) || hex < 0 || hex > 0xffffff) throw new Error("hexToRgb expects a 24-bit RGB integer");
   const r = (hex >> 16) & 0xff;
   const g = (hex >> 8) & 0xff;
   const b = hex & 0xff;
@@ -35,54 +42,17 @@ export function hexToRgb(hex: number): [number, number, number] {
 //  HSL
 //------------------------------
 
-/**
- * Example usage:
- * ```
- * const h = 200; // Hue
- * const s = 75;  // Saturation
- * const l = 50;  // Lightness
- *
- * const [ r, g, b ] = hslToHex(h, s, l);
- * ```
- */
-export function hslToHex(h: number, s: number, l: number): [number, number, number] {
-  s /= 100;
-  l /= 100;
-
-  function hueToRgb(p: number, q: number, t: number): number {
-    if (t < 0) t += 1;
-    if (t > 1) t -= 1;
-    if (t < 1 / 6) return p + (q - p) * 6 * t;
-    if (t < 1 / 2) return q;
-    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-    return p;
-  }
-
-  let r: number, g: number, b: number;
-
-  if (s === 0) {
-    r = g = b = l; // Achromatic (gray)
-  } else {
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    const p = 2 * l - q;
-    r = hueToRgb(p, q, h / 360 + 1 / 3);
-    g = hueToRgb(p, q, h / 360);
-    b = hueToRgb(p, q, h / 360 - 1 / 3);
-  }
-
-  // Convert RGB to hex
-  const toHexValue = (x: number): number => Math.round(x * 255);
-
-  return [
-    toHexValue(r),
-    toHexValue(g),
-    toHexValue(b),
-  ];
+/** Convert HSL degrees / percentages to a packed 24-bit RGB number (for example, 0xff0000). */
+export function hslToHex(h: number, s: number, l: number): number {
+  return rgbToHex(...hslToRgb(h, s, l));
 }
 
+/** Hue wraps to [0, 360); saturation/lightness are clamped to 0–100. Returns fractional RGB bytes. */
 export function hslToRgb(h: number, s: number, l: number): [number, number, number] {
-  s /= 100;
-  l /= 100;
+  if (![h, s, l].every(Number.isFinite)) throw new Error("hslToRgb expects finite coordinates");
+  h = ((h % 360) + 360) % 360;
+  s = Math.max(0, Math.min(100, s)) / 100;
+  l = Math.max(0, Math.min(100, l)) / 100;
   const k = (n: number) => (n + h / 30) % 12;
   const a = s * Math.min(l, 1 - l);
   const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
@@ -94,33 +64,35 @@ export function hslToRgb(h: number, s: number, l: number): [number, number, numb
 //  RGB
 //------------------------------
 
+/** Divide byte channels by 255; this is normalization, not sRGB-to-linear conversion. */
 export function normalizeRgb(r: number, g: number, b: number): [number, number, number] {
   return [r / 255, g / 255, b / 255];
 }
 
 export function rgbToHex(r: number, g: number, b: number): number {
-  r = Math.round(r);
-  g = Math.round(g);
-  b = Math.round(b);
+  if (![r, g, b].every(Number.isFinite)) throw new Error("rgbToHex expects finite channels");
+  r = Math.round(Math.max(0, Math.min(255, r)));
+  g = Math.round(Math.max(0, Math.min(255, g)));
+  b = Math.round(Math.max(0, Math.min(255, b)));
 
   return (r << 16) + (g << 8) + b;
 }
 
 /**
- * Converts an RGB color to HSL.
+ * Converts RGB bytes to HSL degrees / percentages without rounding. Channels clamp to 0–255.
  *
  * Example usage:
  * ```
  * const rgbColor = { r: 255, g: 0, b: 0 }; // Red
  * const hslColor = rgbToHsl(rgbColor.r, rgbColor.g, rgbColor.b);
- * console.log(hslColor); // Output: { h: 0, s: 100, l: 50 }
+ * console.log(hslColor); // Output: [0, 100, 50]
  * ```
  */
 export function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
-  // Normalize r, g, b values to the range 0–1
-  r /= 255;
-  g /= 255;
-  b /= 255;
+  if (![r, g, b].every(Number.isFinite)) throw new Error("rgbToHsl expects finite channels");
+  r = Math.max(0, Math.min(255, r)) / 255;
+  g = Math.max(0, Math.min(255, g)) / 255;
+  b = Math.max(0, Math.min(255, b)) / 255;
 
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
@@ -146,12 +118,7 @@ export function rgbToHsl(r: number, g: number, b: number): [number, number, numb
     s = delta / (1 - Math.abs(2 * l - 1));
   }
 
-  // Convert h and s to percentages
-  h = Math.round(h);
-  s = Math.round(s * 100);
-  const lPercent = Math.round(l * 100);
-
-  return [ h, s, lPercent ];
+  return [h, s * 100, l * 100];
 }
 
 //------------------------------
@@ -163,11 +130,7 @@ export function rgbToHsl(r: number, g: number, b: number): [number, number, numb
  * distance = sqrt((r1 - r2)^2 + (g1 - g2)^2 + (b1 - b2)^2)
  */
 export function calculateDistance(color1: [number, number, number], color2: [number, number, number]): number {
-  return Math.sqrt(
-    Math.pow(color1[0] - color2[0], 2) +
-    Math.pow(color1[1] - color2[1], 2) +
-    Math.pow(color1[2] - color2[2], 2),
-  );
+  return Math.sqrt(Math.pow(color1[0] - color2[0], 2) + Math.pow(color1[1] - color2[1], 2) + Math.pow(color1[2] - color2[2], 2));
 }
 
 /**
@@ -216,23 +179,4 @@ export function findClosestColorChannelWise(inputColor: number, dataset: number[
   }
 
   return closestColor;
-}
-
-//------------------------------
-//  Palette generation
-//------------------------------
-
-/**
- * Example usage:
- * ```
- * const baseHue = Math.floor(Math.random() * 360);
- * const color1 = getAnalogousColors(baseHue);
- * const color2 = getAnalogousColors(baseHue);
- * ```
- */
-export function getAnalogousColors(baseHue: number): [number, number, number] {
-  const h = (baseHue + Math.floor(-30 + Math.random() * 61)) % 360; // ±30 degrees from baseHue
-  const s = Math.floor(60 + Math.random() * 21);                    // Saturation: 60 - 80
-  const l = Math.floor(50 + Math.random() * 21);                    // Lightness: 50 - 70
-  return hslToRgb(h, s, l);
 }

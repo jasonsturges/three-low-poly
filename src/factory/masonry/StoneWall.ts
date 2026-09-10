@@ -9,7 +9,8 @@ import {
   type Material,
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { mulberry32 } from "../../utils/Random";
+import type { ColorSampler } from "../../utils/RandomColor";
+import { createRandom, deriveSubSeed, mulberry32 } from "../../utils/Random";
 
 export interface StoneWallOptions {
   /** Extent along X. Defaults to `3.2`. */
@@ -107,6 +108,8 @@ export interface StoneWallOptions {
   color?: string;
   /** Per-stone tint spread in HSL. Defaults to `0.07` — mostly lightness, barely any hue. */
   colorVariance?: number;
+  /** Per-stone sampler; overrides color/colorVariance. Index counts laid stones, excluding mortar; seeded color draws do not alter geometry. */
+  colors?: ColorSampler;
   /** Defaults to `0x2c1a`. */
   seed?: number;
   /** A material to use instead of the default. **Must set `vertexColors: true`**, or every stone goes white. */
@@ -185,6 +188,7 @@ export class StoneWall extends Group {
     proudChance = 0.12,
     proudDepth = 0.03,
     color = "#6a6560",
+    colors,
     colorVariance = 0.07,
     seed = 0x2c1a,
     material,
@@ -192,6 +196,7 @@ export class StoneWall extends Group {
     super();
 
     const random = mulberry32(seed);
+    const colorContext = { index: 0, random: createRandom(deriveSubSeed(seed, 0x77616c6c)) };
     const signed = (amount: number) => (random() - 0.5) * 2 * amount;
     const base = new Color(color);
     const tint = new Color();
@@ -238,9 +243,7 @@ export class StoneWall extends Group {
         // A course opens with a CLOSER taking up the bond offset, rather than hanging a whole stone off
         // the corner.
         const wanted =
-          c % 2 === 1 && x === 0 && offset > 1e-6
-            ? Math.max(offset, shortest)
-            : nominal * (1 + signed(lengthVariance));
+          c % 2 === 1 && x === 0 && offset > 1e-6 ? Math.max(offset, shortest) : nominal * (1 + signed(lengthVariance));
 
         let length = Math.min(Math.max(wanted, shortest), remaining);
         // NO RUNT. If putting this stone in would strand a remainder too short to cut, take the remainder
@@ -269,15 +272,14 @@ export class StoneWall extends Group {
           block.rotateY(signed(tilt));
           block.rotateZ(signed(tilt));
         }
-        block.translate(
-          x + length / 2 + signed(settle),
-          y + signed(settle),
-          (depth - thickness) / 2 + signed(settle),
-        );
+        block.translate(x + length / 2 + signed(settle), y + signed(settle), (depth - thickness) / 2 + signed(settle));
 
-        tint
-          .copy(base)
-          .offsetHSL(signed(colorVariance) / 4, signed(colorVariance) / 2, signed(colorVariance));
+        tint.copy(base).offsetHSL(signed(colorVariance) / 4, signed(colorVariance) / 2, signed(colorVariance));
+        // Retain the legacy draws above; custom sampling cannot change subsequent stones.
+        if (colors) {
+          colorContext.index = stones.length;
+          colors(tint, colorContext);
+        }
         paint(block, tint);
 
         x += length;

@@ -14,7 +14,8 @@ import {
   type Material,
 } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { createRandom } from "../../utils/Random";
+import type { ColorSampler } from "../../utils/RandomColor";
+import { createRandom, deriveSubSeed } from "../../utils/Random";
 
 export interface AppleTreeOptions {
   /** Seed for the deterministic stream. Defaults to `0xa991`. */
@@ -25,6 +26,8 @@ export interface AppleTreeOptions {
   crownRadius?: number;
   /** Fraction of crown anchors that receive leaf clusters. Defaults to `0.82`. */
   leafDensity?: number;
+  /** Overrides the built-in leaf palette. Index counts visible clusters; seeded color draws do not alter wood, foliage placement or apples. */
+  leafColors?: ColorSampler;
   /** Number of apples scattered through the crown. Defaults to `18`. */
   appleCount?: number;
   /**
@@ -40,12 +43,7 @@ export interface AppleTreeOptions {
 const UP = /*@__PURE__*/ new Vector3(0, 1, 0);
 
 /** A tapered branch from `start` to `end`, oriented along the segment. */
-function branchGeometry(
-  start: Vector3,
-  end: Vector3,
-  bottomRadius: number,
-  topRadius: number,
-): BufferGeometry {
+function branchGeometry(start: Vector3, end: Vector3, bottomRadius: number, topRadius: number): BufferGeometry {
   const direction = new Vector3().subVectors(end, start);
   const length = Math.max(direction.length(), 0.0001);
   const geometry = new CylinderGeometry(topRadius, bottomRadius, length, 7, 1);
@@ -93,6 +91,7 @@ export class AppleTree extends Group {
     height = 3.4,
     crownRadius = 1.5,
     leafDensity = 0.82,
+    leafColors,
     appleCount = 18,
     baseRise = 0.25,
   }: AppleTreeOptions = {}) {
@@ -102,16 +101,13 @@ export class AppleTree extends Group {
     // implementation serves the whole library. A given seed therefore grows a different — equally valid — tree
     // than the website's.
     const source = createRandom(seed);
+    const colorContext = { index: 0, random: createRandom(deriveSubSeed(seed, 0x1eaf)) };
     const random = () => source.next();
 
     const woodParts: BufferGeometry[] = [];
     const crownAnchors: Vector3[] = [];
 
-    const trunkTop = new Vector3(
-      (random() - 0.5) * 0.18,
-      height * 0.46,
-      (random() - 0.5) * 0.18,
-    );
+    const trunkTop = new Vector3((random() - 0.5) * 0.18, height * 0.46, (random() - 0.5) * 0.18);
 
     // Rise straight up before the trunk leans toward its offset top, so the bottom face lands flat.
     let trunkBase = new Vector3();
@@ -128,22 +124,10 @@ export class AppleTree extends Group {
       const reach = crownRadius * (0.62 + random() * 0.24);
       const shoulder = trunkTop
         .clone()
-        .add(
-          new Vector3(
-            Math.cos(angle) * reach * 0.48,
-            height * (0.15 + random() * 0.08),
-            Math.sin(angle) * reach * 0.48,
-          ),
-        );
+        .add(new Vector3(Math.cos(angle) * reach * 0.48, height * (0.15 + random() * 0.08), Math.sin(angle) * reach * 0.48));
       const tip = trunkTop
         .clone()
-        .add(
-          new Vector3(
-            Math.cos(angle) * reach,
-            height * (0.28 + random() * 0.13),
-            Math.sin(angle) * reach,
-          ),
-        );
+        .add(new Vector3(Math.cos(angle) * reach, height * (0.28 + random() * 0.13), Math.sin(angle) * reach));
       woodParts.push(branchGeometry(trunkTop, shoulder, 0.13, 0.085));
       woodParts.push(branchGeometry(shoulder, tip, 0.085, 0.035));
       crownAnchors.push(tip, shoulder.clone().lerp(tip, 0.55));
@@ -189,7 +173,7 @@ export class AppleTree extends Group {
     });
     const leaves = new InstancedMesh(leafGeometry, leafMaterial, visibleAnchors.length * 2);
     const placement = new Object3D();
-    const leafColors = ["#53602c", "#697438", "#7d7531", "#8a692b", "#465126"];
+    const leafPalette = ["#53602c", "#697438", "#7d7531", "#8a692b", "#465126"];
     const tint = new Color();
     let leafIndex = 0;
 
@@ -205,7 +189,13 @@ export class AppleTree extends Group {
         placement.scale.set(scale * 1.15, scale, scale * 1.05);
         placement.updateMatrix();
         leaves.setMatrixAt(leafIndex, placement.matrix);
-        leaves.setColorAt(leafIndex, tint.set(leafColors[Math.floor(random() * leafColors.length)]!));
+        tint.set(leafPalette[Math.floor(random() * leafPalette.length)]!);
+        // Reserve the legacy palette draw even when a custom sampler is supplied.
+        if (leafColors) {
+          colorContext.index = leafIndex;
+          leafColors(tint, colorContext);
+        }
+        leaves.setColorAt(leafIndex, tint);
         leafIndex++;
       }
     }

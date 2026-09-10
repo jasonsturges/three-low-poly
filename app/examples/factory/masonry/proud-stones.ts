@@ -14,7 +14,7 @@ import {
   WireframeGeometry,
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { mulberry32, scatterProudStones } from "three-low-poly";
+import { createRandom, deriveSubSeed, RandomColor, scatterProudStones } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -90,8 +90,9 @@ export default function (container: HTMLElement) {
     stoneWidth: 0.17,
     tilt: 0.025,
     bothSides: true,
-    stoneColor: "#6a6560",
-    colorVariance: 0.09,
+    surfaceColor: "#6a6560",
+    start: "#60666b",
+    end: "#8e9597",
     seed: 0x2c1a,
     showSurface: true,
     window: false,
@@ -131,19 +132,17 @@ export default function (container: HTMLElement) {
       tilt: params.tilt,
       seed: params.seed,
       // Composition, handed in rather than known about — a window the stones must keep off.
-      exclusions: params.window ? [{ x: params.width * 0.34, y: params.height * 0.3, width: params.width * 0.28, height: params.height * 0.42 }] : [],
+      exclusions: params.window
+        ? [{ x: params.width * 0.34, y: params.height * 0.3, width: params.width * 0.28, height: params.height * 0.42 }]
+        : [],
     });
 
-    const random = mulberry32(params.seed ^ 0x9e3779b9);
-    const signed = (amount: number) => (random() - 0.5) * 2 * amount;
-    const base = new Color(params.stoneColor);
+    const sampleColor = RandomColor.between(params.start, params.end);
+    const context = { index: 0, random: createRandom(deriveSubSeed(params.seed, 0x70726f75)) };
     const tint = new Color();
 
     const parts: BufferGeometry[] = [];
-    const paint = (geometry: BufferGeometry, spread: number) => {
-      tint
-        .copy(base)
-        .offsetHSL(signed(spread) / 4, signed(spread) / 2, signed(spread));
+    const paint = (geometry: BufferGeometry) => {
       const count = geometry.attributes.position!.count;
       const colors = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) {
@@ -160,7 +159,8 @@ export default function (container: HTMLElement) {
       // surface, so the surface itself is the least interesting thing here.
       const slab = new BoxGeometry(params.width, params.height, params.surfaceThickness);
       slab.translate(params.width / 2, params.height / 2, 0);
-      paint(slab, params.colorVariance * 0.35);
+      tint.set(params.surfaceColor);
+      paint(slab);
     }
 
     const half = params.surfaceThickness / 2;
@@ -184,11 +184,13 @@ export default function (container: HTMLElement) {
       const solid = Math.min(Math.max(wanted, floor), ceiling);
       if (Math.abs(solid - wanted) > 1e-9) clamped++;
 
+      sampleColor(tint, context);
+      context.index++;
       for (const side of params.bothSides ? [1, -1] : [1]) {
         const block = new BoxGeometry(length, height, solid);
         block.rotateZ(tilt);
         block.translate(x, y, side * (half + depth - solid / 2));
-        paint(block, params.colorVariance);
+        paint(block);
       }
     }
 
@@ -256,8 +258,14 @@ export default function (container: HTMLElement) {
         brick: () => {
           // Every unit identical, one has simply popped. Shallow, square, and barely rolled.
           Object.assign(params, {
-            lengthMin: 1, lengthMax: 1, heightMin: 0.94, heightMax: 0.94,
-            depthMin: 0.022, depthMax: 0.03, tilt: 0.004, density: 0.09,
+            lengthMin: 1,
+            lengthMax: 1,
+            heightMin: 0.94,
+            heightMax: 0.94,
+            depthMin: 0.022,
+            depthMax: 0.03,
+            tilt: 0.004,
+            density: 0.09,
           });
           gui.controllersRecursive().forEach((c) => c.updateDisplay());
           rebuild();
@@ -272,8 +280,14 @@ export default function (container: HTMLElement) {
         stone: () => {
           // Each from its own mold. Wide on every axis, and rolled enough to catch the light unevenly.
           Object.assign(params, {
-            lengthMin: 0.55, lengthMax: 1.35, heightMin: 0.68, heightMax: 0.98,
-            depthMin: 0.018, depthMax: 0.07, tilt: 0.03, density: 0.16,
+            lengthMin: 0.55,
+            lengthMax: 1.35,
+            heightMin: 0.68,
+            heightMax: 0.98,
+            depthMin: 0.018,
+            depthMax: 0.07,
+            tilt: 0.03,
+            density: 0.16,
           });
           gui.controllersRecursive().forEach((c) => c.updateDisplay());
           rebuild();
@@ -285,8 +299,9 @@ export default function (container: HTMLElement) {
   size.open();
 
   const color = gui.addFolder("Color");
-  color.addColor(params, "stoneColor").name("Stone Color").onChange(rebuild);
-  color.add(params, "colorVariance", 0, 0.35, 0.005).name("Color Variance").onChange(rebuild);
+  color.addColor(params, "surfaceColor").name("Surface").onChange(rebuild);
+  color.addColor(params, "start").name("Stone start").onChange(rebuild);
+  color.addColor(params, "end").name("Stone end").onChange(rebuild);
   color.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
 
   const inspect = gui.addFolder("Inspect");

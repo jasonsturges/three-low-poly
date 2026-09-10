@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
 import { DirectionalLight } from "three";
-import { FlagstoneFloor } from "three-low-poly";
+import { FlagstoneFloor, RandomColor } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -38,8 +38,8 @@ export default function (container: HTMLElement) {
     tile: 1.0,
     gap: 0.06,
     thickness: 0.12,
-    color: "#54524d",
-    tintJitter: 0.12,
+    start: "#565b5d",
+    end: "#858783",
     heightJitter: 0.012,
     roughness: 0.72,
     seed: 1,
@@ -49,7 +49,7 @@ export default function (container: HTMLElement) {
   let floor: FlagstoneFloor;
 
   const build = () => {
-    floor = new FlagstoneFloor(params);
+    floor = new FlagstoneFloor({ ...params, colors: RandomColor.between(params.start, params.end) });
     scene.add(floor);
     params.cost = `${floor.tiles} slabs (${floor.columns} × ${floor.rows}) · 1 geometry · 1 material · 1 draw call`;
   };
@@ -78,10 +78,9 @@ export default function (container: HTMLElement) {
   slabs.open();
 
   const wear = gui.addFolder("Wear");
-  wear.addColor(params, "color").name("Stone").onChange(rebuild);
-  // Lightness only — hue drift per slab reads as STAINED rather than weathered, which is the opposite of
-  // what stone wants. A pumpkin patch wants the hue; a floor does not.
-  wear.add(params, "tintJitter", 0, 0.5, 0.005).name("Color Variance").onChange(rebuild);
+  const colors = gui.addFolder("Colors · between");
+  colors.addColor(params, "start").name("Start").onChange(rebuild);
+  colors.addColor(params, "end").name("End").onChange(rebuild);
   // How far each slab settles or lifts. Past about 0.05 it stops reading as worn and reads as broken.
   wear.add(params, "heightJitter", 0, 0.12, 0.002).name("Settle").onChange(rebuild);
   wear.add(params, "roughness", 0, 1, 0.02).name("Roughness").onChange(rebuild);

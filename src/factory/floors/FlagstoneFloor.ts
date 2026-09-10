@@ -1,12 +1,6 @@
-import {
-  BoxGeometry,
-  Color,
-  InstancedMesh,
-  MeshStandardMaterial,
-  Object3D,
-  type ColorRepresentation,
-} from "three";
-import { mulberry32 } from "../../utils/Random";
+import { BoxGeometry, Color, InstancedMesh, MeshStandardMaterial, Object3D, type ColorRepresentation } from "three";
+import type { ColorSampler } from "../../utils/RandomColor";
+import { createRandom, deriveSubSeed, mulberry32 } from "../../utils/Random";
 
 export interface FlagstoneFloorOptions {
   /** Extent across X. Defaults to `20`. */
@@ -33,6 +27,8 @@ export interface FlagstoneFloorOptions {
    * what stone wants — a pumpkin patch wants the hue, a floor does not.
    */
   tintJitter?: number;
+  /** Per-slab sampler overriding color/tintJitter. Row-major index; independent seeded color stream. */
+  colors?: ColorSampler;
   /**
    * How far each slab settles or lifts, in world units. Defaults to `0.012`.
    *
@@ -91,6 +87,7 @@ export class FlagstoneFloor extends InstancedMesh<BoxGeometry, MeshStandardMater
     thickness = 0.12,
     color = "#54524d",
     tintJitter = 0.12,
+    colors,
     heightJitter = 0.012,
     seed = 1,
     roughness = 0.72,
@@ -124,6 +121,7 @@ export class FlagstoneFloor extends InstancedMesh<BoxGeometry, MeshStandardMater
     this.castShadow = false;
 
     const random = mulberry32(seed);
+    const colorContext = { index: 0, random: createRandom(deriveSubSeed(seed, 0x666c6167)) };
     const base = new Color(color);
     const tint = new Color();
     const placement = new Object3D();
@@ -148,6 +146,11 @@ export class FlagstoneFloor extends InstancedMesh<BoxGeometry, MeshStandardMater
         this.setMatrixAt(index, placement.matrix);
 
         tint.copy(base).offsetHSL(0, 0, (random() - 0.5) * 2 * tintJitter);
+        // Reserve the old lightness draw above to preserve the seeded slab layout.
+        if (colors) {
+          colorContext.index = index;
+          colors(tint, colorContext);
+        }
         this.setColorAt(index, tint);
 
         index++;

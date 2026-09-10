@@ -14,7 +14,7 @@ export const meta = {
     "trade rules are in there too: each row opens with a shortened starter board, and a row never ends on " +
     "a runt. Every board is its own weathered plank with its own seed, so none repeat — and because they " +
     "all differ, the whole floor MERGES: one geometry, one material, ONE DRAW CALL at any size. Watch the " +
-    "Readout while you grow the room past four thousand boards. Warm brown and Light oak presets configure endpoint pairs or timber families through the colors sampler option, matching the Hardwood Floor example.",
+    "Readout while you grow the room past four thousand boards. Warm Brown and Light Oak presets initialize two editable endpoint colors through colors: RandomColor.between(a, b), matching the Hardwood Floor example.",
 };
 
 export default function (container: HTMLElement) {

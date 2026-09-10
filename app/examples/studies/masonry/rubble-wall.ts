@@ -14,7 +14,7 @@ import {
   Vector3,
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { BoulderGeometry, mulberry32 } from "three-low-poly";
+import { BoulderGeometry, mulberry32, createRandom, deriveSubSeed, RandomColor } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -80,8 +80,8 @@ export default function (container: HTMLElement) {
     scaleMin: 0.7,
     scaleMax: 1.3,
 
-    stoneColor: "#7a746c",
-    colorVariance: 0.1,
+    start: "#625f59",
+    end: "#a39b8a",
     seed: 0x2c1a,
     readout: "",
     price: "",
@@ -109,7 +109,8 @@ export default function (container: HTMLElement) {
 
     const random = mulberry32(params.seed);
     const signed = (amount: number) => (random() - 0.5) * 2 * amount;
-    const base = new Color(params.stoneColor);
+    const sampleColor = RandomColor.between(params.start, params.end);
+    const colorContext = { index: 0, random: createRandom(deriveSubSeed(params.seed, 0x72756262)) };
     const tint = new Color();
 
     // Packed TIGHTER than the stone, so neighbors overlap and the wall closes. A rubble wall has no
@@ -151,16 +152,15 @@ export default function (container: HTMLElement) {
         params.freeSpin ? random() * Math.PI * 2 : signed(params.tumble),
       );
       const uniform = params.scaleMin + random() * Math.max(0, params.scaleMax - params.scaleMin);
-      scale.set(
-        uniform * (0.9 + random() * 0.2),
-        uniform * (0.9 + random() * 0.2),
-        uniform * (0.9 + random() * 0.2),
-      );
+      scale.set(uniform * (0.9 + random() * 0.2), uniform * (0.9 + random() * 0.2), uniform * (0.9 + random() * 0.2));
       quaternion.setFromEuler(rotation);
       matrix.compose(position, quaternion, scale);
-      tint
-        .copy(base)
-        .offsetHSL(signed(params.colorVariance) / 4, signed(params.colorVariance) / 2, signed(params.colorVariance));
+      // Retain placement draw order in both baking modes; color uses its own stream.
+      random();
+      random();
+      random();
+      colorContext.index = row * columns + column;
+      sampleColor(tint, colorContext);
     };
 
     let drawCalls = 0;
@@ -276,9 +276,9 @@ export default function (container: HTMLElement) {
   variation.add(params, "scaleMin", 0.3, 1.5, 0.02).name("Scale Min").onChange(rebuild);
   variation.add(params, "scaleMax", 0.3, 1.5, 0.02).name("Scale Max").onChange(rebuild);
 
-  const color = gui.addFolder("Color");
-  color.addColor(params, "stoneColor").name("Stone Color").onChange(rebuild);
-  color.add(params, "colorVariance", 0, 0.35, 0.005).name("Color Variance").onChange(rebuild);
+  const color = gui.addFolder("Colors · between");
+  color.addColor(params, "start").name("Start").onChange(rebuild);
+  color.addColor(params, "end").name("End").onChange(rebuild);
   color.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
 
   const readout = gui.addFolder("Readout");

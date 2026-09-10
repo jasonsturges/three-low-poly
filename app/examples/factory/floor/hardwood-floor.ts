@@ -15,7 +15,7 @@ export const meta = {
     "crossing one comes back with five or six sides, which no pair of cut planes could express, while at 0° " +
     "the clip is a no-op and the general case costs nothing. The cut boards at the walls are not a defect — " +
     "a wall is a boundary condition, not the end of the floor, and a carpenter cuts what the room demands. " +
-    "The whole thing bakes to ONE draw call at any size. Warm brown and Light oak presets configure endpoint pairs or timber families, supplied through the colors sampler option. Changing coloring preserves the board layout. The SDK’s original default remains available to existing callers; the broad HSL recipe can be explored in Studies / Color / Variation.",
+    "The whole thing bakes to ONE draw call at any size. Warm Brown and Light Oak presets initialize two editable endpoint colors, supplied through colors: RandomColor.between(a, b). Changing coloring preserves the board layout. The SDK’s original default remains available to existing callers; the broad HSL recipe can be explored in Studies / Color / Variation.",
 };
 
 export default function (container: HTMLElement) {

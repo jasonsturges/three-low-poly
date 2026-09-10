@@ -10,9 +10,14 @@ import {
   Object3D,
 } from "three";
 import { EllipticLeafGeometry } from "../geometry/foliage/EllipticLeafGeometry";
-import { randomFloat } from "../utils/RandomNumberUtils";
+import { createRandom, deriveSubSeed, type RandomSource } from "../utils/Random";
+import { RandomColor, type ColorSampler } from "../utils/RandomColor";
 
 export interface PetalDriftEffectOptions {
+  /** Optional seed for initial state and respawns; reproduce motion with the same update steps. */
+  seed?: number;
+  /** Per-petal working-space color overriding color. Sampled once at construction; retained on respawn. */
+  colors?: ColorSampler;
   /** Override petal geometry. Defaults to {@link EllipticLeafGeometry}. */
   geometry?: BufferGeometry;
   /** Override the default petal material. */
@@ -64,6 +69,7 @@ export interface PetalDriftEffectOptions {
  * ```
  */
 export class PetalDriftEffect extends InstancedMesh {
+  private readonly source: RandomSource;
   private readonly width: number;
   private readonly height: number;
   private readonly depth: number;
@@ -84,6 +90,8 @@ export class PetalDriftEffect extends InstancedMesh {
 
   constructor(options: PetalDriftEffectOptions = {}) {
     const {
+      seed,
+      colors,
       count = 120,
       width = 16,
       height = 8,
@@ -100,10 +108,11 @@ export class PetalDriftEffect extends InstancedMesh {
     } = options;
 
     const palette = (Array.isArray(color) ? color : [color]).map((entry) => new Color(entry));
+    if (palette.length === 0 && !colors) throw new Error("PetalDriftEffect requires a non-empty color palette");
     const petalMaterial =
       material ??
       new MeshStandardMaterial({
-        color: palette.length === 1 ? palette[0].getHex() : 0xffffff,
+        color: !colors && palette.length === 1 ? palette[0].getHex() : 0xffffff,
         metalness: 0.05,
         roughness: 0.85,
         flatShading: true,
@@ -111,6 +120,13 @@ export class PetalDriftEffect extends InstancedMesh {
       });
 
     super(geometry, petalMaterial, count);
+    this.source = createRandom(seed);
+    const sample = colors ?? RandomColor.pick(palette);
+    const context = {
+      index: 0,
+      random: colors ? createRandom(seed === undefined ? undefined : deriveSubSeed(seed, 0x70657461)) : this.source,
+    };
+    const tint = new Color();
     this.instanceMatrix.setUsage(DynamicDrawUsage);
     this.frustumCulled = false;
 
@@ -133,15 +149,18 @@ export class PetalDriftEffect extends InstancedMesh {
 
     for (let i = 0; i < count; i++) {
       this.respawn(i, true);
-      this.fallSpeed[i] = randomFloat(fallSpeedMin, fallSpeedMax);
-      const drift = randomFloat(driftMin, driftMax);
-      const angle = randomFloat(0, Math.PI * 2);
+      this.fallSpeed[i] = this.source.float(fallSpeedMin, fallSpeedMax);
+      const drift = this.source.float(driftMin, driftMax);
+      const angle = this.source.float(0, Math.PI * 2);
       this.driftX[i] = Math.cos(angle) * drift;
       this.driftZ[i] = Math.sin(angle) * drift;
-      this.phase[i] = randomFloat(0, Math.PI * 2);
+      this.phase[i] = this.source.float(0, Math.PI * 2);
 
-      if (palette.length > 1) {
-        this.setColorAt(i, palette[Math.floor(Math.random() * palette.length)]);
+      if (colors || palette.length > 1) {
+        if (colors && palette.length > 1) this.source.next();
+        context.index = i;
+        sample(tint, context);
+        this.setColorAt(i, tint);
       }
     }
 
@@ -176,14 +195,14 @@ export class PetalDriftEffect extends InstancedMesh {
   }
 
   private respawn(index: number, randomHeight: boolean): void {
-    this.px[index] = randomFloat(-this.width * 0.5, this.width * 0.5);
-    this.pz[index] = randomFloat(-this.depth * 0.5, this.depth * 0.5);
+    this.px[index] = this.source.float(-this.width * 0.5, this.width * 0.5);
+    this.pz[index] = this.source.float(-this.depth * 0.5, this.depth * 0.5);
     this.py[index] = randomHeight
-      ? this.floorY + randomFloat(0, this.height * 1.25)
-      : this.floorY + this.height + randomFloat(0, this.height * 0.25);
-    this.rotX[index] = randomFloat(-0.6, 0.6);
-    this.rotY[index] = randomFloat(-Math.PI, Math.PI);
-    this.rotZ[index] = randomFloat(-0.8, 0.8);
+      ? this.floorY + this.source.float(0, this.height * 1.25)
+      : this.floorY + this.height + this.source.float(0, this.height * 0.25);
+    this.rotX[index] = this.source.float(-0.6, 0.6);
+    this.rotY[index] = this.source.float(-Math.PI, Math.PI);
+    this.rotZ[index] = this.source.float(-0.8, 0.8);
   }
 
   private writeMatrices(): void {

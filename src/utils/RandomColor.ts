@@ -1,4 +1,4 @@
-import { Color, type ColorRepresentation } from "three";
+import { Color, SRGBColorSpace, type ColorRepresentation } from "three";
 import type { RandomSource } from "./Random";
 
 /** Per-item input, owned by the caller. Index identifies a logical item, not a vertex. */
@@ -18,6 +18,38 @@ export type ColorSampler = (target: Color, context: ColorSampleContext) => void;
 export interface ColorGradientStop {
   readonly at: number;
   readonly color: ColorRepresentation;
+}
+
+/** HSL coordinates in sRGB; ranges are absolute percentages, not offsets. */
+export interface AnalogousColorOptions {
+  /** Center hue in degrees; wraps around the color wheel. */
+  readonly hue: number;
+  /** Half-width in degrees, from 0 to 180. */
+  readonly spread: number;
+  readonly saturation: readonly [number, number];
+  readonly lightness: readonly [number, number];
+}
+
+function analogous({ hue, spread, saturation, lightness }: AnalogousColorOptions): ColorSampler {
+  if (!Number.isFinite(hue) || !Number.isFinite(spread) || spread < 0 || spread > 180) {
+    throw new Error("RandomColor.analogous needs a finite hue and spread in [0, 180] degrees");
+  }
+  for (const range of [saturation, lightness]) {
+    if (range.length !== 2 || !range.every(Number.isFinite) || range[0] < 0 || range[1] > 100 || range[0] > range[1]) {
+      throw new Error("RandomColor.analogous ranges must be ordered percentages in [0, 100]");
+    }
+  }
+  const center = ((hue % 360) + 360) % 360;
+  const [s0, s1] = saturation;
+  const [l0, l1] = lightness;
+  return (target, { random }) => {
+    target.setHSL(
+      (center + (random.next() * 2 - 1) * spread) / 360,
+      (s0 + random.next() * (s1 - s0)) / 100,
+      (l0 + random.next() * (l1 - l0)) / 100,
+      SRGBColorSpace,
+    );
+  };
 }
 
 function prepareWeights(count: number, weights?: readonly number[]): number[] | undefined {
@@ -110,6 +142,8 @@ function mix(samplers: readonly ColorSampler[], weights?: readonly number[]): Co
  * ```
  */
 export const RandomColor = {
+  /** Independently sample neighboring hues and absolute S/L ranges in sRGB; output is working-space Color. */
+  analogous,
   /** One configured color; consumes no randomness. */
   constant,
   /**

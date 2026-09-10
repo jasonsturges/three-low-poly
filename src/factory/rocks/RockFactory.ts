@@ -11,7 +11,8 @@ import {
 } from "three";
 import { MossyRockGeometry } from "../../geometry/rocks/MossyRockGeometry";
 import { RockGeometry } from "../../geometry/rocks/RockGeometry";
-import { createRandom } from "../../utils/Random";
+import type { ColorSampler } from "../../utils/RandomColor";
+import { createRandom, deriveSubSeed } from "../../utils/Random";
 
 export interface RockScatterBounds {
   /** Scatter extent along X (centered on origin). Defaults to `4`. */
@@ -34,6 +35,8 @@ export interface RockScatterPlacementOptions extends RockScatterBounds {
 }
 
 export interface ScatterRocksOptions extends RockScatterPlacementOptions {
+  /** Per-instance color; overrides color with a white generated material. Custom materials still multiply it. */
+  colors?: ColorSampler;
   /** Base sphere radius for each instance geometry. Defaults to `1`. */
   radius?: number;
   widthSegments?: number;
@@ -44,6 +47,8 @@ export interface ScatterRocksOptions extends RockScatterPlacementOptions {
 }
 
 export interface ScatterMossyRocksOptions extends RockScatterPlacementOptions {
+  /** Per-instance multiplier applied to BOTH stone and moss materials. White is neutral; use gray endpoints for brightness variation. */
+  tints?: ColorSampler;
   /** Dodecahedron radius for each instance geometry. Defaults to `1`. */
   radius?: number;
   detail?: number;
@@ -60,17 +65,20 @@ export interface ScatterMossyRocksOptions extends RockScatterPlacementOptions {
   mossOpacity?: number;
 }
 
+function colorInstances(mesh: InstancedMesh, sample: ColorSampler, seed?: number): void {
+  const context = { index: 0, random: createRandom(seed === undefined ? undefined : deriveSubSeed(seed, 0x726f636b)) };
+  const target = new Color();
+  for (let i = 0; i < mesh.count; i++) {
+    context.index = i;
+    sample(target, context);
+    mesh.setColorAt(i, target);
+  }
+  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+}
+
 function placeInstances(
   mesh: InstancedMesh,
-  {
-    count = 5,
-    width = 4,
-    depth = 4,
-    heightJitter = 0,
-    scaleMin = 0.8,
-    scaleMax = 1.2,
-    seed,
-  }: RockScatterPlacementOptions,
+  { count = 5, width = 4, depth = 4, heightJitter = 0, scaleMin = 0.8, scaleMax = 1.2, seed }: RockScatterPlacementOptions,
 ): void {
   const source = createRandom(seed);
   const matrix = new Matrix4();
@@ -80,18 +88,10 @@ function placeInstances(
   const rotation = new Euler();
 
   for (let i = 0; i < count; i++) {
-    scale.set(
-      source.float(scaleMin, scaleMax),
-      source.float(scaleMin, scaleMax),
-      source.float(scaleMin, scaleMax),
-    );
+    scale.set(source.float(scaleMin, scaleMax), source.float(scaleMin, scaleMax), source.float(scaleMin, scaleMax));
     rotation.set(source.float(0, Math.PI), source.float(0, Math.PI), source.float(0, Math.PI));
     quaternion.setFromEuler(rotation);
-    position.set(
-      source.float(-width / 2, width / 2),
-      source.float(0, heightJitter),
-      source.float(-depth / 2, depth / 2),
-    );
+    position.set(source.float(-width / 2, width / 2), source.float(0, heightJitter), source.float(-depth / 2, depth / 2));
     matrix.compose(position, quaternion, scale);
     mesh.setMatrixAt(i, matrix);
   }
@@ -121,15 +121,20 @@ export function scatterRocks({
   heightSegments = 4,
   material,
   color = "#808080",
+  colors,
 }: ScatterRocksOptions = {}): InstancedMesh {
-  const rockMaterial =
-    material ??
-    new MeshStandardMaterial({ color: new Color(color), flatShading: true });
+  const rockMaterial = material ?? new MeshStandardMaterial({ color: new Color(colors ? 0xffffff : color), flatShading: true });
 
-  const geometry = new RockGeometry({ radius, widthSegments, heightSegments });
+  const geometry = new RockGeometry({
+    radius,
+    widthSegments,
+    heightSegments,
+    seed: seed === undefined ? undefined : deriveSubSeed(seed, 0x73686170),
+  });
   const mesh = new InstancedMesh(geometry, rockMaterial, count);
 
   placeInstances(mesh, { count, width, depth, heightJitter, scaleMin, scaleMax, seed });
+  if (colors) colorInstances(mesh, colors, seed);
   return mesh;
 }
 
@@ -163,10 +168,10 @@ export function scatterMossyRocks({
   rockColor = "#808080",
   mossColor = "#4b8b3b",
   mossOpacity = 0.8,
+  tints,
 }: ScatterMossyRocksOptions = {}): InstancedMesh {
   const materials: Material[] = [
-    rockMaterial ??
-      new MeshStandardMaterial({ color: new Color(rockColor), flatShading: true }),
+    rockMaterial ?? new MeshStandardMaterial({ color: new Color(rockColor), flatShading: true }),
     mossMaterial ??
       new MeshStandardMaterial({
         color: new Color(mossColor),
@@ -180,5 +185,6 @@ export function scatterMossyRocks({
   const mesh = new InstancedMesh(geometry, materials, count);
 
   placeInstances(mesh, { count, width, depth, heightJitter, scaleMin, scaleMax, seed });
+  if (tints) colorInstances(mesh, tints, seed);
   return mesh;
 }

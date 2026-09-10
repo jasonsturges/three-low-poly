@@ -1,19 +1,8 @@
-import {
-  Color,
-  Group,
-  InstancedMesh,
-  Material,
-  Matrix4,
-  MeshStandardMaterial,
-  Object3D,
-  Quaternion,
-  Vector3,
-} from "three";
-import {
-  createPumpkinRindGeometry,
-  createPumpkinStemGeometry,
-  pumpkinStemMatrix,
-} from "../../geometry/flora/PumpkinGeometry";
+import { Color, Group, InstancedMesh, Material, Matrix4, MeshStandardMaterial, Object3D, Quaternion, Vector3 } from "three";
+import { createPumpkinRindGeometry, createPumpkinStemGeometry, pumpkinStemMatrix } from "../../geometry/flora/PumpkinGeometry";
+
+import { createRandom, deriveSubSeed } from "../../utils/Random";
+import type { ColorSampler } from "../../utils/RandomColor";
 
 const UP = new Vector3(0, 1, 0);
 const TILT_AXIS = new Vector3(1, 0, 0);
@@ -61,6 +50,8 @@ export interface PumpkinPatchOptions {
 
   /** Per-instance rind tint spread in HSL, for a non-repeating field. */
   colorVariance?: number;
+  /** Per-rind sampler overriding colorVariance. Index is row-major; seeded color draws do not alter placement. */
+  rindColors?: ColorSampler;
 }
 
 /** Repeatable LCG so a given `seed` always yields the same field. */
@@ -92,11 +83,13 @@ export class PumpkinPatch extends Group {
     sinkMax = 0.05,
     driftMax = 0.18,
     colorVariance = 0.08,
+    rindColors,
   }: PumpkinPatchOptions = {}) {
     super();
 
     const count = rows * columns;
     const random = randomGenerator(seed);
+    const colorContext = { index: 0, random: createRandom(deriveSubSeed(seed, 0x72696e64)) };
 
     // Base unit-pumpkin parts (radius 1); per-instance scale sizes them, keeping
     // the stem proportional for free.
@@ -158,6 +151,11 @@ export class PumpkinPatch extends Group {
         this.stemInstances.setMatrixAt(index, stemWorld);
 
         tint.copy(baseRind).offsetHSL(signed(colorVariance) * 0.3, signed(colorVariance), signed(colorVariance));
+        // Keep the legacy three draws above so sampler choices cannot move later pumpkins.
+        if (rindColors) {
+          colorContext.index = index;
+          rindColors(tint, colorContext);
+        }
         this.rindInstances.setColorAt(index, tint);
 
         index++;

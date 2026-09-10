@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
 import { BoxGeometry, DirectionalLight, Group, Mesh, MeshStandardMaterial } from "three";
-import { QuoinStackGeometry, type QuoinPattern } from "three-low-poly";
+import { QuoinStackGeometry, RandomColor, type QuoinPattern } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -53,9 +53,8 @@ export default function (container: HTMLElement) {
     phase: 0,
     wallThickness: 0.34,
     proud: 0.032,
-    color: "#d6ccb6",
-    colorVariance: 0.025,
-    alternateTint: false,
+    start: "#c5bba5",
+    end: "#e0d5bf",
     seed: 0x2c1a,
     wallLength: 2.6,
     laid: "",
@@ -87,7 +86,7 @@ export default function (container: HTMLElement) {
 
     // The origin is the corner LINE — where the two walls' center planes cross — so placing the stack is
     // one line. `wallThickness` and `proud` carry it out to where a quoin actually sits.
-    const geometry = new QuoinStackGeometry(params);
+    const geometry = new QuoinStackGeometry({ ...params, colors: RandomColor.between(params.start, params.end) });
     const quoins = new Mesh(geometry, stone);
     quoins.castShadow = true;
     stage.add(quoins);
@@ -127,11 +126,9 @@ export default function (container: HTMLElement) {
   corner.add(params, "wallLength", 1, 6, 0.1).name("Wall Length").onChange(build);
   corner.open();
 
-  const color = gui.addFolder("Color");
-  color.addColor(params, "color").name("Color").onChange(build);
-  color.add(params, "colorVariance", 0, 0.25, 0.005).name("Color Variance").onChange(build);
-  // Only correct because ONE stack owns the corner. Two stacks would each want a uniform tint instead.
-  color.add(params, "alternateTint").name("Alternate Tint").onChange(build);
+  const color = gui.addFolder("Colors · between");
+  color.addColor(params, "start").name("Start").onChange(build);
+  color.addColor(params, "end").name("End").onChange(build);
   color.add(params, "seed", 0, 65535, 1).name("Seed").onChange(build);
 
   const readout = gui.addFolder("Readout");

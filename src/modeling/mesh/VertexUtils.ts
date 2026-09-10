@@ -4,8 +4,13 @@ import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 
 /** Deletes input UVs/normals, then returns a welded geometry displaced by axis × randomScale per vertex.
  * Recomputes output normals; the input attribute deletion is a side effect. */
-export function randomTransformVertices<T extends BufferGeometry>(geometry:T, axis = Axis.XYZ, minScale = 0.5, maxScale = 2.0) {
-
+export function randomTransformVertices<T extends BufferGeometry>(
+  geometry: T,
+  axis = Axis.XYZ,
+  minScale = 0.5,
+  maxScale = 2.0,
+  random: () => number = Math.random,
+) {
   geometry.deleteAttribute("uv");
   geometry.deleteAttribute("normal");
   geometry = mergeVertices(geometry) as T;
@@ -16,7 +21,7 @@ export function randomTransformVertices<T extends BufferGeometry>(geometry:T, ax
   for (let i = 0; i < positionAttribute.count; i++) {
     const vertex = new Vector3().fromBufferAttribute(positionAttribute, i);
 
-    const randomScale = Math.random() * (maxScale - minScale) + minScale;
+    const randomScale = random() * (maxScale - minScale) + minScale;
     const displacement = axis.clone().multiplyScalar(randomScale);
 
     vertex.add(displacement);

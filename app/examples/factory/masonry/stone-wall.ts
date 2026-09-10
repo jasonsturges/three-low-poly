@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
 import { DirectionalLight } from "three";
-import { StoneWall } from "three-low-poly";
+import { StoneWall, RandomColor } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -51,8 +51,8 @@ export default function (container: HTMLElement) {
     depthVariance: 0.006,
     proudChance: 0.12,
     proudDepth: 0.03,
-    color: "#6a6560",
-    colorVariance: 0.07,
+    start: "#62615c",
+    end: "#969087",
     seed: 0x2c1a,
     laid: "",
     cost: "",
@@ -61,7 +61,7 @@ export default function (container: HTMLElement) {
   let wall: StoneWall;
 
   const build = () => {
-    wall = new StoneWall(params);
+    wall = new StoneWall({ ...params, colors: RandomColor.between(params.start, params.end) });
     scene.add(wall);
     const geometry = wall.mesh.geometry;
     const index = geometry.getIndex();
@@ -119,9 +119,9 @@ export default function (container: HTMLElement) {
   relief.add(params, "proudDepth", 0, 0.1, 0.002).name("Proud Depth").onChange(rebuild);
   relief.open();
 
-  const color = gui.addFolder("Color");
-  color.addColor(params, "color").name("Color").onChange(rebuild);
-  color.add(params, "colorVariance", 0, 0.3, 0.005).name("Color Variance").onChange(rebuild);
+  const color = gui.addFolder("Colors · between");
+  color.addColor(params, "start").name("Start").onChange(rebuild);
+  color.addColor(params, "end").name("End").onChange(rebuild);
   color.add(params, "seed", 0, 65535, 1).name("Seed").onChange(rebuild);
 
   const readout = gui.addFolder("Readout");

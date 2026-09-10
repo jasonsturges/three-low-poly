@@ -2,7 +2,7 @@ import GUI from "lil-gui";
 import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
 import type { ExampleMeta, ExampleMount } from "../../../framework/example";
-import { GroundGrid, RusticFence, type RusticFenceOptions } from "three-low-poly";
+import { GroundGrid, RusticFence, RandomColor, type RusticFenceOptions } from "three-low-poly";
 
 export const meta: ExampleMeta = {
   description:
@@ -15,7 +15,7 @@ const mount: ExampleMount = (container) => {
     cameraPosition: [7, 4, 8],
   });
 
-  const params: Required<RusticFenceOptions> = {
+  const params: Required<Omit<RusticFenceOptions, "colors">> = {
     sections: 4,
     sectionLength: 2.4,
     railCount: 3,
@@ -25,7 +25,14 @@ const mount: ExampleMount = (container) => {
     seed: 0xf3ce,
   };
 
-  let fence = new RusticFence(params);
+  const colorSettings = { mode: "Original timber", start: "#49301f", end: "#6a4326" };
+  const makeFence = () =>
+    new RusticFence({
+      ...params,
+      colors: colorSettings.mode === "Two endpoints" ? RandomColor.between(colorSettings.start, colorSettings.end) : undefined,
+    });
+
+  let fence = makeFence();
   const grid = new GroundGrid({ size: 14, divisions: 14 });
   handle.scene.add(grid, fence);
   frameObject(handle, fence, { fit: 1.35 });
@@ -33,33 +40,31 @@ const mount: ExampleMount = (container) => {
   function rebuild(): void {
     fence.dispose();
     handle.scene.remove(fence);
-    fence = new RusticFence(params);
+    fence = makeFence();
     handle.scene.add(fence);
   }
 
   const gui = new GUI({ title: "Rustic Fence" });
   gui.add(params, "sections", 1, 12, 1).name("Sections").onChange(rebuild);
-  gui
-    .add(params, "sectionLength", 1.2, 4, 0.05)
-    .name("Bay length")
-    .onChange(rebuild);
-  gui
-    .add(params, "railCount", { Two: 2, Three: 3 })
-    .name("Rails")
-    .onChange(rebuild);
-  gui
-    .add(params, "postHeight", 0.8, 3, 0.05)
-    .name("Post height")
-    .onChange(rebuild);
-  gui
-    .add(params, "postThickness", 0.1, 0.5, 0.01)
-    .name("Post width")
-    .onChange(rebuild);
-  gui
-    .add(params, "railThickness", 0.08, 0.35, 0.01)
-    .name("Rail width")
-    .onChange(rebuild);
+  gui.add(params, "sectionLength", 1.2, 4, 0.05).name("Bay length").onChange(rebuild);
+  gui.add(params, "railCount", { Two: 2, Three: 3 }).name("Rails").onChange(rebuild);
+  gui.add(params, "postHeight", 0.8, 3, 0.05).name("Post height").onChange(rebuild);
+  gui.add(params, "postThickness", 0.1, 0.5, 0.01).name("Post width").onChange(rebuild);
+  gui.add(params, "railThickness", 0.08, 0.35, 0.01).name("Rail width").onChange(rebuild);
   gui.add(params, "seed", 1, 0xffff, 1).name("Seed").onChange(rebuild);
+
+  const colors = gui.addFolder("Timber colors");
+  colors
+    .add(colorSettings, "mode", ["Original timber", "Two endpoints"])
+    .name("Colors")
+    .onChange(() => {
+      endpoints.show(colorSettings.mode === "Two endpoints");
+      rebuild();
+    });
+  const endpoints = colors.addFolder("Endpoints");
+  endpoints.addColor(colorSettings, "start").name("Start").onChange(rebuild);
+  endpoints.addColor(colorSettings, "end").name("End").onChange(rebuild);
+  endpoints.hide();
 
   return () => {
     gui.destroy();

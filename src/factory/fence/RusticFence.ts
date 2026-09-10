@@ -1,13 +1,4 @@
-import {
-  Color,
-  Group,
-  Mesh,
-  MeshStandardMaterial,
-  Quaternion,
-  Vector3,
-  type BufferGeometry,
-  type Material,
-} from "three";
+import { Color, Group, Mesh, MeshStandardMaterial, Quaternion, Vector3, type BufferGeometry, type Material } from "three";
 import { createHewnTimberGeometry } from "../../geometry/timber/HewnTimberGeometry";
 
 export interface RusticFenceOptions {
@@ -19,7 +10,13 @@ export interface RusticFenceOptions {
   postThickness?: number;
   railThickness?: number;
   seed?: number;
+  /** Overrides the repeating timber palette. Index counts posts first, then rails by section.
+   * Each distinct sampled color needs a material in this Mesh-based factory. */
+  colors?: ColorSampler;
 }
+
+import { createRandom, deriveSubSeed } from "../../utils/Random";
+import type { ColorSampler } from "../../utils/RandomColor";
 
 const UP = new Vector3(0, 1, 0);
 
@@ -47,6 +44,7 @@ export class RusticFence extends Group {
     postThickness = 0.22,
     railThickness = 0.16,
     seed = 0xf3ce,
+    colors,
   }: RusticFenceOptions = {}) {
     super();
 
@@ -63,6 +61,23 @@ export class RusticFence extends Group {
         }),
     );
 
+    const context = { index: 0, random: createRandom(deriveSubSeed(seed, 0x66656e63)) };
+    const tint = new Color();
+    const sampledMaterials = new Map<string, MeshStandardMaterial>();
+    const timberMaterial = (defaultIndex: number): Material => {
+      if (!colors) return this.#materials[defaultIndex % 3];
+      colors(tint, context);
+      context.index++;
+      const key = `${tint.r},${tint.g},${tint.b}`;
+      let material = sampledMaterials.get(key);
+      if (!material) {
+        material = new MeshStandardMaterial({ color: tint.clone(), roughness: 1, metalness: 0, flatShading: true });
+        sampledMaterials.set(key, material);
+        this.#materials.push(material);
+      }
+      return material;
+    };
+
     const width = sections * sectionLength;
     const postX: number[] = [];
     const postTop: number[] = [];
@@ -73,16 +88,9 @@ export class RusticFence extends Group {
       postX.push(x);
       postTop.push(height);
 
-      const post = new Mesh(
-        this.#geometry,
-        this.#materials[i % this.#materials.length],
-      );
+      const post = new Mesh(this.#geometry, timberMaterial(i));
       post.position.set(x, height / 2 - signed(0.025), signed(0.035));
-      post.scale.set(
-        postThickness * (1 + signed(0.1)),
-        height,
-        postThickness * (1 + signed(0.1)),
-      );
+      post.scale.set(postThickness * (1 + signed(0.1)), height, postThickness * (1 + signed(0.1)));
       post.rotation.set(signed(0.045), signed(0.2), signed(0.045));
       post.castShadow = post.receiveShadow = true;
       this.add(post);
@@ -95,38 +103,22 @@ export class RusticFence extends Group {
 
     for (let section = 0; section < sections; section++) {
       for (let rail = 0; rail < railCount; rail++) {
-        const fraction =
-          railCount === 2 ? 0.38 + rail * 0.32 : 0.3 + rail * 0.25;
+        const fraction = railCount === 2 ? 0.38 + rail * 0.32 : 0.3 + rail * 0.25;
         const overlap = railThickness * 0.7;
         const side = (section + rail) % 2 === 0 ? -1 : 1;
 
-        start.set(
-          postX[section] - overlap,
-          postTop[section] * fraction + signed(0.035),
-          side * postThickness * 0.34,
-        );
-        end.set(
-          postX[section + 1] + overlap,
-          postTop[section + 1] * fraction + signed(0.035),
-          -side * postThickness * 0.34,
-        );
+        start.set(postX[section] - overlap, postTop[section] * fraction + signed(0.035), side * postThickness * 0.34);
+        end.set(postX[section + 1] + overlap, postTop[section + 1] * fraction + signed(0.035), -side * postThickness * 0.34);
 
         direction.subVectors(end, start);
         const length = direction.length();
         orientation.setFromUnitVectors(UP, direction.normalize());
 
-        const timber = new Mesh(
-          this.#geometry,
-          this.#materials[(section + rail + 1) % this.#materials.length],
-        );
+        const timber = new Mesh(this.#geometry, timberMaterial(section + rail + 1));
         timber.position.addVectors(start, end).multiplyScalar(0.5);
         timber.quaternion.copy(orientation);
         timber.rotateY(signed(0.12));
-        timber.scale.set(
-          railThickness * (1 + signed(0.12)),
-          length,
-          railThickness * (0.85 + random() * 0.25),
-        );
+        timber.scale.set(railThickness * (1 + signed(0.12)), length, railThickness * (0.85 + random() * 0.25));
         timber.castShadow = timber.receiveShadow = true;
         this.add(timber);
       }

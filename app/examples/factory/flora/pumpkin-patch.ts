@@ -1,7 +1,7 @@
 import GUI from "lil-gui";
 import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
-import { GroundGrid, PumpkinPatch, type PumpkinPatchOptions } from "three-low-poly";
+import { GroundGrid, PumpkinPatch, RandomColor, type PumpkinPatchOptions } from "three-low-poly";
 import type { ExampleMeta, ExampleMount } from "../../../framework/example";
 
 export const meta: ExampleMeta = {
@@ -16,7 +16,7 @@ const mount: ExampleMount = (container) => {
   });
   const { scene } = handle;
 
-  const params: Required<PumpkinPatchOptions> = {
+  const params: Required<Omit<PumpkinPatchOptions, "rindColors" | "colorVariance">> = {
     rows: 12,
     columns: 16,
     spacing: 0.9,
@@ -29,12 +29,28 @@ const mount: ExampleMount = (container) => {
     twistMax: Math.PI,
     sinkMax: 0.05,
     driftMax: 0.18,
-    colorVariance: 0.08,
   };
+
+  // This example supplies an authored harvest palette; it is not an SDK preset enum.
+  const harvest = RandomColor.mix(
+    [
+      RandomColor.between("#984719", "#c97828"),
+      RandomColor.between("#b47b29", "#d7a94d"),
+      RandomColor.between("#68402b", "#966037"),
+    ],
+    [6, 2, 2],
+  );
+  const colorSettings = { palette: "Autumn harvest", start: "#984719", end: "#d49b42" };
+  const makePatch = () =>
+    new PumpkinPatch({
+      ...params,
+      rindColors:
+        colorSettings.palette === "Autumn harvest" ? harvest : RandomColor.between(colorSettings.start, colorSettings.end),
+    });
 
   const cost = { pumpkins: 0, drawCalls: 0 };
 
-  let patch = new PumpkinPatch(params);
+  let patch = makePatch();
   let grid = new GroundGrid({ size: 8 });
   scene.add(patch, grid);
 
@@ -44,7 +60,7 @@ const mount: ExampleMount = (container) => {
     grid.dispose();
     scene.remove(grid);
 
-    patch = new PumpkinPatch(params);
+    patch = makePatch();
     scene.add(patch);
 
     const size = Math.max(params.columns * params.spacing, params.rows * params.spacing) + 2;
@@ -83,8 +99,18 @@ const mount: ExampleMount = (container) => {
   size.add(params, "scaleMin", 0.1, 0.6, 0.01).name("Scale min").onChange(rebuild);
   size.add(params, "scaleMax", 0.1, 0.8, 0.01).name("Scale max").onChange(rebuild);
 
-  const appearance = gui.addFolder("Appearance");
-  appearance.add(params, "colorVariance", 0, 0.3, 0.005).name("Color variance").onChange(rebuild);
+  const appearance = gui.addFolder("Rind colors");
+  appearance
+    .add(colorSettings, "palette", ["Autumn harvest", "Two endpoints"])
+    .name("Colors")
+    .onChange(() => {
+      endpoints.show(colorSettings.palette === "Two endpoints");
+      rebuild();
+    });
+  const endpoints = appearance.addFolder("Endpoints");
+  endpoints.addColor(colorSettings, "start").name("Start").onChange(rebuild);
+  endpoints.addColor(colorSettings, "end").name("End").onChange(rebuild);
+  endpoints.hide();
 
   const perf = gui.addFolder("Cost");
   perf.add(cost, "pumpkins").name("Pumpkins").listen().disable();
