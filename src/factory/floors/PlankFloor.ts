@@ -1,15 +1,8 @@
-import {
-  BufferAttribute,
-  Color,
-  Group,
-  Mesh,
-  MeshStandardMaterial,
-  type BufferGeometry,
-  type Material,
-} from "three";
+import { BufferAttribute, Color, Group, Mesh, MeshStandardMaterial, type BufferGeometry, type Material } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { WeatheredPlankGeometry } from "../../geometry/timber/WeatheredPlankGeometry";
-import { mulberry32 } from "../../utils/Random";
+import { createRandom } from "../../utils/Random";
+import type { ColorSampler } from "../../utils/RandomColor";
 import { layPlankFloor, type PlankFloorLayoutOptions } from "./PlankFloorLayout";
 
 export interface PlankFloorOptions extends PlankFloorLayoutOptions {
@@ -50,6 +43,13 @@ export interface PlankFloorOptions extends PlankFloorLayoutOptions {
    * mixed timber rather than a run of one board dyed slightly differently each time.
    */
   tints?: string[];
+  /**
+   * Per-board working-space color sampler. Overrides tints, color, and colorVariance.
+   * Called once per board in layout order, with a contiguous index starting at zero.
+   * Uses a seeded stream independent of layout and plank geometry; all vertices of a
+   * board receive the same tint. Omit to preserve the original palette/HSL behavior.
+   */
+  colors?: ColorSampler;
   /** A material to use instead of the default. **Must set `vertexColors: true`**, or every board goes white. */
   material?: Material;
 }
@@ -106,6 +106,7 @@ export class PlankFloor extends Group {
     color = "#6b4b2c",
     colorVariance = 0.06,
     tints,
+    colors: colorSampler,
     material,
     ...layout
   }: PlankFloorOptions = {}) {
@@ -114,7 +115,9 @@ export class PlankFloor extends Group {
     const { placements, rows, plankWidth, closestJoint } = layPlankFloor(layout);
     const seed = layout.seed ?? 0x51ab;
     // A separate stream from the layout's, so changing a color cannot move a board.
-    const random = mulberry32(seed ^ 0x9e3779b9);
+    const colorRandom = createRandom(seed ^ 0x9e3779b9);
+    const random = () => colorRandom.next();
+    const colorContext = { index: 0, random: colorRandom };
 
     this.#ownsMaterial = material === undefined;
     this.#material =
@@ -151,14 +154,15 @@ export class PlankFloor extends Group {
       board.rotateX(Math.PI / 2);
       board.translate(start + length / 2, -plankThickness / 2, across);
 
-      if (palette && palette.length > 0) {
+      if (colorSampler) {
+        colorContext.index = boards.length;
+        colorSampler(tint, colorContext);
+      } else if (palette && palette.length > 0) {
         tint.copy(palette[sequence % palette.length]!);
       } else {
         // Hue drifts a third as far as saturation and lightness: one delivery of timber varies in depth,
         // not in species.
-        tint
-          .copy(base)
-          .offsetHSL(signed(colorVariance) / 3, signed(colorVariance), signed(colorVariance));
+        tint.copy(base).offsetHSL(signed(colorVariance) / 3, signed(colorVariance), signed(colorVariance));
       }
 
       // One color for the WHOLE board, so it reads as a board rather than a gradient across it.

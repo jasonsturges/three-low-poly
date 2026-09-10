@@ -7,7 +7,7 @@ import type { ExampleMeta, ExampleMount } from "../../../framework/example";
 export const meta: ExampleMeta = {
   title: "Deciduous Tree",
   description:
-    "Choose Summer, Autumn, or Cherry Blossom, then choose how its leaf colors are sampled: Factory defaults preserves the original seeded palette assignments, Season palette uses those same colors through RandomColor.pick, and Two endpoints interpolates the season’s editable endpoint pair. Changing coloring does not move clusters. Bare hides leaves without discarding density or color settings. Changing tree type restores its cluster size and bark preset while retaining the coloring method. Original configurations remain in Studies / Trees.",
+    "Summer, Autumn, and Cherry Blossom are example presets: each supplies leafPalette plus cluster size, clustersPerPoint, and barkColor. The factory applies its original palette sampling. Two endpoints supplies leafColors: RandomColor.between(a, b), overriding leafPalette while keeping the last selected tree shape. Its endpoints start from the last preset and can be edited. Bare toggles the exposed leaf mesh’s visibility. These preset names are not SDK options; they demonstrate configurations of the properties below.",
 };
 
 const mount: ExampleMount = (container) => {
@@ -58,16 +58,13 @@ const mount: ExampleMount = (container) => {
     },
   };
   const colorSettings = {
-    season: "Summer" as keyof typeof seasons,
-    mode: "Factory defaults",
+    mode: "Summer",
     start: seasons.Summer.start,
     end: seasons.Summer.end,
     bare: false,
   };
   function leafColors(): ColorSampler | undefined {
     switch (colorSettings.mode) {
-      case "Season palette":
-        return RandomColor.pick(params.leafPalette);
       case "Two endpoints":
         return RandomColor.between(colorSettings.start, colorSettings.end);
       default:
@@ -98,22 +95,7 @@ const mount: ExampleMount = (container) => {
   gui.add(params, "seed", 1, 0xffff, 1).name("Seed").onChange(rebuild);
 
   const colors = gui.addFolder("Leaf colors");
-  colors
-    .add(colorSettings, "season", Object.keys(seasons))
-    .name("Season / tree type")
-    .onChange(() => {
-      const preset = seasons[colorSettings.season];
-      params.leafPalette = [...preset.palette];
-      params.leafSize = preset.size;
-      params.clustersPerPoint = preset.clusters;
-      params.barkColor = preset.bark;
-      colorSettings.start = preset.start;
-      colorSettings.end = preset.end;
-      // Keep the selected coloring method and Bare state while changing season.
-      gui.controllersRecursive().forEach((c) => c.updateDisplay());
-      rebuild();
-    });
-  const method = colors.add(colorSettings, "mode", ["Factory defaults", "Season palette", "Two endpoints"]).name("Coloring");
+  const method = colors.add(colorSettings, "mode", [...Object.keys(seasons), "Two endpoints"]).name("Leaf colors");
   const startControl = colors.addColor(colorSettings, "start").name("Endpoint A").onChange(rebuild);
   const endControl = colors.addColor(colorSettings, "end").name("Endpoint B").onChange(rebuild);
   const syncColors = () => {
@@ -122,6 +104,16 @@ const mount: ExampleMount = (container) => {
     endControl.show(endpoints);
   };
   method.onChange(() => {
+    if (colorSettings.mode !== "Two endpoints") {
+      const preset = seasons[colorSettings.mode as keyof typeof seasons];
+      params.leafPalette = [...preset.palette];
+      params.leafSize = preset.size;
+      params.clustersPerPoint = preset.clusters;
+      params.barkColor = preset.bark;
+      colorSettings.start = preset.start;
+      colorSettings.end = preset.end;
+      gui.controllersRecursive().forEach((c) => c.updateDisplay());
+    }
     syncColors();
     rebuild();
   });

@@ -1,6 +1,7 @@
 import GUI from "lil-gui";
 import { DirectionalLight, Mesh, MeshStandardMaterial } from "three";
 import { PlankFloor } from "three-low-poly";
+import { addTimberColorControls, createTimberColorSettings, sampleTimber } from "../../../framework/timberColors";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
@@ -13,7 +14,7 @@ export const meta = {
     "trade rules are in there too: each row opens with a shortened starter board, and a row never ends on " +
     "a runt. Every board is its own weathered plank with its own seed, so none repeat — and because they " +
     "all differ, the whole floor MERGES: one geometry, one material, ONE DRAW CALL at any size. Watch the " +
-    "Readout while you grow the room past four thousand boards.",
+    "Readout while you grow the room past four thousand boards. Warm brown and Light oak presets configure endpoint pairs or timber families through the colors sampler option, matching the Hardwood Floor example.",
 };
 
 export default function (container: HTMLElement) {
@@ -46,19 +47,17 @@ export default function (container: HTMLElement) {
     plankEndSkew: 0.06,
     plankBow: 0.12,
 
-    color: "#6b4b2c",
-    colorVariance: 0.06,
-
     seed: 0x51ab,
     planks: "",
     stagger: "",
     budget: "",
   };
 
+  const colorSettings = createTimberColorSettings();
   let floor: PlankFloor;
 
   const build = () => {
-    floor = new PlankFloor(params);
+    floor = new PlankFloor({ ...params, colors: sampleTimber(colorSettings) });
     scene.add(floor);
 
     const geometry = floor.mesh.geometry;
@@ -110,11 +109,7 @@ export default function (container: HTMLElement) {
   weather.add(params, "plankBow", 0, 0.6, 0.01).name("Bow").onChange(rebuild);
   weather.open();
 
-  const color = gui.addFolder("Color");
-  color.addColor(params, "color").name("Timber").onChange(rebuild);
-  // Per board, not per vertex — the whole board takes one tint, so it reads as a board.
-  color.add(params, "colorVariance", 0, 0.25, 0.005).name("Variance").onChange(rebuild);
-  color.open();
+  addTimberColorControls(gui, colorSettings, rebuild);
 
   const readout = gui.addFolder("Readout");
   readout.add(params, "planks").name("Laid").listen().disable();
