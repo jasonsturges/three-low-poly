@@ -596,6 +596,13 @@ the source geometry.
 
 Every feature has a matching example in the host gallery,
 
+#### Text
+
+The Vite app host provides canvas-based text utilities with shared sizing and rendering:
+
+- `createTextSprite()` creates billboard labels that always face the camera.
+- `createTextPlane()` creates fixed-orientation labels that rotate with their geometry or parent.
+
 #### Studies
 
 Advanced experimentation belongs in studies.
