@@ -26,7 +26,7 @@ import { clearDefaultLights } from "../../../framework/clearDefaultLights";
 export const meta = {
   title: "Molding Profile Gallery",
   description:
-    "Eight solid-backed corner profiles from moldingProfile, paired with the exact cross-section used by each MoldingGeometry sweep. Two backs meet at the wall and ceiling or floor. Switch crown/base to see the same profile hang down or rise up. Drawings are enlarged 2× with their proportions preserved; all profiles share the same dimensions. Amber outlines mark the cut ends. Amber profile points reveal curve sampling. Select a profile to focus on it; each application uses the same short, straight run.",
+    "Eight solid-backed corner profiles from moldingProfile, paired with the exact cross-section used by each MoldingGeometry sweep. Two backs meet at the wall and ceiling or floor. Switch crown/base to see the same profile hang down or rise up. Drawings are enlarged 2× with their proportions preserved and oriented like the application: distance along the wall runs vertically and projection runs right. All profiles share the same dimensions. Samples align in flat rows separated by subtle line guides, with billboard labels that face the camera. Orbit to inspect depth, or reset for the front view. Amber outlines mark the cut ends. Amber profile points reveal curve sampling. Select a profile to focus on it; each application uses the same short, straight run.",
 };
 
 const STYLES: MoldingStyle[] = ["cove", "ovolo", "chamfer", "ogee", "cyma", "scotia", "fillet", "step"];
@@ -75,6 +75,7 @@ export default function (container: HTMLElement) {
     wireframe: false,
     readout: "",
   };
+  const dividerMaterial = new LineBasicMaterial({ color: 0x293646, depthWrite: false });
   const stage = new Group();
   scene.add(stage);
 
@@ -96,8 +97,8 @@ export default function (container: HTMLElement) {
     parent.add(new Line(new BufferGeometry().setFromPoints(points), material));
   }
 
-  // Draw the section independently of the run's presentation rotation. The same SDK array feeds
-  // both views; the diagram swaps the axes so projection reads right and wall distance reads vertically.
+  // Orient the drawing like the application: distance along the wall is vertical,
+  // projection reads right, and crown profiles hang down while base profiles rise up.
   function rebuild() {
     clear();
     const styles = params.lineup ? STYLES : [params.style];
@@ -105,6 +106,14 @@ export default function (container: HTMLElement) {
     const pitch = Math.max(0.22, height * 2 + 0.09);
     const top = ((styles.length - 1) * pitch) / 2;
     const sign = params.run === "crown" ? -1 : 1;
+    // Open row guides use the same muted tone as the material reference grids.
+    // No backing surface: billboard labels stay clear when the scene is orbited.
+    const dividers: Vector3[] = [];
+    for (let row = 0; row <= styles.length; row++) {
+      const y = top + pitch / 2 - row * pitch;
+      dividers.push(new Vector3(-1.2, y, -0.045), new Vector3(0.62, y, -0.045));
+    }
+    stage.add(new LineSegments(new BufferGeometry().setFromPoints(dividers), dividerMaterial));
     let vertices = 0;
     let samples = 0;
     label("PROFILE ×2", -0.62, top + pitch * 0.7, 0.065, "#72d9ed");
@@ -138,10 +147,9 @@ export default function (container: HTMLElement) {
         }
       }
 
-      // Each application is tilted locally, leaving its companion drawing square to the camera.
+      // Keep the samples aligned in one plane; orbit the scene to inspect their depth.
       const application = new Group();
       application.position.set(0.26, y, 0);
-      application.rotation.set(0.12, 0.42, 0);
       stage.add(application);
       const half = RUN_LENGTH / 2;
       const origin = (-sign * height) / 2;
@@ -241,7 +249,7 @@ export default function (container: HTMLElement) {
     resize.disconnect();
     gui.destroy();
     clear();
-    [timber, wallPaint, contour, guide, outline, wire, dots].forEach((material) => material.dispose());
+    [timber, wallPaint, contour, guide, outline, wire, dots, dividerMaterial].forEach((material) => material.dispose());
     dispose();
   };
 }
