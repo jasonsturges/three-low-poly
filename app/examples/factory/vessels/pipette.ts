@@ -17,7 +17,7 @@ export default function (container: HTMLElement) {
     height: 3,
     tipLength: 0.66,
     radialSegments: 16,
-    rim: 0.4,
+    rim: 0.1,
     fill: 0.45,
     color: 0xe08a3c,
     opacity: 0.85,

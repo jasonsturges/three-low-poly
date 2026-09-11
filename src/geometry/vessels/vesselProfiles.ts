@@ -280,7 +280,7 @@ export interface VesselShellOptions {
    * glass, fake the wall with a fill gap instead ({@link fillProfile}'s `inset`).
    */
   thickness?: number;
-  /** Rolled-rim bead thickness, as a fraction of the rim radius — used only when `thickness` is `0`. Defaults to `0.4`. */
+  /** Rolled-rim bead thickness, as a fraction of the rim radius — used only when `thickness` is `0`. Defaults to `0.1`. */
   rim?: number;
   /**
    * Round the double wall's rim over a bead (a rolled lip). When `false`, the outer and inner walls meet
@@ -348,7 +348,7 @@ function rolledRim(radius: number, topY: number, rim: number, segments = 6): Vec
  */
 export function vesselShell(
   silhouette: Vector2[],
-  { thickness = 0, rim = 0.4, roundedRim = true }: VesselShellOptions = {},
+  { thickness = 0, rim = 0.1, roundedRim = true }: VesselShellOptions = {},
 ): Vector2[] {
   if (silhouette.length < 2) return silhouette;
   const rimTop = silhouette[silhouette.length - 1]!;

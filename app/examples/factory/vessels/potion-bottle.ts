@@ -17,6 +17,7 @@ export default function (container: HTMLElement) {
     neckRadius: 0.4,
     height: 2.6,
     radialSegments: 20,
+    rim: 0.15,
     corkDepth: 0.6,
     corkUpper: 0,
     corkLower: 0.7,
@@ -34,6 +35,7 @@ export default function (container: HTMLElement) {
         neckRadius: params.neckRadius,
         height: params.height,
         radialSegments: params.radialSegments,
+        rim: params.rim,
       },
       corkDepth: params.corkDepth,
       cork: { upperHeight: params.corkUpper, lowerHeight: params.corkLower },
@@ -71,6 +73,7 @@ export default function (container: HTMLElement) {
   bottleFolder.add(params, "neckRadius", 0.15, 0.9, 0.01).name("Neck Radius").onChange(rebuild);
   bottleFolder.add(params, "height", 1.5, 4.5, 0.05).name("Height").onChange(rebuild);
   bottleFolder.add(params, "radialSegments", 3, 48, 1).name("Radial Segments").onChange(rebuild);
+  bottleFolder.add(params, "rim", 0, 0.8, 0.01).name("Rim").onChange(rebuild);
   bottleFolder.open();
 
   const cork = gui.addFolder("Cork");

@@ -20,6 +20,7 @@ export default function (container: HTMLElement) {
     shoulderHeight: 0.5,
     shoulderSegments: 6,
     radialSegments: 20,
+    rim: 0.12,
     corkDepth: 1,
     corkUpper: 1.2,
     corkLower: 1.2,
@@ -40,6 +41,7 @@ export default function (container: HTMLElement) {
         shoulderHeight: params.shoulderHeight,
         shoulderSegments: params.shoulderSegments,
         radialSegments: params.radialSegments,
+        rim: params.rim,
       },
       corkDepth: params.corkDepth,
       cork: { upperHeight: params.corkUpper, lowerHeight: params.corkLower },
@@ -81,6 +83,7 @@ export default function (container: HTMLElement) {
   // 1 = a hard straight shoulder; higher rounds it.
   bottle.add(params, "shoulderSegments", 1, 12, 1).name("Shoulder Segments").onChange(rebuild);
   bottle.add(params, "radialSegments", 3, 48, 1).name("Radial Segments").onChange(rebuild);
+  bottle.add(params, "rim", 0, 0.8, 0.01).name("Rim").onChange(rebuild);
   bottle.open();
 
   const cork = gui.addFolder("Cork");

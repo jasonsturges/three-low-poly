@@ -17,6 +17,7 @@ export default function (container: HTMLElement) {
     neckRadius: 0.6,
     height: 3.5,
     radialSegments: 20,
+    rim: 0.15,
     corkDepth: 0.6,
     corkUpper: 0,
     corkLower: 0.7,
@@ -34,6 +35,7 @@ export default function (container: HTMLElement) {
         neckRadius: params.neckRadius,
         height: params.height,
         radialSegments: params.radialSegments,
+        rim: params.rim,
       },
       corkDepth: params.corkDepth,
       cork: { upperHeight: params.corkUpper, lowerHeight: params.corkLower },
@@ -71,6 +73,7 @@ export default function (container: HTMLElement) {
   jarFolder.add(params, "neckRadius", 0.2, 1.2, 0.01).name("Neck Radius").onChange(rebuild);
   jarFolder.add(params, "height", 2, 6, 0.05).name("Height").onChange(rebuild);
   jarFolder.add(params, "radialSegments", 3, 48, 1).name("Radial Segments").onChange(rebuild);
+  jarFolder.add(params, "rim", 0, 0.8, 0.01).name("Rim").onChange(rebuild);
   jarFolder.open();
 
   // Depth 1 seats the flat top flush with the rim; lower values push the lid up, and it scales to stay sealed.

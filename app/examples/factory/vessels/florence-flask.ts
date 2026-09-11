@@ -17,7 +17,7 @@ export default function (container: HTMLElement) {
     neckRadius: 0.2,
     neckHeight: 1.5,
     radialSegments: 32,
-    rim: 0.4,
+    rim: 0.1,
     fill: 0.4,
     color: 0x4bbfa0,
     opacity: 0.85,
