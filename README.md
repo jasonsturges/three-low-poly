@@ -413,14 +413,13 @@ Plots
                               0 └───────────────────► X           ▼ +V                        (0,0) └──────────────────► +X
 ```
 
-
-
-
-
 ## Structure
 
-- App host
-- Distributable
+This repository contains three-low-poly, a Three.js npm SDK.
+
+- `src/` contains the distributable library;
+- `app/` is a separate Vite host for examples, references, galleries, and studies.
+
 
 
 ## Conventions
