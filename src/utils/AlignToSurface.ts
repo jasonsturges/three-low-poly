@@ -1,120 +1,67 @@
-import { Box3, BufferGeometry, Float32BufferAttribute, InstancedMesh, Matrix4, Object3D, Quaternion, Vector3 } from "three";
+import { BufferGeometry, InstancedMesh, Matrix4, Object3D, Vector3 } from "three";
+import { finiteVector, inverseWorld, placementBounds, translateWorld } from "./internal/Placement";
 
-//------------------------------
-//  Object3D
-//------------------------------
-
-/**
- * Align an Object3D to a surface by adjusting its position.
+/** Move the world AABB bottom center to targetPosition + offset, both world-space.
+ * Translation only: does not query terrain, orient to normals, or test footprint contact.
  */
-export function alignObjectToSurface(object: Object3D, targetPosition: Vector3, offset: Vector3 = new Vector3(0, 0, 0)): void {
-  const boundingBox = new Box3().setFromObject(object);
-
-  if (!boundingBox.isEmpty()) {
-    const min = boundingBox.min;
-
-    // Compute bottom center in world space
-    const bottomCenter = new Vector3((min.x + boundingBox.max.x) / 2, min.y, (min.z + boundingBox.max.z) / 2);
-    object.localToWorld(bottomCenter);
-
-    // Calculate adjustment vector in world space
-    const adjustment = targetPosition.clone().sub(bottomCenter).add(offset);
-
-    // Transform adjustment to local space and apply
-    const localAdjustment = object.worldToLocal(adjustment.clone());
-    object.position.add(localAdjustment);
-  } else {
-    console.warn("The object has no geometry or is not visible.");
-  }
+export function alignObjectToSurface(object: Object3D, targetPosition: Vector3, offset = new Vector3()): void {
+  finiteVector(targetPosition);
+  finiteVector(offset);
+  const box = placementBounds(object);
+  const anchor = box.getCenter(new Vector3());
+  anchor.y = box.min.y;
+  translateWorld(object, targetPosition.clone().add(offset).sub(anchor));
 }
 
-//------------------------------
-//  Buffer Geometry
-//------------------------------
-
-/**
- * Align a BufferGeometry to a surface by adjusting its vertices.
+/** Translate vertices so the geometry-local minimum Y equals targetPositionY.
+ * Mutates shared geometry. Supports interleaved attributes; empty geometry is rejected.
  */
 export function alignBufferGeometryToSurface(geometry: BufferGeometry, targetPositionY: number): void {
-  const boundingBox = new Box3().setFromBufferAttribute(new Float32BufferAttribute(geometry.attributes.position.array, 3));
-
-  if (!boundingBox.isEmpty()) {
-    const minY = boundingBox.min.y;
-
-    // Translate the geometry to align the bottom to the target position
-    geometry.translate(0, targetPositionY - minY, 0);
-  } else {
-    console.warn("The geometry is empty or invalid.");
-  }
+  if (!Number.isFinite(targetPositionY)) throw new Error("Expected a finite target height.");
+  geometry.computeBoundingBox();
+  const box = geometry.boundingBox;
+  if (!box || box.isEmpty() || !Number.isFinite(box.min.y)) throw new Error("Expected nonempty finite geometry.");
+  geometry.translate(0, targetPositionY - box.min.y, 0);
 }
 
-//------------------------------
-//  Instanced Mesh
-//------------------------------
-
-/**
- * Align an InstancedMesh to a surface.
+/** Move the entire batch's world AABB bottom center to targetPosition + offset.
+ * This now has the same XYZ anchor semantics as alignObjectToSurface.
  */
-export function alignInstancedMeshToSurface(
-  instancedMesh: InstancedMesh,
-  targetPosition: Vector3,
-  offset: Vector3 = new Vector3(0, 0, 0),
-): void {
-  // Compute the bounding box for the entire InstancedMesh
-  const boundingBox = new Box3().setFromObject(instancedMesh);
-
-  if (!boundingBox.isEmpty()) {
-    // Find the bottom Y coordinate of the bounding box
-    const minY = boundingBox.min.y;
-
-    // Compute the adjustment needed to align the bottom of the InstancedMesh to the target position
-    const adjustment = new Vector3(0, targetPosition.y - minY, 0).add(offset);
-
-    // Transform adjustment to local space and apply to position
-    const localAdjustment = instancedMesh.worldToLocal(adjustment.clone());
-    instancedMesh.position.add(localAdjustment);
-  } else {
-    console.warn("The InstancedMesh has no geometry or is not visible.");
-  }
+export function alignInstancedMeshToSurface(mesh: InstancedMesh, targetPosition: Vector3, offset = new Vector3()): void {
+  alignObjectToSurface(mesh, targetPosition, offset);
 }
 
-/**
- * Align a specific instance in an InstancedMesh to a surface.
+/** Move one instance's world AABB bottom center to targetPosition + offset.
+ * Preserves its linear transform, updates GPU data and batch bounds. Uses the transformed
+ * geometry-local box (conservative for rotated non-box shapes). Other instances stay fixed.
  */
 export function alignInstancedMeshIndexToSurface(
-  instancedMesh: InstancedMesh,
+  mesh: InstancedMesh,
   targetPosition: Vector3,
   instanceIndex: number,
-  offset: Vector3 = new Vector3(0, 0, 0),
+  offset = new Vector3(),
 ): void {
-  const boundingBox = new Box3().setFromObject(instancedMesh);
-
-  if (!boundingBox.isEmpty()) {
-    const minY = boundingBox.min.y;
-
-    // Get the instance's current transformation matrix
-    const matrix = new Matrix4();
-    instancedMesh.getMatrixAt(instanceIndex, matrix);
-
-    // Decompose the matrix to extract position, rotation, and scale
-    const position = new Vector3();
-    const quaternion = new Quaternion();
-    const scale = new Vector3();
-    matrix.decompose(position, quaternion, scale);
-
-    // Transform targetPosition to the instanced mesh's local space
-    const localTargetPosition = instancedMesh.worldToLocal(targetPosition.clone());
-
-    // Adjust the position of the instance
-    position.y = localTargetPosition.y - minY + offset.y;
-
-    // Recompose the matrix and update the instance
-    matrix.compose(position, quaternion, scale);
-    instancedMesh.setMatrixAt(instanceIndex, matrix);
-
-    // Mark the instance matrix as needing an update
-    instancedMesh.instanceMatrix.needsUpdate = true;
-  } else {
-    console.warn("The instanced mesh has invalid geometry.");
-  }
+  finiteVector(targetPosition);
+  finiteVector(offset);
+  if (!Number.isInteger(instanceIndex) || instanceIndex < 0 || instanceIndex >= mesh.count)
+    throw new Error("Instance index out of range.");
+  const inverse = inverseWorld(mesh);
+  mesh.geometry.computeBoundingBox();
+  const matrix = new Matrix4();
+  mesh.getMatrixAt(instanceIndex, matrix);
+  const world = new Matrix4().multiplyMatrices(mesh.matrixWorld, matrix);
+  const box = mesh.geometry.boundingBox?.clone().applyMatrix4(world);
+  if (!box || box.isEmpty() || ![...box.min.toArray(), ...box.max.toArray()].every(Number.isFinite))
+    throw new Error("Expected nonempty finite instance bounds.");
+  const anchor = box.getCenter(new Vector3());
+  anchor.y = box.min.y;
+  const delta = targetPosition.clone().add(offset).sub(anchor);
+  const localDelta = delta.applyMatrix4(inverse).sub(new Vector3().applyMatrix4(inverse));
+  matrix.elements[12] += localDelta.x;
+  matrix.elements[13] += localDelta.y;
+  matrix.elements[14] += localDelta.z;
+  mesh.setMatrixAt(instanceIndex, matrix);
+  mesh.instanceMatrix.needsUpdate = true;
+  mesh.computeBoundingBox();
+  mesh.computeBoundingSphere();
 }

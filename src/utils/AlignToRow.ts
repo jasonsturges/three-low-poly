@@ -1,43 +1,33 @@
 import { Direction } from "../constants/Direction";
-import { Box3, Object3D, Vector3 } from "three";
+import { Object3D, Vector3 } from "three";
+import { finiteVector, independentObjects, placementBounds, translateWorld } from "./internal/Placement";
 
-/**
- * Aligns an array of `Object3D` objects along a specified direction with optional spacing.
+/** Lay out independent objects in input order along a world-space line.
+ * The first projected AABB interval starts at `origin`; centers lie on the line.
+ * `gap` is the nonnegative distance between projected world AABBs (conservative on diagonals).
+ * Uses CPU bounds, including hidden descendants; does not rotate objects or solve collisions.
  */
 export function alignToRow<T extends Object3D>(
   objects: T[],
   direction: Vector3 = Direction.RIGHT,
-  spacing: number = 0,
+  gap = 0,
+  origin = new Vector3(),
 ): void {
-  // Ensure the direction vector is normalized
-  const alignmentDirection = direction.clone().normalize();
-
-  // Start the position tracker for alignment
-  let currentPosition = new Vector3();
-  const worldBoundingBox = new Box3();
-
-  // Align each object
-  objects.forEach((object) => {
-    // Compute the world-space bounding box
-    worldBoundingBox.setFromObject(object); // Accounts for scale and rotation
-
-    // Calculate the object's size along the alignment direction
-    const sizeVector = new Vector3(
-      worldBoundingBox.max.x - worldBoundingBox.min.x,
-      worldBoundingBox.max.y - worldBoundingBox.min.y,
-      worldBoundingBox.max.z - worldBoundingBox.min.z,
-    );
-    const size = sizeVector.dot(alignmentDirection);
-
-    // Compute the object's center in world space
-    const objectCenter = new Vector3();
-    worldBoundingBox.getCenter(objectCenter);
-
-    // Adjust the object's position so its center aligns with the current position
-    const offset = alignmentDirection.clone().multiplyScalar(size / 2);
-    object.position.copy(currentPosition.clone().add(offset).sub(objectCenter).add(object.position));
-
-    // Update the position tracker for the next object
-    currentPosition.add(alignmentDirection.clone().multiplyScalar(size + spacing));
+  finiteVector(direction);
+  finiteVector(origin);
+  if (direction.length() === 0 || !Number.isFinite(direction.length()))
+    throw new Error("Row direction must have a finite nonzero length.");
+  if (!Number.isFinite(gap) || gap < 0) throw new Error("Row gap must be finite and nonnegative.");
+  independentObjects(objects);
+  const boxes = objects.map(placementBounds);
+  const unit = direction.clone().normalize();
+  const absolute = new Vector3(Math.abs(unit.x), Math.abs(unit.y), Math.abs(unit.z));
+  let distance = 0;
+  objects.forEach((object, i) => {
+    const box = boxes[i];
+    const width = box.getSize(new Vector3()).dot(absolute);
+    const target = origin.clone().addScaledVector(unit, distance + width / 2);
+    translateWorld(object, target.sub(box.getCenter(new Vector3())));
+    distance += width + gap;
   });
 }

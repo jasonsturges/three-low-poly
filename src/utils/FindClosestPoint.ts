@@ -25,9 +25,9 @@ export function findClosestPoint(point: Vector3, mesh: Mesh) {
   const tempPoint = new Vector3();
   let minDistance = Infinity;
 
-  for (let i = 0; i < positionAttribute.count; i++) {
+  for (let i = 0; i < (positionAttribute?.count ?? 0); i++) {
     tempPoint.fromBufferAttribute(positionAttribute, i);
-    const distance = tempPoint.distanceTo(point);
+    const distance = tempPoint.distanceToSquared(point);
 
     if (distance < minDistance) {
       minDistance = distance;
@@ -39,4 +39,25 @@ export function findClosestPoint(point: Vector3, mesh: Mesh) {
   mesh.localToWorld(closestPoint);
 
   return closestPoint;
+}
+
+/** Nearest stored base-geometry vertex by world-space distance; null for empty geometry.
+ * Query and result are world-space. Does not query faces, instances, morphs, or skinning.
+ */
+export function findClosestVertexWorld(point: Vector3, mesh: Mesh): Vector3 | null {
+  if (![point.x, point.y, point.z].every(Number.isFinite)) throw new Error("Expected a finite query point.");
+  mesh.updateWorldMatrix(true, false);
+  const attribute = mesh.geometry.getAttribute("position");
+  let result: Vector3 | null = null;
+  let best = Infinity;
+  const vertex = new Vector3();
+  for (let i = 0; i < (attribute?.count ?? 0); i++) {
+    vertex.fromBufferAttribute(attribute, i).applyMatrix4(mesh.matrixWorld);
+    const distance = vertex.distanceToSquared(point);
+    if (distance < best) {
+      best = distance;
+      result = vertex.clone();
+    }
+  }
+  return result;
 }

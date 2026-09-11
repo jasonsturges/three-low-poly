@@ -1,11 +1,12 @@
-import { Box3, Mesh, Object3D, Vector3 } from "three";
+import { Mesh, Object3D, Vector3 } from "three";
+import { finiteVector, placementBounds, translateWorld } from "./internal/Placement";
 
 //------------------------------
 //  Object3D
 //------------------------------
 
 /**
- * Centers an `Object3D` relative to a specified target position with an optional offset.
+ * Centers an `Object3D` at a world-space target position plus a world-space offset.
  *
  * This function calculates the bounding box center of the given `Object3D` and adjusts
  * its position so that it is centered at the specified target position, with an optional
@@ -13,35 +14,17 @@ import { Box3, Mesh, Object3D, Vector3 } from "three";
  * its scale and rotation.
  */
 export function centerObject<T extends Object3D>(object: T, target = new Vector3(0, 0, 0), offset = new Vector3(0, 0, 0)) {
-  const box = new Box3().setFromObject(object);
-  const center = box.getCenter(new Vector3());
-  const totalOffset = new Vector3().addVectors(target, offset);
-  const adjustment = new Vector3().subVectors(totalOffset, center);
-
-  object.position.add(adjustment);
+  finiteVector(target);
+  finiteVector(offset);
+  const box = placementBounds(object);
+  translateWorld(object, target.clone().add(offset).sub(box.getCenter(new Vector3())));
 }
 
-/**
- * Centers the geometry of an `Object3D` relative to a target position with an optional offset.
- *
- * This function calculates the bounding box center of the given `Object3D` and adjusts its
- * geometry's position by translating it such that the geometry is centered at the specified
- * target position, with an optional offset applied. Unlike modifying the `position` property,
- * this function directly translates the geometry within the object's local space.
+/** @deprecated Misnamed legacy alias: moves the object, never edited geometry.
+ * Use centerObject for world placement or centerMeshGeometry for local vertex editing.
  */
-export function centerObjectGeometry<T extends Object3D>(
-  object: T,
-  target: Vector3 = new Vector3(0, 0, 0),
-  offset: Vector3 = new Vector3(0, 0, 0),
-): void {
-  const box = new Box3().setFromObject(object);
-  const center = box.getCenter(new Vector3());
-  const totalTarget = new Vector3().addVectors(target, offset);
-
-  object.translateX(totalTarget.x - center.x);
-  object.translateY(totalTarget.y - center.y);
-  object.translateZ(totalTarget.z - center.z);
-  object.updateMatrixWorld(true);
+export function centerObjectGeometry<T extends Object3D>(object: T, target = new Vector3(), offset = new Vector3()): void {
+  centerObject(object, target, offset);
 }
 
 //------------------------------
@@ -61,10 +44,14 @@ export function centerMeshGeometry<T extends Mesh>(
   target: Vector3 = new Vector3(0, 0, 0),
   offset: Vector3 = new Vector3(0, 0, 0),
 ): void {
+  finiteVector(target);
+  finiteVector(offset);
   // Compute the bounding box for the geometry
   mesh.geometry.computeBoundingBox();
   const box = mesh.geometry.boundingBox;
 
+  if (!box || box.isEmpty() || ![...box.min.toArray(), ...box.max.toArray()].every(Number.isFinite))
+    throw new Error("Expected nonempty finite geometry.");
   if (box) {
     const center = box.getCenter(new Vector3());
     const totalTarget = new Vector3().addVectors(target, offset);
