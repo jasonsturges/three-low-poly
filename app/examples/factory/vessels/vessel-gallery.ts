@@ -33,6 +33,7 @@ import {
 } from "three-low-poly";
 import { createOrthographicScene } from "../../../framework/createOrthographicScene";
 import { createTextSprite } from "../../../framework/createTextSprite";
+import { createTextPlane } from "../../../framework/createTextPlane";
 import { clearDefaultLights } from "../../../framework/clearDefaultLights";
 
 export const meta = {
@@ -164,6 +165,7 @@ export default function (container: HTMLElement) {
       if (object instanceof Mesh) {
         const materials = Array.isArray(object.material) ? object.material : [object.material];
         materials.forEach((material) => {
+          if (material instanceof MeshBasicMaterial && material !== amber) material.map?.dispose();
           if (material !== glass && material !== amber) material.dispose();
         });
       }
@@ -178,6 +180,9 @@ export default function (container: HTMLElement) {
   }
   function label(text: string, x: number, y: number, scale = 0.3, color = "#e5edf5") {
     stage.add(createTextSprite(text, { size: 64, scale, x, y, z: 0.8, color }));
+  }
+  function caption(text: string, x: number, y: number, color = "#e5edf5") {
+    stage.add(createTextPlane(text, { size: 64, scale: 0.28, x, y, z: 0, color }));
   }
   function line(points: Vector3[], material: LineBasicMaterial) {
     stage.add(new Line(new BufferGeometry().setFromPoints(points), material));
@@ -248,8 +253,8 @@ export default function (container: HTMLElement) {
       object.position.set(x + 0.65, y, 0);
       stage.add(object);
       label(spec.label, x, y + 2.85, 0.44);
-      label("Profile + fill", x - 0.75, y - 0.27, 0.28, "#72d9ed");
-      label("Vessel", x + 0.65, y - 0.27, 0.28);
+      caption("Profile + fill", x - 0.75, y - 0.27, "#72d9ed");
+      caption("Vessel", x + 0.65, y - 0.27);
       line([new Vector3(x - pitchX / 2 + 0.1, y - 0.52, -0.1), new Vector3(x + pitchX / 2 - 0.1, y - 0.52, -0.1)], guide);
     });
     label(

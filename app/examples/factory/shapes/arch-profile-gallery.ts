@@ -19,6 +19,7 @@ import {
 import { ArchedSlabShape, type ArchStyle } from "three-low-poly";
 import { createOrthographicScene } from "../../../framework/createOrthographicScene";
 import { createTextSprite } from "../../../framework/createTextSprite";
+import { createTextPlane } from "../../../framework/createTextPlane";
 import { clearDefaultLights } from "../../../framework/clearDefaultLights";
 
 export const meta = {
@@ -64,6 +65,10 @@ export default function (container: HTMLElement) {
     stage.traverse((object) => {
       if (object instanceof Mesh || object instanceof Line) object.geometry.dispose();
       if (object instanceof InstancedMesh) object.dispose();
+      if (object instanceof Mesh && object.material instanceof MeshBasicMaterial && object.material !== amber) {
+        object.material.map?.dispose();
+        object.material.dispose();
+      }
       if (object instanceof Sprite) {
         object.material.map?.dispose();
         object.material.dispose();
@@ -73,6 +78,9 @@ export default function (container: HTMLElement) {
   }
   function label(text: string, x: number, y: number, scale = 0.26, color = "#e5edf5") {
     stage.add(createTextSprite(text, { size: 64, scale, x, y, z: 0.18, color }));
+  }
+  function caption(text: string, x: number, y: number, color = "#e5edf5") {
+    stage.add(createTextPlane(text, { size: 64, scale: 0.22, x, y, z: 0, color }));
   }
   function line(points: Vector3[], material: LineBasicMaterial) {
     stage.add(new Line(new BufferGeometry().setFromPoints(points), material));
@@ -122,8 +130,8 @@ export default function (container: HTMLElement) {
       slab.position.set(x + offset, y, 0);
       stage.add(slab);
       label(style, x, y + cellHeight - 0.85, 0.36);
-      label("Profile", x - offset, y - 0.23, 0.22, "#72d9ed");
-      label("Extrusion", x + offset, y - 0.23, 0.22);
+      caption("Profile", x - offset, y - 0.23, "#72d9ed");
+      caption("Extrusion", x + offset, y - 0.23);
       line([new Vector3(x - cellWidth / 2 + 0.1, y - 0.48, -0.05), new Vector3(x + cellWidth / 2 - 0.1, y - 0.48, -0.05)], guide);
     });
   }
