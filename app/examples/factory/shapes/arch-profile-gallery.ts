@@ -1,119 +1,171 @@
 import GUI from "lil-gui";
-import { ExtrudeGeometry, Group, Mesh, MeshStandardMaterial, Sprite } from "three";
-import { ArchedSlabShape, ArchStyle, GroundGrid } from "three-low-poly";
-import { createScene } from "../../../framework/createScene";
+import {
+  BufferGeometry,
+  DirectionalLight,
+  ExtrudeGeometry,
+  Group,
+  HemisphereLight,
+  InstancedMesh,
+  Line,
+  LineBasicMaterial,
+  Matrix4,
+  Mesh,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  SphereGeometry,
+  Sprite,
+  Vector3,
+} from "three";
+import { ArchedSlabShape, type ArchStyle } from "three-low-poly";
+import { createOrthographicScene } from "../../../framework/createOrthographicScene";
 import { createTextSprite } from "../../../framework/createTextSprite";
+import { clearDefaultLights } from "../../../framework/clearDefaultLights";
 
 export const meta = {
   title: "Arch Profile Gallery",
   description:
-    "The named arches — square, semicircle, segmental, horseshoe, elliptical, pointed, ogee. " +
-    "One vocabulary, shared by doors, doorways, windows and headstones.",
+    "Each cyan outline is sampled from the same ArchedSlabShape used by its solid extrusion, at the same scale. Amber dots mark tessellation samples, not Bézier control handles. Span, body height, rise, and curve segments update both views. Each named arch constrains rise to its own regime; the guide across the drawing marks the springing line. Select a profile to inspect it alone. Orbit to see the slab depth.",
 };
 
-// Grouped by family, not alphabetically. `segmental`, `semicircle` and `horseshoe` are the SAME circle —
-// only the rise moves its center — so they stand together, and at a high rise you can see two of them
-// render identically. That is the taxonomy telling the truth, not a bug.
+// Keep the circular family together. Each named profile constrains rise to its own regime.
 const STYLES: ArchStyle[] = ["square", "segmental", "semicircle", "horseshoe", "elliptical", "pointed", "ogee"];
 
-const SPACING = 1.5;
-
 export default function (container: HTMLElement) {
-  const { scene, controls, dispose } = createScene(container, {
-    background: 0x1e242b,
-    cameraPosition: [0, 2.4, 9],
+  const { scene, camera, controls, dispose } = createOrthographicScene(container, {
+    background: 0x141b24,
+    frustumSize: 7,
+    cameraPosition: [0, 0, 20],
+    grid: false,
   });
-
-  controls.target.set(0, 1.1, 0);
-  controls.update();
-
-  const floor = new GroundGrid({ size: 14 });
-  scene.add(floor);
-
+  clearDefaultLights(scene);
+  scene.add(new HemisphereLight(0xcddff5, 0x514236, 1.5));
+  const key = new DirectionalLight(0xffffff, 3);
+  key.position.set(-3, 4, 6);
+  scene.add(key);
   const params = {
-    // Above half the span (0.5), so each style shows its character. Drag it DOWN to exactly half and every
-    // curved arch converges on the same semicircle — the whole taxonomy in one gesture.
     rise: 0.8,
     width: 1,
     height: 1,
     curveSegments: 24,
+    lineup: true,
+    profile: "ogee" as ArchStyle,
+    showPoints: true,
   };
-
   const stone = new MeshStandardMaterial({ color: 0xb9b2a4, roughness: 0.9, flatShading: true });
+  const cyan = new LineBasicMaterial({ color: 0x72d9ed });
+  const guide = new LineBasicMaterial({ color: 0x293646, depthWrite: false });
+  const amber = new MeshBasicMaterial({ color: 0xffbb66 });
+  const stage = new Group();
+  scene.add(stage);
+  let viewWidth = 1;
+  let viewHeight = 1;
 
-  let row = new Group();
-
-  // A Sprite shares ONE global geometry across every sprite in Three, so disposing it here would tear the
-  // rug out from under every other sprite in the app. Its texture and material are its own; the geometry
-  // is not ours to free.
-  const disposeRow = () => {
-    for (const child of row.children) {
-      if (child instanceof Sprite) {
-        child.material.map?.dispose();
-        child.material.dispose();
-      } else {
-        (child as Mesh).geometry.dispose();
+  function clear() {
+    stage.traverse((object) => {
+      if (object instanceof Mesh || object instanceof Line) object.geometry.dispose();
+      if (object instanceof InstancedMesh) object.dispose();
+      if (object instanceof Sprite) {
+        object.material.map?.dispose();
+        object.material.dispose();
       }
-    }
-  };
-
-  const rebuild = () => {
-    disposeRow();
-    scene.remove(row);
-
-    row = new Group();
-
-    STYLES.forEach((style, i) => {
-      // Every style is handed the SAME rise. The library clamps each name into its own regime — a
-      // `segmental` can never rise past the semicircle, a `horseshoe` can never fall below it — so a style
-      // always renders as the thing it is named, whatever rise it is given.
-      const slab = new ArchedSlabShape({
-        width: params.width,
-        height: params.height,
-        archHeight: params.rise,
-        arch: style,
-      });
-
-      const mesh = new Mesh(
-        new ExtrudeGeometry(slab, {
-          depth: 0.14,
-          bevelEnabled: false,
-          curveSegments: params.curveSegments,
-        }),
+    });
+    stage.clear();
+  }
+  function label(text: string, x: number, y: number, scale = 0.26, color = "#e5edf5") {
+    stage.add(createTextSprite(text, { size: 64, scale, x, y, z: 0.18, color }));
+  }
+  function line(points: Vector3[], material: LineBasicMaterial) {
+    stage.add(new Line(new BufferGeometry().setFromPoints(points), material));
+  }
+  function rebuild() {
+    clear();
+    const styles = params.lineup ? STYLES : [params.profile];
+    const columns = Math.min(3, styles.length);
+    const rows = Math.ceil(styles.length / columns);
+    const entries = styles.map((style) => {
+      const shape = new ArchedSlabShape({ width: params.width, height: params.height, archHeight: params.rise, arch: style });
+      // ExtrudeGeometry uses these same sampled contour points.
+      return { style, shape, samples: shape.extractPoints(params.curveSegments).shape };
+    });
+    // Horseshoe arches can bulge beyond the springing span. Measure the contour for safe spacing.
+    const halfWidth = Math.max(...entries.flatMap(({ samples }) => samples.map((p) => Math.abs(p.x))));
+    const maxHeight = Math.max(...entries.flatMap(({ samples }) => samples.map((p) => p.y)));
+    const cellWidth = Math.max(3.4, halfWidth * 4 + 1.2);
+    const cellHeight = maxHeight + 1.3;
+    viewWidth = columns * cellWidth;
+    viewHeight = rows * cellHeight + 0.65;
+    entries.forEach(({ style, shape, samples }, index) => {
+      const row = Math.floor(index / columns);
+      const rowCount = Math.min(columns, styles.length - row * columns);
+      const x = ((index % columns) - (rowCount - 1) / 2) * cellWidth;
+      const y = viewHeight / 2 - (row + 1) * cellHeight;
+      const offset = halfWidth + 0.25;
+      const points = samples.map((p) => new Vector3(x - offset + p.x, y + p.y, 0.02));
+      line([...points, points[0]!], cyan);
+      line(
+        [
+          new Vector3(x - offset - params.width / 2 - 0.08, y + params.height, 0),
+          new Vector3(x - offset + params.width / 2 + 0.08, y + params.height, 0),
+        ],
+        guide,
+      );
+      if (params.showPoints) {
+        const markers = new InstancedMesh(new SphereGeometry(0.018, 8, 6), amber, points.length);
+        points.forEach((p, i) => markers.setMatrixAt(i, new Matrix4().makeTranslation(p.x, p.y, 0.04)));
+        markers.instanceMatrix.needsUpdate = true;
+        stage.add(markers);
+      }
+      const slab = new Mesh(
+        new ExtrudeGeometry(shape, { depth: 0.14, bevelEnabled: false, curveSegments: params.curveSegments }),
         stone,
       );
-      const x = (i - (STYLES.length - 1) / 2) * SPACING;
-      mesh.position.x = x;
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      row.add(mesh);
-
-      // Name each arch under its own slab. A key in the GUI would make you count along the row and map it
-      // back — the label belongs on the thing.
-      row.add(createTextSprite(style, { x, y: -0.28, z: 0.1, scale: 0.26, color: "#c8d2dd" }));
+      slab.position.set(x + offset, y, 0);
+      stage.add(slab);
+      label(style, x, y + cellHeight - 0.85, 0.36);
+      label("Profile", x - offset, y - 0.23, 0.22, "#72d9ed");
+      label("Extrusion", x + offset, y - 0.23, 0.22);
+      line([new Vector3(x - cellWidth / 2 + 0.1, y - 0.48, -0.05), new Vector3(x + cellWidth / 2 - 0.1, y - 0.48, -0.05)], guide);
     });
-
-    scene.add(row);
-  };
-
-  rebuild();
-
+  }
+  function resetView() {
+    const aspect = container.clientWidth / Math.max(1, container.clientHeight);
+    camera.zoom = Math.min(14 / viewHeight, (14 * aspect) / viewWidth) * 0.87;
+    camera.position.set(0, 0, 20);
+    camera.updateProjectionMatrix();
+    controls.target.set(0, 0, 0);
+    controls.update();
+  }
   const gui = new GUI();
-  gui.title("Arch Profile Gallery");
-
-  // The control that matters, and it always bites. Drag it to half the span and watch the whole row
-  // converge on one semicircle; push it past half and each style shows what it actually is.
-  gui.add(params, "rise", 0.05, 1.4, 0.01).name("Rise").onChange(rebuild);
-  gui.add(params, "width", 0.5, 1.4, 0.05).name("Span").onChange(rebuild);
-  gui.add(params, "height", 0.2, 2, 0.05).name("Body Height").onChange(rebuild);
-  // The low-poly knob. At 3 the ogee's S is a zigzag; at 24 it is a curve.
-  gui.add(params, "curveSegments", 2, 32, 1).name("Curve Segments").onChange(rebuild);
-
+  gui.title(meta.title);
+  if (container.clientWidth < 900) gui.close();
+  const reshape = () => {
+    rebuild();
+    resetView();
+  };
+  gui.add(params, "rise", 0.05, 1.4, 0.01).name("Rise").onChange(reshape);
+  gui.add(params, "width", 0.5, 1.4, 0.05).name("Span").onChange(reshape);
+  gui.add(params, "height", 0.2, 2, 0.05).name("Body Height").onChange(reshape);
+  gui.add(params, "curveSegments", 2, 32, 1).name("Curve Segments").onChange(reshape);
+  const view = gui.addFolder("View");
+  view.add(params, "lineup").name("Show All").listen().onChange(reshape);
+  view
+    .add(params, "profile", STYLES)
+    .name("Profile")
+    .onChange(() => {
+      params.lineup = false;
+      reshape();
+    });
+  view.add(params, "showPoints").name("Profile Points").onChange(rebuild);
+  view.add({ resetView }, "resetView").name("Reset View");
+  rebuild();
+  const observer = new ResizeObserver(resetView);
+  observer.observe(container);
+  resetView();
   return () => {
+    observer.disconnect();
     gui.destroy();
-    disposeRow();
-    stone.dispose();
-    floor.dispose();
+    clear();
+    [stone, cyan, guide, amber].forEach((m) => m.dispose());
     dispose();
   };
 }
