@@ -603,12 +603,13 @@ Advanced experimentation belongs in studies.
 Studies are durable, isolated explorations. They can prototype an idea, investigate a problem, compare approaches, or
 demonstrate a particular application. They may call SDK functions, but keep the code essential to the investigation
 inline when that preserves the idea independently of future SDK changes.
+
 A study may remain an exploration, contribute selected pieces to the SDK while remaining intact, or move into production
 when the whole study becomes the product. Overlap with production code is not, by itself, a reason to remove or refactor
 a study.
 
 References primarily explain established behavior; galleries compare named forms or profiles. These boundaries are
-flexible—a study can also become a useful reference.
+flexible — a study can also become a useful reference.
 
 
 ## Author
