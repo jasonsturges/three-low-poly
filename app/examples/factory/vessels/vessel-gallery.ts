@@ -21,7 +21,7 @@ import {
   ApothecaryJar,
   BeakerGeometry,
   ErlenmeyerFlaskGeometry,
-  FlorenceFlaskStand,
+  FlorenceFlaskGeometry,
   GraduatedCylinderGeometry,
   PipetteGeometry,
   PotionBottle,
@@ -38,7 +38,7 @@ import { clearDefaultLights } from "../../../framework/clearDefaultLights";
 export const meta = {
   title: "Vessel Gallery",
   description:
-    "Nine vessels arranged as profile-and-object pairs at a common scale. Cyan traces each geometry's source silhouette (radius right, height up); colored lines show fillProfile using the same fill and inset as the liquid mesh. Fill is a fraction of height, not volume. The silhouette excludes rolled rims, wall thickness, and the beaker's spout, which is added after revolving. Corks and the Florence stand remain visible in the assembled examples. Select a vessel to inspect it alone.",
+    "Nine vessels arranged as profile-and-object pairs at a common scale. Cyan traces each geometry's source silhouette (radius right, height up); colored lines show fillProfile using the same fill and inset as the liquid mesh. Fill is a fraction of height, not volume. The silhouette excludes rolled rims, wall thickness, and the beaker's spout, which is added after revolving. Corks remain visible on the assembled bottles and jar. Select a vessel to inspect it alone.",
 };
 
 export default function (container: HTMLElement) {
@@ -108,11 +108,10 @@ export default function (container: HTMLElement) {
     {
       label: "Florence Flask",
       make: () =>
-        new FlorenceFlaskStand({
-          flask: { bodyRadius: 0.5, neckRadius: 0.13, neckHeight: 0.9, radialSegments: seg },
-          fill: fillFor(0x8a7cf0),
-          glassMaterial: glass,
-        }),
+        glassVessel(
+          new FlorenceFlaskGeometry({ bodyRadius: 0.5, neckRadius: 0.13, neckHeight: 0.9, radialSegments: seg }),
+          0x8a7cf0,
+        ),
     },
     {
       label: "Graduated Cylinder",
@@ -193,15 +192,16 @@ export default function (container: HTMLElement) {
     const rows = Math.ceil(entries.length / columns);
     const pitchX = 3.8;
     const pitchY = 3.7;
-    viewWidth = columns * pitchX;
+    // Reserve room for the shared-scale legend even when inspecting one vessel in a narrow viewport.
+    viewWidth = Math.max(columns * pitchX, 6.4);
     viewHeight = rows * pitchY + 0.7;
     centerY = 1.2;
     entries.forEach((spec, index) => {
       const x = ((index % columns) - (columns - 1) / 2) * pitchX;
       const y = ((rows - 1) / 2 - Math.floor(index / columns)) * pitchY;
       const object = spec.make();
-      // Read the actual factory shell, retaining its seating transform (notably Florence's stand).
-      // Material identity distinguishes the glass from corks, stands, and liquid meshes.
+      // Read the actual glass shell, retaining its local transform.
+      // Material identity distinguishes the glass from corks and liquid meshes.
       const shells: Mesh<VesselGeometry>[] = [];
       object.traverse((child) => {
         if (
