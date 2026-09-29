@@ -324,6 +324,7 @@ export * from "./sky/StarField";
 
 export * from "./textures/checkerboard";
 export * from "./textures/linearGradient";
+export * from "./textures/plaid";
 export * from "./textures/radialGradient";
 
 //------------------------------
