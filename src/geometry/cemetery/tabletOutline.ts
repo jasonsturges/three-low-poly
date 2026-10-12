@@ -71,6 +71,12 @@ export type TabletShoulder =
   /** The side swells in a quarter-ellipse from part-way up into the top, like a lancet's flank. */
   | "gothic";
 
+/** Every {@link TabletTop}, in the order a chooser should list them — arches first. */
+export const TABLET_TOP_NAMES: readonly TabletTop[] = ["flat", "camber", "oval", "halfRound", "pointed", "ogeeArch", "ogee", "serpentine", "halfOgee", "peon"];
+
+/** Every {@link TabletShoulder}, plainest first. */
+export const TABLET_SHOULDER_NAMES: readonly TabletShoulder[] = ["none", "ledge", "checked", "rounded", "doubleRounded", "scotia", "splayed", "gothic"];
+
 export interface TabletOutlineOptions {
   /** Width across the sides. Defaults to `0.6`. */
   width?: number;

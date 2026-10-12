@@ -23,12 +23,30 @@ export const TABLET_HEADSTONE_DEFAULTS: Required<TabletHeadstoneOptions> = {
 };
 
 /**
+ * Every option a tablet will be built with: defaults, then the named preset's, then the ones given — with the
+ * preset folded in, so the result describes the stone by itself.
+ */
+export function resolveTabletOptions(options: TabletHeadstoneOptions = {}): Required<TabletHeadstoneOptions> {
+  const preset = options.preset ? TABLET_TOPS[options.preset].options : {};
+  return { ...TABLET_HEADSTONE_DEFAULTS, ...preset, ...options, preset: null };
+}
+
+/**
  * A tablet headstone: the {@link tabletOutline} extruded through the stone's thickness, with a chamfered
  * arris all round.
  *
  * Base at `y = 0`, centred on X and Z, the face toward `+Z` — the frame every stone in
  * {@link HEADSTONE_CATALOG} shares, so it drops into the same layouts. Set it a few centimetres INTO
  * whatever it stands in (the ground, a plinth) so it is housed, not standing on a coplanar face.
+ *
+ * @example
+ * ```ts
+ * // A chart stone by its preset name — or reach it through the catalogue as "tablet/squareScotia"
+ * const chart = new TabletHeadstoneGeometry({ preset: "squareScotia" });
+ *
+ * // Your own pairing of a top and a shoulder
+ * const own = new TabletHeadstoneGeometry({ top: "pointed", shoulder: "ledge", shoulderWidth: 0.1, rise: 0.36 });
+ * ```
  */
 export class TabletHeadstoneGeometry extends BufferGeometry {
   /** The silhouette it was cut from, in its own plane — for anything that has to fit against it. */
@@ -37,8 +55,7 @@ export class TabletHeadstoneGeometry extends BufferGeometry {
   readonly height: number;
 
   constructor(options: TabletHeadstoneOptions = {}) {
-    const preset = options.preset ? TABLET_TOPS[options.preset].options : {};
-    const o: Required<TabletHeadstoneOptions> = { ...TABLET_HEADSTONE_DEFAULTS, ...preset, ...options };
+    const o = resolveTabletOptions(options);
     const outline = tabletOutline(o);
     super();
     const solid = extrudeOutline(outline, o.depth, { bevel: o.bevel });

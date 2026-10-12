@@ -83,11 +83,15 @@ export interface CrossOptions extends CrossOutlineOptions {
   /** Slab depth. Defaults to `0.14`. */
   depth?: number;
   /**
-   * The nimbus at the crossing. `true` for a default radius, a number to set its outer radius, `false` for
-   * none. The ring sits inside the arm span, so the arms reach past it — a cross wearing a ring, not a
-   * wheel. Defaults to `false`.
+   * The nimbus at the crossing — a Celtic cross. The ring sits inside the arm span, so the arms reach past
+   * it: a cross wearing a ring, not a wheel. Defaults to `false`.
    */
-  ring?: boolean | number;
+  ring?: boolean;
+  /**
+   * The ring's outer radius as a fraction of the room it has — the shorter of the arm's reach and the
+   * height of the crossing above the shaft. Defaults to `0.82`.
+   */
+  ringSize?: number;
   /** Width of the ring's band. Defaults to `0.085`. */
   ringWidth?: number;
   /** Points round the ring. Defaults to `24`. */
@@ -105,6 +109,7 @@ export const CROSS_DEFAULTS: Required<CrossOptions> = {
   ...CROSS_OUTLINE_DEFAULTS,
   depth: 0.14,
   ring: false,
+  ringSize: 0.82,
   ringWidth: 0.085,
   ringSegments: 24,
   steps: 0,
@@ -137,8 +142,8 @@ export function crossGeometry(options: CrossOptions = {}): BufferGeometry {
 
   const n = o.thickness / 2;
   const cy = o.height * o.crossing;
-  const outer = typeof o.ring === "number" ? o.ring : Math.min(o.span / 2, cy - n) * 0.82;
-  if (o.ring !== false && outer - o.ringWidth > 1e-3) {
+  const outer = Math.min(o.span / 2, cy - n) * o.ringSize;
+  if (o.ring && outer - o.ringWidth > 1e-3) {
     const circle = (r: number, reverse: boolean) =>
       Array.from({ length: o.ringSegments }, (_, i) => {
         const a = ((reverse ? -i : i) / o.ringSegments) * Math.PI * 2;

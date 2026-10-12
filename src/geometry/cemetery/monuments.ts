@@ -203,8 +203,21 @@ export function columnUrnGeometry(options: ColumnUrnOptions = {}): BufferGeometr
 //  Pyramid
 //------------------------------
 
+export interface PyramidMonumentOptions {
+  /** The pyramid's side at its foot. Defaults to `0.78`. */
+  base?: number;
+  /** The pyramid's height above its plinth. Defaults to `1.0`. */
+  height?: number;
+}
+
+export const PYRAMID_MONUMENT_DEFAULTS: Required<PyramidMonumentOptions> = {
+  base: 0.78,
+  height: 1.0,
+};
+
 /** A small pyramid tomb-marker on a moulded plinth — the Egyptian revival's one gift to the churchyard. */
-export function pyramidMonumentGeometry(base = 0.78, height = 1.0): BufferGeometry {
+export function pyramidMonumentGeometry(options: PyramidMonumentOptions = {}): BufferGeometry {
+  const { base, height } = { ...PYRAMID_MONUMENT_DEFAULTS, ...options };
   const plinthHeight = 0.16;
   return mergeStone([
     ...plinthParts({ width: base + 0.2, height: plinthHeight, depth: base + 0.2, capStyle: "ogee", capDrop: 0.05, capProjection: 0.03 }),
@@ -413,11 +426,24 @@ export function obeliskGeometry(options: ObeliskOptions = {}): BufferGeometry {
   ]);
 }
 
+export interface SteppedObeliskOptions {
+  /** Overall height, foot of the lowest step to the pyramidion's point. Defaults to `1.75`. */
+  height?: number;
+  /** The lowest step's side; the shaft and upper steps are proportioned from it. Defaults to `0.7`. */
+  baseWidth?: number;
+}
+
+export const STEPPED_OBELISK_DEFAULTS: Required<SteppedObeliskOptions> = {
+  height: 1.75,
+  baseWidth: 0.7,
+};
+
 /**
  * The everyday obelisk marker — a short tapered shaft on three diminishing steps, small enough to stand in
  * a row of headstones.
  */
-export function steppedObeliskGeometry(height = 1.75, baseWidth = 0.7): BufferGeometry {
+export function steppedObeliskGeometry(options: SteppedObeliskOptions = {}): BufferGeometry {
+  const { height, baseWidth } = { ...STEPPED_OBELISK_DEFAULTS, ...options };
   const steps = [
     [baseWidth, height * 0.06],
     [baseWidth * 0.8, height * 0.1],

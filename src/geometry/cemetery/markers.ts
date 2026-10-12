@@ -45,13 +45,16 @@ export function plinthTabletGeometry(options: PlinthTabletOptions = {}): BufferG
   return mergeStone(parts);
 }
 
+/** The horizontal stele's proportions: a tablet on a plinth, laid wide and low. */
+export const HORIZONTAL_STELE_OPTIONS: Required<PlinthTabletOptions> = {
+  tablet: { top: "camber", width: 0.98, height: 0.46, rise: 0.08, depth: 0.16, shoulder: "checked", shoulderWidth: 0.05, shoulderDrop: 0.04 },
+  plinth: { width: 1.14, height: 0.16, depth: 0.34 },
+  footStyle: "cove",
+};
+
 /** The horizontal stele: a wide, low cambered stone on a long plinth. */
-export function horizontalSteleGeometry(): BufferGeometry {
-  return plinthTabletGeometry({
-    tablet: { top: "camber", width: 0.98, height: 0.46, rise: 0.08, depth: 0.16, shoulder: "checked", shoulderWidth: 0.05, shoulderDrop: 0.04 },
-    plinth: { width: 1.14, height: 0.16, depth: 0.34 },
-    footStyle: "cove",
-  });
+export function horizontalSteleGeometry(options: PlinthTabletOptions = {}): BufferGeometry {
+  return plinthTabletGeometry({ ...HORIZONTAL_STELE_OPTIONS, ...options });
 }
 
 //------------------------------
