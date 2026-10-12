@@ -14,7 +14,8 @@ export interface ArchedSlabGeometryOptions extends ArchedSlabShapeOptions {
 
 /**
  * Extruded arched slab — a door, an arched window, or a shouldered headstone, depending on the arch's
- * span. See {@link ArchedSlabShape}.
+ * span. See {@link ArchedSlabShape}. For grave markers proper — chamfered, on the stonecutter's tops and
+ * shoulders — see {@link HEADSTONE_CATALOG}.
  *
  * @example
  * ```ts

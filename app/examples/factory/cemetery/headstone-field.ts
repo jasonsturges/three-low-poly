@@ -1,14 +1,21 @@
 import GUI from "lil-gui";
 import { Group, InstancedMesh, Material } from "three";
-import { fieldOfHeadstones, GroundGrid, RandomColor } from "three-low-poly";
+import { HEADSTONE_CATALOG, ROW_HEADSTONES, type HeadstoneEntry, fieldOfHeadstones, GroundGrid, RandomColor } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = {
   title: "Headstone Field",
   description:
-    "A whole graveyard — a grid of aged rows sharing one instanced mesh per silhouette, so ten thousand " +
+    "A whole graveyard — a grid of aged rows sharing one instanced mesh per catalogue stone, so ten thousand " +
     "stones stay a handful of draw calls.",
 };
+
+/** The lab's family picker, as the factory's real `catalog` option. */
+function catalogFor(family: string): readonly HeadstoneEntry[] {
+  if (family === "row") return ROW_HEADSTONES;
+  if (family === "all") return HEADSTONE_CATALOG;
+  return HEADSTONE_CATALOG.filter((entry) => entry.family === family);
+}
 
 export default function (container: HTMLElement) {
   const { scene, controls, dispose } = createScene(container, {
@@ -26,6 +33,9 @@ export default function (container: HTMLElement) {
     rowSpacing: 2.2,
     density: 1,
     seed: 1337,
+    broken: 0.05,
+    /** Which slice of HEADSTONE_CATALOG to pass as `catalog`. */
+    family: "row" as "row" | "tablet" | "cross" | "obelisk" | "monument" | "all",
     leanMax: 0.12,
     twistMax: 0.4,
     sinkMax: 0.08,
@@ -51,7 +61,7 @@ export default function (container: HTMLElement) {
     floor.dispose();
     scene.remove(floor);
 
-    field = fieldOfHeadstones({ ...params, colors: RandomColor.between(params.start, params.end) });
+    field = fieldOfHeadstones({ ...params, catalog: catalogFor(params.family), colors: RandomColor.between(params.start, params.end) });
     field.traverse((child) => {
       if (child instanceof InstancedMesh) {
         child.castShadow = true;
@@ -86,6 +96,8 @@ export default function (container: HTMLElement) {
   // Below 1, plots are left empty at random — the gaps of an old churchyard, or a sparse distant fill.
   plot.add(params, "density", 0.05, 1, 0.01).name("Density").onChange(rebuild);
   plot.add(params, "seed", 1, 9999, 1).name("Seed").onChange(rebuild);
+  plot.add(params, "family", ["row", "tablet", "cross", "obelisk", "monument", "all"]).name("catalog").onChange(rebuild);
+  plot.add(params, "broken", 0, 1, 0.01).name("broken").onChange(rebuild);
   plot.open();
 
   const age = gui.addFolder("Settling");
