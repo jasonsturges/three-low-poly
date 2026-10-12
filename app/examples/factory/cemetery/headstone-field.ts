@@ -75,7 +75,8 @@ export default function (container: HTMLElement) {
     field.position.set(-width / 2, 0, -depth / 2);
     scene.add(field);
 
-    stats.stones = field.children.reduce((n, c) => n + (c as InstancedMesh).count, 0);
+    // A broken stone's fallen top is the same stone, not another plot.
+    stats.stones = field.children.filter((c) => !c.name.endsWith("#top")).reduce((n, c) => n + (c as InstancedMesh).count, 0);
     stats.drawCalls = field.children.length;
 
     const size = Math.max(width, depth) + 4;
