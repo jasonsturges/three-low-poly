@@ -1,9 +1,16 @@
 import GUI from "lil-gui";
 import { Group, InstancedMesh, Material } from "three";
-import { GroundGrid, rowOfHeadstones } from "three-low-poly";
+import { HEADSTONE_CATALOG, ROW_HEADSTONES, type HeadstoneEntry, GroundGrid, rowOfHeadstones } from "three-low-poly";
 import { createScene } from "../../../framework/createScene";
 
 export const meta = { title: "Headstone Row" };
+
+/** The lab's family picker, as the factory's real `catalog` option. */
+function catalogFor(family: string): readonly HeadstoneEntry[] {
+  if (family === "row") return ROW_HEADSTONES;
+  if (family === "all") return HEADSTONE_CATALOG;
+  return HEADSTONE_CATALOG.filter((entry) => entry.family === family);
+}
 
 export default function (container: HTMLElement) {
   const { scene, dispose } = createScene(container, {
@@ -15,6 +22,9 @@ export default function (container: HTMLElement) {
     count: 10,
     spacing: 1,
     seed: 1337,
+    broken: 0.05,
+    /** Which slice of HEADSTONE_CATALOG to pass as `catalog`. */
+    family: "row" as "row" | "tablet" | "cross" | "obelisk" | "monument" | "all",
     leanMax: 0.12,
     twistMax: 0.4,
     sinkMax: 0.08,
@@ -45,7 +55,7 @@ export default function (container: HTMLElement) {
     floor.dispose();
     scene.remove(floor);
 
-    row = rowOfHeadstones(params);
+    row = rowOfHeadstones({ ...params, catalog: catalogFor(params.family) });
     row.traverse((child) => {
       if (child instanceof InstancedMesh) {
         child.castShadow = true;
@@ -68,6 +78,8 @@ export default function (container: HTMLElement) {
   gui.add(params, "count", 1, 30, 1).name("Plots").onChange(rebuild);
   gui.add(params, "spacing", 0.4, 3, 0.05).name("Plot Spacing").onChange(rebuild);
   gui.add(params, "seed", 1, 9999, 1).name("Seed").onChange(rebuild);
+  gui.add(params, "family", ["row", "tablet", "cross", "obelisk", "monument", "all"]).name("catalog").onChange(rebuild);
+  gui.add(params, "broken", 0, 1, 0.01).name("broken").onChange(rebuild);
 
   const age = gui.addFolder("Settling");
   age.add(params, "leanMax", 0, 0.4, 0.005).name("Lean").onChange(rebuild);

@@ -125,13 +125,13 @@ export * from "./geometry/atmosphere/SmokeCurlGeometry";
 export * from "./geometry/books/BookGeometry";
 
 // Cemetery
-export * from "./geometry/cemetery/CelticCrossHeadstoneGeometry";
-export * from "./geometry/cemetery/CrossHeadstoneGeometry";
-export * from "./geometry/cemetery/MausoleumGeometry";
-export * from "./geometry/cemetery/ObeliskGeometry";
-export * from "./geometry/cemetery/ObeliskHeadstoneGeometry";
-export * from "./geometry/cemetery/RoundedHeadstoneGeometry";
-export * from "./geometry/cemetery/SquareHeadstoneGeometry";
+export * from "./geometry/cemetery/crosses";
+export * from "./geometry/cemetery/headstoneCatalog";
+export * from "./geometry/cemetery/markers";
+export * from "./geometry/cemetery/monuments";
+export * from "./geometry/cemetery/stoneParts";
+export * from "./geometry/cemetery/TabletHeadstoneGeometry";
+export * from "./geometry/cemetery/tabletOutline";
 
 // Fence
 export * from "./geometry/fence/StoneFencePostGeometry";

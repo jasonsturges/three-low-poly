@@ -1,5 +1,5 @@
 import {
-  BufferGeometry,
+  type BufferGeometry,
   Color,
   ColorRepresentation,
   Euler,
@@ -11,51 +11,9 @@ import {
   Quaternion,
   Vector3,
 } from "three";
-import { CelticCrossHeadstoneGeometry } from "../../geometry/cemetery/CelticCrossHeadstoneGeometry";
-import { CrossHeadstoneGeometry } from "../../geometry/cemetery/CrossHeadstoneGeometry";
-import { ObeliskGeometry } from "../../geometry/cemetery/ObeliskGeometry";
-import { ObeliskHeadstoneGeometry } from "../../geometry/cemetery/ObeliskHeadstoneGeometry";
-import { RoundedHeadstoneGeometry } from "../../geometry/cemetery/RoundedHeadstoneGeometry";
-import { SquareHeadstoneGeometry } from "../../geometry/cemetery/SquareHeadstoneGeometry";
-import { ArchStyle } from "../../modeling/profiles/ArchProfile";
+import { breakHeadstone, ROW_HEADSTONES, type HeadstoneEntry } from "../../geometry/cemetery/headstoneCatalog";
 import type { ColorSampler } from "../../utils/RandomColor";
 import { createRandom, deriveSubSeed } from "../../utils/Random";
-
-/**
- * One kind of stone in the row's palette.
- *
- * The `rounded` family is where the variety lives — it is an arched slab, so it takes the whole
- * {@link ArchStyle} vocabulary plus a narrower `archWidth` for the shouldered look (an arch sitting *on*
- * the slab). `cross`, `obelisk` (a tapered monument) and `obeliskHeadstone` (a stepped one) are single
- * silhouettes. Every style carries a `weight` — its relative frequency in the row.
- */
-export type HeadstoneStyle =
-  | { kind: "rounded"; arch?: ArchStyle; archWidth?: number; archHeight?: number; weight?: number }
-  | { kind: "square"; weight?: number }
-  | { kind: "cross"; weight?: number }
-  | { kind: "celticCross"; weight?: number }
-  | { kind: "obelisk"; weight?: number }
-  | { kind: "obeliskHeadstone"; weight?: number };
-
-/**
- * The stock cemetery: mostly plain rounded and square stones, the occasional cross, and obelisks that
- * stand out because they are fewer. The rounded family dominates and fans into four tops — a full-width
- * semicircle, a shouldered one, a gently curved segmental, and a gothic point.
- *
- * These are relative weights, not counts: a row draws from them, so the mix holds at any `count`.
- */
-export const DEFAULT_HEADSTONE_STYLES: readonly HeadstoneStyle[] = [
-  { kind: "rounded", arch: "semicircle", weight: 6 },
-  { kind: "rounded", arch: "semicircle", archWidth: 0.42, weight: 4 }, // shouldered — arch sits ON the slab
-  { kind: "rounded", arch: "segmental", archHeight: 0.16, weight: 4 }, // a gentle curve, not a full round
-  { kind: "rounded", arch: "pointed", archHeight: 0.5, weight: 2 }, // gothic
-  { kind: "rounded", arch: "ogee", archHeight: 0.26, weight: 1 }, // a low ogee flourish — rare
-  { kind: "square", weight: 4 },
-  { kind: "cross", weight: 2 },
-  { kind: "celticCross", weight: 2 }, // the gothic flourish — flared arms and a nimbus
-  { kind: "obeliskHeadstone", weight: 2 }, // the stepped one — the everyday obelisk marker
-  { kind: "obelisk", weight: 1 }, // the tall tapered monument — rarer, so it stands out
-];
 
 /** Everything that ages a stone — shared by a single {@link rowOfHeadstones} and a whole {@link fieldOfHeadstones}. */
 export interface HeadstoneSettleOptions {
@@ -100,12 +58,21 @@ export interface HeadstoneSettleOptions {
   /** Stone material. Omit for a flat-shaded standard material: white with `colors`, otherwise tinted by `color`. */
   material?: Material;
   /**
-   * The palette the row draws from. Defaults to {@link DEFAULT_HEADSTONE_STYLES}.
+   * The stones the row draws from, by their catalogue weights. Defaults to {@link ROW_HEADSTONES} — every
+   * tablet, cross and obelisk in {@link HEADSTONE_CATALOG}.
    *
-   * Pass your own to reshape the graveyard — `[{ kind: "cross" }]` for a war plot, all-`rounded` with
-   * one `arch` for a uniform churchyard. Weights are relative; omit `weight` for `1`.
+   * Pass a slice of the catalogue to reshape the graveyard — the crosses alone for a war plot, one tablet
+   * for a uniform churchyard. Re-weight by mapping: `catalog.map((e) => ({ ...e, weight: 1 }))`.
+   *
+   * Each entry is built ONCE, the first time it is drawn, and every stone of it is an instance — so a big
+   * catalogue costs variety, not geometry.
    */
-  styles?: readonly HeadstoneStyle[];
+  catalog?: readonly HeadstoneEntry[];
+  /**
+   * Fraction of TABLETS found snapped across — the stump standing, the top lying on its back in front of
+   * it. `0` for an intact yard. Defaults to `0.05`.
+   */
+  broken?: number;
 }
 
 export interface HeadstoneRowOptions extends HeadstoneSettleOptions {
@@ -146,53 +113,27 @@ export interface HeadstoneFieldOptions extends HeadstoneSettleOptions {
   density?: number;
 }
 
-/** The geometry a style builds, and the footprint a lean has to lift out of the ground. */
+/** A catalogue entry once built: its geometry, and the footprint a lean has to lift out of the ground. */
 interface Variant {
   geometry: BufferGeometry;
-  weight: number;
   halfWidth: number;
   halfDepth: number;
 }
 
-function styleGeometry(style: HeadstoneStyle): BufferGeometry {
-  switch (style.kind) {
-    case "rounded":
-      return new RoundedHeadstoneGeometry({
-        arch: style.arch,
-        archWidth: style.archWidth,
-        archHeight: style.archHeight,
-      });
-    case "square":
-      return new SquareHeadstoneGeometry();
-    case "cross":
-      return new CrossHeadstoneGeometry();
-    case "celticCross":
-      return new CelticCrossHeadstoneGeometry();
-    case "obelisk":
-      return new ObeliskGeometry();
-    case "obeliskHeadstone":
-      return new ObeliskHeadstoneGeometry();
-  }
+function measure(geometry: BufferGeometry): Variant {
+  geometry.computeBoundingBox();
+  const box = geometry.boundingBox!;
+  return {
+    geometry,
+    halfWidth: Math.max(Math.abs(box.min.x), Math.abs(box.max.x)),
+    halfDepth: Math.max(Math.abs(box.min.z), Math.abs(box.max.z)),
+  };
 }
 
-function buildPalette(styles: readonly HeadstoneStyle[]): Variant[] {
-  return styles.map((style) => {
-    const geometry = styleGeometry(style);
-    geometry.computeBoundingBox();
-    const box = geometry.boundingBox!;
-
-    return {
-      geometry,
-      weight: Math.max(0, style.weight ?? 1),
-      halfWidth: Math.max(Math.abs(box.min.x), Math.abs(box.max.x)),
-      halfDepth: Math.max(Math.abs(box.min.z), Math.abs(box.max.z)),
-    };
-  });
-}
-
-/** One settled stone — which silhouette it is, where it ended up, and the shade it weathered to. */
+/** One settled stone — which geometry it is, where it ended up, and the shade it weathered to. */
 interface Plot {
-  variant: number;
+  /** The geometry's key: a catalogue name, or that name's broken `#stump` / `#top`. */
+  key: string;
   matrix: Matrix4;
   tint: Color;
 }
@@ -217,7 +158,7 @@ const _scale = new Vector3();
 const _rotation = new Euler();
 
 /**
- * Draw and age ONE stone at a plot center — the atomic unit a row and a field both repeat.
+ * Age ONE stone at a plot center — the atomic unit a row and a field both repeat.
  *
  * This is the shared base. A row and a field differ only in where they put the plot centers; each
  * center still gets a stone the same way. It advances `source` in a fixed order, so a given seed lays
@@ -230,16 +171,11 @@ const _rotation = new Euler();
  */
 function settleStone(
   source: ReturnType<typeof createRandom>,
-  variants: Variant[],
-  indices: number[],
-  weights: number[],
+  { halfWidth, halfDepth }: Variant,
   x: number,
   z: number,
   s: Settle,
-): Plot {
-  const variant = source.weighted(indices, weights);
-  const { halfWidth, halfDepth } = variants[variant]!;
-
+): { matrix: Matrix4; tint: Color; yaw: number; scale: number } {
   const uniform = source.float(s.scaleMin, s.scaleMax);
   const leanX = source.float(-s.leanMax, s.leanMax);
   const leanZ = source.float(-s.leanMax, s.leanMax);
@@ -247,7 +183,8 @@ function settleStone(
   const lifted = halfWidth * uniform * Math.abs(Math.sin(leanZ)) + halfDepth * uniform * Math.abs(Math.sin(leanX));
   const sink = lifted + source.float(0, s.sinkMax);
 
-  _rotation.set(leanX, source.skewCenter(s.twistBias, -s.twistMax, s.twistMax), leanZ, "YXZ");
+  const yaw = source.skewCenter(s.twistBias, -s.twistMax, s.twistMax);
+  _rotation.set(leanX, yaw, leanZ, "YXZ");
   _quaternion.setFromEuler(_rotation);
   _position.set(x + source.float(-s.driftMax, s.driftMax), -sink, z + source.float(-s.driftMax, s.driftMax));
   _scale.setScalar(uniform);
@@ -260,25 +197,39 @@ function settleStone(
       source.float(-s.weathering, s.weathering * 0.6),
     );
 
-  return { variant, matrix: new Matrix4().compose(_position, _quaternion, _scale), tint };
+  return { matrix: new Matrix4().compose(_position, _quaternion, _scale), tint, yaw, scale: uniform };
 }
 
 /**
- * Group the settled plots into one {@link InstancedMesh} PER SILHOUETTE — the whole reason a field is
- * cheap. Ten thousand stones drawn from an eight-style palette are eight draw calls, not ten thousand,
- * because every plot of a given style shares one instanced mesh regardless of which row it sits in.
+ * The fallen top of a broken stone: in front of its stump along the stone's facing, on its back, turned a
+ * little from square — resting on its own thickness.
  */
-function instancePlots(variants: Variant[], plots: Plot[], material: Material): Group {
+function fallenTop(source: ReturnType<typeof createRandom>, top: Variant, x: number, z: number, yaw: number, scale: number): Matrix4 {
+  const reach = source.float(0.5, 0.8) * scale;
+  _rotation.set(-Math.PI / 2 + source.float(-0.1, 0.12), yaw + source.float(-0.5, 0.5), source.float(-0.08, 0.08), "YXZ");
+  _quaternion.setFromEuler(_rotation);
+  _position.set(x + Math.sin(yaw) * reach, top.halfDepth * scale * 0.9, z + Math.cos(yaw) * reach);
+  _scale.setScalar(scale);
+  return new Matrix4().compose(_position, _quaternion, _scale);
+}
+
+/**
+ * Group the settled plots into one {@link InstancedMesh} PER GEOMETRY — the whole reason a field is cheap.
+ * Ten thousand stones drawn from a thirty-stone catalogue are at most thirty draw calls (plus the broken
+ * ones), because every plot of a given stone shares one instanced mesh regardless of which row it sits in.
+ */
+function instancePlots(variants: Map<string, Variant>, plots: Plot[], material: Material): Group {
   const group = new Group();
 
-  variants.forEach((variant, index) => {
-    const mine = plots.filter((plot) => plot.variant === index);
+  for (const [key, variant] of variants) {
+    const mine = plots.filter((plot) => plot.key === key);
     if (mine.length === 0) {
       variant.geometry.dispose();
-      return;
+      continue;
     }
 
     const mesh = new InstancedMesh(variant.geometry, material, mine.length);
+    mesh.name = key;
     mine.forEach((plot, i) => {
       mesh.setMatrixAt(i, plot.matrix);
       mesh.setColorAt(i, plot.tint);
@@ -287,7 +238,7 @@ function instancePlots(variants: Variant[], plots: Plot[], material: Material): 
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
 
     group.add(mesh);
-  });
+  }
 
   return group;
 }
@@ -308,15 +259,18 @@ function layStones(
     weathering = 0.09,
     colors,
     material,
-    styles = DEFAULT_HEADSTONE_STYLES,
+    catalog = ROW_HEADSTONES,
+    broken = 0.05,
     density = 1,
   }: HeadstoneSettleOptions & { density?: number },
 ): Group {
   const source = createRandom(seed);
   const colorContext = { index: 0, random: createRandom(seed === undefined ? undefined : deriveSubSeed(seed, 0x73746f6e)) };
-  const variants = buildPalette(styles);
-  const indices = variants.map((_, i) => i);
-  const weights = variants.map((variant) => variant.weight);
+  //  Breakage draws from its own stream, so turning it up or down never moves a standing stone.
+  const breakage = createRandom(seed === undefined ? undefined : deriveSubSeed(seed, 0x62726b6e));
+  const entries = catalog.filter((entry) => entry.weight > 0);
+  if (entries.length === 0) return new Group();
+  const weights = entries.map((entry) => entry.weight);
   const settle: Settle = {
     leanMax,
     twistMax,
@@ -329,22 +283,47 @@ function layStones(
     base: new Color(color),
   };
 
+  //  Built on first draw: a stone the dice never pick costs nothing.
+  const variants = new Map<string, Variant>();
+  const variant = (entry: HeadstoneEntry): Variant => {
+    let v = variants.get(entry.name);
+    if (!v) variants.set(entry.name, (v = measure(entry.build())));
+    return v;
+  };
+  const brokenVariants = (entry: HeadstoneEntry): { stump: string; top: Variant } => {
+    const stump = `${entry.name}#stump`;
+    const top = `${entry.name}#top`;
+    if (!variants.has(stump)) {
+      const pieces = breakHeadstone(variant(entry).geometry);
+      variants.set(stump, measure(pieces.stump));
+      variants.set(top, measure(pieces.top));
+    }
+    return { stump, top: variants.get(top)! };
+  };
+
   const stone =
     material ?? new MeshStandardMaterial({ color: new Color(colors ? 0xffffff : color), roughness: 0.9, flatShading: true });
 
-  // Draw every stone up front so each silhouette's instance count is known before its mesh is built.
+  // Draw every stone up front so each geometry's instance count is known before its mesh is built.
   const plots: Plot[] = [];
   for (const center of centers) {
     // An empty plot: rolled only when density < 1, so a full layout draws the exact same sequence a
     // seed always did.
     if (density < 1 && source.next() >= density) continue;
-    // settleStone retains legacy tint draws, keeping density, silhouettes and placement stable.
-    const plot = settleStone(source, variants, indices, weights, center.x, center.z, settle);
+    const entry = source.weighted(entries, weights);
+    const settled = settleStone(source, variant(entry), center.x, center.z, settle);
     if (colors) {
       colorContext.index = plots.length;
-      colors(plot.tint, colorContext);
+      colors(settled.tint, colorContext);
     }
-    plots.push(plot);
+    if (entry.family === "tablet" && broken > 0 && breakage.next() < broken) {
+      const { stump, top } = brokenVariants(entry);
+      plots.push({ key: stump, matrix: settled.matrix, tint: settled.tint });
+      const fallen = fallenTop(breakage, top, center.x, center.z, settled.yaw, settled.scale);
+      plots.push({ key: `${entry.name}#top`, matrix: fallen, tint: settled.tint.clone() });
+    } else {
+      plots.push({ key: entry.name, matrix: settled.matrix, tint: settled.tint });
+    }
   }
 
   return instancePlots(variants, plots, stone);
