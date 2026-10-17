@@ -263,14 +263,16 @@ export function sarcophagusGeometry(options: SarcophagusOptions = {}): BufferGeo
   const half = (lidDepth - 0.1) / 2;
   const rise = 0.09;
   const radius = (half * half + rise * rise) / (2 * rise);
-  const section: [number, number][] = [[half, -HOUSE]];
+  //  Bedded deep enough that its side stands taller than twice its bevel, or the bevel's inset folds there.
+  const bed = 0.03;
+  const section: [number, number][] = [[half, -bed]];
   for (let i = 0; i <= 10; i++) {
     const z = half - (i / 10) * half * 2;
     section.push([z, Math.sqrt(radius * radius - z * z) - (radius - rise)]);
   }
-  section.push([-half, -HOUSE]);
+  section.push([-half, -bed]);
   const scrollR = 0.1;
-  const cushion = extrudeAlongX(section, lidLength - scrollR * 4 + 0.04, 0.01);
+  const cushion = extrudeAlongX(section, lidLength - scrollR * 4 + 0.04, 0.005);
   cushion.translate(0, lidTop, 0);
 
   const parts = [
@@ -291,7 +293,8 @@ export function sarcophagusGeometry(options: SarcophagusOptions = {}): BufferGeo
     for (const sz of [-1, 1]) {
       const disc = new CylinderGeometry(scrollR + 0.012, scrollR + 0.012, 0.03, 14, 1);
       disc.rotateX(Math.PI / 2);
-      disc.translate(x, lidTop + scrollR - 0.03, sz * (lidDepth / 2 - 0.035));
+      //  Its inner face stands just outside the cushion's side (at ±half), never coplanar with it.
+      disc.translate(x, lidTop + scrollR - 0.03, sz * (lidDepth / 2 - 0.03));
       parts.push(disc);
     }
   }

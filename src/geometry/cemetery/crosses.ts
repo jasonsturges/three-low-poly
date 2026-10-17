@@ -48,35 +48,45 @@ export function crossOutline(options: CrossOutlineOptions = {}): Vector2[] {
   const cy = o.height * o.crossing;
   const R = o.span / 2;
   const h = o.height;
-  const f = o.flare * 1.5;
+  //  A flare leaves the neck straight, bends outward, and meets the tip edge at an ANGLE. Its control point
+  //  sits short of the tip: on the tip line, the curve would end tangent to the tip edge and the outline
+  //  would double back along it — a cusp the chamfer's inset folds over.
+  const reach = R - n; // a side arm's free length
+  const bend = n + reach * 0.75;
+  //  The upper arm flares over as long, if it has room above the crossing.
+  const up = Math.min(reach, (h - cy - n) * 0.9);
 
   const s = new Shape();
   s.moveTo(-n, 0);
   s.lineTo(n, 0);
   s.lineTo(n, cy - n);
-  //  The right arm: each flare bows toward the outer corner, so the arm keeps its width and opens at the end.
-  s.quadraticCurveTo(R, cy - n, R, cy - t);
+  //  The right arm.
+  s.quadraticCurveTo(bend, cy - n, R, cy - t);
   s.lineTo(R, cy + t);
-  s.quadraticCurveTo(R, cy + n, n, cy + n);
+  s.quadraticCurveTo(bend, cy + n, n, cy + n);
   //  Up the upper arm to its flared tip, across, and down the other side.
-  s.lineTo(n, h - f);
-  s.quadraticCurveTo(n, h, t, h);
+  s.lineTo(n, h - up);
+  s.quadraticCurveTo(n, h - up * 0.25, t, h);
   s.lineTo(-t, h);
-  s.quadraticCurveTo(-n, h, -n, h - f);
+  s.quadraticCurveTo(-n, h - up * 0.25, -n, h - up);
   //  The left arm, mirror of the right.
   s.lineTo(-n, cy + n);
-  s.quadraticCurveTo(-R, cy + n, -R, cy + t);
+  s.quadraticCurveTo(-bend, cy + n, -R, cy + t);
   s.lineTo(-R, cy - t);
-  s.quadraticCurveTo(-R, cy - n, -n, cy - n);
+  s.quadraticCurveTo(-bend, cy - n, -n, cy - n);
 
-  //  An unflared cross draws its curves at zero length; drop the repeated points they leave behind.
+  //  An unflared cross draws its curves as straight runs; drop the repeated and collinear points they leave.
   const clean: Vector2[] = [];
   for (const p of s.getPoints(o.segments)) {
     const last = clean[clean.length - 1];
     if (!last || last.distanceTo(p) > 1e-5) clean.push(p);
   }
   if (clean.length > 1 && clean[0]!.distanceTo(clean[clean.length - 1]!) < 1e-5) clean.pop();
-  return clean;
+  return clean.filter((b, i) => {
+    const a = clean[(i + clean.length - 1) % clean.length]!;
+    const c = clean[(i + 1) % clean.length]!;
+    return Math.abs((b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x)) > 1e-9;
+  });
 }
 
 export interface CrossOptions extends CrossOutlineOptions {
