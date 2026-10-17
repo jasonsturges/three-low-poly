@@ -109,6 +109,7 @@ export * from "./factory/vessels/liquidFill";
 
 // Architecture
 export * from "./geometry/architecture/ArchGeometry";
+export * from "./geometry/architecture/DentilCourseGeometry";
 export * from "./geometry/architecture/DiamondLatticeGeometry";
 export * from "./geometry/architecture/GregorianLatticeGeometry";
 export * from "./geometry/architecture/MoldingGeometry";

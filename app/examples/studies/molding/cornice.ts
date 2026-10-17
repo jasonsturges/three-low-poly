@@ -15,6 +15,7 @@ import {
   WireframeGeometry,
 } from "three";
 import {
+  DentilCourseGeometry,
   measurePath,
   miterFrames,
   moldingProfile,
@@ -22,7 +23,6 @@ import {
   type PathMeasure,
   pointAtDistance,
   repeatAlongPath,
-  slicePath,
   sweep,
   type Vec2,
 } from "three-low-poly";
@@ -30,23 +30,11 @@ import { createScene } from "../../../framework/createScene";
 import { frameObject } from "../../../framework/frameObject";
 
 export const meta = {
-  title: "Dentil Cornice",
+  title: "Cornice",
   description:
-    "STUDY — the Corner Anchoring findings at molding scale, in the assembly they came from. A classical " +
-    "cornice carries BOTH repeat families at once: DENTILS are a notched band (the gap is a member, the " +
-    "interdentil), and MODILLIONS are an applied repeat (their own construction, no gap member — which is " +
-    "why they read as bolted on rather than cut from the run). Everything else is a plain swept course. " +
-    "You design with WIDTH and GAP; the pitch is what comes out. A dentil has a width and an interdentil " +
-    "has a gap, both real decisions with a proportion between them — set the pitch directly instead and " +
-    "the gap becomes whatever is left over, swinging from solid to gaping as anything else moves. Both " +
-    "courses are laid out INDEPENDENTLY from their own width and gap; they need not agree in the field, " +
-    "only at the corners, and corner anchoring gives that to each of them for free. Two more things the " +
-    "castle scale could not show. A section standing OFF its path must run `outer x tan(turn/2)` past a " +
-    "convex corner, so the corner dentil is genuinely bigger and reaches over its neighbors — which are " +
-    "dropped, and the block then CUT TO SUIT so its face sits exactly one gap from the first survivor, " +
-    "the way a joiner does it. And an applied repeat needs a FRAME, not a point: a bracket has a BACK, so " +
-    "unlike a baluster it cannot sit on the bisector without burying half of itself — a corner wants a " +
-    "PAIR flanking it, one flat on each face.",
+    "SHOWCASE — a classical cornice assembled from its members: frieze, bed mold, a dentil course, corona " +
+    "and crown, carried on modillions. Every course runs the same wall line and miters at its corners; the " +
+    "dentils are a DentilCourseGeometry, set out on their own face.",
 };
 
 //------------------------------
@@ -299,10 +287,6 @@ export default function (container: HTMLElement) {
     crownProjection: 0.055,
 
     wireframe: false,
-    dentilOut: "",
-    modillionOut: "",
-    alignOut: "",
-    swallowOut: "",
   };
 
   const stage = new Group();
@@ -381,88 +365,24 @@ export default function (container: HTMLElement) {
       plaster,
     );
 
-    // ── THE SETTING-OUT, ON THE FACE THE DENTILS ACTUALLY SIT ON. ───────────────────────────────────
+    // ── The dentils: one strip per run, set out on the band's face. ─────────────────────────────────
     //
-    // Width and GAP are the design decisions; the PITCH is their sum and comes out. And the run is the
-    // BAND'S FACE, not the wall — see `offsetPath`. Measuring arc length there is also how it is really
-    // done: you set dentils out on the face you can see, so the gap you draw is the gap you get, and the
-    // corner they land on is the visible corner rather than one buried 26mm behind it.
-    const half = params.dentilWidth / 2;
-    const face = offsetPath(points, BAND_FACE, params.closed);
-    const facePath = measurePath(face, { closed: params.closed });
-    const laid = repeatAlongPath(facePath, {
-      pitch: params.dentilWidth + params.dentilGap,
-      anchor: "corners",
+    // Hung from the BAND'S face, not the wall — see `offsetPath` — so a corner tooth reaches its own depth
+    // past the corner and no further. The geometry handles the rest: a full tooth on each face at every
+    // corner, and each run's slack spread through its own gaps.
+    const band = 0.008;
+    const dentils = new DentilCourseGeometry({
+      points: offsetPath(points, BAND_FACE, params.closed).map((p) => p.setY(dentilTop)),
+      closed: params.closed,
+      facing: "outward",
+      width: params.dentilWidth,
+      gap: params.dentilGap,
+      height: params.dentilHeight - band,
+      band,
+      projection: params.dentilDepth,
     });
-    const gap = laid.pitch - params.dentilWidth;
-
-    // A section standing off its path still runs `depth · tan(turn/2)` past a convex corner — but that is
-    // now its OWN depth, so the corner block comes out a little over one dentil wide instead of two and a
-    // half, and nothing needs swallowing at sane proportions. The rule stays because extreme settings can
-    // still bury a neighbor, and a buried dentil is worse than a missing one.
-    const vertexIndices = params.closed
-      ? face.map((_, i) => i)
-      : face.map((_, i) => i).slice(1, -1); // an open run's ENDS are square cuts, not miters
-    const corners = vertexIndices.map((i) => {
-      const n = face.length;
-      const a = face[i]!.clone().sub(face[(i - 1 + n) % n]!).normalize();
-      const b = face[(i + 1) % n]!.clone().sub(face[i]!).normalize();
-      const turn = Math.acos(Math.min(1, Math.max(-1, a.dot(b))));
-      return { at: facePath.distances[i]!, reach: params.dentilDepth * Math.tan(turn / 2) };
-    });
-    const cornerAt = new Map(corners.map((c) => [c.at, c]));
-
-    const signedTo = (from: number, to: number) => {
-      let d = to - from;
-      if (!params.closed) return d;
-      if (d > facePath.length / 2) d -= facePath.length;
-      if (d < -facePath.length / 2) d += facePath.length;
-      return d;
-    };
-
-    const dropped = new Set<number>();
-    // Per corner, per side.
-    //
-    // A neighbor only has to GO if it is actually inside the block — `near edge < reach`. Demanding a
-    // full nominal gap as well drops a dentil that fits perfectly well, and trades a slightly tight gap
-    // for a conspicuously large one. The photograph settles it: real courses run up to the corner block
-    // with a tighter interdentil, they do not leave a hole.
-    //
-    // The block is only CUT TO SUIT when something did have to go, since then the survivor is a whole
-    // pitch away and the raw miter would leave a ragged space.
-    const extents = new Map<number, { back: number; forward: number }>();
-    for (const { at, reach } of corners) {
-      const side = (sign: 1 | -1) => {
-        const ordered = laid.centers
-          .filter((c) => c !== at)
-          .map((c) => ({ c, d: signedTo(at, c) * sign }))
-          .filter((x) => x.d > 1e-9)
-          .sort((a, b) => a.d - b.d);
-        let removed = false;
-        for (const { c, d } of ordered) {
-          if (d - half >= reach - 1e-9) return removed ? Math.max(half, d - half - gap) : half;
-          dropped.add(c);
-          removed = true;
-        }
-        return half;
-      };
-      extents.set(at, { forward: side(1), back: side(-1) });
-    }
-
-    if (params.dentils) {
-      for (const center of laid.centers) {
-        if (dropped.has(center)) continue;
-        const extent = extents.get(center);
-        add(
-          runAlong(
-            slicePath(facePath, center - (extent ? extent.back : half), center + (extent ? extent.forward : half))
-              .map((p) => p.clone().setY(bedTop)),
-            course(params.dentilHeight, 0, params.dentilDepth),
-          ),
-          toothed,
-        );
-      }
-    }
+    if (params.dentils) add(dentils, toothed);
+    else dentils.dispose();
 
     // ── B — MODILLIONS. Only the CENTER — plus a facing, which a point alone cannot give. ─────────────
     //
@@ -512,14 +432,6 @@ export default function (container: HTMLElement) {
       }
     }
 
-    params.dentilOut = `${laid.centers.length - dropped.size} dentils · pitch ${laid.pitch.toFixed(4)} (${params.dentilWidth} + ${gap.toFixed(4)} gap)`;
-    params.modillionOut = `${modillions.length} modillions · pitch ${bays.pitch.toFixed(4)}`;
-    const grown = [...extents.values()].map((e) => e.forward).find((e) => e > half + 1e-9);
-    const blockFace = (corners[0]?.reach ?? 0) + half;
-    params.swallowOut = `${dropped.size} swallowed · corner block ${(blockFace / params.dentilWidth).toFixed(2)}× a field dentil${grown ? " (cut to suit)" : ""}`;
-    const missed = corners.filter(({ at }) => !laid.centers.some((d) => Math.abs(d - at) < 1e-6)).length;
-    params.alignOut =
-      missed === 0 ? "locked — both courses land on every corner" : `${missed} corner(s) unset`;
 
   };
   rebuild();
@@ -537,21 +449,17 @@ export default function (container: HTMLElement) {
   };
 
   const gui = new GUI();
-  gui.title("Dentil Cornice");
+  gui.title("Cornice");
 
-  const dentil = gui.addFolder("Dentils — notched band");
+  const dentil = gui.addFolder("Dentils");
   dentil.add(params, "dentils").name("Show").onChange(rebuild);
-  // Center to center. The gap — the interdentil — is what is left after the width, never a knob.
-  // Width and GAP are the design decisions; the pitch is their sum and is reported, not set.
-  dentil.add(params, "dentilGap", 0.004, 0.1, 0.002).name("Gap (interdentil)").onChange(rebuild);
   dentil.add(params, "dentilWidth", 0.008, 0.08, 0.002).name("Width").onChange(rebuild);
+  dentil.add(params, "dentilGap", 0.004, 0.1, 0.002).name("Gap").onChange(rebuild);
   dentil.add(params, "dentilHeight", 0.02, 0.12, 0.002).name("Height").onChange(rebuild);
-  // Its OWN depth off the band, which is also what sets its reach past a corner — not its distance from
-  // the wall, which is what made the corner block twice the size it should have been.
   dentil.add(params, "dentilDepth", 0.008, 0.08, 0.002).name("Depth").onChange(rebuild);
   dentil.open();
 
-  const modillion = gui.addFolder("Modillions — applied repeat");
+  const modillion = gui.addFolder("Modillions");
   modillion.add(params, "modillions").name("Show").onChange(rebuild);
   // The classical alignment rule, as one integer. Every corner stays locked whatever you choose.
   // Same model as the dentils, and laid out independently — the two courses only have to agree at the
@@ -580,13 +488,6 @@ export default function (container: HTMLElement) {
   inspect.add(params, "length", 0.6, 2.4, 0.05).name("Wall Length").onChange(rebuild);
   inspect.add(params, "wireframe").name("Wireframe Overlay").onChange(rebuild);
   inspect.open();
-
-  const readout = gui.addFolder("Readout");
-  readout.add(params, "dentilOut").name("Dentils").listen().disable();
-  readout.add(params, "modillionOut").name("Modillions").listen().disable();
-  readout.add(params, "swallowOut").name("Swallowed").listen().disable();
-  readout.add(params, "alignOut").name("Corners").listen().disable();
-  readout.open();
 
   return () => {
     gui.destroy();
